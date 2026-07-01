@@ -307,11 +307,44 @@ func resourceBroker() *schema.Resource {
 					ForceNew: true,
 					Default:  false,
 				},
+				"resource_share_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
 				names.AttrSecurityGroups: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MaxItems: 5,
 					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"shared_resources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_names": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
 				},
 				names.AttrStorageType: {
 					Type:             schema.TypeString,
@@ -377,6 +410,12 @@ func resourceBroker() *schema.Resource {
 						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
 							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
 						}
+					}
+				}
+
+				if !strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
+					if v, ok := diff.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
+						return errors.New("resource_share_arns: Can only be configured when engine is RabbitMQ")
 					}
 				}
 
@@ -455,6 +494,33 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
 	}
 
+	// Resource shares can only be set via UpdateBroker, so they are applied
+	// after the broker reaches a running state.
+	if v, ok := d.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
+		_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
+			BrokerId:          aws.String(d.Id()),
+			ResourceShareArns: flex.ExpandStringValueSet(v.(*schema.Set)),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
+		}
+
+		if d.Get(names.AttrApplyImmediately).(bool) {
+			_, err := conn.RebootBroker(ctx, &mq.RebootBrokerInput{
+				BrokerId: aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "rebooting MQ Broker (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitBrokerRebooted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
+			}
+		}
+	}
+
 	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
@@ -490,6 +556,22 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+
+	// Shared resources are only supported for RabbitMQ brokers and are read
+	// via a separate API not exposed by DescribeBroker.
+	if strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) {
+		sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) shared resources: %s", d.Id(), err)
+		}
+
+		d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
+
+		if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+		}
+	}
 
 	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
@@ -649,6 +731,21 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		requiresReboot = true
 	}
 
+	if d.HasChange("resource_share_arns") {
+		input := &mq.UpdateBrokerInput{
+			BrokerId:          aws.String(d.Id()),
+			ResourceShareArns: flex.ExpandStringValueSet(d.Get("resource_share_arns").(*schema.Set)),
+		}
+
+		_, err := conn.UpdateBroker(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
 	if d.Get(names.AttrApplyImmediately).(bool) && requiresReboot {
 		_, err := conn.RebootBroker(ctx, &mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
@@ -710,6 +807,27 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findSharedResourcesByBrokerID(ctx context.Context, conn *mq.Client, id string) ([]types.SharedResource, error) {
+	input := &mq.DescribeSharedResourcesInput{
+		BrokerId: aws.String(id),
+	}
+
+	var output []types.SharedResource
+
+	pages := mq.NewDescribeSharedResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SharedResources...)
 	}
 
 	return output, nil
@@ -1144,6 +1262,42 @@ func flattenConfiguration(config *types.Configurations) []any {
 	}
 
 	return []any{m}
+}
+
+// flattenResourceShareARNs returns the RAM resource share ARNs associated with a
+// broker. DescribeSharedResources represents each share as a RESOURCE_SHARE entry
+// whose resource ARN is the share ARN.
+func flattenResourceShareARNs(sharedResources []types.SharedResource) []string {
+	var arns []string
+
+	for _, sharedResource := range sharedResources {
+		if sharedResource.Type == types.SharedResourceTypeResourceShare {
+			arns = append(arns, aws.ToString(sharedResource.ResourceArn))
+		}
+	}
+
+	return arns
+}
+
+func flattenSharedResources(sharedResources []types.SharedResource) []any {
+	if len(sharedResources) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, len(sharedResources))
+	for i, sharedResource := range sharedResources {
+		m := map[string]any{
+			names.AttrResourceARN: aws.ToString(sharedResource.ResourceArn),
+			names.AttrStatus:      string(sharedResource.Status),
+			names.AttrType:        string(sharedResource.Type),
+		}
+		if len(sharedResource.DnsNames) > 0 {
+			m["dns_names"] = sharedResource.DnsNames
+		}
+		l[i] = m
+	}
+
+	return l
 }
 
 // brokerEndpointOrder defines the canonical sort priority for known MQ broker endpoints,

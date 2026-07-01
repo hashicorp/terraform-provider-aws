@@ -65,6 +65,41 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccMQBrokerDataSource_resourceShareArns(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+	dataSourceName := "data.aws_mq_broker.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.MQEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerDataSourceConfig_resourceShareARNs(rName, testAccRabbitVersionNormalized3_13),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "resource_share_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resource_share_arns.#", resourceName, "resource_share_arns.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "shared_resources.#", resourceName, "shared_resources.#"),
+				),
+			},
+		},
+	})
+}
+
+func testAccBrokerDataSourceConfig_resourceShareARNs(rName, version string) string {
+	return acctest.ConfigCompose(testAccBrokerConfig_rabbitResourceShareARNs(rName, version), `
+data "aws_mq_broker" "test" {
+  broker_id = aws_mq_broker.test.id
+}
+`)
+}
+
 func testAccBrokerDataSourceConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccBrokerConfig_baseCustomVPC(rName), fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
