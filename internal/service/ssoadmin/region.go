@@ -5,9 +5,9 @@ package ssoadmin
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -25,6 +25,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -93,7 +94,7 @@ func (r *regionResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 
 func (r *regionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan regionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -101,37 +102,31 @@ func (r *regionResource) Create(ctx context.Context, req resource.CreateRequest,
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	var input ssoadmin.AddRegionInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.AddRegion(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("creating SSO Region (%s/%s)", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, aws.ToString(input.RegionName))
 		return
 	}
 
 	output, err := waitRegionActive(ctx, conn, aws.ToString(input.InstanceArn), aws.ToString(input.RegionName), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("waiting for SSO Region (%s/%s) to become active", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, aws.ToString(input.RegionName))
 		return
 	}
 
 	plan.Status = fwtypes.StringEnumValue(output.Status)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *regionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state regionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -139,7 +134,7 @@ func (r *regionResource) Read(ctx context.Context, req resource.ReadRequest, res
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	var input ssoadmin.DescribeRegionInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, state, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, state, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -151,21 +146,18 @@ func (r *regionResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("reading SSO Region (%s/%s)", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, aws.ToString(input.RegionName))
 		return
 	}
 
 	state.Status = fwtypes.StringEnumValue(output.Status)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state regionResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -173,7 +165,7 @@ func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	var input ssoadmin.RemoveRegionInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, state, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, state, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -183,18 +175,12 @@ func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("deleting SSO Region (%s/%s)", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, aws.ToString(input.RegionName))
 		return
 	}
 
 	if err := waitRegionDeleted(ctx, conn, aws.ToString(input.InstanceArn), aws.ToString(input.RegionName), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("waiting for SSO Region (%s/%s) to be removed", aws.ToString(input.InstanceArn), aws.ToString(input.RegionName)),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, aws.ToString(input.RegionName))
 		return
 	}
 }
@@ -208,17 +194,17 @@ func findRegionByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, instance
 	output, err := conn.DescribeRegion(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
@@ -233,7 +219,7 @@ func statusRegion(conn *ssoadmin.Client, instanceARN, regionName string) retry.S
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.Status), nil
@@ -252,10 +238,10 @@ func waitRegionActive(ctx context.Context, conn *ssoadmin.Client, instanceARN, r
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssoadmin.DescribeRegionOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitRegionDeleted(ctx context.Context, conn *ssoadmin.Client, instanceARN, regionName string, timeout time.Duration) error {
@@ -269,7 +255,7 @@ func waitRegionDeleted(ctx context.Context, conn *ssoadmin.Client, instanceARN, 
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	return smarterr.NewError(err)
 }
 
 var _ inttypes.ImportIDParser = regionImportID{}
