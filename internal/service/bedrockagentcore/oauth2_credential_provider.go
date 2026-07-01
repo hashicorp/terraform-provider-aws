@@ -55,7 +55,7 @@ type oauth2CredentialProviderResource struct {
 	framework.ResourceWithModel[oauth2CredentialProviderResourceModel]
 }
 
-func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attribute {
+func oauth2ClientCredentialsAttributes(ctx context.Context) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"client_credentials_wo_version": schema.Int64Attribute{
 			Optional: true,
@@ -64,6 +64,27 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 					path.MatchRelative().AtParent().AtName("client_id_wo"),
 				}...),
 			},
+		},
+		"client_secret_config": schema.ListNestedAttribute{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2SecretReferenceModel](ctx),
+			Optional:   true,
+			Validators: []validator.List{
+				listvalidator.SizeAtMost(1),
+			},
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"json_key": schema.StringAttribute{
+						Required: true,
+					},
+					"secret_id": schema.StringAttribute{
+						Required: true,
+					},
+				},
+			},
+		},
+		"client_secret_source": schema.StringAttribute{
+			CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
+			Optional:   true,
 		},
 		names.AttrClientID: schema.StringAttribute{
 			Optional:  true,
@@ -225,8 +246,10 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 								},
 							},
 						},
+						"atlassian_oauth2_provider_config":  basicOAuth2ProviderConfigBlock[atlassianOAuth2ProviderConfigModel](ctx),
 						"github_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[githubOAuth2ProviderConfigModel](ctx),
 						"google_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[googleOAuth2ProviderConfigModel](ctx),
+						"linkedin_oauth2_provider_config":   basicOAuth2ProviderConfigBlock[linkedinOAuth2ProviderConfigModel](ctx),
 						"microsoft_oauth2_provider_config":  basicOAuth2ProviderConfigBlock[microsoftOAuth2ProviderConfigModel](ctx),
 						"salesforce_oauth2_provider_config": basicOAuth2ProviderConfigBlock[salesforceOAuth2ProviderConfigModel](ctx),
 						"slack_oauth2_provider_config":      basicOAuth2ProviderConfigBlock[slackOAuth2ProviderConfigModel](ctx),
@@ -481,9 +504,11 @@ type oauth2CredentialProviderResourceModel struct {
 }
 
 type oauth2ProviderConfigModel struct {
+	AtlassianOAuth2ProviderConfig  fwtypes.ListNestedObjectValueOf[atlassianOAuth2ProviderConfigModel]  `tfsdk:"atlassian_oauth2_provider_config"`
 	CustomOAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[customOAuth2ProviderConfigModel]     `tfsdk:"custom_oauth2_provider_config"`
 	GithubOAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[githubOAuth2ProviderConfigModel]     `tfsdk:"github_oauth2_provider_config"`
 	GoogleOAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[googleOAuth2ProviderConfigModel]     `tfsdk:"google_oauth2_provider_config"`
+	LinkedinOAuth2ProviderConfig   fwtypes.ListNestedObjectValueOf[linkedinOAuth2ProviderConfigModel]   `tfsdk:"linkedin_oauth2_provider_config"`
 	MicrosoftOAuth2ProviderConfig  fwtypes.ListNestedObjectValueOf[microsoftOAuth2ProviderConfigModel]  `tfsdk:"microsoft_oauth2_provider_config"`
 	SalesforceOAuth2ProviderConfig fwtypes.ListNestedObjectValueOf[salesforceOAuth2ProviderConfigModel] `tfsdk:"salesforce_oauth2_provider_config"`
 	SlackOAuth2ProviderConfig      fwtypes.ListNestedObjectValueOf[slackOAuth2ProviderConfigModel]      `tfsdk:"slack_oauth2_provider_config"`
@@ -516,6 +541,15 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 	clientCredentials := oauth2ClientCredentialsCtxKey.FromContext(ctx)
 
 	switch t := v.(type) {
+	case awstypes.Oauth2ProviderConfigOutputMemberAtlassianOauth2ProviderConfig:
+		var model atlassianOAuth2ProviderConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		model.oauth2ClientCredentialsModel = clientCredentials
+		m.AtlassianOAuth2ProviderConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
 	case awstypes.Oauth2ProviderConfigOutputMemberCustomOauth2ProviderConfig:
 		var model customOAuth2ProviderConfigModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
@@ -542,6 +576,15 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		}
 		model.oauth2ClientCredentialsModel = clientCredentials
 		m.GoogleOAuth2ProviderConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.Oauth2ProviderConfigOutputMemberLinkedinOauth2ProviderConfig:
+		var model linkedinOAuth2ProviderConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		model.oauth2ClientCredentialsModel = clientCredentials
+		m.LinkedinOAuth2ProviderConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberMicrosoftOauth2ProviderConfig:
 		var model microsoftOAuth2ProviderConfigModel
@@ -588,6 +631,19 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 	}
 
 	switch {
+	case !m.AtlassianOAuth2ProviderConfig.IsNull():
+		data, d := m.AtlassianOAuth2ProviderConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		data.oauth2ClientCredentialsModel = clientCredentials
+		var r awstypes.Oauth2ProviderConfigInputMemberAtlassianOauth2ProviderConfig
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	case !m.CustomOAuth2ProviderConfig.IsNull():
 		data, d := m.CustomOAuth2ProviderConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -623,6 +679,20 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
 		var r awstypes.Oauth2ProviderConfigInputMemberGoogleOauth2ProviderConfig
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.LinkedinOAuth2ProviderConfig.IsNull():
+		data, d := m.LinkedinOAuth2ProviderConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		data.oauth2ClientCredentialsModel = clientCredentials
+		var r awstypes.Oauth2ProviderConfigInputMemberLinkedinOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
@@ -678,6 +748,14 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 	var diags diag.Diagnostics
 
 	switch {
+	case !m.AtlassianOAuth2ProviderConfig.IsNull():
+		v, d := m.AtlassianOAuth2ProviderConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return inttypes.Zero[oauth2ClientCredentialsModel](), diags
+		}
+		return v.oauth2ClientCredentialsModel, diags
+
 	case !m.CustomOAuth2ProviderConfig.IsNull():
 		v, d := m.CustomOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -696,6 +774,14 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 
 	case !m.GoogleOAuth2ProviderConfig.IsNull():
 		v, d := m.GoogleOAuth2ProviderConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return inttypes.Zero[oauth2ClientCredentialsModel](), diags
+		}
+		return v.oauth2ClientCredentialsModel, diags
+
+	case !m.LinkedinOAuth2ProviderConfig.IsNull():
+		v, d := m.LinkedinOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return inttypes.Zero[oauth2ClientCredentialsModel](), diags
@@ -731,11 +817,18 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 }
 
 type oauth2ClientCredentialsModel struct {
-	ClientCredentialsWOVersion types.Int64  `tfsdk:"client_credentials_wo_version"`
-	ClientID                   types.String `tfsdk:"client_id"`
-	ClientIDWO                 types.String `tfsdk:"client_id_wo"`
-	ClientSecret               types.String `tfsdk:"client_secret"`
-	ClientSecretWO             types.String `tfsdk:"client_secret_wo"`
+	ClientCredentialsWOVersion types.Int64                                                 `tfsdk:"client_credentials_wo_version"`
+	ClientID                   types.String                                                `tfsdk:"client_id"`
+	ClientIDWO                 types.String                                                `tfsdk:"client_id_wo"`
+	ClientSecret               types.String                                                `tfsdk:"client_secret"`
+	ClientSecretConfig         fwtypes.ListNestedObjectValueOf[oauth2SecretReferenceModel] `tfsdk:"client_secret_config"`
+	ClientSecretSource         fwtypes.StringEnum[awstypes.SecretSourceType]               `tfsdk:"client_secret_source"`
+	ClientSecretWO             types.String                                                `tfsdk:"client_secret_wo"`
+}
+
+type oauth2SecretReferenceModel struct {
+	JSONKey  types.String `tfsdk:"json_key"`
+	SecretID types.String `tfsdk:"secret_id"`
 }
 
 type oauth2DiscoveryModel struct {
@@ -748,7 +841,17 @@ type customOAuth2ProviderConfigModel struct {
 	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
 }
 
+type atlassianOAuth2ProviderConfigModel struct {
+	oauth2ClientCredentialsModel
+	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+}
+
 type githubOAuth2ProviderConfigModel struct {
+	oauth2ClientCredentialsModel
+	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+}
+
+type linkedinOAuth2ProviderConfigModel struct {
 	oauth2ClientCredentialsModel
 	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
 }

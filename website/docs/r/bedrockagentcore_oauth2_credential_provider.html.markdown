@@ -81,7 +81,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
 The following arguments are required:
 
-* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values: `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `Microsoft`, `SalesforceOauth2`, `SlackOauth2`.
+* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values include `AtlassianOauth2`, `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `LinkedinOauth2`, `MicrosoftOauth2`, `SalesforceOauth2`, and `SlackOauth2`.
 * `name` - (Required) Name of the OAuth2 credential provider.
 * `oauth2_provider_config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`oauth2_provider_config`](#oauth2_provider_config) below.
 
@@ -94,12 +94,14 @@ The following arguments are optional:
 
 The `oauth2_provider_config` block must contain exactly one of the following provider configurations:
 
+* `atlassian_oauth2_provider_config` - (Optional) Atlassian OAuth provider configuration. See [`atlassian`](#predefined-providers) below.
 * `custom_oauth2_provider_config` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
-* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
-* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
-* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
-* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
-* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
+* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#predefined-providers) below.
+* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#predefined-providers) below.
+* `linkedin_oauth2_provider_config` - (Optional) LinkedIn OAuth provider configuration. See [`linkedin`](#predefined-providers) below.
+* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#predefined-providers) below.
+* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#predefined-providers) below.
+* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#predefined-providers) below.
 
 ### `custom`
 
@@ -116,13 +118,18 @@ The `custom_oauth2_provider_config` block supports the following:
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
+**Externally-Managed Client Secret:**
+
+* `client_secret_source` - (Optional) Source type of the client secret. Valid values: `MANAGED` (the service manages the secret) or `EXTERNAL` (you manage the secret in AWS Secrets Manager). Use `EXTERNAL` together with `client_secret_config`.
+* `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config`](#client_secret_config) below.
+
 **OAuth Discovery Configuration:**
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
-### `github`, `google`, `microsoft`, `salesforce`, `slack`
+### Predefined Providers
 
-These predefined provider blocks support the following:
+The `atlassian`, `github`, `google`, `linkedin`, `microsoft`, `salesforce`, and `slack` provider blocks support the following:
 
 **Standard Credentials (choose one pair):**
 
@@ -135,7 +142,19 @@ These predefined provider blocks support the following:
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
+**Externally-Managed Client Secret:**
+
+* `client_secret_source` - (Optional) Source type of the client secret. Valid values: `MANAGED` or `EXTERNAL`. Use `EXTERNAL` together with `client_secret_config`.
+* `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config`](#client_secret_config) below.
+
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
+
+### `client_secret_config`
+
+The `client_secret_config` block supports the following:
+
+* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the client secret value.
+* `json_key` - (Required) JSON key used to extract the client secret value from the Secrets Manager secret.
 
 ### `oauth_discovery`
 
