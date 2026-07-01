@@ -79,9 +79,15 @@ func TestAccMQBrokerDataSource_resourceShareArns(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.MQEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerDataSourceConfig_resourceShareARNs(rName, testAccRabbitVersionNormalized3_13),
+				Config: testAccBrokerDataSourceConfig_resourceShareARNs(rName, testAccRabbitVersionNormalized4_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "resource_share_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_share_arns.#", resourceName, "resource_share_arns.#"),

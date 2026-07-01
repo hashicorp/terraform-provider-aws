@@ -629,6 +629,7 @@ func TestNormalizeEngineVersion(t *testing.T) {
 const (
 	testAccActiveVersionNormalized5_18 = "5.18"
 	testAccRabbitVersionNormalized3_13 = "3.13"
+	testAccRabbitVersionNormalized4_2  = "4.2"
 	// testAccNoAutoMinorVersionUpgrade   = acctest.CtFalse
 	testAccAutoMinorVersionUpgrade = acctest.CtTrue
 )
@@ -2045,10 +2046,16 @@ func TestAccMQBroker_RabbitMQ_resourceShareArns(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrokerDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		CheckDestroy: testAccCheckBrokerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbitResourceShareARNs(rName, testAccRabbitVersionNormalized3_13),
+				Config: testAccBrokerConfig_rabbitResourceShareARNs(rName, testAccRabbitVersionNormalized4_2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
@@ -2057,10 +2064,12 @@ func TestAccMQBroker_RabbitMQ_resourceShareArns(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// shared_resources reflects live infrastructure (e.g. rotating
+				// VPC endpoint DNS names) and is not guaranteed to round-trip.
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "shared_resources"},
 			},
 		},
 	})
@@ -2796,17 +2805,39 @@ resource "aws_mq_broker" "test" {
 func testAccBrokerConfig_rabbitResourceShareARNs(rName, version string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name = %[1]q
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
+resource "aws_security_group" "gateway" {
+  name   = "%[1]s-gateway"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port       = 5671
+    to_port         = 5671
+    protocol        = "tcp"
+    security_groups = [aws_security_group.test.id]
+  }
+
+  tags = {
+    Name = "%[1]s-gateway"
+  }
+}
+
+# The resource gateway shares the broker's subnet so a single-instance broker
+# overlaps an Availability Zone with the gateway.
 resource "aws_vpclattice_resource_gateway" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
-  subnet_ids = [aws_subnet.test[0].id]
+  name                           = %[1]q
+  vpc_id                         = aws_vpc.test.id
+  subnet_ids                     = [aws_subnet.test[0].id]
+  ip_address_type                = "IPV4"
+  resource_config_dns_resolution = "IN_VPC"
+  security_group_ids             = [aws_security_group.gateway.id]
 }
 
 resource "aws_vpclattice_resource_configuration" "test" {
@@ -2814,7 +2845,7 @@ resource "aws_vpclattice_resource_configuration" "test" {
 
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
-  port_ranges = ["443"]
+  port_ranges = ["5671"]
   protocol    = "TCP"
 
   resource_configuration_definition {
@@ -2827,21 +2858,34 @@ resource "aws_vpclattice_resource_configuration" "test" {
 
 resource "aws_ram_resource_share" "test" {
   name                      = %[1]q
-  allow_external_principals = false
+  allow_external_principals = true
+}
+
+# Deleting the broker asynchronously removes the VPC endpoints it created for the
+# shared resource. Delay destroying the resource configuration until those
+# endpoints are gone, otherwise its deletion fails as still associated.
+resource "time_sleep" "wait_for_endpoint_cleanup" {
+  depends_on       = [aws_vpclattice_resource_configuration.test]
+  destroy_duration = "5m"
 }
 
 resource "aws_ram_resource_association" "test" {
   resource_arn       = aws_vpclattice_resource_configuration.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
+
+  depends_on = [time_sleep.wait_for_endpoint_cleanup]
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-  apply_immediately  = true
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m7g.medium"
+  publicly_accessible        = false
+  security_groups            = [aws_security_group.test.id]
+  subnet_ids                 = [aws_subnet.test[0].id]
+  apply_immediately          = true
+  auto_minor_version_upgrade = true
 
   resource_share_arns = [aws_ram_resource_share.test.arn]
 
