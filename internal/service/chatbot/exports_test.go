@@ -8,6 +8,6 @@ var (
 	ResourceSlackChannelConfiguration = newSlackChannelConfigurationResource
 	ResourceTeamsChannelConfiguration = newTeamsChannelConfigurationResource
 
-	FindSlackChannelConfigurationByARN    = findSlackChannelConfigurationByARN
-	FindTeamsChannelConfigurationByTeamID = findTeamsChannelConfigurationByTeamID
+	FindSlackChannelConfigurationByARN = findSlackChannelConfigurationByARN
+	FindTeamsChannelConfigurationByARN = findTeamsChannelConfigurationByARN
 )
