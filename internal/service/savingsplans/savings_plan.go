@@ -237,6 +237,13 @@ func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// AWS returns "0.00000000" for upfront_payment_amount on No Upfront plans, but
+	// rejects that value on input. Normalize to null so subsequent plans don't
+	// detect drift and force replacement.
+	if savingsPlan.PaymentOption == awstypes.SavingsPlanPaymentOptionNoUpfront {
+		plan.UpfrontPaymentAmount = types.StringNull()
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -266,6 +273,13 @@ func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 	state.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
+
+	// AWS returns "0.00000000" for upfront_payment_amount on No Upfront plans, but
+	// rejects that value on input. Normalize to null so subsequent plans don't
+	// detect drift and force replacement.
+	if out.PaymentOption == awstypes.SavingsPlanPaymentOptionNoUpfront {
+		state.UpfrontPaymentAmount = types.StringNull()
+	}
 
 	setTagsOut(ctx, out.Tags)
 
