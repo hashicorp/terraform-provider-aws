@@ -36,8 +36,13 @@ resource "aws_iam_role_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["bedrock-agentcore:CreateWorkloadIdentity"]
+        Effect = "Allow"
+        Action = [
+          "bedrock-agentcore:CreateWorkloadIdentity",
+          "bedrock-agentcore:TagResource",
+          "bedrock-agentcore:UntagResource",
+          "bedrock-agentcore:ListTagsForResource",
+        ]
         Resource = "*"
       }
     ]
