@@ -5,27 +5,28 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceAgentRuntime             = newAgentRuntimeResource
-	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
-	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource
-	ResourceBrowser                  = newBrowserResource
-	ResourceBrowserProfile           = newBrowserProfileResource
-	ResourceCodeInterpreter          = newCodeInterpreterResource
-	ResourceEvaluator                = newEvaluatorResource
-	ResourceGateway                  = newGatewayResource
-	ResourceGatewayTarget            = newGatewayTargetResource
-	ResourceMemory                   = newMemoryResource
-	ResourceResourcePolicy           = newResourcePolicyResource
-	ResourceMemoryStrategy           = newResourceMemoryStrategy
-	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
-	ResourcePolicy                   = newPolicyResource
-	ResourceTokenVaultCMK            = newTokenVaultCMKResource
-	ResourceHarness                  = newHarnessResource
-	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
-	ResourcePolicyEngine             = newPolicyEngineResource
-	ResourceRegistry                 = newRegistryResource
-	ResourcePaymentManager           = newPaymentManagerResource
-	ResourceWorkloadIdentity         = newWorkloadIdentityResource
+	ResourceAgentRuntime              = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint      = newAgentRuntimeEndpointResource
+	ResourceAPIKeyCredentialProvider  = newAPIKeyCredentialProviderResource
+	ResourceBrowser                   = newBrowserResource
+	ResourceBrowserProfile            = newBrowserProfileResource
+	ResourceCodeInterpreter           = newCodeInterpreterResource
+	ResourceEvaluator                 = newEvaluatorResource
+	ResourceGateway                   = newGatewayResource
+	ResourceGatewayTarget             = newGatewayTargetResource
+	ResourceMemory                    = newMemoryResource
+	ResourceResourcePolicy            = newResourcePolicyResource
+	ResourceMemoryStrategy            = newResourceMemoryStrategy
+	ResourceOAuth2CredentialProvider  = newOAuth2CredentialProviderResource
+	ResourcePolicy                    = newPolicyResource
+	ResourceTokenVaultCMK             = newTokenVaultCMKResource
+	ResourceHarness                   = newHarnessResource
+	ResourceOnlineEvaluationConfig    = newOnlineEvaluationConfigResource
+	ResourcePolicyEngine              = newPolicyEngineResource
+	ResourceRegistry                  = newRegistryResource
+	ResourcePaymentCredentialProvider = newPaymentCredentialProviderResource
+	ResourcePaymentManager            = newPaymentManagerResource
+	ResourceWorkloadIdentity          = newWorkloadIdentityResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindHarnessByID                      = findHarnessByID
@@ -46,6 +47,7 @@ var (
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
+	FindPaymentCredentialProviderByName  = findPaymentCredentialProviderByName
 	FindPaymentManagerByID               = findPaymentManagerByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
