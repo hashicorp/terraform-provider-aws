@@ -198,8 +198,6 @@ func (r *regionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-// Finder functions.
-
 func findRegionByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, instanceARN, regionName string) (*ssoadmin.DescribeRegionOutput, error) {
 	input := &ssoadmin.DescribeRegionInput{
 		InstanceArn: aws.String(instanceARN),
