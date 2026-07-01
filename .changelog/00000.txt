@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagentcore_payment_connector
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_payment_credential_provider
+```
