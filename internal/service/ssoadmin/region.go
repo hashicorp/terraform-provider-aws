@@ -289,8 +289,6 @@ func (regionImportID) Parse(id string) (string, map[string]any, error) {
 	return id, result, nil
 }
 
-// Resource model.
-
 type regionResourceModel struct {
 	framework.WithRegionModel
 	InstanceARN fwtypes.ARN                               `tfsdk:"instance_arn"`
