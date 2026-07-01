@@ -1,0 +1,169 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package bedrockagentcore_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccBedrockAgentCorePaymentCredentialProvider_stripePrivy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_payment_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPaymentCredentialProviderConfig_stripePrivy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentCredentialProviderExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_vendor"), knownvalue.StringExact("StripePrivy")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`.+`))),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				// The provider configuration holds write-only secrets that the API does
+				// not return, so the block cannot be reconstructed on import.
+				ImportStateVerifyIgnore: []string{
+					"provider_configuration",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCorePaymentCredentialProvider_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_payment_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPaymentCredentialProviderConfig_stripePrivy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentCredentialProviderExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePaymentCredentialProvider, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckPaymentCredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_bedrockagentcore_payment_credential_provider" {
+				continue
+			}
+
+			_, err := tfbedrockagentcore.FindPaymentCredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Payment Credential Provider %s still exists", rs.Primary.Attributes[names.AttrName])
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckPaymentCredentialProviderExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+
+		_, err := tfbedrockagentcore.FindPaymentCredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+		return err
+	}
+}
+
+func testAccPreCheckPaymentCredentialProviders(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
+	input := bedrockagentcorecontrol.ListPaymentCredentialProvidersInput{}
+
+	_, err := conn.ListPaymentCredentialProviders(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPaymentCredentialProviderConfig_stripePrivy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_payment_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "StripePrivy"
+
+  provider_configuration {
+    stripe_privy_configuration {
+      app_id                    = "app_test_id"
+      app_secret                = "sk_test_secret"
+      authorization_id          = "auth_test_id"
+      authorization_private_key = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI"
+    }
+  }
+}
+`, rName)
+}
