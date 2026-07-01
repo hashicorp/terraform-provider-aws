@@ -34,7 +34,6 @@ import (
 // @IdentityAttribute("instance_arn")
 // @IdentityAttribute("region_name")
 // @ImportIDHandler("regionImportID")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeRegionOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
