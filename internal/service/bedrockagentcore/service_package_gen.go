@@ -154,6 +154,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newPaymentCredentialProviderResource,
+			TypeName: "aws_bedrockagentcore_payment_credential_provider",
+			Name:     "Payment Credential Provider",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "credential_provider_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newPolicyResource,
 			TypeName: "aws_bedrockagentcore_policy",
 			Name:     "Policy",
