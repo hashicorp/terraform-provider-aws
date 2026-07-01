@@ -37,6 +37,7 @@ import (
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
 // @Testing(importStateIdAttributes="instance_arn;region_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newRegionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &regionResource{}
