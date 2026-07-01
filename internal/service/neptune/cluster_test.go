@@ -39,6 +39,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			names.AttrFinalSnapshotIdentifier,
 			"cluster_members",
 			"neptune_instance_parameter_group_name",
+			"restore_to_point_in_time",
 			"skip_final_snapshot",
 			"snapshot_identifier",
 			"cluster_members",
@@ -945,6 +946,54 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_restoreToPointInTime_latestRestorableTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_restoreToPointInTime_latestRestorableTime(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccNeptuneCluster_restoreToPointInTime_copyOnWrite(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_restoreToPointInTime_copyOnWrite(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -1941,6 +1990,61 @@ resource "aws_neptune_cluster" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName)
+}
+
+func testAccClusterConfig_restoreToPointInTime_latestRestorableTime(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "source" {
+  cluster_identifier  = "%[1]s-src"
+  skip_final_snapshot = true
+}
+
+resource "aws_neptune_cluster_instance" "source" {
+  cluster_identifier = aws_neptune_cluster.source.id
+  instance_class     = "db.r5.large"
+  identifier         = "%[1]s-src-inst"
+}
+
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  skip_final_snapshot = true
+
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_neptune_cluster.source.cluster_identifier
+    use_latest_restorable_time = true
+  }
+
+  depends_on = [aws_neptune_cluster_instance.source]
+}
+`, rName)
+}
+
+func testAccClusterConfig_restoreToPointInTime_copyOnWrite(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "source" {
+  cluster_identifier  = "%[1]s-src"
+  skip_final_snapshot = true
+}
+
+resource "aws_neptune_cluster_instance" "source" {
+  cluster_identifier = aws_neptune_cluster.source.id
+  instance_class     = "db.r5.large"
+  identifier         = "%[1]s-src-inst"
+}
+
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  skip_final_snapshot = true
+
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_neptune_cluster.source.cluster_identifier
+    restore_type               = "copy-on-write"
+    use_latest_restorable_time = true
+  }
+
+  depends_on = [aws_neptune_cluster_instance.source]
 }
 `, rName)
 }
