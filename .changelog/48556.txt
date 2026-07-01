@@ -1,0 +1,35 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `litellm_model_config` configuration block to `model`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `s3`, `git`, and `aws_skills` configuration blocks to `skill` and make `skill.path` optional
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `require_service_s3_endpoint` argument to `network_configuration.network_mode_config`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `allowed_workload_configuration` and `private_endpoint_overrides` configuration blocks to `authorizer_configuration.custom_jwt_authorizer`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `managed_memory_configuration` configuration block and `disabled` argument to `memory`
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix `Unsupported Type` error on create when the service returns a managed or disabled memory configuration
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `require_service_s3_endpoint` argument to `network_configuration.network_mode_config`, and `allowed_workload_configuration` and `private_endpoint_overrides` configuration blocks to `authorizer_configuration.custom_jwt_authorizer`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_browser: Add `require_service_s3_endpoint` argument to `network_configuration.vpc_config`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_code_interpreter: Add `require_service_s3_endpoint` argument to `network_configuration.vpc_config`
+```

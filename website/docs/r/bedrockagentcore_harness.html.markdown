@@ -150,6 +150,7 @@ The `model` block supports exactly one of the following:
 * `bedrock_model_config` - (Optional) Amazon Bedrock model configuration. See [`bedrock_model_config`](#bedrock_model_config) below.
 * `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config`](#openai_model_config) below.
 * `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config`](#gemini_model_config) below.
+* `litellm_model_config` - (Optional) LiteLLM model configuration. See [`litellm_model_config`](#litellm_model_config) below.
 
 ### `bedrock_model_config` Block
 
@@ -174,6 +175,15 @@ The `model` block supports exactly one of the following:
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
 * `top_k` - (Optional) Top-k sampling parameter.
+
+### `litellm_model_config` Block
+
+* `model_id` - (Required) LiteLLM model ID.
+* `api_base` - (Optional) Base URL of the LiteLLM-compatible API endpoint.
+* `api_key_arn` - (Optional) ARN of the secret containing the API key.
+* `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
+* `top_p` - (Optional) Top-p sampling parameter. Must be between 0 and 1.
 
 ### `system_prompt` Block
 
@@ -236,7 +246,31 @@ Exactly one of the following must be specified:
 
 ### `skill` Block
 
-* `path` - (Required) Path to the skill.
+Each `skill` block specifies exactly one of the following sources:
+
+* `path` - (Optional) Filesystem path to the skill definition.
+* `s3` - (Optional) S3 source for the skill. See [`s3`](#s3) below.
+* `git` - (Optional) Git repository source for the skill. See [`git`](#git) below.
+* `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills`](#aws_skills) below.
+
+### `s3` Block
+
+* `uri` - (Required) S3 URI of the skill source. Must begin with `s3://`.
+
+### `git` Block
+
+* `url` - (Required) HTTPS URL of the git repository.
+* `path` - (Optional) Subdirectory within the repository containing the skill.
+* `auth` - (Optional) Authentication configuration for private repositories. See [`auth`](#auth) below.
+
+### `auth` Block
+
+* `credential_arn` - (Required) ARN of the credential in AgentCore Identity containing the password or personal access token.
+* `username` - (Optional) Username for authentication. Defaults to `oauth2` if not specified.
+
+### `aws_skills` Block
+
+* `paths` - (Optional) List of glob patterns to filter allowed skills (e.g., `["core-skills/*"]`).
 
 ### `truncation` Block
 
@@ -284,6 +318,7 @@ The `config` block supports exactly one of the following:
 
 * `security_groups` - (Required) Security groups for the VPC.
 * `subnets` - (Required) Subnets for the VPC.
+* `require_service_s3_endpoint` - (Optional) Whether to require an S3 endpoint for the service in the VPC.
 
 ### `filesystem_configuration` Block
 
@@ -335,7 +370,26 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+
+### `allowed_workload_configuration` Block
+
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. Each entry supports an `arn` argument.
+* `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
+
+### `private_endpoint_overrides` Block
+
+* `domain` - (Required) Domain the override applies to.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint) below.
+
+### `private_endpoint` Block
+
+Exactly one of the following must be specified:
+
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. Supports `endpoint_ip_address_type` (Required, one of `IPV4` or `IPV6`), `subnet_ids` (Required), `vpc_identifier` (Required), `routing_domain` (Optional), `security_group_ids` (Optional), and `tags` (Optional).
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. Supports `resource_configuration_identifier` (Required).
 
 ### `custom_claim` Block
 
@@ -361,7 +415,11 @@ The `claim_match_value` block supports the following:
 
 ### `memory` Block
 
-* `agentcore_memory_configuration` - (Required) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+The `memory` block is optional and computed. If omitted, AgentCore provisions a managed memory configuration by default. When specified, it supports exactly one of the following:
+
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration referencing an existing memory resource. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+* `managed_memory_configuration` - (Optional) Configuration for a memory resource that the harness creates and manages in your account. See [`managed_memory_configuration`](#managed_memory_configuration) below.
+* `disabled` - (Optional) Set to `true` to explicitly opt out of memory.
 
 ### `agentcore_memory_configuration` Block
 
@@ -369,6 +427,12 @@ The `claim_match_value` block supports the following:
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
 * `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
+
+### `managed_memory_configuration` Block
+
+* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key. Defaults to an AWS-owned key. Not updatable after creation.
+* `event_expiry_duration` - (Optional) Event retention in days. Defaults to 30.
+* `strategies` - (Optional) Strategy types to enable. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
 
 ### `retrieval_config` Block
 

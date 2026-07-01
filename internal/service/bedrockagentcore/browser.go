@@ -221,6 +221,12 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"require_service_s3_endpoint": schema.BoolAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+										},
+									},
 									names.AttrSecurityGroups: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,

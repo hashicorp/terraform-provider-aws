@@ -115,6 +115,7 @@ The `vpc_config` object supports the following:
 
 * `security_groups` - (Required) Set of security group IDs for the VPC configuration.
 * `subnets` - (Required) Set of subnet IDs for the VPC configuration.
+* `require_service_s3_endpoint` - (Optional) Whether to require an S3 endpoint for the service in the VPC. Changing this forces a new resource to be created.
 
 ### `recording`
 
