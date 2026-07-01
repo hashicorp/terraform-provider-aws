@@ -150,7 +150,10 @@ func (r *regionResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	state.Status = fwtypes.StringEnumValue(output.Status)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
