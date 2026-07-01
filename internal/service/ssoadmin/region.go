@@ -77,7 +77,7 @@ func (r *regionResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RegionStatus](),
 				Computed:   true,
 			},
