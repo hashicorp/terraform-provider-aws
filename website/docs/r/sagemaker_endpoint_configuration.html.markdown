@@ -41,6 +41,7 @@ This resource supports the following arguments:
 * `kms_key_arn` - (Optional) ARN of a AWS KMS key that SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name_prefix` - (Optional) Unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
 * `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `metrics_config` - (Optional) Configuration for endpoint utilization metrics. See [metrics_config](#metrics_config) below.
 * `production_variants` - (Required) List each model that you want to host at this endpoint. [See below](#production_variants).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shadow_production_variants` - (Optional) Models that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on `production_variants`. If you use this field, you can only specify one variant for `production_variants` and one variant for `shadow_production_variants`. [See below](#production_variants) (same arguments as `production_variants`).
@@ -55,12 +56,14 @@ This resource supports the following arguments:
 * `inference_ami_version` - (Optional) Option from a collection of preconfigured AMI images. Each image is configured by AWS with a set of software and driver versions. AWS optimizes these configurations for different machine learning workloads.
 * `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
 * `initial_variant_weight` - (Optional) Initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, defaults to `1.0`. Ignored if `model_name` is not set (Inference Components endpoint).
+* `instance_pools` - (Optional) List of instance pools for heterogeneous endpoint deployments. Allows configuring multiple instance types with priority-based provisioning. See [instance_pools](#instance_pools) below.
 * `instance_type` - (Optional)  Type of instance to start.
 * `managed_instance_scaling` - (Optional) Control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
 * `model_data_download_timeout_in_seconds` - (Optional) Timeout value, in seconds, to download and extract the model that you want to host from S3 to the individual inference instance associated with this production variant. Valid values between `60` and `3600`.
 * `model_name` - (Optional) Name of the model to use. Required unless using Inference Components (in which case `execution_role_arn` must be specified at the endpoint configuration level).
 * `routing_config` - (Optional) How the endpoint routes incoming traffic. See [routing_config](#routing_config) below.
 * `serverless_config` - (Optional) How an endpoint performs asynchronous inference.
+* `variant_instance_provision_timeout_in_seconds` - (Optional) The timeout value, in seconds, for provisioning instances for the production variant. When SageMaker AI encounters an insufficient capacity error while provisioning instances, it retries with the next instance pool (if configured via `instance_pools`) or waits until the timeout expires. This timeout applies only to capacity provisioning and does not include the time for model download or container startup. Valid values between `300` and `3600`.
 * `variant_name` - (Optional) Name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) Size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
 
@@ -84,6 +87,18 @@ This resource supports the following arguments:
 * `max_instance_count` - (Optional) Maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.
 * `min_instance_count` - (Optional) Minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.
 * `status` - (Optional) Whether managed instance scaling is enabled. Valid values are `ENABLED` and `DISABLED`.
+
+#### instance_pools
+
+* `instance_type` - (Required) The ML compute instance type for the instance pool.
+* `priority` - (Required) The priority for the instance pool. SageMaker attempts to provision instances in order of priority, starting with the lowest value. Valid values are `1` to `5`, where `1` is the highest priority.
+* `model_name_override` - (Optional) Name of a SageMaker model to use for this instance pool instead of the model specified for the production variant. Use this to deploy a different model optimized for the instance type in this pool.
+
+### metrics_config
+
+* `enable_detailed_observability` - (Optional) Whether detailed observability is enabled. When `true`, publishes container Prometheus metrics, per-GPU metrics, per-instance host metrics, and inference component placement metrics. Defaults to `true` for new endpoint configurations.
+* `enable_enhanced_metrics` - (Optional) Whether enhanced metrics are enabled. Enhanced metrics provide utilization and invocation data at instance and container granularity. Defaults to `false`.
+* `metric_publish_frequency_in_seconds` - (Optional) The interval, in seconds, at which metrics are published to CloudWatch. Valid values are `10`, `30`, `60`, `120`, `180`, `240`, `300`. Defaults to `60`.
 
 ### data_capture_config
 

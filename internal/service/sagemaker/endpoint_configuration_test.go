@@ -1981,3 +1981,268 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 `, rName)
 }
+
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_instancePools(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_instancePools(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.0.instance_type", "ml.m5.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.1.instance_type", "ml.m5.2xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.1.priority", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_instancePoolsModelNameOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_instancePoolsModelNameOverride(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.0.instance_type", "ml.m5.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.1.instance_type", "ml.m5.2xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_pools.1.priority", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "production_variants.0.instance_pools.1.model_name_override", "aws_sagemaker_model.test2", names.AttrName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_metricsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_metricsConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.enable_detailed_observability", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.enable_enhanced_metrics", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.metric_publish_frequency_in_seconds", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEndpointConfigurationConfig_instancePools(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+
+    instance_pools {
+      instance_type = "ml.m5.xlarge"
+      priority      = 1
+    }
+
+    instance_pools {
+      instance_type = "ml.m5.2xlarge"
+      priority      = 2
+    }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_instancePoolsModelNameOverride(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test2" {
+  name               = "%[1]s-2"
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+  }
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+
+    instance_pools {
+      instance_type = "ml.m5.xlarge"
+      priority      = 1
+    }
+
+    instance_pools {
+      instance_type       = "ml.m5.2xlarge"
+      priority            = 2
+      model_name_override = aws_sagemaker_model.test2.name
+    }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_metricsConfig(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  metrics_config {
+    enable_detailed_observability       = true
+    enable_enhanced_metrics             = true
+    metric_publish_frequency_in_seconds = 30
+  }
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+  }
+}
+`, rName))
+}
+
+func TestAccSageMakerEndpointConfiguration_metricsConfigPartial(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_metricsConfigPartial(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.enable_enhanced_metrics", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEndpointConfigurationConfig_metricsConfigPartial(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  metrics_config {
+    enable_enhanced_metrics = true
+  }
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+  }
+}
+`, rName))
+}
+
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_variantInstanceProvisionTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_variantInstanceProvisionTimeout(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_instance_provision_timeout_in_seconds", "600"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEndpointConfigurationConfig_variantInstanceProvisionTimeout(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name                                 = "variant-1"
+    model_name                                   = aws_sagemaker_model.test.name
+    initial_instance_count                       = 1
+    instance_type                                = "ml.m5.xlarge"
+    variant_instance_provision_timeout_in_seconds = 600
+  }
+}
+`, rName))
+}

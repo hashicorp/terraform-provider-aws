@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `instance_pools` argument to `production_variants`
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `metrics_config` argument
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `variant_instance_provision_timeout_in_seconds` argument to `production_variants`
+```
