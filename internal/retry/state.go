@@ -119,6 +119,12 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 					return t, err
 				}
 
+				// https://github.com/hashicorp/terraform-provider-aws/issues/48682.
+				// Backwards compatibility with SDKv2 helper/retry.
+				if v, ok := delay.(backoff.DelayWithSetIncrementDelay); ok {
+					v.SetIncrementDelay(false)
+				}
+
 				continue
 			}
 
