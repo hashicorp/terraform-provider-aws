@@ -84,6 +84,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			names.AttrARN:         framework.ARNAttributeComputedOnly(),
 			names.AttrEnvironment: framework.ResourceOptionalComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"memory":              framework.ResourceOptionalComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -142,63 +143,6 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								Attributes: map[string]schema.Attribute{
 									"container_uri": schema.StringAttribute{
 										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"memory": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessMemoryConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"agentcore_memory_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreMemoryConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrARN: schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-									"actor_id": schema.StringAttribute{
-										Optional: true,
-									},
-									"messages_count": schema.Int32Attribute{
-										Optional: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"retrieval_config": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreMemoryRetrievalConfigModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
-												"map_block_key": schema.StringAttribute{
-													Required: true,
-												},
-												"relevance_score": schema.Float32Attribute{
-													Optional: true,
-													Validators: []validator.Float32{
-														float32validator.Between(0, 1),
-													},
-												},
-												"strategy_id": schema.StringAttribute{
-													Optional: true,
-												},
-												"top_k": schema.Int32Attribute{
-													Optional: true,
-												},
-											},
-										},
 									},
 								},
 							},
@@ -1388,6 +1332,8 @@ func (m harnessEnvironmentArtifactModel) expandToUpdatedHarnessEnvironmentArtifa
 
 type harnessMemoryConfigurationModel struct {
 	AgentCoreMemoryConfiguration fwtypes.ListNestedObjectValueOf[harnessAgentCoreMemoryConfigurationModel] `tfsdk:"agentcore_memory_configuration"`
+	Disabled                     types.Bool                                                                `tfsdk:"disabled"`
+	ManagedMemoryConfiguration   fwtypes.ListNestedObjectValueOf[harnessManagedMemoryConfigurationModel]   `tfsdk:"managed_memory_configuration"`
 }
 
 var (
@@ -1405,6 +1351,15 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 			return diags
 		}
 		m.AgentCoreMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
+		var data harnessManagedMemoryConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.HarnessMemoryConfigurationMemberDisabled:
+		m.Disabled = types.BoolValue(true)
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("memory configuration flatten: %T", v))
 	}
@@ -1425,7 +1380,8 @@ func (m harnessMemoryConfigurationModel) ExpandTo(ctx context.Context, targetTyp
 
 func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx context.Context) (awstypes.HarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if !m.AgentCoreMemoryConfiguration.IsNull() {
+	switch {
+	case !m.AgentCoreMemoryConfiguration.IsNull():
 		data, d := m.AgentCoreMemoryConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1434,13 +1390,24 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 		var r awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
+	case !m.ManagedMemoryConfiguration.IsNull():
+		data, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		return &r, diags
+	case !m.Disabled.IsNull() && m.Disabled.ValueBool():
+		return &awstypes.HarnessMemoryConfigurationMemberDisabled{}, diags
 	}
 	return nil, diags
 }
 
 func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfiguration(ctx context.Context) (*awstypes.UpdatedHarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if !m.AgentCoreMemoryConfiguration.IsNull() {
+	if !m.AgentCoreMemoryConfiguration.IsNull() || !m.ManagedMemoryConfiguration.IsNull() || (!m.Disabled.IsNull() && m.Disabled.ValueBool()) {
 		r, d := m.expandToHarnessMemoryConfiguration(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1463,4 +1430,10 @@ type harnessAgentCoreMemoryRetrievalConfigModel struct {
 	RelevanceScore types.Float32 `tfsdk:"relevance_score"`
 	StrategyID     types.String  `tfsdk:"strategy_id"`
 	TopK           types.Int32   `tfsdk:"top_k"`
+}
+
+type harnessManagedMemoryConfigurationModel struct {
+	EncryptionKeyARN    fwtypes.ARN                                                         `tfsdk:"encryption_key_arn"`
+	EventExpiryDuration types.Int32                                                         `tfsdk:"event_expiry_duration"`
+	Strategies          fwtypes.ListOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
 }

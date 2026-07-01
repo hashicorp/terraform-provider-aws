@@ -361,7 +361,11 @@ The `claim_match_value` block supports the following:
 
 ### `memory` Block
 
-* `agentcore_memory_configuration` - (Required) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+The `memory` block is optional and computed. If omitted, AgentCore provisions a managed memory configuration by default. When specified, it supports exactly one of the following:
+
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration referencing an existing memory resource. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+* `managed_memory_configuration` - (Optional) Configuration for a memory resource that the harness creates and manages in your account. See [`managed_memory_configuration`](#managed_memory_configuration) below.
+* `disabled` - (Optional) Set to `true` to explicitly opt out of memory.
 
 ### `agentcore_memory_configuration` Block
 
@@ -369,6 +373,12 @@ The `claim_match_value` block supports the following:
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
 * `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
+
+### `managed_memory_configuration` Block
+
+* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key. Defaults to an AWS-owned key. Not updatable after creation.
+* `event_expiry_duration` - (Optional) Event retention in days. Defaults to 30.
+* `strategies` - (Optional) Strategy types to enable. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
 
 ### `retrieval_config` Block
 
