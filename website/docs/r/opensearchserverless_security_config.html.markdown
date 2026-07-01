@@ -29,13 +29,26 @@ resource "aws_opensearchserverless_security_config" "example" {
 The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the policy.
-* `saml_options` - (Required) Configuration block for SAML options.
-* `type` - (Required) Type of configuration. Must be `saml`.
+* `type` - (Required) Type of configuration. Valid values are `saml`, `iamidentitycenter` and `iamfederation`.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the security configuration.
+* `iam_federation_options` - (Optional) Configuration block for IAM Federation options. Required if `type` is set to `iamfederation`. See [iam_federation_options](#iam_federation_options) below for details.
+* `iam_identity_center_options` - (Optional) Configuration block for IAM Identity Center options. Required if `type` is set to `iamidentitycenter`. See [iam_identity_center_options](#iam_identity_center_options) below for details.
+* `saml_options` - (Optional) Configuration block for SAML options. Required if `type` is set to `saml`. See [saml_options](#saml_options) below for details.
+
+### iam_federation_options
+
+* `group_attribute` - (Optional) Group attribute for this IAM federation integration. At least one of `group_attribute` or `user_attribute` must be specified.
+* `user_attribute` - (Option) User attribute for this IAM federation integration. At least one of `group_attribute` or `user_attribute` must be specified.
+
+### iam_identity_center_options
+
+* `instance_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
+* `group_attribute` - (Optional) Group attribute for this IAM Identity Center integration. Valid values are `GroupId` and `GroupName`. Defaults to `GroupId`.
+* `user_attribute` - (Optional) User attribute for this IAM Identity Center integration. Valid values are `UserId`, `UserName` and `Email`. Defaults to `UserId`.
 
 ### saml_options
 

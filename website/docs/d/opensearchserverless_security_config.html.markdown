@@ -34,9 +34,26 @@ This data source exports the following attributes in addition to the arguments a
 * `config_version` - The version of the security configuration.
 * `created_date` - The date the configuration was created.
 * `description` - The description of the security configuration.
+* `iam_federation_options` - IAM Federation options for the security configuration.
+* `iam_identity_center_options` - IAM Identity Center options for the security configuration.
 * `last_modified_date` - The date the configuration was last modified.
 * `saml_options` - SAML options for the security configuration.
 * `type` - The type of security configuration.
+
+### iam_federation_options
+
+IAM Federation options for the security configuration.
+
+* `group_attribute` - Group attribute for this IAM federation integration.
+* `user_attribute` - User attribute for this IAM federation integration.
+
+### iam_identity_center_options
+
+IAM Identity Center options for the security configuration.
+
+* `instance_arn` - Amazon Resource Name (ARN) of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
+* `group_attribute` - Group attribute for this IAM Identity Center integration.
+* `user_attribute` - User attribute for this IAM Identity Center integration.
 
 ### saml_options
 
