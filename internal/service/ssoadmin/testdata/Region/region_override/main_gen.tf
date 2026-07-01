@@ -12,11 +12,6 @@ resource "aws_ssoadmin_region" "test" {
   region_name  = var.region
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"

@@ -8,8 +8,3 @@ resource "aws_ssoadmin_region" "test" {
   region_name  = "us-west-2"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

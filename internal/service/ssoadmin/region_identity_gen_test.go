@@ -36,7 +36,6 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_region.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -53,9 +52,7 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Region/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionExists(ctx, t, resourceName),
 				),
@@ -74,10 +71,8 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Region/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:                      config.StaticDirectory("testdata/Region/basic/"),
+				ConfigVariables:                      config.Variables{},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "region_name"),
 				ResourceName:                         resourceName,
@@ -88,10 +83,8 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Region/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/Region/basic/"),
+				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -108,9 +101,7 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Region/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -130,7 +121,6 @@ func testAccSSOAdminRegion_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_region.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -148,8 +138,7 @@ func testAccSSOAdminRegion_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -168,8 +157,7 @@ func testAccSSOAdminRegion_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "region_name"),
@@ -183,8 +171,7 @@ func testAccSSOAdminRegion_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -203,8 +190,7 @@ func testAccSSOAdminRegion_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
