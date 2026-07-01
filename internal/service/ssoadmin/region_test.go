@@ -54,7 +54,7 @@ func testAccSSOAdminRegion_basic(t *testing.T) {
 					testAccCheckRegionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.RegionStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.RegionStatusActive)),
 				),
 			},
 			{
