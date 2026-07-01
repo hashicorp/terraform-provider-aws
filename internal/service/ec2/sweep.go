@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -1784,6 +1785,13 @@ func sweepSpotInstanceRequests(region string) error {
 func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
 
+	// Skip subnets anchored by a VPC endpoint we cannot remove;
+	// see findResourcesBlockedByRequesterManagedVPCEndpoints for rationale.
+	blockedSubnets, _, err := findResourcesBlockedByRequesterManagedVPCEndpoints(ctx, conn)
+	if err != nil {
+		return nil, fmt.Errorf("listing requester-managed VPC endpoints: %w", err)
+	}
+
 	var sweepResources []sweep.Sweepable
 
 	r := resourceSubnet()
@@ -1803,14 +1811,85 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, v := range page.Subnets {
+			subnetID := aws.ToString(v.SubnetId)
+
+			if endpointIDs, blocked := blockedSubnets[subnetID]; blocked {
+				logSweepBlockedByRequesterManagedVPCEndpoint("EC2 Subnet", subnetID, endpointIDs)
+				continue
+			}
+
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.SubnetId))
+			d.SetId(subnetID)
+			d.Set(names.AttrVPCID, v.VpcId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
 	return sweepResources, nil
+}
+
+// findResourcesBlockedByRequesterManagedVPCEndpoints returns subnet→endpoints
+// and VPC→endpoints maps of every available, requester-managed VPC endpoint in
+// the region. The customer role cannot delete these endpoints (DeleteVpcEndpoints
+// and ModifyVpcEndpoint both refuse them), and the in-resource GuardDuty cleanup
+// matches only a narrow service-name/tag heuristic, so subnets and VPCs anchored
+// by anything else would hang their sweeper on DependencyViolation for the full
+// schema.TimeoutDelete. The most common producer is an orphan GuardDuty Runtime
+// Monitoring endpoint whose underlying service AWS has since retired; clearing
+// those requires AWS Support. Consumer-side counterpart to the RequesterManaged
+// skip in sweepVPCEndpoints.
+//
+// To inspect what this would skip in a region:
+//
+//	aws ec2 describe-vpc-endpoints --region <region> \
+//	  --filters Name=vpc-endpoint-state,Values=available \
+//	  --query 'VpcEndpoints[?RequesterManaged==`true`].{Endpoint:VpcEndpointId,Subnets:SubnetIds,VPC:VpcId,Service:ServiceName}'
+func findResourcesBlockedByRequesterManagedVPCEndpoints(ctx context.Context, conn *ec2.Client) (subnetIDs, vpcIDs map[string][]string, err error) {
+	input := ec2.DescribeVpcEndpointsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-endpoint-state": vpcEndpointStateAvailable,
+		}),
+	}
+
+	endpoints, err := findVPCEndpoints(ctx, conn, &input)
+	if err != nil {
+		if retry.NotFound(err) {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	subnetIDs = make(map[string][]string)
+	vpcIDs = make(map[string][]string)
+	for _, ep := range endpoints {
+		if !aws.ToBool(ep.RequesterManaged) {
+			continue
+		}
+		endpointID := aws.ToString(ep.VpcEndpointId)
+		for _, subnetID := range ep.SubnetIds {
+			subnetIDs[subnetID] = append(subnetIDs[subnetID], endpointID)
+		}
+		if vpcID := aws.ToString(ep.VpcId); vpcID != "" {
+			vpcIDs[vpcID] = append(vpcIDs[vpcID], endpointID)
+		}
+	}
+	return subnetIDs, vpcIDs, nil
+}
+
+// logSweepBlockedByRequesterManagedVPCEndpoint emits the standard [WARN] used by
+// sweepers when they skip a resource anchored by a requester-managed VPC endpoint;
+// the log body points at the AWS Support routing needed to clear the orphan.
+func logSweepBlockedByRequesterManagedVPCEndpoint(resourceKind, resourceID string, endpointIDs []string) {
+	log.Printf("[WARN] Skipping %s %s: blocked by requester-managed VPC endpoint(s) %v\n"+
+		"  Why: Requester-managed VPC endpoints cannot be removed by the customer role; "+
+		"DeleteVpcEndpoints and ModifyVpcEndpoint both refuse them. The most common cause is "+
+		"an orphan AWS-managed endpoint (e.g., left behind by GuardDuty Runtime Monitoring "+
+		"after the feature was disabled, sometimes against an endpoint service AWS has since retired).\n"+
+		"  Next: If not already addressed, open an AWS Support case (service: "+
+		"amazon-virtual-private-cloud, category: vpc-endpoints) requesting force-delete of "+
+		"the listed endpoint(s). A subsequent sweep will then clear this resource automatically.",
+		resourceKind, resourceID, endpointIDs)
 }
 
 func sweepTrafficMirrorFilters(region string) error {
@@ -2480,6 +2559,13 @@ func sweepVPCs(region string) error {
 	conn := client.EC2Client(ctx)
 	var sweepResources []sweep.Sweepable
 
+	// Skip VPCs anchored by a VPC endpoint we cannot remove;
+	// see findResourcesBlockedByRequesterManagedVPCEndpoints for rationale.
+	_, blockedVPCs, err := findResourcesBlockedByRequesterManagedVPCEndpoints(ctx, conn)
+	if err != nil {
+		return fmt.Errorf("listing requester-managed VPC endpoints (%s): %w", region, err)
+	}
+
 	input := ec2.DescribeVpcsInput{
 		Filters: []awstypes.Filter{
 			{
@@ -2502,9 +2588,16 @@ func sweepVPCs(region string) error {
 		}
 
 		for _, v := range page.Vpcs {
+			vpcID := aws.ToString(v.VpcId)
+
+			if endpointIDs, blocked := blockedVPCs[vpcID]; blocked {
+				logSweepBlockedByRequesterManagedVPCEndpoint("EC2 VPC", vpcID, endpointIDs)
+				continue
+			}
+
 			r := resourceVPC()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.VpcId))
+			d.SetId(vpcID)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
