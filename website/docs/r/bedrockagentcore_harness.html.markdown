@@ -154,6 +154,7 @@ The `model` block supports exactly one of the following:
 ### `bedrock_model_config` Block
 
 * `model_id` - (Required) Bedrock model ID (e.g., `anthropic.claude-sonnet-4-20250514`).
+* `api_format` - (Optional) API format for the model. Valid values are `converse_stream`, `responses`, and `chat_completions`.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p (nucleus) sampling parameter. Must be between 0 and 1.
@@ -161,6 +162,7 @@ The `model` block supports exactly one of the following:
 ### `openai_model_config` Block
 
 * `model_id` - (Required) OpenAI model ID.
+* `api_format` - (Optional) API format for the model. Valid values are `responses` and `chat_completions`.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling.
