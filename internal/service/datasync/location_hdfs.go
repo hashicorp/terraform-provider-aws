@@ -42,138 +42,140 @@ func resourceLocationHDFS() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationHDFSUpdate,
 		DeleteWithoutTimeout: resourceLocationHDFSDelete,
 
-		Schema: map[string]*schema.Schema{
-			"agent_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"agent_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.HdfsAuthenticationType](),
+				},
+				"block_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  128 * 1024 * 1024, // 128 MiB
+					ValidateFunc: validation.All(
+						validation.IntDivisibleBy(512),
+						validation.IntBetween(1048576, 1073741824),
+					),
+				},
+				"kerberos_keytab": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"kerberos_keytab_base64"},
+				},
+				"kerberos_keytab_base64": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"kerberos_keytab"},
+					ValidateFunc:  verify.ValidBase64String,
+				},
+				"kerberos_krb5_conf": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"kerberos_krb5_conf_base64"},
+				},
+				"kerberos_krb5_conf_base64": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"kerberos_krb5_conf"},
+					ValidateFunc:  verify.ValidBase64String,
+				},
+				"kerberos_principal": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.HdfsAuthenticationType](),
-			},
-			"block_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  128 * 1024 * 1024, // 128 MiB
-				ValidateFunc: validation.All(
-					validation.IntDivisibleBy(512),
-					validation.IntBetween(1048576, 1073741824),
-				),
-			},
-			"kerberos_keytab": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"kerberos_keytab_base64"},
-			},
-			"kerberos_keytab_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"kerberos_keytab"},
-				ValidateFunc:  verify.ValidBase64String,
-			},
-			"kerberos_krb5_conf": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"kerberos_krb5_conf_base64"},
-			},
-			"kerberos_krb5_conf_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"kerberos_krb5_conf"},
-				ValidateFunc:  verify.ValidBase64String,
-			},
-			"kerberos_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"kms_key_provider_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"name_node": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hostname": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumber,
+				"kms_key_provider_uri": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"name_node": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hostname": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
-			"qop_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_transfer_protection": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.HdfsDataTransferProtection](),
-						},
-						"rpc_protection": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.HdfsRpcProtection](),
+				"qop_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_transfer_protection": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.HdfsDataTransferProtection](),
+							},
+							"rpc_protection": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.HdfsRpcProtection](),
+							},
 						},
 					},
 				},
-			},
-			"replication_factor": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3,
-				ValidateFunc: validation.IntBetween(1, 512),
-			},
-			"simple_user": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "/" {
+				"replication_factor": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      3,
+					ValidateFunc: validation.IntBetween(1, 512),
+				},
+				"simple_user": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "/",
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if new == "/" {
+							return false
+						}
+						if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
+							return true
+						}
 						return false
-					}
-					if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
-						return true
-					}
-					return false
+					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

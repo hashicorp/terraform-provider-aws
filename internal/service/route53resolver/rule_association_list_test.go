@@ -25,7 +25,7 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 	resourceName1 := "aws_route53_resolver_rule_association.test[0]"
 	resourceName2 := "aws_route53_resolver_rule_association.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	id1 := tfstatecheck.StateValue()
 	id2 := tfstatecheck.StateValue()
@@ -66,12 +66,12 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_route53_resolver_rule_association.test", map[string]knownvalue.Check{
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 					querycheck.ExpectIdentity("aws_route53_resolver_rule_association.test", map[string]knownvalue.Check{
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),

@@ -278,6 +278,22 @@ func statusLocalGatewayRouteTableVPCAssociation(conn *ec2.Client, id string) ret
 	}
 }
 
+func statusLocalGatewayRouteTableVIFGroupAssociation(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findLocalGatewayRouteTableVIFGroupAssociationByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.State), nil
+	}
+}
+
 func statusManagedPrefixListState(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findManagedPrefixListByID(ctx, conn, id)
@@ -1450,6 +1466,22 @@ func statusTransitGatewayStaticRoute(conn *ec2.Client, transitGatewayRouteTableI
 func statusTransitGatewayRouteTable(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayRouteTableByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusTransitGatewayMeteringPolicy(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTransitGatewayMeteringPolicyByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
 			return nil, "", nil

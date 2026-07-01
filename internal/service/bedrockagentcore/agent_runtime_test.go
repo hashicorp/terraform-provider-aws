@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomAgentRuntimeName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
@@ -303,6 +307,75 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, "/mnt/data"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("filesystem_configuration").AtSliceIndex(0).AtMapKey("session_storage").AtSliceIndex(0).AtMapKey("mount_path"),
+						knownvalue.StringExact("/mnt/data")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, "/mnt/data2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("filesystem_configuration").AtSliceIndex(0).AtMapKey("session_storage").AtSliceIndex(0).AtMapKey("mount_path"),
+						knownvalue.StringExact("/mnt/data2")),
+				},
+			},
+		},
+	})
+}
+
+// NOTE: TestAccBedrockAgentCoreAgentRuntime_filesystemEFSAccessPoint and
+// TestAccBedrockAgentCoreAgentRuntime_filesystemS3FilesAccessPoint were
+// verified locally (apply + import-verify both succeeded with properly
+// configured VPC + mount targets + execution-role permissions), but are
+// omitted from the upstream test suite because the agent runtime's Delete
+// does not wait for VPC ENI reclamation, which AgentCore can take up to
+// 8 hours to complete. Re-introduce these tests when AgentCore's ENI drain
+// SLA improves or when the Delete path awaits it.
+
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
@@ -347,6 +420,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"custom_claim":  knownvalue.SetSizeExact(0),
 									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
 								}),
 							}),
@@ -388,12 +462,231 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
+									"custom_claim":  knownvalue.SetSizeExact(0),
 									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
 								}),
 							}),
 						}),
 					})),
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(
+					rName,
+					rImageUri,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+					string(awstypes.InboundTokenClaimValueTypeString),
+					string(awstypes.ClaimMatchOperatorTypeEquals),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeString)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string":      knownvalue.StringExact("admin"),
+															"match_value_string_list": knownvalue.Null(),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				// Update to inbound_token_claim_value_type "STRING_ARRAY" and claim_match_operator "CONTAINS"
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(
+					rName,
+					rImageUri,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+					string(awstypes.InboundTokenClaimValueTypeStringArray),
+					string(awstypes.ClaimMatchOperatorTypeContains),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeStringArray)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeContains)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string":      knownvalue.StringExact("admin"),
+															"match_value_string_list": knownvalue.Null(),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				// Update to use match_value_string_list instead of match_value_string for claim_match_operator "CONTAINS_ANY"
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimStringList(
+					rName,
+					rImageUri,
+					"https://accounts.google.com/.well-known/openid-configuration",
+					"weather", "sports",
+					"client-999", "client-888",
+					"openid", names.AttrEmail,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
+									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
+											"inbound_token_claim_value_type": knownvalue.StringExact(string(awstypes.InboundTokenClaimValueTypeStringArray)),
+											"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeContainsAny)),
+													"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"match_value_string": knownvalue.Null(),
+															"match_value_string_list": knownvalue.SetExact([]knownvalue.Check{
+																knownvalue.StringExact("admin"),
+																knownvalue.StringExact("user"),
+															}),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 		},
 	})
@@ -456,6 +749,24 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolMcp),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "AGUI"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolAgui),
 						}),
 					})),
 				},
@@ -1003,6 +1314,82 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[3]q
+      allowed_audience = [%[4]q, %[5]q]
+      allowed_clients  = [%[6]q, %[7]q]
+      allowed_scopes   = [%[8]q, %[9]q]
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = %[10]q
+        authorizing_claim_match_value {
+          claim_match_operator = %[11]q
+          claim_match_value {
+            match_value_string = "admin"
+          }
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimStringList(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[3]q
+      allowed_audience = [%[4]q, %[5]q]
+      allowed_clients  = [%[6]q, %[7]q]
+      allowed_scopes   = [%[8]q, %[9]q]
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = "STRING_ARRAY"
+        authorizing_claim_match_value {
+          claim_match_operator = "CONTAINS_ANY"
+          claim_match_value {
+            match_value_string_list = ["admin", "user"]
+          }
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
 func testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, serverProtocol string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
@@ -1050,4 +1437,29 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, s3Bucket, s3Key))
+}
+
+func testAccAgentRuntimeConfig_filesystemSessionStorage(rName, rImageUri, mountPath string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  filesystem_configuration {
+    session_storage {
+      mount_path = %[3]q
+    }
+  }
+}
+`, rName, rImageUri, mountPath))
 }

@@ -118,7 +118,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
-## kerberos_authentication_settings
+### kerberos_authentication_settings
 
 -> Additional information can be found in the [Using Kerberos Authentication with AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.Kerberos.html).
 

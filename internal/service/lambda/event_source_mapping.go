@@ -53,17 +53,18 @@ var kafkaOrARNPattern = `$|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-
 
 // @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("uuid")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetEventSourceMappingOutput")
+// @Testing(importIgnore="last_modified")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.42.0")
 func resourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSourceMappingCreate,
 		ReadWithoutTimeout:   resourceEventSourceMappingRead,
 		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
 		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -678,6 +679,12 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
+
+	return append(diags, resourceEventSourceMappingFlatten(d, output)...)
+}
+
+func resourceEventSourceMappingFlatten(d *schema.ResourceData, output *lambda.GetEventSourceMappingOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	if output.AmazonManagedKafkaEventSourceConfig != nil {
 		if err := d.Set("amazon_managed_kafka_event_source_config", []any{flattenAmazonManagedKafkaEventSourceConfig(output.AmazonManagedKafkaEventSourceConfig)}); err != nil {

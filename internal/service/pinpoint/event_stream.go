@@ -34,22 +34,29 @@ func resourceEventStream() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"destination_stream_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		DeprecationMessage: "AWS End User Messaging event streams are being discontinued on October 30, 2026. After that date, this resource will no longer be available. For SMS/Voice event delivery, use aws_pinpointsmsvoicev2_event_destination with a configuration set.",
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:       schema.TypeString,
+					Required:   true,
+					ForceNew:   true,
+					Deprecated: "application_id is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
+				},
+				"destination_stream_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "destination_stream_arn is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "role_arn is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026.",
+				},
+			}
 		},
 	}
 }
@@ -76,7 +83,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	}, "make sure the IAM Role is configured correctly")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting Pinpoint Event Stream for application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "putting End User Messaging Event Stream for application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -88,18 +95,18 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging Event Stream for application %s", d.Id())
 
 	output, err := findEventStreamByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint Event Stream (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging Event Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Event Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging Event Stream (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -113,7 +120,7 @@ func resourceEventStreamDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
+	log.Printf("[DEBUG] End User Messaging Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStream(ctx, &pinpoint.DeleteEventStreamInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -123,7 +130,7 @@ func resourceEventStreamDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Event Stream for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging Event Stream for application %s: %s", d.Id(), err)
 	}
 	return diags
 }

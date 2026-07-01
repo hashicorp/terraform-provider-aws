@@ -81,7 +81,7 @@ func (l *listResourceCollaboration) List(ctx context.Context, request list.ListR
 
 			result.DisplayName = aws.ToString(item.Name)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

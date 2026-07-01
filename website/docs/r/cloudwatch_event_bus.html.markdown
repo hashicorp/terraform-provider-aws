@@ -24,7 +24,7 @@ resource "aws_cloudwatch_event_bus" "messenger" {
 
 ```terraform
 data "aws_cloudwatch_event_source" "examplepartner" {
-  name_prefix = "aws.partner/examplepartner.com"
+  name_prefix = "aws.partner/example.com"
 }
 
 resource "aws_cloudwatch_event_bus" "examplepartner" {

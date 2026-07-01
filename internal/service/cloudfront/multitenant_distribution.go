@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -39,15 +39,15 @@ import (
 )
 
 const (
-	defaultConnectionAttempts        = 3
-	defaultConnectionTimeout         = 10
-	defaultResponseCompletionTimeout = 30
-	defaultOriginKeepaliveTimeout    = 5
-	defaultOriginReadTimeout         = 30
+	defaultConnectionAttempts     = 3
+	defaultConnectionTimeout      = 10
+	defaultOriginKeepaliveTimeout = 5
+	defaultOriginReadTimeout      = 30
 )
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
@@ -141,7 +141,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						names.AttrEnabled: schema.BoolAttribute{Computed: true},
 					},
 					Blocks: map[string]schema.Block{
-						"items": schema.ListNestedBlock{
+						attrItems: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[kgKeyPairIDsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -224,7 +224,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 									},
@@ -235,8 +235,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionAssociationModel](ctx),
+						"function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -244,13 +244,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
 						},
-						"lambda_function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
+						"lambda_function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -262,7 +263,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 									},
 									"lambda_function_arn": schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -274,7 +276,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									attrItems: schema.ListAttribute{
 										Optional:   true,
 										CustomType: fwtypes.ListOfStringType,
 									},
@@ -338,7 +340,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 									},
@@ -349,8 +351,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionAssociationModel](ctx),
+						"function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -358,13 +360,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.EventType](),
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
 						},
-						"lambda_function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
+						"lambda_function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -376,7 +379,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 									},
 									"lambda_function_arn": schema.StringAttribute{
-										Required: true,
+										Required:   true,
+										CustomType: fwtypes.ARNType,
 									},
 								},
 							},
@@ -388,7 +392,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									attrItems: schema.ListAttribute{
 										Optional:   true,
 										CustomType: fwtypes.ListOfStringType,
 									},
@@ -402,8 +406,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
-			"origin": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[originModel](ctx),
+			"origin": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[originModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_attempts": schema.Int32Attribute{
@@ -428,12 +432,10 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"origin_path": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							Default:  stringdefault.StaticString(""),
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
-							Default:  int32default.StaticInt32(defaultResponseCompletionTimeout),
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -481,6 +483,22 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									"origin_ssl_protocols": schema.SetAttribute{
 										Required:   true,
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"origin_mtls_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[originMtlsConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"client_certificate_arn": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.ARNType,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -579,7 +597,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										Optional:   true,
 										CustomType: fwtypes.SetOfStringType,
 									},
@@ -701,8 +719,11 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	// This is needed for S3 origins using Origin Access Control (OAC)
 	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
 
+	// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
+	fixCacheBehaviors(input.DistributionConfigWithTags.DistributionConfig)
+
 	// Set required computed fields that AutoFlex can't handle
-	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(sdkid.UniqueId())
+	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(create.UniqueId(ctx))
 
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions
@@ -828,6 +849,9 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
 		fixOriginConfigs(input.DistributionConfig.Origins)
+
+		// Fix cache behaviors: CloudFront requires IncludeBody to be set (even as false) for lambda function associations
+		fixCacheBehaviors(input.DistributionConfig)
 
 		// Ensure ConnectionMode remains tenant-only
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -1043,7 +1067,7 @@ type multiTenantDistributionResourceModel struct {
 	ID                            types.String                                                 `tfsdk:"id"`
 	InProgressInvalidationBatches types.Int32                                                  `tfsdk:"in_progress_invalidation_batches"`
 	LastModifiedTime              timetypes.RFC3339                                            `tfsdk:"last_modified_time"`
-	Origin                        fwtypes.ListNestedObjectValueOf[originModel]                 `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
+	Origin                        fwtypes.SetNestedObjectValueOf[originModel]                  `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
 	OriginGroup                   fwtypes.ListNestedObjectValueOf[originGroupModel]            `tfsdk:"origin_group" autoflex:",xmlwrapper=Items,omitempty"`
 	Restrictions                  fwtypes.ListNestedObjectValueOf[restrictionsModel]           `tfsdk:"restrictions"`
 	Status                        types.String                                                 `tfsdk:"status"`
@@ -1063,9 +1087,9 @@ type originModel struct {
 	DomainName                types.String                                             `tfsdk:"domain_name"`
 	ID                        types.String                                             `tfsdk:"id"`
 	OriginAccessControlID     types.String                                             `tfsdk:"origin_access_control_id" autoflex:",omitempty"`
-	OriginPath                types.String                                             `tfsdk:"origin_path"`
+	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",omitempty"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
-	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
+	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout" autoflex:",omitempty"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
 }
 
@@ -1079,9 +1103,14 @@ type customOriginConfigModel struct {
 	HTTPSPort              types.Int32                                                  `tfsdk:"https_port"`
 	IPAddressType          fwtypes.StringEnum[awstypes.IpAddressType]                   `tfsdk:"ip_address_type"`
 	OriginKeepaliveTimeout types.Int32                                                  `tfsdk:"origin_keepalive_timeout"`
+	OriginMtlsConfig       fwtypes.ListNestedObjectValueOf[originMtlsConfigModel]       `tfsdk:"origin_mtls_config" autoflex:",omitempty"`
 	OriginReadTimeout      types.Int32                                                  `tfsdk:"origin_read_timeout"`
 	OriginProtocolPolicy   fwtypes.StringEnum[awstypes.OriginProtocolPolicy]            `tfsdk:"origin_protocol_policy"`
 	OriginSSLProtocols     fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"origin_ssl_protocols" autoflex:",xmlwrapper=Items"`
+}
+
+type originMtlsConfigModel struct {
+	ClientCertificateArn fwtypes.ARN `tfsdk:"client_certificate_arn"`
 }
 
 type originShieldModel struct {
@@ -1110,18 +1139,18 @@ type memberModel struct {
 }
 
 type defaultCacheBehaviorModel struct {
-	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
-	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
-	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
-	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
-	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
-	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
-	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
-	TargetOriginID            types.String                                                    `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]          `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
-	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]               `tfsdk:"viewer_protocol_policy"`
+	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]           `tfsdk:"allowed_methods"`
+	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
+	Compress                  types.Bool                                                     `tfsdk:"compress"`
+	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
+	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
+	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
+	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
+	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
+	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
@@ -1131,19 +1160,19 @@ type allowedMethodsModel struct {
 }
 
 type cacheBehaviorModel struct {
-	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
-	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
-	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
-	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
-	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
-	PathPattern               types.String                                                    `tfsdk:"path_pattern"`
-	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
-	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
-	TargetOriginID            types.String                                                    `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]          `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
-	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]               `tfsdk:"viewer_protocol_policy"`
+	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]           `tfsdk:"allowed_methods"`
+	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
+	Compress                  types.Bool                                                     `tfsdk:"compress"`
+	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
+	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
+	PathPattern               types.String                                                   `tfsdk:"path_pattern"`
+	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
+	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
+	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
+	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
@@ -1172,13 +1201,13 @@ type viewerCertificateModel struct {
 
 type functionAssociationModel struct {
 	EventType   fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	FunctionARN types.String                           `tfsdk:"function_arn"`
+	FunctionARN fwtypes.ARN                            `tfsdk:"function_arn"`
 }
 
 type lambdaFunctionAssociationModel struct {
 	EventType         fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	IncludeBody       types.Bool                             `tfsdk:"include_body"`
-	LambdaFunctionARN types.String                           `tfsdk:"lambda_function_arn"`
+	IncludeBody       types.Bool                             `tfsdk:"include_body" autoflex:",omitempty"`
+	LambdaFunctionARN fwtypes.ARN                            `tfsdk:"lambda_function_arn"`
 }
 
 type tenantConfigModel struct {
@@ -1224,11 +1253,47 @@ func fixOriginConfigs(origins *awstypes.Origins) {
 
 	for i := range origins.Items {
 		origin := &origins.Items[i]
+		// CloudFront requires OriginPath to always be present, even as empty string.
+		if origin.OriginPath == nil {
+			origin.OriginPath = aws.String("")
+		}
 		// If custom, S3, and VPC origin configs are all missing, add an empty S3 origin config
 		// One or the other must be specified, but the S3 origin can be "empty"
 		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
 			origin.S3OriginConfig = &awstypes.S3OriginConfig{
 				OriginAccessIdentity: aws.String(""),
+			}
+		}
+	}
+}
+
+// fixCacheBehaviors ensures lambda function associations have IncludeBody set (even as false) when required by CloudFront.
+func fixCacheBehaviors(config *awstypes.DistributionConfig) {
+	if config == nil {
+		return
+	}
+
+	// Fix default cache behavior
+	if config.DefaultCacheBehavior != nil && config.DefaultCacheBehavior.LambdaFunctionAssociations != nil {
+		for i := range config.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
+			assoc := &config.DefaultCacheBehavior.LambdaFunctionAssociations.Items[i]
+			if assoc.IncludeBody == nil {
+				assoc.IncludeBody = aws.Bool(false)
+			}
+		}
+	}
+
+	// Fix cache behaviors
+	if config.CacheBehaviors != nil {
+		for i := range config.CacheBehaviors.Items {
+			behavior := &config.CacheBehaviors.Items[i]
+			if behavior.LambdaFunctionAssociations != nil {
+				for j := range behavior.LambdaFunctionAssociations.Items {
+					assoc := &behavior.LambdaFunctionAssociations.Items[j]
+					if assoc.IncludeBody == nil {
+						assoc.IncludeBody = aws.Bool(false)
+					}
+				}
 			}
 		}
 	}

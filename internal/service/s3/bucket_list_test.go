@@ -138,7 +138,7 @@ func TestAccS3Bucket_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNNoAccountIDExact("s3", rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_domain_name"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucketPrefix), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucketPrefix), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_region"), knownvalue.Null()), // `bucket_region` is redundant
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_regional_domain_name"), knownvalue.StringExact(testAccBucketRegionalDomainName(rName+"-0", acctest.Region()))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrForceDestroy), knownvalue.Null()),

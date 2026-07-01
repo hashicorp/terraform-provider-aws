@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -81,12 +82,8 @@ func newAutoExpander(optFns []AutoFlexOptionsFunc) *autoExpander {
 	}
 }
 
-func (expander autoExpander) getOptions() AutoFlexOptions {
-	return expander.Options
-}
-
-// getCachedField returns a cached field lookup or performs and caches the lookup
-func (expander *autoExpander) getCachedField(t reflect.Type, fieldName string) (reflect.StructField, bool) {
+// expandGetCachedField returns a cached field lookup or performs and caches the lookup
+func expandGetCachedField(expander *autoExpander, t reflect.Type, fieldName string) (reflect.StructField, bool) {
 	if expander.fieldCache == nil {
 		expander.fieldCache = make(map[reflect.Type]map[string]reflect.StructField)
 	}
@@ -108,16 +105,16 @@ func (expander *autoExpander) getCachedField(t reflect.Type, fieldName string) (
 	return reflect.StructField{}, false
 }
 
-// getCachedFieldValue returns a cached field value lookup
-func (expander *autoExpander) getCachedFieldValue(v reflect.Value, fieldName string) reflect.Value {
-	if field, found := expander.getCachedField(v.Type(), fieldName); found {
+// expandGetCachedFieldValue returns a cached field value lookup
+func expandGetCachedFieldValue(expander *autoExpander, v reflect.Value, fieldName string) reflect.Value {
+	if field, found := expandGetCachedField(expander, v.Type(), fieldName); found {
 		return v.FieldByIndex(field.Index)
 	}
 	return reflect.Value{}
 }
 
-// autoFlexConvert converts `from` to `to` using the specified auto-flexer.
-func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
+// autoFlexConvert converts `from` to `to` using the specified autoExpander.
+func autoExpandConvert(ctx context.Context, from, to any, expander *autoExpander) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourcePath := path.Empty()
@@ -138,18 +135,18 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
-			diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			diags.Append(expandStruct(ctx, sourcePath, from, targetPath, to, expander)...)
 			return diags
 		}
 	}
 
 	// Anything else.
-	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
+	diags.Append(expandConvert(ctx, expander, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
 	return diags
 }
 
-// convert converts a single Plugin Framework value to its AWS API equivalent.
-func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandConvert converts a single Plugin Framework value to its AWS API equivalent.
+func expandConvert(ctx context.Context, expander *autoExpander, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -188,7 +185,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	// No need to set the target value if there's no source value.
 	if vFrom.IsNull() {
 		// Special case: if target is XML wrapper struct and no omitempty, create zero-value
-		if vTo.Kind() == reflect.Ptr && !fieldOpts.omitempty {
+		if vTo.Kind() == reflect.Pointer && !fieldOpts.omitempty {
 			targetType := vTo.Type().Elem()
 			if targetType.Kind() == reflect.Struct && potentialXMLWrapperStruct(targetType) {
 				tflog.SubsystemDebug(ctx, subsystemName, "Source is null but target is XML wrapper without omitempty - creating zero-value struct")
@@ -200,7 +197,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 					itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 				}
 				quantityField := zeroStruct.Elem().FieldByName(xmlWrapperFieldQuantity)
-				if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr {
+				if quantityField.IsValid() && quantityField.Kind() == reflect.Pointer {
 					zero := int32(0)
 					quantityField.Set(reflect.ValueOf(&zero))
 				}
@@ -211,7 +208,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 					if fieldType.Name == wrapperFieldName || fieldType.Name == xmlWrapperFieldQuantity {
 						continue
 					}
-					if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() {
+					if field.Kind() == reflect.Pointer && field.CanSet() && field.IsNil() {
 						switch fieldType.Type.Elem().Kind() {
 						case reflect.Bool:
 							falseVal := false
@@ -237,57 +234,57 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	switch vFrom := vFrom.(type) {
 	// Primitive types.
 	case basetypes.BoolValuable:
-		diags.Append(expander.bool(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandBool(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Float64Valuable:
-		diags.Append(expander.float64(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandFloat64(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Float32Valuable:
-		diags.Append(expander.float32(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandFloat32(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Int64Valuable:
-		diags.Append(expander.int64(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandInt64(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Int32Valuable:
-		diags.Append(expander.int32(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandInt32(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringValuable:
-		diags.Append(expander.string(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandString(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	// Aggregate types.
 	case basetypes.ObjectValuable:
-		diags.Append(expander.object(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
+		diags.Append(expandObject(ctx, expander, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.ListValuable:
-		diags.Append(expander.list(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
+		diags.Append(expandList(ctx, expander, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.MapValuable:
-		diags.Append(expander.map_(ctx, vFrom, vTo, fieldOpts)...)
+		diags.Append(expandMap(ctx, expander, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.SetValuable:
-		diags.Append(expander.set(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
+		diags.Append(expandSet(ctx, expander, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 		return diags
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// bool copies a Plugin Framework Bool(ish) value to a compatible AWS API value.
-func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandBool copies a Plugin Framework Bool(ish) value to a compatible AWS API value.
+func expandBool(ctx context.Context, _ *autoExpander, vFrom basetypes.BoolValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToBoolValue(ctx)
@@ -322,15 +319,15 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API value.
-func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandFloat64 copies a Plugin Framework Float64(ish) value to a compatible AWS API value.
+func expandFloat64(ctx context.Context, _ *autoExpander, vFrom basetypes.Float64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToFloat64Value(ctx)
@@ -379,15 +376,15 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// float32 copies a Plugin Framework Float32(ish) value to a compatible AWS API value.
-func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float32Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandFloat32 copies a Plugin Framework Float32(ish) value to a compatible AWS API value.
+func expandFloat32(ctx context.Context, _ *autoExpander, vFrom basetypes.Float32Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToFloat32Value(ctx)
@@ -426,8 +423,8 @@ func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float3
 	return diags
 }
 
-// int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API value.
-func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandInt64 copies a Plugin Framework Int64(ish) value to a compatible AWS API value.
+func expandInt64(ctx context.Context, _ *autoExpander, vFrom basetypes.Int64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToInt64Value(ctx)
@@ -476,15 +473,15 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// int32 copies a Plugin Framework Int32(ish) value to a compatible AWS API value.
-func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandInt32 copies a Plugin Framework Int32(ish) value to a compatible AWS API value.
+func expandInt32(ctx context.Context, _ *autoExpander, vFrom basetypes.Int32Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToInt32Value(ctx)
@@ -523,8 +520,8 @@ func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Val
 	return diags
 }
 
-// string copies a Plugin Framework String(ish) value to a compatible AWS API value.
-func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandString copies a Plugin Framework String(ish) value to a compatible AWS API value.
+func expandString(ctx context.Context, _ *autoExpander, vFrom basetypes.StringValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToStringValue(ctx)
@@ -555,6 +552,11 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		// timetypes.RFC3339 --> time.Time
 		//
 		if t, ok := vFrom.(timetypes.RFC3339); ok {
+			if vTo.Type() != reflect.TypeFor[time.Time]() {
+				tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+				diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+				return diags
+			}
 			v, d := t.ValueRFC3339Time()
 			diags.Append(d...)
 			if diags.HasError() {
@@ -597,6 +599,11 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			// timetypes.RFC3339 --> *time.Time
 			//
 			if t, ok := vFrom.(timetypes.RFC3339); ok {
+				if tElem != reflect.TypeFor[time.Time]() {
+					tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+					diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+					return diags
+				}
 				v, d := t.ValueRFC3339Time()
 				diags.Append(d...)
 				if diags.HasError() {
@@ -616,8 +623,8 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 	return diags
 }
 
-// string copies a Plugin Framework Object(ish) value to a compatible AWS API value.
-func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
+// expandObject copies a Plugin Framework Object(ish) value to a compatible AWS API value.
+func expandObject(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	_, d := vFrom.ToObjectValue(ctx)
@@ -632,7 +639,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 		// types.Object -> struct.
 		//
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+			diags.Append(expandNestedObjectToStruct(ctx, expander, sourcePath, vFrom, targetPath, tTo, vTo)...)
 			return diags
 		}
 
@@ -643,7 +650,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 			// types.Object --> *struct
 			//
 			if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-				diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
+				diags.Append(expandNestedObjectToStruct(ctx, expander, sourcePath, vFrom, targetPath, tElem, vTo)...)
 				return diags
 			}
 		}
@@ -653,21 +660,21 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 		// types.Object -> interface.
 		//
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+			diags.Append(expandNestedObjectToStruct(ctx, expander, sourcePath, vFrom, targetPath, tTo, vTo)...)
 			return diags
 		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// list copies a Plugin Framework List(ish) value to a compatible AWS API value.
-func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFrom basetypes.ListValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandList copies a Plugin Framework List(ish) value to a compatible AWS API value.
+func expandList(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom basetypes.ListValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToListValue(ctx)
@@ -678,37 +685,41 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
-		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo, fieldOpts)...)
+		diags.Append(expandListOrSetOfInt64(ctx, expander, v, vTo, fieldOpts)...)
+		return diags
+
+	case basetypes.Int32Typable:
+		diags.Append(expandListOrSetOfInt32(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringTypable:
-		diags.Append(expander.listOrSetOfString(ctx, v, vTo, fieldOpts)...)
+		diags.Append(expandListOrSetOfString(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
+			diags.Append(expandNestedObjectCollection(ctx, expander, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 			return diags
 		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from list[%s]": v.ElementType(ctx),
-		"to":            vTo.Kind(),
+		logAttrKeyTo:    vTo.Kind(),
 	})
 
 	return diags
 }
 
-// listOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandListOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
+func expandListOrSetOfInt64(ctx context.Context, expander *autoExpander, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
 		if fieldOpts.xmlWrapper {
-			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, fieldOpts.xmlWrapperField)...)
+			diags.Append(expandXMLWrapper(ctx, expander, vFrom, vTo, fieldOpts.xmlWrapperField)...)
 			return diags
 		}
 
@@ -777,7 +788,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 			if fieldOpts.xmlWrapper {
 				// Create new instance of the XML wrapper struct
 				newStruct := reflect.New(tElem).Elem()
-				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, fieldOpts.xmlWrapperField)...)
+				diags.Append(expandXMLWrapper(ctx, expander, vFrom, newStruct, fieldOpts.xmlWrapperField)...)
 				if !diags.HasError() {
 					vTo.Set(newStruct.Addr())
 				}
@@ -786,23 +797,20 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
 
-// listOrSetOfString copies a Plugin Framework ListOfString(ish) or SetOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandListOrSetOfString copies a Plugin Framework ListOfString(ish) or SetOfString(ish) value to a compatible AWS API value.
+func expandListOrSetOfString(ctx context.Context, expander *autoExpander, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
 		if fieldOpts.xmlWrapper {
-			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, fieldOpts.xmlWrapperField)...)
+			diags.Append(expandXMLWrapper(ctx, expander, vFrom, vTo, fieldOpts.xmlWrapperField)...)
 			return diags
 		}
 
@@ -857,7 +865,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 			if fieldOpts.xmlWrapper {
 				// Create new instance of the XML wrapper struct
 				newStruct := reflect.New(tElem).Elem()
-				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, fieldOpts.xmlWrapperField)...)
+				diags.Append(expandXMLWrapper(ctx, expander, vFrom, newStruct, fieldOpts.xmlWrapperField)...)
 				if !diags.HasError() {
 					vTo.Set(newStruct.Addr())
 				}
@@ -867,22 +875,22 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": vFrom.Type(ctx),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: vFrom.Type(ctx),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// listOrSetOfInt32 copies a Plugin Framework ListOfInt32(ish) or SetOfInt32(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandListOrSetOfInt32 copies a Plugin Framework ListOfInt32(ish) or SetOfInt32(ish) value to a compatible AWS API value.
+func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
 		if fieldOpts.xmlWrapper {
-			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, fieldOpts.xmlWrapperField)...)
+			diags.Append(expandXMLWrapper(ctx, expander, vFrom, vTo, fieldOpts.xmlWrapperField)...)
 			return diags
 		}
 
@@ -931,7 +939,7 @@ func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWi
 			if fieldOpts.xmlWrapper {
 				// Create new instance of the XML wrapper struct
 				newStruct := reflect.New(tElem).Elem()
-				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, fieldOpts.xmlWrapperField)...)
+				diags.Append(expandXMLWrapper(ctx, expander, vFrom, newStruct, fieldOpts.xmlWrapperField)...)
 				if !diags.HasError() {
 					vTo.Set(newStruct.Addr())
 				}
@@ -940,16 +948,13 @@ func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWi
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": "Set[Int32]",
-		"to":   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
 
-// map_ copies a Plugin Framework Map(ish) value to a compatible AWS API value.
-func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
+// expandMap copies a Plugin Framework Map(ish) value to a compatible AWS API value.
+func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapValuable, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToMapValue(ctx)
@@ -960,7 +965,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		diags.Append(expander.mapOfString(ctx, v, vTo)...)
+		diags.Append(expandMapOfString(ctx, expander, v, vTo)...)
 		return diags
 
 	case basetypes.MapTypable:
@@ -1013,15 +1018,15 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": fmt.Sprintf("map[string, %s]", v.ElementType(ctx)),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", v.ElementType(ctx)),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// mapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
+// expandMapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API value.
+func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -1068,15 +1073,15 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		"from": fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
-		"to":   vTo.Kind(),
+		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// set copies a Plugin Framework Set(ish) value to a compatible AWS API value.
-func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFrom basetypes.SetValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandSet copies a Plugin Framework Set(ish) value to a compatible AWS API value.
+func expandSet(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom basetypes.SetValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToSetValue(ctx)
@@ -1087,34 +1092,34 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
-		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo, fieldOpts)...)
+		diags.Append(expandListOrSetOfInt64(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Int32Typable:
-		diags.Append(expander.listOrSetOfInt32(ctx, v, vTo, fieldOpts)...)
+		diags.Append(expandListOrSetOfInt32(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringTypable:
-		diags.Append(expander.listOrSetOfString(ctx, v, vTo, fieldOpts)...)
+		diags.Append(expandListOrSetOfString(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
+			diags.Append(expandNestedObjectCollection(ctx, expander, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 			return diags
 		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
 		"from set[%s]": v.ElementType(ctx),
-		"to":           vTo.Kind(),
+		logAttrKeyTo:   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// nestedObjectCollection copies a Plugin Framework NestedObjectCollectionValue value to a compatible AWS API value.
-func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+// expandNestedObjectCollection copies a Plugin Framework NestedObjectCollectionValue value to a compatible AWS API value.
+func expandNestedObjectCollection(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// TRACE: Log entry with field options
@@ -1127,13 +1132,13 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 	case reflect.Struct:
 		// Check if xmlwrapper tag is present
 		if fieldOpts.xmlWrapper {
-			diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts.xmlWrapperField)...)
+			diags.Append(expandNestedObjectCollectionToXMLWrapper(ctx, expander, sourcePath, vFrom, targetPath, vTo, fieldOpts.xmlWrapperField)...)
 			return diags
 		}
 
 		sourcePath := sourcePath.AtListIndex(0)
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+		diags.Append(expandNestedObjectToStruct(ctx, expander, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Pointer:
@@ -1143,7 +1148,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			if fieldOpts.xmlWrapper {
 				// Create new instance of the XML wrapper struct
 				newWrapper := reflect.New(tElem)
-				diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, newWrapper.Elem(), fieldOpts.xmlWrapperField)...)
+				diags.Append(expandNestedObjectCollectionToXMLWrapper(ctx, expander, sourcePath, vFrom, targetPath, newWrapper.Elem(), fieldOpts.xmlWrapperField)...)
 				if !diags.HasError() {
 					vTo.Set(newWrapper)
 				}
@@ -1155,7 +1160,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			sourcePath := sourcePath.AtListIndex(0)
 			ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
+			diags.Append(expandNestedObjectToStruct(ctx, expander, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 		}
 
@@ -1165,7 +1170,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 		//
 		sourcePath := sourcePath.AtListIndex(0)
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+		diags.Append(expandNestedObjectToStruct(ctx, expander, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Map:
@@ -1174,14 +1179,14 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			// types.List(OfObject) -> map[string]struct
 			//
-			diags.Append(expander.nestedKeyObjectToMap(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
+			diags.Append(expandNestedKeyObjectToMap(ctx, expander, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 
 		case reflect.Pointer:
 			//
 			// types.List(OfObject) -> map[string]*struct
 			//
-			diags.Append(expander.nestedKeyObjectToMap(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
+			diags.Append(expandNestedKeyObjectToMap(ctx, expander, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 		}
 
@@ -1191,7 +1196,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			// types.List(OfObject) -> []struct
 			//
-			diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
+			diags.Append(expandNestedObjectCollectionToSlice(ctx, expander, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 
 		case reflect.Pointer:
@@ -1200,7 +1205,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 				//
 				// types.List(OfObject) -> []*struct.
 				//
-				diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
+				diags.Append(expandNestedObjectCollectionToSlice(ctx, expander, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 				return diags
 			}
 
@@ -1208,7 +1213,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			// types.List(OfObject) -> []interface.
 			//
-			diags.Append(expander.nestedObjectCollectionToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
+			diags.Append(expandNestedObjectCollectionToSlice(ctx, expander, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 		}
 	}
@@ -1217,8 +1222,8 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 	return diags
 }
 
-// nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct value.
-func (expander autoExpander) nestedObjectToStruct(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectValue, targetPath path.Path, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
+// expandNestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct value.
+func expandNestedObjectToStruct(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom fwtypes.NestedObjectValue, targetPath path.Path, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Object as a pointer.
@@ -1262,8 +1267,8 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, sourcePat
 	return diags
 }
 
-// nestedObjectCollectionToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
-func (expander autoExpander) nestedObjectCollectionToSlice(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+// expandNestedObjectCollectionToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
+func expandNestedObjectCollectionToSlice(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -1309,8 +1314,8 @@ func (expander autoExpander) nestedObjectCollectionToSlice(ctx context.Context, 
 	return diags
 }
 
-// nestedKeyObjectToMap copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API map[string]struct value.
-func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+// expandNestedKeyObjectToMap copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API map[string]struct value.
+func expandNestedKeyObjectToMap(ctx context.Context, expander *autoExpander, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -1362,8 +1367,8 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 	return diags
 }
 
-// expandStruct traverses struct `from`, calling `flexer` for each exported field.
-func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
+// expandStruct traverses struct `from`, calling `expander` for each exported field.
+func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, expander *autoExpander) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -1400,12 +1405,12 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	// Handle XML wrapper collapse patterns where multiple source fields
 	// need to be combined into a single complex target field
 	processedFields := make(map[string]bool)
-	diags.Append(flexer.handleXMLWrapperCollapse(ctx, sourcePath, valFrom, targetPath, valTo, typeFrom, typeTo, processedFields)...)
+	diags.Append(expandHandleXMLWrapperCollapse(ctx, expander, sourcePath, valFrom, targetPath, valTo, typeFrom, typeTo, processedFields)...)
 	if diags.HasError() {
 		return diags
 	}
 
-	for fromField := range expandSourceFields(ctx, typeFrom, flexer.getOptions()) {
+	for fromField := range expandSourceFields(ctx, typeFrom, expander.Options) {
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
 		if fromFieldOpts.NoExpand() {
@@ -1431,7 +1436,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			continue
 		}
 
-		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer)
+		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, expander.Options)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding target field", map[string]any{
@@ -1462,7 +1467,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			xmlWrapperField: fromFieldOpts.XMLWrapperField(),
 		}
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		diags.Append(expandConvert(ctx, expander, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
@@ -1710,20 +1715,20 @@ const (
 	xmlWrapperFieldQuantity = "Quantity"
 )
 
-// xmlWrapper handles expansion from TF collection types to AWS XML wrapper structs
+// expandXMLWrapper handles expansion from TF collection types to AWS XML wrapper structs
 // that follow the pattern: {Items: []T, Quantity: *int32}
-func (expander *autoExpander) xmlWrapper(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, wrapperField string) diag.Diagnostics {
+func expandXMLWrapper(ctx context.Context, expander *autoExpander, vFrom valueWithElementsAs, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Validate target structure
-	itemsField, quantityField, d := expander.validateXMLWrapperTarget(vTo, wrapperField)
+	itemsField, quantityField, d := expandValidateXMLWrapperTarget(expander, vTo, wrapperField)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
 	// Convert elements to slice
-	itemsSlice, d := expander.convertElementsToXMLWrapperSlice(ctx, vFrom.Elements(), itemsField.Type())
+	itemsSlice, d := expandConvertElementsToXMLWrapperSlice(ctx, expander, vFrom.Elements(), itemsField.Type())
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -1739,10 +1744,10 @@ func (expander *autoExpander) xmlWrapper(ctx context.Context, vFrom valueWithEle
 	return diags
 }
 
-// validateXMLWrapperTarget validates target structure and returns field references
-func (expander *autoExpander) validateXMLWrapperTarget(vTo reflect.Value, wrapperField string) (itemsField, quantityField reflect.Value, diags diag.Diagnostics) {
-	itemsField = expander.getCachedFieldValue(vTo, wrapperField)
-	quantityField = expander.getCachedFieldValue(vTo, xmlWrapperFieldQuantity)
+// expandValidateXMLWrapperTarget validates target structure and returns field references
+func expandValidateXMLWrapperTarget(expander *autoExpander, vTo reflect.Value, wrapperField string) (itemsField, quantityField reflect.Value, diags diag.Diagnostics) {
+	itemsField = expandGetCachedFieldValue(expander, vTo, wrapperField)
+	quantityField = expandGetCachedFieldValue(expander, vTo, xmlWrapperFieldQuantity)
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vTo.Interface()), vTo.Type()))
@@ -1750,8 +1755,8 @@ func (expander *autoExpander) validateXMLWrapperTarget(vTo reflect.Value, wrappe
 	return
 }
 
-// convertElementsToXMLWrapperSlice converts collection elements to target slice
-func (expander *autoExpander) convertElementsToXMLWrapperSlice(ctx context.Context, elements []attr.Value, sliceType reflect.Type) (reflect.Value, diag.Diagnostics) {
+// expandConvertElementsToXMLWrapperSlice converts collection elements to target slice
+func expandConvertElementsToXMLWrapperSlice(ctx context.Context, expander *autoExpander, elements []attr.Value, sliceType reflect.Type) (reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	slice := reflect.MakeSlice(sliceType, len(elements), len(elements))
@@ -1763,7 +1768,7 @@ func (expander *autoExpander) convertElementsToXMLWrapperSlice(ctx context.Conte
 			continue
 		}
 
-		diags.Append(expander.convertElementToXMLWrapperItem(ctx, elem, itemValue, targetElemType)...)
+		diags.Append(expandConvertElementToXMLWrapperItem(ctx, expander, elem, itemValue, targetElemType)...)
 		if diags.HasError() {
 			return reflect.Value{}, diags
 		}
@@ -1772,8 +1777,8 @@ func (expander *autoExpander) convertElementsToXMLWrapperSlice(ctx context.Conte
 	return slice, diags
 }
 
-// convertElementToXMLWrapperItem converts single element to target item
-func (expander *autoExpander) convertElementToXMLWrapperItem(ctx context.Context, elem attr.Value, itemValue reflect.Value, targetElemType reflect.Type) diag.Diagnostics {
+// expandConvertElementToXMLWrapperItem converts single element to target item
+func expandConvertElementToXMLWrapperItem(ctx context.Context, _ *autoExpander, elem attr.Value, itemValue reflect.Value, targetElemType reflect.Type) diag.Diagnostics {
 	switch elemTyped := elem.(type) {
 	case basetypes.StringValuable:
 		return convertStringValueableToXMLItem(ctx, elemTyped, itemValue, targetElemType)
@@ -1917,8 +1922,7 @@ func potentialXMLWrapperStructUncached(t reflect.Type) bool {
 	// Check if struct has the XML wrapper pattern:
 	// - One slice field (Items, Elements, Members, etc.)
 	// - One Quantity field (*int32)
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		fieldType := field.Type
 
 		// Check for slice field
@@ -1941,8 +1945,7 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 		return ""
 	}
 
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		if field.Type.Kind() == reflect.Slice {
 			return field.Name
 		}
@@ -1951,7 +1954,7 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 	return ""
 }
 
-// nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
+// expandNestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
 //
 // XML Wrapper Compatibility Rules:
 // Rule 1: Items/Quantity only - Direct collection mapping
@@ -1965,7 +1968,7 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 //	TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
 //
 // Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
-func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value, wrapperField string) diag.Diagnostics {
+func expandNestedObjectCollectionToXMLWrapper(ctx context.Context, expander *autoExpander, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper")
@@ -1995,16 +1998,16 @@ func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Con
 		})
 
 		// Handle pointer to struct (which is what NestedObjectCollection contains)
-		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() {
+		if nestedObj.Kind() == reflect.Pointer && !nestedObj.IsNil() {
 			structObj := nestedObj.Elem()
 			if structObj.Kind() == reflect.Struct {
 				// Check if the struct has a wrapper field - indicates Rule 2
 				itemsField := structObj.FieldByName(wrapperField)
 				if itemsField.IsValid() {
 					tflog.SubsystemTrace(ctx, subsystemName, "TRACE: Detected Rule 2 - delegating to expandRule2XMLWrapper", map[string]any{
-						"wrapper_field": wrapperField,
+						logAttrKeyWrapperField: wrapperField,
 					})
-					return expander.expandRule2XMLWrapper(ctx, nestedObj, vTo, wrapperField)
+					return expandRule2XMLWrapper(ctx, expander, nestedObj, vTo, wrapperField)
 				}
 			}
 		}
@@ -2013,18 +2016,18 @@ func (expander *autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Con
 	tflog.SubsystemTrace(ctx, subsystemName, "TRACE: Using Rule 1 - direct collection to XML wrapper")
 
 	// Rule 1: Direct collection to XML wrapper (existing logic)
-	return expander.expandRule1XMLWrapper(ctx, fromSlice, vTo, wrapperField)
+	return expandRule1XMLWrapper(ctx, expander, fromSlice, vTo, wrapperField)
 }
 
 // expandRule2XMLWrapper handles Rule 2: single plural block with items + additional fields
-func (expander *autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedObjPtr reflect.Value, vTo reflect.Value, wrapperField string) diag.Diagnostics {
+func expandRule2XMLWrapper(ctx context.Context, expander *autoExpander, nestedObjPtr reflect.Value, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding Rule 2 XML wrapper (items + additional fields)")
 
 	// Get target fields
-	itemsField := expander.getCachedFieldValue(vTo, wrapperField)
-	quantityField := expander.getCachedFieldValue(vTo, xmlWrapperFieldQuantity)
+	itemsField := expandGetCachedFieldValue(expander, vTo, wrapperField)
+	quantityField := expandGetCachedFieldValue(expander, vTo, xmlWrapperFieldQuantity)
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		diags.Append(diagExpandingIncompatibleTypes(nestedObjPtr.Type(), vTo.Type()))
@@ -2035,7 +2038,7 @@ func (expander *autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedO
 	nestedObj := nestedObjPtr.Elem()
 
 	// Extract wrapper field from nested object
-	itemsSourceField := expander.getCachedFieldValue(nestedObj, wrapperField)
+	itemsSourceField := expandGetCachedFieldValue(expander, nestedObj, wrapperField)
 	if !itemsSourceField.IsValid() {
 		diags.AddError("Missing items field", fmt.Sprintf("Rule 2 XML wrapper requires '%s' field", wrapperField))
 		return diags
@@ -2044,7 +2047,7 @@ func (expander *autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedO
 	// Convert items collection to Items slice using existing logic
 	if itemsAttr, ok := itemsSourceField.Interface().(attr.Value); ok {
 		if collectionValue, ok := itemsAttr.(valueWithElementsAs); ok {
-			diags.Append(expander.convertCollectionToXMLWrapperFields(ctx, collectionValue, itemsField, quantityField)...)
+			diags.Append(expandConvertCollectionToXMLWrapperFields(ctx, expander, collectionValue, itemsField, quantityField)...)
 			if diags.HasError() {
 				return diags
 			}
@@ -2077,7 +2080,7 @@ func (expander *autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedO
 				xmlWrapper:      sourceFieldOpts.XMLWrapperField() != "",
 				xmlWrapperField: sourceFieldOpts.XMLWrapperField(),
 			}
-			diags.Append(expander.convert(ctx, path.Empty(), sourceField, path.Empty(), targetField, opts)...)
+			diags.Append(expandConvert(ctx, expander, path.Empty(), sourceField, path.Empty(), targetField, opts)...)
 			if diags.HasError() {
 				return diags
 			}
@@ -2088,14 +2091,14 @@ func (expander *autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedO
 }
 
 // expandRule1XMLWrapper handles Rule 1: direct collection to XML wrapper (existing logic)
-func (expander *autoExpander) expandRule1XMLWrapper(ctx context.Context, fromSlice reflect.Value, vTo reflect.Value, wrapperField string) diag.Diagnostics {
+func expandRule1XMLWrapper(ctx context.Context, expander *autoExpander, fromSlice reflect.Value, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding Rule 1 XML wrapper (direct collection)")
 
 	// Get the wrapper fields from target struct
-	itemsField := expander.getCachedFieldValue(vTo, wrapperField)
-	quantityField := expander.getCachedFieldValue(vTo, xmlWrapperFieldQuantity)
+	itemsField := expandGetCachedFieldValue(expander, vTo, wrapperField)
+	quantityField := expandGetCachedFieldValue(expander, vTo, xmlWrapperFieldQuantity)
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		diags.Append(diagExpandingIncompatibleTypes(fromSlice.Type(), vTo.Type()))
@@ -2160,13 +2163,13 @@ func (expander *autoExpander) expandRule1XMLWrapper(ctx context.Context, fromSli
 	return diags
 }
 
-// handleXMLWrapperCollapse handles the special case where multiple source fields
+// expandHandleXMLWrapperCollapse handles the special case where multiple source fields
 // need to be combined into a single complex target field containing XML wrapper structures.
 // This handles patterns like:
 //   - Source: separate XMLWrappedEnumSlice and Other fields
 //   - Target: single XMLWrappedEnumSlice field containing XMLWrappedEnumSliceOther struct
 //     with Items/Quantity from main field and Other nested XML wrapper from other field
-func (expander autoExpander) handleXMLWrapperCollapse(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, valTo reflect.Value, typeFrom, typeTo reflect.Type, processedFields map[string]bool) diag.Diagnostics {
+func expandHandleXMLWrapperCollapse(ctx context.Context, expander *autoExpander, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, valTo reflect.Value, typeFrom, typeTo reflect.Type, processedFields map[string]bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Look for target fields that are complex XML wrapper structures
@@ -2189,7 +2192,7 @@ func (expander autoExpander) handleXMLWrapperCollapse(ctx context.Context, sourc
 		// Check if this target struct has the XML wrapper collapse pattern:
 		// - Contains Items/Quantity fields (making it an XML wrapper)
 		// - Contains additional fields that should come from other source fields
-		if !expander.isXMLWrapperCollapseTarget(targetStructType) {
+		if !expandIsXMLWrapperCollapseTarget(expander, targetStructType) {
 			continue
 		}
 
@@ -2199,7 +2202,7 @@ func (expander autoExpander) handleXMLWrapperCollapse(ctx context.Context, sourc
 		})
 
 		// Handle XML wrapper collapse patterns generically
-		diags.Append(expander.buildGenericXMLWrapperCollapse(ctx, sourcePath, valFrom, targetPath.AtName(toFieldName), toFieldVal, typeFrom, targetStructType, toFieldType.Kind() == reflect.Pointer, processedFields)...)
+		diags.Append(expandBuildGenericXMLWrapperCollapse(ctx, expander, sourcePath, valFrom, targetPath.AtName(toFieldName), toFieldVal, typeFrom, targetStructType, toFieldType.Kind() == reflect.Pointer, processedFields)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -2208,15 +2211,14 @@ func (expander autoExpander) handleXMLWrapperCollapse(ctx context.Context, sourc
 	return diags
 }
 
-// isXMLWrapperCollapseTarget checks if a struct type represents a target that should be
+// expandIsXMLWrapperCollapseTarget checks if a struct type represents a target that should be
 // populated via XML wrapper collapse (multiple source fields -> single complex target)
-func (expander autoExpander) isXMLWrapperCollapseTarget(structType reflect.Type) bool {
+func expandIsXMLWrapperCollapseTarget(_ *autoExpander, structType reflect.Type) bool {
 	hasSliceField := false
 	hasQuantity := false
 	hasOtherFields := false
 
-	for i := 0; i < structType.NumField(); i++ {
-		field := structType.Field(i)
+	for field := range structType.Fields() {
 		fieldName := field.Name
 
 		if field.Type.Kind() == reflect.Slice {
@@ -2233,8 +2235,8 @@ func (expander autoExpander) isXMLWrapperCollapseTarget(structType reflect.Type)
 	return hasSliceField && hasQuantity && hasOtherFields
 }
 
-// convertCollectionToItemsQuantity converts a source collection to Items slice and Quantity fields
-func (expander autoExpander) convertCollectionToItemsQuantity(ctx context.Context, sourceFieldVal reflect.Value, itemsField, quantityField reflect.Value) diag.Diagnostics {
+// expandConvertCollectionToItemsQuantity converts a source collection to Items slice and Quantity fields
+func expandConvertCollectionToItemsQuantity(ctx context.Context, expander *autoExpander, sourceFieldVal reflect.Value, itemsField, quantityField reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
@@ -2248,22 +2250,22 @@ func (expander autoExpander) convertCollectionToItemsQuantity(ctx context.Contex
 	case basetypes.SetValuable, basetypes.ListValuable:
 		if setValue, ok := vFrom.(valueWithElementsAs); ok {
 			// Use existing logic to convert to Items/Quantity, but target specific fields
-			diags.Append(expander.convertCollectionToXMLWrapperFields(ctx, setValue, itemsField, quantityField)...)
+			diags.Append(expandConvertCollectionToXMLWrapperFields(ctx, expander, setValue, itemsField, quantityField)...)
 			if diags.HasError() {
 				return diags
 			}
 		}
 	default:
 		tflog.SubsystemError(ctx, subsystemName, "Unsupported source type for Items/Quantity conversion", map[string]any{
-			"source_type": fmt.Sprintf("%T", vFrom),
+			logAttrKeySourceTypeLiteral: fmt.Sprintf("%T", vFrom),
 		})
 	}
 
 	return diags
 }
 
-// convertCollectionToXMLWrapperFields converts a collection directly to Items and Quantity fields
-func (expander autoExpander) convertCollectionToXMLWrapperFields(ctx context.Context, vFrom valueWithElementsAs, itemsField, quantityField reflect.Value) diag.Diagnostics {
+// expandConvertCollectionToXMLWrapperFields converts a collection directly to Items and Quantity fields
+func expandConvertCollectionToXMLWrapperFields(ctx context.Context, _ *autoExpander, vFrom valueWithElementsAs, itemsField, quantityField reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the source elements
@@ -2351,8 +2353,8 @@ func (expander autoExpander) convertCollectionToXMLWrapperFields(ctx context.Con
 	return diags
 }
 
-// shouldConvertToXMLWrapper determines if a source field should be converted to XML wrapper format
-func (expander autoExpander) shouldConvertToXMLWrapper(sourceFieldVal, targetFieldVal reflect.Value) bool {
+// expandShouldConvertToXMLWrapper determines if a source field should be converted to XML wrapper format
+func expandShouldConvertToXMLWrapper(_ *autoExpander, sourceFieldVal, targetFieldVal reflect.Value) bool {
 	// Check if source is a collection (Set/List) and target is XML wrapper struct
 	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
 	if !ok {
@@ -2375,14 +2377,14 @@ func (expander autoExpander) shouldConvertToXMLWrapper(sourceFieldVal, targetFie
 	return false
 }
 
-// convertToXMLWrapper converts a source collection to an XML wrapper structure
-func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourceFieldVal reflect.Value, targetFieldVal reflect.Value) diag.Diagnostics {
+// expandConvertToXMLWrapper converts a source collection to an XML wrapper structure
+func expandConvertToXMLWrapper(ctx context.Context, expander *autoExpander, sourceFieldVal reflect.Value, targetFieldVal reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source field is not an attr.Value", map[string]any{
-			"source_type": sourceFieldVal.Type().String(),
+			logAttrKeySourceTypeLiteral: sourceFieldVal.Type().String(),
 		})
 		return diags
 	}
@@ -2391,29 +2393,29 @@ func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourceFiel
 	switch vFrom := sourceValue.(type) {
 	case basetypes.SetValuable:
 		if setValue, ok := vFrom.(valueWithElementsAs); ok {
-			diags.Append(expander.listOrSetOfString(ctx, setValue, targetFieldVal, fieldOpts{})...)
+			diags.Append(expandListOrSetOfString(ctx, expander, setValue, targetFieldVal, fieldOpts{})...)
 			if diags.HasError() {
 				return diags
 			}
 		}
 	case basetypes.ListValuable:
 		if listValue, ok := vFrom.(valueWithElementsAs); ok {
-			diags.Append(expander.listOrSetOfString(ctx, listValue, targetFieldVal, fieldOpts{})...)
+			diags.Append(expandListOrSetOfString(ctx, expander, listValue, targetFieldVal, fieldOpts{})...)
 			if diags.HasError() {
 				return diags
 			}
 		}
 	default:
 		tflog.SubsystemError(ctx, subsystemName, "Unsupported source type for XML wrapper conversion", map[string]any{
-			"source_type": fmt.Sprintf("%T", vFrom),
+			logAttrKeySourceTypeLiteral: fmt.Sprintf("%T", vFrom),
 		})
 	}
 
 	return diags
 }
 
-// buildGenericXMLWrapperCollapse handles any XML wrapper collapse pattern generically
-func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, toFieldVal reflect.Value, typeFrom, targetStructType reflect.Type, isPointer bool, processedFields map[string]bool) diag.Diagnostics {
+// expandBuildGenericXMLWrapperCollapse handles any XML wrapper collapse pattern generically
+func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExpander, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, toFieldVal reflect.Value, typeFrom, targetStructType reflect.Type, isPointer bool, processedFields map[string]bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Create the target struct
@@ -2432,8 +2434,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		allFieldsNull := true
 		hasCollectionFields := false
 
-		for i := 0; i < typeFrom.NumField(); i++ {
-			sourceField := typeFrom.Field(i)
+		for sourceField := range typeFrom.Fields() {
 			sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 
 			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
@@ -2451,8 +2452,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		if hasCollectionFields && allFieldsNull {
 			// Check if any collection field has omitempty=false (should create zero-value)
 			shouldCreateZeroValue := false
-			for i := 0; i < typeFrom.NumField(); i++ {
-				sourceField := typeFrom.Field(i)
+			for sourceField := range typeFrom.Fields() {
 				sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 				if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 					switch sourceValue.(type) {
@@ -2471,8 +2471,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 				toFieldVal.SetZero()
 
 				// Mark all collection fields as processed
-				for i := 0; i < typeFrom.NumField(); i++ {
-					sourceField := typeFrom.Field(i)
+				for sourceField := range typeFrom.Fields() {
 					sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 					if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 						switch sourceValue.(type) {
@@ -2525,7 +2524,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 					// This is Rule 2: single nested object with items + additional fields
 					// Delegate to nestedObjectCollectionToXMLWrapper which handles Rule 2
 					tflog.SubsystemTrace(ctx, subsystemName, "Detected Rule 2 pattern - delegating to nestedObjectCollectionToXMLWrapper")
-					diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath.AtName(mainSourceFieldName), nestedObjCollection, targetPath, targetStructVal, wrapperFieldName)...)
+					diags.Append(expandNestedObjectCollectionToXMLWrapper(ctx, expander, sourcePath.AtName(mainSourceFieldName), nestedObjCollection, targetPath, targetStructVal, wrapperFieldName)...)
 					if diags.HasError() {
 						return diags
 					}
@@ -2554,7 +2553,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 					if itemsField.IsValid() && itemsField.Kind() == reflect.Slice {
 						itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 					}
-					if quantityField.IsValid() && quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 {
+					if quantityField.IsValid() && quantityField.Kind() == reflect.Pointer && quantityField.Type().Elem().Kind() == reflect.Int32 {
 						zero := int32(0)
 						quantityField.Set(reflect.ValueOf(&zero))
 					}
@@ -2568,7 +2567,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 							continue
 						}
 						// Set zero value for pointer fields
-						if field.Kind() == reflect.Ptr && field.CanSet() && field.IsNil() {
+						if field.Kind() == reflect.Pointer && field.CanSet() && field.IsNil() {
 							switch fieldType.Type.Elem().Kind() {
 							case reflect.Bool:
 								falseVal := false
@@ -2601,7 +2600,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 				if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 					// Convert the collection to wrapper slice and Quantity
-					diags.Append(expander.convertCollectionToItemsQuantity(ctx, sourceFieldVal, itemsField, quantityField)...)
+					diags.Append(expandConvertCollectionToItemsQuantity(ctx, expander, sourceFieldVal, itemsField, quantityField)...)
 					if diags.HasError() {
 						return diags
 					}
@@ -2623,7 +2622,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 						if itemsField.Kind() == reflect.Slice {
 							itemsField.Set(reflect.MakeSlice(itemsField.Type(), 0, 0))
 						}
-						if quantityField.Kind() == reflect.Ptr && quantityField.Type().Elem().Kind() == reflect.Int32 {
+						if quantityField.Kind() == reflect.Pointer && quantityField.Type().Elem().Kind() == reflect.Int32 {
 							zero := int32(0)
 							quantityField.Set(reflect.ValueOf(&zero))
 						}
@@ -2670,16 +2669,16 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 			})
 
 			// Check if we need special XML wrapper conversion
-			if expander.shouldConvertToXMLWrapper(sourceFieldVal, targetFieldVal) {
+			if expandShouldConvertToXMLWrapper(expander, sourceFieldVal, targetFieldVal) {
 				// Convert collection to XML wrapper structure
-				diags.Append(expander.convertToXMLWrapper(ctx, sourceFieldVal, targetFieldVal)...)
+				diags.Append(expandConvertToXMLWrapper(ctx, expander, sourceFieldVal, targetFieldVal)...)
 				if diags.HasError() {
 					return diags
 				}
 			} else {
 				// Regular field conversion
 				opts := fieldOpts{}
-				diags.Append(expander.convert(ctx, sourcePath.AtName(targetFieldName), sourceFieldVal, targetPath.AtName(targetFieldName), targetFieldVal, opts)...)
+				diags.Append(expandConvert(ctx, expander, sourcePath.AtName(targetFieldName), sourceFieldVal, targetPath.AtName(targetFieldName), targetFieldVal, opts)...)
 				if diags.HasError() {
 					return diags
 				}

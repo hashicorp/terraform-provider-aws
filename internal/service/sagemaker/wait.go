@@ -41,8 +41,7 @@ const (
 	spaceInServiceTimeout             = 10 * time.Minute
 	mlflowTrackingServerTimeout       = 45 * time.Minute
 	hubTimeout                        = 10 * time.Minute
-
-	notebookInstanceStatusNotFound = "NotFound"
+	notebookInstanceStatusNotFound    = "NotFound"
 )
 
 func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
@@ -681,6 +680,48 @@ func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*
 	return nil, err
 }
 
+func waitHubContentReferenceAvailable(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, timeout time.Duration) (*sagemaker.DescribeHubContentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubContentStatusImporting, awstypes.HubContentStatusPendingImport),
+		Target:  enum.Slice(awstypes.HubContentStatusAvailable),
+		Refresh: statusHubContentReference(conn, hubName, hubContentName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubContentOutput); ok {
+		if status, reason := output.HubContentStatus, aws.ToString(output.FailureReason); status == awstypes.HubContentStatusImportFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubContentReferenceDeleted(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, timeout time.Duration) (*sagemaker.DescribeHubContentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubContentStatusDeleting, awstypes.HubContentStatusPendingDelete),
+		Target:  []string{},
+		Refresh: statusHubContentReference(conn, hubName, hubContentName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubContentOutput); ok {
+		if status, reason := output.HubContentStatus, aws.ToString(output.FailureReason); status == awstypes.HubContentStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.HubStatusUpdating),
@@ -750,4 +791,144 @@ func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn strin
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeAlgorithmOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AlgorithmStatusPending),
+		Target:  enum.Slice(awstypes.AlgorithmStatusInProgress, awstypes.AlgorithmStatusCompleted),
+		Refresh: statusAlgorithm(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*sagemaker.DescribeAlgorithmOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAlgorithmDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.AlgorithmStatusDeleting,
+			awstypes.AlgorithmStatusPending,
+			awstypes.AlgorithmStatusInProgress,
+			awstypes.AlgorithmStatusCompleted,
+		),
+		Target:  []string{},
+		Refresh: statusAlgorithm(conn, name),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    enum.Slice(awstypes.TrainingJobStatusInProgress),
+		Refresh:                   statusTrainingJob(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrainingJobStatusDeleting, awstypes.TrainingJobStatusInProgress, awstypes.TrainingJobStatusStopping),
+		Target:  []string{},
+		Refresh: statusTrainingJob(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitTrainingJobStopped(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.TrainingJobStatusInProgress, awstypes.TrainingJobStatusStopping),
+		Target:                    enum.Slice(awstypes.TrainingJobStatusCompleted, awstypes.TrainingJobStatusFailed, awstypes.TrainingJobStatusStopped),
+		Refresh:                   statusTrainingJob(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitHyperParameterTuningJobCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
+	// Do not wait for terminal completion. Hyper parameter tuning jobs can run for a long time.
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target: enum.Slice(
+			awstypes.HyperParameterTuningJobStatusInProgress,
+			awstypes.HyperParameterTuningJobStatusCompleted,
+			awstypes.HyperParameterTuningJobStatusFailed,
+			awstypes.HyperParameterTuningJobStatusStopped,
+		),
+		Refresh:                   statusHyperParameterTuningJob(conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHyperParameterTuningJobOutput); ok {
+		if status, reason := output.HyperParameterTuningJobStatus, aws.ToString(output.FailureReason); status == awstypes.HyperParameterTuningJobStatusFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHyperParameterTuningJobDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.HyperParameterTuningJobStatusDeleting,
+			awstypes.HyperParameterTuningJobStatusInProgress,
+			awstypes.HyperParameterTuningJobStatusStopping,
+			awstypes.HyperParameterTuningJobStatusStopped,
+			awstypes.HyperParameterTuningJobStatusCompleted,
+			awstypes.HyperParameterTuningJobStatusFailed,
+			awstypes.HyperParameterTuningJobStatusDeleteFailed,
+		),
+		Target:  []string{},
+		Refresh: statusHyperParameterTuningJob(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHyperParameterTuningJobOutput); ok {
+		if status, reason := output.HyperParameterTuningJobStatus, aws.ToString(output.FailureReason); status == awstypes.HyperParameterTuningJobStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

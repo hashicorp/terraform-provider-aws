@@ -21,7 +21,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_connection_accepter.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)

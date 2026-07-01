@@ -87,20 +87,6 @@ func TestExpandXMLWrapperRule1ScalarElements(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := map[string]autoFlexTestCases{
-		"OriginSslProtocols": {
-			"null set": {
-				Source:     fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.SslProtocol]](ctx),
-				Target:     &awstypes.OriginSslProtocols{},
-				WantTarget: (*awstypes.OriginSslProtocols)(nil),
-			},
-			"single protocol": {
-				Source: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.SslProtocol]](ctx, []attr.Value{
-					fwtypes.StringEnumValue(awstypes.SslProtocolTLSv12),
-				}),
-				Target:     &awstypes.OriginSslProtocols{},
-				WantTarget: &awstypes.OriginSslProtocols{Items: []awstypes.SslProtocol{awstypes.SslProtocolTLSv12}, Quantity: aws.Int32(1)},
-			},
-		},
 		"TestXMLWrapperScalar": func() autoFlexTestCases {
 			type tfModel struct {
 				Field fwtypes.SetValueOf[types.String] `tfsdk:"field" autoflex:",xmlwrapper=Items,omitempty"`
@@ -182,13 +168,7 @@ func TestExpandXMLWrapperRule1ScalarElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			// Cannot generate golden logs: Log file names don't take multiple levels of tests into account
-			// e.g. "TestXMLWrapperInt32/empty set" and "TestXMLWrapperInt64/empty set" collide
-			if testName == "OriginSslProtocols" {
-				runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: false, SkipGoldenLogs: true})
-			} else {
-				runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
-			}
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -243,7 +223,7 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -288,7 +268,7 @@ func TestFlattenXMLWrapperRule1ScalarElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -344,7 +324,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -532,7 +512,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -575,7 +555,7 @@ func TestFlattenXMLWrapperRule2(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1197,7 +1177,7 @@ func TestFlattenXMLWrapperSplitNested(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenXMLWrapperSplit(t *testing.T) {
@@ -1327,7 +1307,7 @@ func TestFlattenXMLWrapperSplit(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandXMLWrapperSplit(t *testing.T) {
@@ -1468,7 +1448,7 @@ func TestExpandXMLWrapperSplit(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true}, cmpopts.IgnoreUnexported(
+	runAutoExpandTestCases(t, testCases, runChecks{}, cmpopts.IgnoreUnexported(
 		awstypes.AllowedMethods{},
 		awstypes.CachedMethods{},
 	))

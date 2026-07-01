@@ -113,6 +113,14 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -201,6 +209,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_stringUpdate(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccSecurityPolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType)
 }
 
 func testAccCheckSecurityPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

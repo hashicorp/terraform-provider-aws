@@ -85,7 +85,7 @@ func (l *listResourceTaskDefinition) List(ctx context.Context, request list.List
 
 			result.DisplayName = rd.Get(names.AttrFamily).(string)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

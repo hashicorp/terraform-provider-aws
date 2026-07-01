@@ -540,6 +540,14 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_model.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sagemaker_model.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

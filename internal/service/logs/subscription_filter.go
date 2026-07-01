@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,11 +30,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_subscription_filter", name="Subscription Filter")
+// @IdentityAttribute("log_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("subscriptionFilterImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.SubscriptionFilter")
+// @Testing(importStateIdFunc=testAccSubscriptionFilterImportStateIDFunc)
+// @Testing(importIgnore="apply_on_transformed_logs")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubscriptionFilterPut,
@@ -40,58 +51,56 @@ func resourceSubscriptionFilter() *schema.Resource {
 		UpdateWithoutTimeout: resourceSubscriptionFilterPut,
 		DeleteWithoutTimeout: resourceSubscriptionFilterDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceSubscriptionFilterImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"apply_on_transformed_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"distribution": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DistributionByLogStream,
-				ValidateDiagFunc: enum.Validate[awstypes.Distribution](),
-			},
-			"emit_system_fields": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"apply_on_transformed_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"filter_pattern": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrLogGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				names.AttrDestinationARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"distribution": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DistributionByLogStream,
+					ValidateDiagFunc: enum.Validate[awstypes.Distribution](),
+				},
+				"emit_system_fields": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+					},
+				},
+				"filter_pattern": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrLogGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -102,7 +111,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.PutSubscriptionFilterInput{
+	input := cloudwatchlogs.PutSubscriptionFilterInput{
 		DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 		FilterName:     aws.String(name),
 		FilterPattern:  aws.String(d.Get("filter_pattern").(string)),
@@ -130,7 +139,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
-			return conn.PutSubscriptionFilter(ctx, input)
+			return conn.PutSubscriptionFilter(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Could not deliver test message to specified") {
@@ -145,7 +154,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 				return true, err
 			}
 
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Make sure you have given CloudWatch Logs permission to assume the provided role") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Make sure you have given CloudWatch Logs permission to assume the provided role") {
 				return true, err
 			}
 
@@ -179,14 +188,9 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
-	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
-	d.Set("distribution", subscriptionFilter.Distribution)
-	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
-	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
-	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
-	d.Set(names.AttrName, subscriptionFilter.FilterName)
-	d.Set(names.AttrRoleARN, subscriptionFilter.RoleArn)
+	if err := resourceSubscriptionFilterFlatten(ctx, subscriptionFilter, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -196,10 +200,11 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
-	_, err := conn.DeleteSubscriptionFilter(ctx, &cloudwatchlogs.DeleteSubscriptionFilterInput{
+	input := cloudwatchlogs.DeleteSubscriptionFilterInput{
 		FilterName:   aws.String(d.Get(names.AttrName).(string)),
 		LogGroupName: aws.String(d.Get(names.AttrLogGroupName).(string)),
-	})
+	}
+	_, err := conn.DeleteSubscriptionFilter(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -212,26 +217,25 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSubscriptionFilterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "|")
-	if len(idParts) < 2 {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())
-	}
+func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error { //nolint:unparam
+	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
+	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
+	d.Set("distribution", subscriptionFilter.Distribution)
+	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
+	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
+	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
+	d.Set(names.AttrName, subscriptionFilter.FilterName)
+	d.Set(names.AttrRoleARN, subscriptionFilter.RoleArn)
 
-	logGroupName := idParts[0]
-	filterNamePrefix := idParts[1]
-
-	d.Set(names.AttrLogGroupName, logGroupName)
-	d.Set(names.AttrName, filterNamePrefix)
-	d.SetId(subscriptionFilterCreateResourceID(filterNamePrefix))
-
-	return []*schema.ResourceData{d}, nil
+	return nil
 }
 
 func subscriptionFilterCreateResourceID(logGroupName string) string {
 	var buf bytes.Buffer
 
-	fmt.Fprintf(&buf, "%s-", logGroupName) // only one filter allowed per log_group_name at the moment
+	// Each log group can have up to two subscription filters associated with it.
+	// However, having multiple resources with the same 'id' attribute valuse is OK.
+	fmt.Fprintf(&buf, "%s-", logGroupName)
 
 	return fmt.Sprintf("cwlsf-%d", create.StringHashcode(buf.String()))
 }
@@ -242,13 +246,13 @@ func findSubscriptionFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlog
 		LogGroupName:     aws.String(logGroupName),
 	}
 
-	return findSubscriptionFilter(ctx, conn, &input, func(v *awstypes.SubscriptionFilter) bool {
+	return findSubscriptionFilter(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.SubscriptionFilter) bool {
 		return aws.ToString(v.FilterName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.SubscriptionFilter]())
 }
 
-func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter]) (*awstypes.SubscriptionFilter, error) {
-	output, err := findSubscriptionFilters(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) (*awstypes.SubscriptionFilter, error) {
+	output, err := findSubscriptionFilters(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -257,33 +261,71 @@ func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, in
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.SubscriptionFilter, error) {
-	var output []awstypes.SubscriptionFilter
-	opts := tfslices.NewFinderOptions(optFns)
+func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) ([]awstypes.SubscriptionFilter, error) {
+	output, err := tfslices.CollectAndConcatWithError(listSubscriptionFilterPages(ctx, conn, input), optFns...)
 
-	pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.SubscriptionFilters {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
+}
+
+func listSubscriptionFilterPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.SubscriptionFilter, error] {
+	return func(yield func([]awstypes.SubscriptionFilter, error) bool) {
+		pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Subscription Filters: %w", err))
+				return
+			}
+
+			if !yield(page.SubscriptionFilters, nil) {
+				return
+			}
+		}
+	}
+}
+
+const subscriptionFilterImportIDSeparator = "|"
+
+func subscriptionFilterParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, subscriptionFilterImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected log-group-name%[2]sfilter-name", id, subscriptionFilterImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = subscriptionFilterImportID{}
+)
+
+type subscriptionFilterImportID struct{}
+
+func (subscriptionFilterImportID) Parse(id string) (string, map[string]any, error) {
+	logGroupName, filterName, err := subscriptionFilterParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrLogGroupName: logGroupName,
+		names.AttrName:         filterName,
+	}
+
+	return subscriptionFilterCreateResourceID(logGroupName), result, nil
+}
+
+func (subscriptionFilterImportID) Create(d *schema.ResourceData) string {
+	return subscriptionFilterCreateResourceID(d.Get(names.AttrLogGroupName).(string))
 }

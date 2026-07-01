@@ -62,14 +62,14 @@ func TestAccSecretsManagerSecretVersion_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_secretsmanager_secret_version.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"secret_id":         secretID.Value(),
-						"version_id":        versionID1.Value(),
+						"secret_id":         secretID.ValueCheck(),
+						"version_id":        versionID1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_secretsmanager_secret_version.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"secret_id":         secretID.Value(),
-						"version_id":        versionID2.Value(),
+						"secret_id":         secretID.ValueCheck(),
+						"version_id":        versionID2.ValueCheck(),
 					}),
 				},
 			},

@@ -12,6 +12,7 @@ Manages a QuickSight custom permissions profile.
 
 ## Example Usage
 
+```terraform
 resource "aws_quicksight_custom_permissions" "example" {
   custom_permissions_name = "example-permissions"
 
@@ -20,6 +21,7 @@ resource "aws_quicksight_custom_permissions" "example" {
     share_dashboards = "DENY"
   }
 }
+```
 
 ## Argument Reference
 

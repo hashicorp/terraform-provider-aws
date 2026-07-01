@@ -111,7 +111,7 @@ func (l *listResourceService) List(ctx context.Context, request list.ListRequest
 
 			result.DisplayName = aws.ToString(service.ServiceName)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -132,7 +132,7 @@ type listServiceModel struct {
 
 func listServices(ctx context.Context, conn *ecs.Client, input *ecs.ListServicesInput) iter.Seq2[string, error] {
 	return func(yield func(string, error) bool) {
-		pages := ecs.NewListServicesPaginator(conn, input)
+		pages := newListRegularServicesPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {

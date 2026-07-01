@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_opensearchserverless_access_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_opensearchserverless_lifecycle_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_opensearchserverless_security_config: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_opensearchserverless_security_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_opensearchserverless_vpc_endpoint: Add Resource Identity support
+```

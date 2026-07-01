@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Add Resource Identity support
+```
+
+```release-note:bug
+resource/aws_kinesis_firehose_delivery_stream: Fix `ValidationException: Unknown parameter: ExtendedS3DestinationConfiguration.CustomTimeZone` errors in AWS partitions which do not yet support selecting a time zone for bucket prefixes
+```

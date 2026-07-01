@@ -20,8 +20,8 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -71,8 +71,8 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_regionOverride(t *testi
 					ctx := acctest.Context(t)
 					rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-					zoneName := acctest.RandomDomain()
-					recordName := zoneName.RandomSubdomain()
+					zoneName := acctest.RandomDomain(t)
+					recordName := zoneName.RandomSubdomain(t)
 
 					acctest.ParallelTest(ctx, t, resource.TestCase{
 						PreCheck: func() {

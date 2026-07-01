@@ -107,6 +107,30 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 }
 ```
 
+### AG-UI Server
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example_agui_runtime"
+  description        = "Agent runtime with AG-UI protocol"
+  role_arn           = aws_iam_role.example.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "${aws_ecr_repository.example.repository_url}:latest"
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  protocol_configuration {
+    server_protocol = "AGUI"
+  }
+}
+```
+
 ### Agent runtime artifact from S3 with Code Configuration
 
 ```terraform
@@ -148,6 +172,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the agent runtime.
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
+* `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
@@ -202,6 +227,57 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+
+### `custom_claim`
+
+The `custom_claim` block supports the following:
+
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
+* `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
+
+### `authorizing_claim_match_value`
+
+The `authorizing_claim_match_value` block supports the following:
+
+* `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+
+### `claim_match_value`
+
+The `claim_match_value` block supports the following:
+
+* `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+* `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+
+### `filesystem_configuration`
+
+Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
+
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point) below.
+
+### `session_storage`
+
+The `session_storage` block supports the following:
+
+* `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `s3_files_access_point`
+
+The `s3_files_access_point` block supports the following:
+
+* `access_point_arn` - (Required) ARN of the Amazon S3 Files access point to mount into the agent runtime.
+* `mount_path` - (Required) Mount path for the S3 Files access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `efs_access_point`
+
+The `efs_access_point` block supports the following:
+
+* `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
+* `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
 
 ### `lifecycle_configuration`
 
@@ -228,7 +304,7 @@ The `network_mode_config` block supports the following:
 
 The `protocol_configuration` block supports the following:
 
-* `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`, `A2A`.
+* `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`, `A2A`, `AGUI`.
 
 ### `request_header_configuration`
 

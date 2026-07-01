@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -343,6 +344,55 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					//resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "param1_val2"),
 				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/48534
+func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionText(rName, "view_original_text_1", "view_expanded_text_1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Updating only the view text while keeping table_type = "VIRTUAL_VIEW"
+				// must succeed in place — resourceCatalogTableUpdate sets
+				// UpdateTableInput.ViewUpdateAction = REPLACE on the view path.
+				Config: testAccCatalogTableConfig_viewDefinitionText(rName, "view_original_text_2", "view_expanded_text_2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -807,6 +857,24 @@ func TestAccGlueCatalogTable_icebergTableInput(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogTable_viewDefinitionFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCatalogTableConfig_viewDefinitionFailure(rName),
+				ExpectError: regexache.MustCompile(`unexpected state 'FAILED'`),
+			},
+		},
+	})
+}
+
 func testAccCheckCatalogTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
@@ -950,6 +1018,36 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 `, rName, desc)
+}
+
+func testAccCatalogTableConfig_viewDefinitionText(rName, viewOriginalText, viewExpandedText string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  storage_descriptor {
+    columns {
+      name = "my_column_1"
+      type = "int"
+    }
+  }
+
+  view_definition {
+    representations {
+      dialect            = "SPARK"
+      dialect_version    = "1.0"
+      view_original_text = %[2]q
+      view_expanded_text = %[3]q
+    }
+  }
+}
+`, rName, viewOriginalText, viewExpandedText)
 }
 
 func testAccCatalogTableConfig_fullReplacedValues(rName string) string {
@@ -1766,6 +1864,40 @@ EOF
         }
       }
     }
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinitionFailure(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    is_protected = true
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = "SELECT 1"
+      validation_connection = aws_glue_connection.test_athena.name
+    }
+  }
+}
+
+resource "aws_glue_connection" "test_athena" {
+  name            = "%[1]s-a"
+  connection_type = "VIEW_VALIDATION_ATHENA"
+
+  connection_properties = {
+    WORKGROUP_NAME = "primary"
   }
 }
 `, rName)

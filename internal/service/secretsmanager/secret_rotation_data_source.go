@@ -21,39 +21,41 @@ func dataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRotationRead,
 
-		Schema: map[string]*schema.Schema{
-			"rotation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"rotation_lambda_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rotation_rules": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automatically_after_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrDuration: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrScheduleExpression: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"rotation_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"rotation_lambda_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rotation_rules": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automatically_after_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrDuration: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrScheduleExpression: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"secret_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

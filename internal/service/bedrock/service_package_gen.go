@@ -26,37 +26,49 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newCustomModelDataSource,
 			TypeName: "aws_bedrock_custom_model",
 			Name:     "Custom Model",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newCustomModelsDataSource,
 			TypeName: "aws_bedrock_custom_models",
 			Name:     "Custom Models",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newFoundationModelDataSource,
 			TypeName: "aws_bedrock_foundation_model",
 			Name:     "Foundation Model",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newFoundationModelAgreementOffersDataSource,
+			TypeName: "aws_bedrock_foundation_model_agreement_offers",
+			Name:     "Foundation Model Agreement Offers",
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newFoundationModelsDataSource,
 			TypeName: "aws_bedrock_foundation_models",
 			Name:     "Foundation Models",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newInferenceProfileDataSource,
 			TypeName: "aws_bedrock_inference_profile",
 			Name:     "Inference Profile",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newInferenceProfilesDataSource,
 			TypeName: "aws_bedrock_inference_profiles",
 			Name:     "Inference Profiles",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newUseCaseForModelAccessDataSource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -70,8 +82,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newFoundationModelAgreementResource,
+			TypeName: "aws_bedrock_foundation_model_agreement",
+			Name:     "Foundation Model Agreement",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("model_id", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -83,13 +105,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "guardrail_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newGuardrailVersionResource,
 			TypeName: "aws_bedrock_guardrail_version",
 			Name:     "Guardrail Version",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newInferenceProfileResource,
@@ -98,13 +120,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newModelInvocationLoggingConfigurationResource,
 			TypeName: "aws_bedrock_model_invocation_logging_configuration",
 			Name:     "Model Invocation Logging Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -117,8 +139,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "provisioned_model_arn",
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("provisioned_model_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newUseCaseForModelAccessResource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingletonIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

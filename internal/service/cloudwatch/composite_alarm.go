@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -30,6 +31,9 @@ import (
 
 // @SDKResource("aws_cloudwatch_composite_alarm", name="Composite Alarm")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("alarm_name")
+// @Testing(idAttrDuplicates="alarm_name")
+// @Testing(preIdentityVersion="v6.52.0")
 func resourceCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCompositeAlarmCreate,
@@ -37,87 +41,85 @@ func resourceCompositeAlarm() *schema.Resource {
 		UpdateWithoutTimeout: resourceCompositeAlarmUpdate,
 		DeleteWithoutTimeout: resourceCompositeAlarmDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"actions_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
-			},
-			"actions_suppressor": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarm": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"extension_period": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"wait_period": {
-							Type:     schema.TypeInt,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"actions_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+					ForceNew: true,
+				},
+				"actions_suppressor": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarm": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"extension_period": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"wait_period": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"alarm_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"alarm_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"alarm_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"alarm_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"alarm_rule": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 10240),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"insufficient_data_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"alarm_description": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
-			},
-			"ok_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"alarm_name": {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"alarm_rule": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 10240),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"insufficient_data_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"ok_actions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -241,21 +243,38 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.CompositeAlarm, error) {
-	input := &cloudwatch.DescribeAlarmsInput{
+	input := cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []string{name},
-		AlarmTypes: []types.AlarmType{types.AlarmTypeCompositeAlarm},
+		AlarmTypes: enum.EnumSlice(types.AlarmTypeCompositeAlarm),
 	}
 
-	output, err := conn.DescribeAlarms(ctx, input)
+	return findCompositeAlarm(ctx, conn, &input)
+}
+
+func findCompositeAlarm(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) (*types.CompositeAlarm, error) {
+	output, err := findCompositeAlarms(ctx, conn, input)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
-	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
+}
+
+func findCompositeAlarms(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) ([]types.CompositeAlarm, error) {
+	var output []types.CompositeAlarm
+
+	pages := cloudwatch.NewDescribeAlarmsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		output = append(output, page.CompositeAlarms...)
 	}
 
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output.CompositeAlarms))
+	return output, nil
 }
 
 func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutCompositeAlarmInput {
