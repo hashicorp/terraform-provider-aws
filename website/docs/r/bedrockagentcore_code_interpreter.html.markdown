@@ -102,6 +102,7 @@ The `vpc_config` block supports the following:
 
 * `security_groups` - (Required) Security groups associated with the VPC configuration.
 * `subnets` - (Required) Subnets associated with the VPC configuration.
+* `require_service_s3_endpoint` - (Optional) Whether to require an S3 endpoint for the service in the VPC. Changing this forces a new resource to be created.
 
 ## Attribute Reference
 

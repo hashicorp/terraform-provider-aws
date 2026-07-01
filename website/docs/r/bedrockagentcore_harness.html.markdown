@@ -284,6 +284,7 @@ The `config` block supports exactly one of the following:
 
 * `security_groups` - (Required) Security groups for the VPC.
 * `subnets` - (Required) Subnets for the VPC.
+* `require_service_s3_endpoint` - (Optional) Whether to require an S3 endpoint for the service in the VPC.
 
 ### `filesystem_configuration` Block
 
@@ -335,7 +336,26 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+
+### `allowed_workload_configuration` Block
+
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. Each entry supports an `arn` argument.
+* `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
+
+### `private_endpoint_overrides` Block
+
+* `domain` - (Required) Domain the override applies to.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint) below.
+
+### `private_endpoint` Block
+
+Exactly one of the following must be specified:
+
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. Supports `endpoint_ip_address_type` (Required, one of `IPV4` or `IPV6`), `subnet_ids` (Required), `vpc_identifier` (Required), `routing_domain` (Optional), `security_group_ids` (Optional), and `tags` (Optional).
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. Supports `resource_configuration_identifier` (Required).
 
 ### `custom_claim` Block
 

@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `require_service_s3_endpoint` argument to `network_configuration.network_mode_config`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `allowed_workload_configuration` and `private_endpoint_overrides` configuration blocks to `authorizer_configuration.custom_jwt_authorizer`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `require_service_s3_endpoint` argument to `network_configuration.network_mode_config`, and `allowed_workload_configuration` and `private_endpoint_overrides` configuration blocks to `authorizer_configuration.custom_jwt_authorizer`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_browser: Add `require_service_s3_endpoint` argument to `network_configuration.vpc_config`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_code_interpreter: Add `require_service_s3_endpoint` argument to `network_configuration.vpc_config`
+```
