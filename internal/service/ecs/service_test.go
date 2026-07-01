@@ -1100,6 +1100,37 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSService_BlueGreenDeployment_pauseLifecycleHook(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_pauseHook(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"target_type":                                "PAUSE",
+						"lifecycle_stages.0":                         "POST_TEST_TRAFFIC_SHIFT",
+						"timeout_configuration.#":                    "1",
+						"timeout_configuration.0.action":             "ROLLBACK",
+						"timeout_configuration.0.timeout_in_minutes": "60",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_BlueGreenDeployment_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -4117,6 +4148,74 @@ resource "aws_ecs_service" "test" {
   ]
 }
 `, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_blueGreenDeployment_pauseHook(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "BLUE_GREEN"
+    bake_time_in_minutes = 2
+
+    lifecycle_hook {
+      target_type      = "PAUSE"
+      lifecycle_stages = ["POST_TEST_TRAFFIC_SHIFT"]
+
+      timeout_configuration {
+        timeout_in_minutes = 60
+        action             = "ROLLBACK"
+      }
+    }
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    service {
+      client_alias {
+        dns_name = "test-service.local"
+        port     = 8080
+      }
+      discovery_name = "test-service"
+      port_name      = "http"
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.primary.arn
+    container_name   = "test"
+    container_port   = 80
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.alternate.arn
+      production_listener_rule   = aws_lb_listener_rule.production.arn
+      test_listener_rule         = aws_lb_listener_rule.test.arn
+      role_arn                   = aws_iam_role.global.arn
+    }
+  }
+
+  wait_for_steady_state = false
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName))
 }
 
 func testAccServiceConfig_blueGreenDeployment_withCircuitBreaker(rName string) string {
