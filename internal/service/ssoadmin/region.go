@@ -271,8 +271,6 @@ func waitRegionDeleted(ctx context.Context, conn *ssoadmin.Client, instanceARN, 
 	return err
 }
 
-// Import ID handler.
-
 var _ inttypes.ImportIDParser = regionImportID{}
 
 type regionImportID struct{}
