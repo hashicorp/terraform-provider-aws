@@ -76,6 +76,51 @@ func resourceConfigurationSet() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.TlsPolicy](),
 							},
 						},
+						"suppression_scope": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.SuppressionListScope](),
+						},
+						"validation_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"condition_threshold": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"condition_threshold_enabled": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.FeatureStatus](),
+												},
+												"overall_confidence_threshold": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
+														return d.Get("suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled") == string(types.FeatureStatusDisabled)
+													},
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"confidence_verdict_threshold": {
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[types.SuppressionConfidenceVerdictThreshold](),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 				"reputation_options": {
@@ -217,18 +262,27 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 		input.SendingOptions = expandSendingOptions(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetRawConfig().AsValueMap()["suppression_options"]; ok && v.LengthInt() > 0 {
-		if v, ok := v.Index(cty.NumberIntVal(0)).AsValueMap()["suppressed_reasons"]; ok && !v.IsNull() {
-			tfMap := map[string]any{
-				"suppressed_reasons": []any{},
-			}
+	if v, ok := d.GetRawConfig().AsValueMap()["suppression_options"]; ok && !v.IsNull() && v.LengthInt() > 0 {
+		tfMap := map[string]any{}
+		suppressionOptions := v.Index(cty.NumberIntVal(0)).AsValueMap()
+
+		if v, ok := suppressionOptions["suppressed_reasons"]; ok && !v.IsNull() {
+			tfMap["suppressed_reasons"] = []any{}
 
 			for _, v := range v.AsValueSlice() {
 				tfMap["suppressed_reasons"] = append(tfMap["suppressed_reasons"].([]any), v.AsString())
 			}
-
-			input.SuppressionOptions = expandSuppressionOptions(tfMap)
 		}
+
+		if v, ok := suppressionOptions["suppression_scope"]; ok && !v.IsNull() {
+			tfMap["suppression_scope"] = v.AsString()
+		}
+
+		if v, ok := suppressionOptions["validation_options"]; ok && !v.IsNull() {
+			tfMap["validation_options"] = suppressionValidationOptionsFromRawConfig(v)
+		}
+
+		input.SuppressionOptions = expandSuppressionOptions(tfMap)
 	}
 
 	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -397,6 +451,12 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			if v, ok := tfMap["suppressed_reasons"].([]any); ok && len(v) > 0 {
 				input.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
 			}
+			if v, ok := tfMap["suppression_scope"].(string); ok && v != "" {
+				input.SuppressionScope = types.SuppressionListScope(v)
+			}
+			if v, ok := tfMap["validation_options"].([]any); ok && len(v) > 0 {
+				input.ValidationOptions = expandSuppressionValidationOptions(v[0].(map[string]any))
+			}
 		}
 
 		_, err := conn.PutConfigurationSetSuppressionOptions(ctx, input)
@@ -556,6 +616,48 @@ func flattenSuppressionOptions(apiObject *types.SuppressionOptions) map[string]a
 		tfMap["suppressed_reasons"] = apiObject.SuppressedReasons
 	}
 
+	if v := apiObject.SuppressionScope; v != "" {
+		tfMap["suppression_scope"] = v
+	}
+
+	if v := apiObject.ValidationOptions; v != nil {
+		tfMap["validation_options"] = []any{flattenSuppressionValidationOptions(v)}
+	}
+
+	return tfMap
+}
+
+func flattenSuppressionValidationOptions(apiObject *types.SuppressionValidationOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"condition_threshold": []any{flattenSuppressionConditionThreshold(apiObject.ConditionThreshold)},
+	}
+
+	return tfMap
+}
+
+func flattenSuppressionConditionThreshold(apiObject *types.SuppressionConditionThreshold) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"condition_threshold_enabled":  string(apiObject.ConditionThresholdEnabled),
+		"overall_confidence_threshold": []any{flattenSuppressionConfidenceThreshold(apiObject.OverallConfidenceThreshold)},
+	}
+
+	return tfMap
+}
+
+func flattenSuppressionConfidenceThreshold(apiObject *types.SuppressionConfidenceThreshold) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"confidence_verdict_threshold": string(apiObject.ConfidenceVerdictThreshold),
+	}
+
 	return tfMap
 }
 
@@ -680,6 +782,133 @@ func expandSuppressionOptions(tfMap map[string]any) *types.SuppressionOptions {
 		} else {
 			apiObject.SuppressedReasons = make([]types.SuppressionListReason, 0)
 		}
+	}
+
+	if v, ok := tfMap["suppression_scope"].(string); ok && v != "" {
+		apiObject.SuppressionScope = types.SuppressionListScope(v)
+	}
+
+	if v, ok := tfMap["validation_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ValidationOptions = expandSuppressionValidationOptions(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func suppressionValidationOptionsFromRawConfig(value cty.Value) []any {
+	if value.IsNull() {
+		return nil
+	}
+
+	values := value.AsValueSlice()
+	if len(values) == 0 {
+		return nil
+	}
+
+	value = values[0]
+	if value.IsNull() {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	valueMap := value.AsValueMap()
+
+	if v, ok := valueMap["condition_threshold"]; ok && !v.IsNull() {
+		tfMap["condition_threshold"] = suppressionConditionThresholdFromRawConfig(v)
+	}
+
+	return []any{tfMap}
+}
+
+func suppressionConditionThresholdFromRawConfig(value cty.Value) []any {
+	if value.IsNull() {
+		return nil
+	}
+
+	values := value.AsValueSlice()
+	if len(values) == 0 {
+		return nil
+	}
+
+	value = values[0]
+	if value.IsNull() {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	valueMap := value.AsValueMap()
+
+	if v, ok := valueMap["condition_threshold_enabled"]; ok && !v.IsNull() {
+		tfMap["condition_threshold_enabled"] = v.AsString()
+	}
+
+	if v, ok := valueMap["overall_confidence_threshold"]; ok && !v.IsNull() {
+		tfMap["overall_confidence_threshold"] = suppressionConfidenceThresholdFromRawConfig(v)
+	}
+
+	return []any{tfMap}
+}
+
+func suppressionConfidenceThresholdFromRawConfig(value cty.Value) []any {
+	if value.IsNull() {
+		return nil
+	}
+
+	values := value.AsValueSlice()
+	if len(values) == 0 {
+		return nil
+	}
+
+	value = values[0]
+	if value.IsNull() {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	valueMap := value.AsValueMap()
+
+	if v, ok := valueMap["confidence_verdict_threshold"]; ok && !v.IsNull() {
+		tfMap["confidence_verdict_threshold"] = v.AsString()
+	}
+
+	return []any{tfMap}
+}
+
+func expandSuppressionValidationOptions(tfMap map[string]any) *types.SuppressionValidationOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SuppressionValidationOptions{
+		ConditionThreshold: expandSuppressionConditionThreshold(tfMap["condition_threshold"].([]any)[0].(map[string]any)),
+	}
+
+	return apiObject
+}
+
+func expandSuppressionConditionThreshold(tfMap map[string]any) *types.SuppressionConditionThreshold {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SuppressionConditionThreshold{
+		ConditionThresholdEnabled: types.FeatureStatus(tfMap["condition_threshold_enabled"].(string)),
+	}
+
+	if v, ok := tfMap["overall_confidence_threshold"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.OverallConfidenceThreshold = expandSuppressionConfidenceThreshold(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandSuppressionConfidenceThreshold(tfMap map[string]any) *types.SuppressionConfidenceThreshold {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SuppressionConfidenceThreshold{
+		ConfidenceVerdictThreshold: types.SuppressionConfidenceVerdictThreshold(tfMap["confidence_verdict_threshold"].(string)),
 	}
 
 	return apiObject
