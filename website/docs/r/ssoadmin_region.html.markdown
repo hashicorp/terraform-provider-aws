@@ -80,6 +80,7 @@ resource "aws_ssoadmin_region" "example" {
 
 #### Optional
 
+* `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource with `instance_arn` and `region_name` separated by a comma (`,`). For example:
