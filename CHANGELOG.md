@@ -53,6 +53,7 @@ BUG FIXES:
 * resource/aws_lightsail_bucket_access_key: Mark `secret_access_key` as sensitive ([#48577](https://github.com/hashicorp/terraform-provider-aws/issues/48577))
 * resource/aws_lightsail_key_pair: Mark `private_key` as sensitive ([#48577](https://github.com/hashicorp/terraform-provider-aws/issues/48577))
 * resource/aws_route53_record: Fix the `type` attribute to no longer force resource replacement on change ([#47105](https://github.com/hashicorp/terraform-provider-aws/issues/47105))
+* resource/aws_sqs_queue: Reduce the wait time for queue deletion. This fixes a regression introduced in [v6.34.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6340-february-25-2026). ([#48722](https://github.com/hashicorp/terraform-provider-aws/issues/48722))
 
 ## 6.52.0 (June 24, 2026)
 
