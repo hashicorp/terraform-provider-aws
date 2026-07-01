@@ -27,6 +27,7 @@ func TestAccSSOAdminRegion_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccSSOAdminRegion_basic,
 		acctest.CtDisappears: testAccSSOAdminRegion_disappears,
+		"Identity":           testAccSSOAdminRegion_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
