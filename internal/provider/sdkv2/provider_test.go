@@ -455,14 +455,14 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 		"config": {
 			tfMap: map[string]any{
 				"duration":           "1h",
-				"role_arn":           "arn:aws:iam::123456789012:role/my-role",
+				"policy":             "my-policy",
 				"session_name":       "my-session",
 				"web_identity_token": "my-token",
 			},
 			envvars: map[string]string{},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
 				Duration:         1 * time.Hour,
-				RoleARN:          "arn:aws:iam::123456789012:role/my-role",
+				Policy:           "my-policy",
 				SessionName:      "my-session",
 				WebIdentityToken: "my-token",
 			},
@@ -470,7 +470,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 		"envvar": {
 			tfMap: map[string]any{
 				"duration":     "1h",
-				"role_arn":     "arn:aws:iam::123456789012:role/my-role",
+				"policy":       "my-policy",
 				"session_name": "my-session",
 			},
 			envvars: map[string]string{
@@ -478,7 +478,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
 				Duration:         1 * time.Hour,
-				RoleARN:          "arn:aws:iam::123456789012:role/my-role",
+				Policy:           "my-policy",
 				SessionName:      "my-session",
 				WebIdentityToken: "my-token",
 			},
@@ -486,7 +486,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 		"envvar and config": {
 			tfMap: map[string]any{
 				"duration":           "1h",
-				"role_arn":           "arn:aws:iam::123456789012:role/my-role",
+				"policy":             "my-policy",
 				"session_name":       "my-session",
 				"web_identity_token": "token2",
 			},
@@ -495,7 +495,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
 				Duration:         1 * time.Hour,
-				RoleARN:          "arn:aws:iam::123456789012:role/my-role",
+				Policy:           "my-policy",
 				SessionName:      "my-session",
 				WebIdentityToken: "token2",
 			},
