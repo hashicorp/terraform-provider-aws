@@ -81,6 +81,66 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("EXTERNAL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secret_id": knownvalue.NotNull(),
+							"json_key":  knownvalue.StringExact("apiKey"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				// api_key_secret_config is input-only; the API does not echo it back on read.
+				ImportStateVerifyIgnore: []string{"api_key_secret_config"},
+			},
+			{
+				// Re-apply the same config to ensure the Optional+Computed
+				// api_key_secret_source and input-only api_key_secret_config block
+				// do not produce a perpetual diff.
+				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
@@ -329,6 +389,29 @@ resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
   api_key_wo_version = %[3]d
 }
 `, rName, apiKeyWo, version)
+}
+
+func testAccAPIKeyCredentialProviderConfig_externalSecret(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ apiKey = "external-secret-value" })
+}
+
+resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
+  name                  = %[1]q
+  api_key_secret_source = "EXTERNAL"
+
+  api_key_secret_config {
+    secret_id = aws_secretsmanager_secret_version.test.secret_id
+    json_key  = "apiKey"
+  }
+}
+`, rName)
 }
 
 func testAccAPIKeyCredentialProviderConfig_tags1(rName, apiKey, tag1Key, tag1Value string) string {

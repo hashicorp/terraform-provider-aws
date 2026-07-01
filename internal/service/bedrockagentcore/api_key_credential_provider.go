@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -57,6 +58,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 					stringvalidator.ExactlyOneOf(
 						path.MatchRoot("api_key"),
 						path.MatchRoot("api_key_wo"),
+						path.MatchRoot("api_key_secret_config"),
 					),
 					stringvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("api_key_wo"),
@@ -72,6 +74,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 					stringvalidator.ExactlyOneOf(
 						path.MatchRoot("api_key"),
 						path.MatchRoot("api_key_wo"),
+						path.MatchRoot("api_key_secret_config"),
 					),
 					stringvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("api_key_wo_version"),
@@ -86,7 +89,15 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 					}...),
 				},
 			},
-			"api_key_secret_arn":      framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"api_key_secret_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"api_key_secret_source": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"credential_provider_arn": framework.ARNAttributeComputedOnly(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -100,6 +111,31 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"api_key_secret_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[secretReferenceModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.AlsoRequires(path.MatchRoot("api_key_secret_source")),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"secret_id": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+							},
+						},
+						"json_key": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 128),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -272,16 +308,23 @@ func findAPIKeyCredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 
 type apiKeyCredentialProviderResourceModel struct {
 	framework.WithRegionModel
-	APIKey                types.String                                 `tfsdk:"api_key"`
-	APIKeySecretARN       fwtypes.ListNestedObjectValueOf[secretModel] `tfsdk:"api_key_secret_arn"`
-	APIKeyWO              types.String                                 `tfsdk:"api_key_wo"`
-	APIKeyWOVersion       types.Int64                                  `tfsdk:"api_key_wo_version"`
-	CredentialProviderARN types.String                                 `tfsdk:"credential_provider_arn"`
-	Name                  types.String                                 `tfsdk:"name"`
-	Tags                  tftags.Map                                   `tfsdk:"tags"`
-	TagsAll               tftags.Map                                   `tfsdk:"tags_all"`
+	APIKey                types.String                                          `tfsdk:"api_key"`
+	APIKeySecretARN       fwtypes.ListNestedObjectValueOf[secretModel]          `tfsdk:"api_key_secret_arn"`
+	APIKeySecretConfig    fwtypes.ListNestedObjectValueOf[secretReferenceModel] `tfsdk:"api_key_secret_config"`
+	APIKeySecretSource    fwtypes.StringEnum[awstypes.SecretSourceType]         `tfsdk:"api_key_secret_source"`
+	APIKeyWO              types.String                                          `tfsdk:"api_key_wo"`
+	APIKeyWOVersion       types.Int64                                           `tfsdk:"api_key_wo_version"`
+	CredentialProviderARN types.String                                          `tfsdk:"credential_provider_arn"`
+	Name                  types.String                                          `tfsdk:"name"`
+	Tags                  tftags.Map                                            `tfsdk:"tags"`
+	TagsAll               tftags.Map                                            `tfsdk:"tags_all"`
 }
 
 type secretModel struct {
 	SecretARN fwtypes.ARN `tfsdk:"secret_arn"`
+}
+
+type secretReferenceModel struct {
+	SecretID types.String `tfsdk:"secret_id"`
+	JSONKey  types.String `tfsdk:"json_key"`
 }
