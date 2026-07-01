@@ -461,7 +461,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			},
 			envvars: map[string]string{},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
-				Duration:         time.Duration(1 * time.Hour),
+				Duration:         1 * time.Hour,
 				RoleARN:          "arn:aws:iam::123456789012:role/my-role",
 				SessionName:      "my-session",
 				WebIdentityToken: "my-token",
@@ -477,7 +477,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				WebIdentityTokenEnvVar: "my-token",
 			},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
-				Duration:         time.Duration(1 * time.Hour),
+				Duration:         1 * time.Hour,
 				RoleARN:          "arn:aws:iam::123456789012:role/my-role",
 				SessionName:      "my-session",
 				WebIdentityToken: "my-token",
@@ -494,7 +494,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				WebIdentityTokenEnvVar: "token1",
 			},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
-				Duration:         time.Duration(1 * time.Hour),
+				Duration:         1 * time.Hour,
 				RoleARN:          "arn:aws:iam::123456789012:role/my-role",
 				SessionName:      "my-session",
 				WebIdentityToken: "token2",
