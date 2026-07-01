@@ -669,7 +669,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(
-															regexache.MustCompile(`https://.*`),
+															regexache.MustCompile(`^https://.+`),
 															"Must start with https://",
 														),
 													},
