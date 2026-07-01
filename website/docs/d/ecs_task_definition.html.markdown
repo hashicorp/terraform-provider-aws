@@ -85,7 +85,13 @@ The following arguments are optional:
 * `runtime_platform` - Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
 * `status` - Status of the task definition.
 * `task_role_arn` - ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `trusted_execution_configuration` - The trusted execution configuration for the task. See [Trusted Execution Configuration](#trusted_execution_configuration) below.
 * `volume` - Attributes corresponding to the `volume` argument of the [`aws_ecs_task_definition`](/docs/providers/aws/r/ecs_task_definition.html) resource.
+
+### trusted_execution_configuration
+
+* `isolation_mode` - The isolation mode for the task. `EXCLUSIVE` guarantees the task is the only primary task running on the instance. `SHARED` uses standard shared placement.
+* `instance_reuse_mode` - Controls what happens to the instance after the exclusive task stops. `REUSE` retains the instance for the next exclusive task. `TERMINATE` always provisions a fresh instance and terminates it after the task stops.
 
 ### ephemeral_storage
 

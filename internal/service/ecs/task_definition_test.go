@@ -4279,3 +4279,209 @@ TASK_DEFINITION
 }
 `, rName, enableFaultInjection)
 }
+
+func TestAccECSTaskDefinition_TrustedExecution_exclusiveReuse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecution(rName, "EXCLUSIVE", "REUSE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", "EXCLUSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.instance_reuse_mode", "REUSE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_TrustedExecution_exclusiveTerminate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecution(rName, "EXCLUSIVE", "TERMINATE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", "EXCLUSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.instance_reuse_mode", "TERMINATE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func testAccTaskDefinitionConfig_trustedExecution(rName, isolationMode, instanceReuseMode string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["MANAGED_INSTANCES"]
+
+  trusted_execution_configuration {
+    isolation_mode      = %[2]q
+    instance_reuse_mode = %[3]q
+  }
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "app",
+    "image": "busybox",
+    "cpu": 256,
+    "memory": 512,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, rName, isolationMode, instanceReuseMode)
+}
+
+func TestAccECSTaskDefinition_TrustedExecution_shared(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecutionShared(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", "SHARED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func testAccTaskDefinitionConfig_trustedExecutionShared(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["MANAGED_INSTANCES"]
+
+  trusted_execution_configuration {
+    isolation_mode = "SHARED"
+  }
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "app",
+    "image": "busybox",
+    "cpu": 256,
+    "memory": 512,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, rName)
+}
+
+func TestAccECSTaskDefinition_TrustedExecution_exclusiveDefaultReuse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecutionExclusiveOnly(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", "EXCLUSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.instance_reuse_mode", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func testAccTaskDefinitionConfig_trustedExecutionExclusiveOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["MANAGED_INSTANCES"]
+
+  trusted_execution_configuration {
+    isolation_mode = "EXCLUSIVE"
+  }
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "app",
+    "image": "busybox",
+    "cpu": 256,
+    "memory": 512,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, rName)
+}
