@@ -9,7 +9,7 @@ resource "aws_ssoadmin_region" "test" {
   region = var.region
 
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  region_name  = "us-west-2"
+  region_name  = var.region
 }
 
 variable "rName" {
