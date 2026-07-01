@@ -513,6 +513,12 @@ func resourceEndpointConfiguration() *schema.Resource {
 									},
 								},
 							},
+							"variant_instance_provision_timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(300, 3600),
+							},
 							"variant_name": {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -1010,6 +1016,10 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.ModelDataDownloadTimeoutInSeconds = aws.Int32(int32(v))
 		}
 
+		if v, ok := data["variant_instance_provision_timeout_in_seconds"].(int); ok && v > 0 {
+			l.VariantInstanceProvisionTimeoutInSeconds = aws.Int32(int32(v))
+		}
+
 		if v, ok := data["volume_size_in_gb"].(int); ok && v > 0 {
 			l.VolumeSizeInGB = aws.Int32(int32(v))
 		}
@@ -1098,6 +1108,10 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 		if i.ModelDataDownloadTimeoutInSeconds != nil {
 			l["model_data_download_timeout_in_seconds"] = aws.ToInt32(i.ModelDataDownloadTimeoutInSeconds)
+		}
+
+		if i.VariantInstanceProvisionTimeoutInSeconds != nil {
+			l["variant_instance_provision_timeout_in_seconds"] = aws.ToInt32(i.VariantInstanceProvisionTimeoutInSeconds)
 		}
 
 		if i.VolumeSizeInGB != nil {

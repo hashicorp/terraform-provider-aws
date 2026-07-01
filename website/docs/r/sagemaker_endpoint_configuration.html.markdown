@@ -64,6 +64,7 @@ This resource supports the following arguments:
 * `model_name` - (Optional) Name of the model to use. Required unless using Inference Components (in which case `execution_role_arn` must be specified at the endpoint configuration level).
 * `routing_config` - (Optional) How the endpoint routes incoming traffic. See [routing_config](#routing_config) below.
 * `serverless_config` - (Optional) How an endpoint performs asynchronous inference.
+* `variant_instance_provision_timeout_in_seconds` - (Optional) The timeout value, in seconds, for provisioning instances for the production variant. When SageMaker AI encounters an insufficient capacity error while provisioning instances, it retries with the next instance pool (if configured via `instance_pools`) or waits until the timeout expires. This timeout applies only to capacity provisioning and does not include the time for model download or container startup. Valid values between `300` and `3600`.
 * `variant_name` - (Optional) Name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) Size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
 
