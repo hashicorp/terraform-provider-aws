@@ -255,6 +255,11 @@ func resourceEndpointConfiguration() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc:  validPrefix,
 				},
+				"enable_network_isolation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
 				names.AttrExecutionRoleARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -716,6 +721,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		Tags:               getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("enable_network_isolation"); ok {
+		createOpts.EnableNetworkIsolation = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
@@ -763,6 +772,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
+	d.Set("enable_network_isolation", endpointConfig.EnableNetworkIsolation)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
 	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
