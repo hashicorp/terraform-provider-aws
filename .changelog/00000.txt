@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentication_method`, `on_behalf_of_token_exchange_config`, `private_endpoint`, and `private_endpoint_overrides` arguments to `custom_oauth2_provider_config`
+```

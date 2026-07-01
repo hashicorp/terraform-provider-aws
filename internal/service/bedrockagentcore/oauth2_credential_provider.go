@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -149,6 +150,104 @@ func oauth2ClientSecretConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
+func customOAuth2ProviderConfigAttributes(ctx context.Context) map[string]schema.Attribute {
+	attrs := oauth2ClientCredentialsAttributes(ctx)
+	attrs["client_authentication_method"] = schema.StringAttribute{
+		CustomType: fwtypes.StringEnumType[awstypes.ClientAuthenticationMethodType](),
+		Optional:   true,
+	}
+	return attrs
+}
+
+func oauth2ManagedVPCResourceBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+			listvalidator.ExactlyOneOf(
+				path.MatchRelative().AtParent().AtName("managed_vpc_resource"),
+				path.MatchRelative().AtParent().AtName("self_managed_lattice_resource"),
+			),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"endpoint_ip_address_type": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
+					Required:   true,
+				},
+				"routing_domain": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(3, 255),
+					},
+				},
+				names.AttrSecurityGroupIDs: schema.SetAttribute{
+					CustomType: fwtypes.SetOfStringType,
+					Optional:   true,
+					Validators: []validator.Set{
+						setvalidator.SizeAtMost(5),
+					},
+				},
+				names.AttrSubnetIDs: schema.SetAttribute{
+					CustomType: fwtypes.SetOfStringType,
+					Required:   true,
+				},
+				names.AttrTags: tftags.TagsAttribute(),
+				"vpc_identifier": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func oauth2SelfManagedLatticeResourceBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"resource_configuration_identifier": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func oauth2PrivateEndpointBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"managed_vpc_resource":          oauth2ManagedVPCResourceBlock(ctx),
+				"self_managed_lattice_resource": oauth2SelfManagedLatticeResourceBlock(ctx),
+			},
+		},
+	}
+}
+
+func oauth2PrivateEndpointOverridesBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2PrivateEndpointOverrideModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrDomain: schema.StringAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"private_endpoint": oauth2PrivateEndpointBlock(ctx),
+			},
+		},
+	}
+}
+
 func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNestedBlock {
 	attrs := oauth2ClientCredentialsAttributes(ctx)
 	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
@@ -207,9 +306,46 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: oauth2ClientCredentialsAttributes(ctx),
+								Attributes: customOAuth2ProviderConfigAttributes(ctx),
 								Blocks: map[string]schema.Block{
 									"client_secret_config": oauth2ClientSecretConfigBlock(ctx),
+									"on_behalf_of_token_exchange_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2TokenExchangeConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"grant_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.OnBehalfOfTokenExchangeGrantTypeType](),
+													Required:   true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"token_exchange_grant_type_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2TokenExchangeGrantTypeConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"actor_token_content": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ActorTokenContentType](),
+																Required:   true,
+															},
+															"actor_token_scopes": schema.SetAttribute{
+																CustomType:  fwtypes.SetOfStringType,
+																ElementType: types.StringType,
+																Optional:    true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"private_endpoint":           oauth2PrivateEndpointBlock(ctx),
+									"private_endpoint_overrides": oauth2PrivateEndpointOverridesBlock(ctx),
 									"oauth_discovery": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
 										Validators: []validator.List{
@@ -857,7 +993,26 @@ type oauth2DiscoveryModel struct {
 
 type customOAuth2ProviderConfigModel struct {
 	oauth2ClientCredentialsModel
-	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+	ClientAuthenticationMethod    fwtypes.StringEnum[awstypes.ClientAuthenticationMethodType]         `tfsdk:"client_authentication_method"`
+	OAuthDiscovery                fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel]               `tfsdk:"oauth_discovery"`
+	OnBehalfOfTokenExchangeConfig fwtypes.ListNestedObjectValueOf[oauth2TokenExchangeConfigModel]     `tfsdk:"on_behalf_of_token_exchange_config"`
+	PrivateEndpoint               fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides      fwtypes.ListNestedObjectValueOf[oauth2PrivateEndpointOverrideModel] `tfsdk:"private_endpoint_overrides"`
+}
+
+type oauth2TokenExchangeConfigModel struct {
+	GrantType                    fwtypes.StringEnum[awstypes.OnBehalfOfTokenExchangeGrantTypeType]        `tfsdk:"grant_type"`
+	TokenExchangeGrantTypeConfig fwtypes.ListNestedObjectValueOf[oauth2TokenExchangeGrantTypeConfigModel] `tfsdk:"token_exchange_grant_type_config"`
+}
+
+type oauth2TokenExchangeGrantTypeConfigModel struct {
+	ActorTokenContent fwtypes.StringEnum[awstypes.ActorTokenContentType] `tfsdk:"actor_token_content"`
+	ActorTokenScopes  fwtypes.SetOfString                                `tfsdk:"actor_token_scopes"`
+}
+
+type oauth2PrivateEndpointOverrideModel struct {
+	Domain          types.String                                          `tfsdk:"domain"`
+	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
 }
 
 type atlassianOAuth2ProviderConfigModel struct {

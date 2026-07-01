@@ -127,6 +127,58 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
+**Advanced Configuration:**
+
+* `client_authentication_method` - (Optional) Client authentication method used with the token endpoint. Valid values: `CLIENT_SECRET_BASIC`, `CLIENT_SECRET_POST`, `AWS_IAM_ID_TOKEN_JWT`.
+* `on_behalf_of_token_exchange_config` - (Optional) On-behalf-of token exchange configuration, enabling RFC 8693 token exchange or RFC 7523 JWT authorization grant flows. See [`on_behalf_of_token_exchange_config`](#on_behalf_of_token_exchange_config) below.
+* `private_endpoint` - (Optional) Default private endpoint for the custom OAuth2 provider, enabling secure connectivity through a VPC Lattice resource configuration. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint_overrides` - (Optional) Private endpoint overrides for the custom OAuth2 provider configuration. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+
+### `on_behalf_of_token_exchange_config`
+
+The `on_behalf_of_token_exchange_config` block supports the following:
+
+* `grant_type` - (Required) Grant type for the on-behalf-of token exchange. Valid values: `TOKEN_EXCHANGE`, `JWT_AUTHORIZATION_GRANT`.
+* `token_exchange_grant_type_config` - (Optional) Configuration specific to the `TOKEN_EXCHANGE` grant type (RFC 8693). See [`token_exchange_grant_type_config`](#token_exchange_grant_type_config) below.
+
+### `token_exchange_grant_type_config`
+
+The `token_exchange_grant_type_config` block supports the following:
+
+* `actor_token_content` - (Required) Content type for the actor token in the token exchange. Valid values: `NONE`, `M2M`, `AWS_IAM_ID_TOKEN_JWT`.
+* `actor_token_scopes` - (Optional) Set of scopes for the actor token. Only valid when `actor_token_content` is `M2M`.
+
+### `private_endpoint`
+
+The `private_endpoint` block supports exactly one of the following:
+
+* `managed_vpc_resource` - (Optional) Service-managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+
+### `private_endpoint_overrides`
+
+The `private_endpoint_overrides` block supports the following:
+
+* `domain` - (Optional) Domain the private endpoint override applies to.
+* `private_endpoint` - (Optional) Private endpoint configuration for the domain. See [`private_endpoint`](#private_endpoint) above.
+
+### `managed_vpc_resource`
+
+The `managed_vpc_resource` block supports the following:
+
+* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values: `IPV4`, `DUALSTACK`.
+* `subnet_ids` - (Required) Set of subnet IDs for the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC.
+* `routing_domain` - (Optional) Routing domain for the managed VPC resource.
+* `security_group_ids` - (Optional) Set of up to 5 security group IDs for the managed VPC resource.
+* `tags` - (Optional) Key-value map of tags for the managed VPC resource.
+
+### `self_managed_lattice_resource`
+
+The `self_managed_lattice_resource` block supports the following:
+
+* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+
 ### Predefined Providers
 
 The `atlassian`, `github`, `google`, `linkedin`, `microsoft`, `salesforce`, and `slack` provider blocks support the following:
