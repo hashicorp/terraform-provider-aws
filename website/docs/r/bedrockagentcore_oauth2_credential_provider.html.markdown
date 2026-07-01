@@ -81,7 +81,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
 The following arguments are required:
 
-* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values: `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `Microsoft`, `SalesforceOauth2`, `SlackOauth2`.
+* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values include `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `MicrosoftOauth2`, `SalesforceOauth2`, `SlackOauth2`, `AtlassianOauth2`, `LinkedinOauth2`, and a number of additional supported vendors (e.g. `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`) configured via `included_oauth2_provider_config`. Refer to the AWS API for the full, current list. See the note under [`included_oauth2_provider_config`](#oauth2_provider_config) for vendors that are not yet supported.
 * `name` - (Required) Name of the OAuth2 credential provider.
 * `oauth2_provider_config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`oauth2_provider_config`](#oauth2_provider_config) below.
 
@@ -94,12 +94,17 @@ The following arguments are optional:
 
 The `oauth2_provider_config` block must contain exactly one of the following provider configurations:
 
+* `atlassian_oauth2_provider_config` - (Optional) Atlassian OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `custom_oauth2_provider_config` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
-* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
-* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
-* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
-* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
-* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
+* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `included_oauth2_provider_config` - (Optional) Configuration for an included (vendor-supported) OAuth2 provider, used for the additional supported vendors. See [`predefined providers`](#predefined-providers) below.
+
+-> **Note:** `included_oauth2_provider_config` currently supports only vendors that have fixed, AWS-known OAuth2 endpoints (for example `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`), which require nothing beyond `client_id` and `client_secret`. Isolated-tenant vendors such as `OktaOauth2`, `PingOneOauth2`, and `OneLoginOauth2` require provider-specific endpoints (`issuer`, `authorization_endpoint`, `token_endpoint`) that are not yet exposed by this resource, and will fail at create time with a `Missing TokenEndpoint` error. Support for those fields is planned in a follow-up.
+* `linkedin_oauth2_provider_config` - (Optional) LinkedIn OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
+* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 
 ### `custom`
 
@@ -120,9 +125,73 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
-### `github`, `google`, `microsoft`, `salesforce`, `slack`
+**Externally-Managed Client Secret:**
 
-These predefined provider blocks support the following:
+* `client_secret_source` - (Optional) Source type of the client secret. Valid values: `MANAGED` (the service manages the secret) or `EXTERNAL` (you manage the secret in AWS Secrets Manager). Use `EXTERNAL` together with `client_secret_config`.
+* `client_secret_config` - (Optional) Reference to an AWS Secrets Manager secret that stores the client secret. Required when `client_secret_source` is `EXTERNAL`. See [`client_secret_config`](#client_secret_config) below.
+
+**Advanced Configuration:**
+
+* `client_authentication_method` - (Optional) Client authentication method used with the token endpoint. Valid values: `CLIENT_SECRET_BASIC`, `CLIENT_SECRET_POST`, `AWS_IAM_ID_TOKEN_JWT`.
+* `on_behalf_of_token_exchange_config` - (Optional) On-behalf-of token exchange configuration, enabling RFC 8693 token exchange or RFC 7523 JWT authorization grant flows. See [`on_behalf_of_token_exchange_config`](#on_behalf_of_token_exchange_config) below.
+* `private_endpoint` - (Optional) Default private endpoint for the custom OAuth2 provider, enabling secure connectivity through a VPC Lattice resource configuration. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint_overrides` - (Optional) Private endpoint overrides for the custom OAuth2 provider configuration. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+
+### `client_secret_config`
+
+The `client_secret_config` block supports the following:
+
+* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the client secret value.
+* `json_key` - (Required) JSON key used to extract the client secret value from the Secrets Manager secret.
+
+### `on_behalf_of_token_exchange_config`
+
+The `on_behalf_of_token_exchange_config` block supports the following:
+
+* `grant_type` - (Required) Grant type for the on-behalf-of token exchange. Valid values: `TOKEN_EXCHANGE`, `JWT_AUTHORIZATION_GRANT`.
+* `token_exchange_grant_type_config` - (Optional) Configuration specific to the `TOKEN_EXCHANGE` grant type (RFC 8693). See [`token_exchange_grant_type_config`](#token_exchange_grant_type_config) below.
+
+### `token_exchange_grant_type_config`
+
+The `token_exchange_grant_type_config` block supports the following:
+
+* `actor_token_content` - (Required) Content type for the actor token in the token exchange. Valid values: `NONE`, `M2M`, `AWS_IAM_ID_TOKEN_JWT`.
+* `actor_token_scopes` - (Optional) Set of scopes for the actor token. Only valid when `actor_token_content` is `M2M`.
+
+### `private_endpoint`
+
+The `private_endpoint` block supports exactly one of the following:
+
+* `managed_vpc_resource` - (Optional) Service-managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+
+### `private_endpoint_overrides`
+
+The `private_endpoint_overrides` block supports the following:
+
+* `domain` - (Optional) Domain the private endpoint override applies to.
+* `private_endpoint` - (Optional) Private endpoint configuration for the domain. See [`private_endpoint`](#private_endpoint) above.
+
+### `managed_vpc_resource`
+
+The `managed_vpc_resource` block supports the following:
+
+* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values: `IPV4`, `DUALSTACK`.
+* `subnet_ids` - (Required) Set of subnet IDs for the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC.
+* `routing_domain` - (Optional) Routing domain for the managed VPC resource.
+* `security_group_ids` - (Optional) Set of up to 5 security group IDs for the managed VPC resource.
+* `tags` - (Optional) Key-value map of tags for the managed VPC resource.
+
+### `self_managed_lattice_resource`
+
+The `self_managed_lattice_resource` block supports the following:
+
+* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+
+### Predefined providers
+
+The `atlassian_oauth2_provider_config`, `github_oauth2_provider_config`, `google_oauth2_provider_config`, `included_oauth2_provider_config`, `linkedin_oauth2_provider_config`, `microsoft_oauth2_provider_config`, `salesforce_oauth2_provider_config`, and `slack_oauth2_provider_config` blocks support the following:
 
 **Standard Credentials (choose one pair):**
 
