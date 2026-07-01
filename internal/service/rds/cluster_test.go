@@ -246,6 +246,126 @@ func TestAccRDSCluster_tags(t *testing.T) {
 	})
 }
 
+// Renaming a cluster (and an attached instance) must update in place, not recreate.
+func TestAccRDSCluster_identifierRename(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2, dbCluster3 types.DBCluster
+	var dbInstance1, dbInstance2, dbInstance3 types.DBInstance
+	clusterID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterIDUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterIDFinal := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceIDUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	instanceResourceName := "aws_rds_cluster_instance.test"
+
+	planChecksUpdate := resource.ConfigPlanChecks{
+		PreApply: []plancheck.PlanCheck{
+			// Renaming must be an in-place update, never a replacement.
+			plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+			plancheck.ExpectResourceAction(instanceResourceName, plancheck.ResourceActionUpdate),
+		},
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierRename(instanceID, clusterID, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckClusterInstanceExists(ctx, t, instanceResourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, clusterID),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrIdentifier, instanceID),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrClusterIdentifier, clusterID),
+				),
+			},
+			{
+				// Rename only the cluster. The instance must not be recreated and
+				// its cluster_identifier must follow the renamed cluster.
+				Config:           testAccClusterConfig_identifierRename(instanceID, clusterIDUpdated, 1),
+				ConfigPlanChecks: planChecksUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckClusterInstanceExists(ctx, t, instanceResourceName, &dbInstance2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					testAccCheckClusterInstanceNotRecreated(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, clusterIDUpdated),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrIdentifier, instanceID),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrClusterIdentifier, clusterIDUpdated),
+				),
+			},
+			{
+				// Rename the cluster and the instance, and change a non-identifier
+				// attribute (backup_retention_period) in the same apply. Nothing
+				// must be recreated and the combined modify must succeed.
+				Config:           testAccClusterConfig_identifierRename(instanceIDUpdated, clusterIDFinal, 7),
+				ConfigPlanChecks: planChecksUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster3),
+					testAccCheckClusterInstanceExists(ctx, t, instanceResourceName, &dbInstance3),
+					testAccCheckClusterNotRecreated(&dbCluster2, &dbCluster3),
+					testAccCheckClusterInstanceNotRecreated(&dbInstance2, &dbInstance3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, clusterIDFinal),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "7"),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrIdentifier, instanceIDUpdated),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrClusterIdentifier, clusterIDFinal),
+				),
+			},
+			{
+				// The renamed cluster's ID must still be a valid import handle.
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					"cluster_members",
+					"db_instance_parameter_group_name",
+					"enable_global_write_forwarding",
+					"enable_local_write_forwarding",
+					"manage_master_user_password",
+					"master_password",
+					"master_password_wo",
+					"master_user_secret_kms_key_id",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+// Renaming without apply_immediately must fail fast rather than defer the rename.
+func TestAccRDSCluster_identifierRenameRequiresApplyImmediately(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	clusterID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterIDUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_identifierRenameApplyImmediately(clusterID, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+			},
+			{
+				Config:      testAccClusterConfig_identifierRenameApplyImmediately(clusterIDUpdated, false),
+				ExpectError: regexache.MustCompile(`renaming RDS Cluster \(.+\) requires apply_immediately = true`),
+			},
+		},
+	})
+}
+
 // Test case for verifying that the security groups can be destroyed, recreated,
 // and number changed whilst Terraform handles it correctly.
 // https://github.com/hashicorp/terraform-provider-aws/issues/9692
@@ -4193,6 +4313,53 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_identifierRename(instanceID, clusterID string, backupRetentionPeriod int) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[3]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.t3.medium", "db.t3.small", "db.r5.large"]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier      = %[2]q
+  database_name           = "test"
+  engine                  = data.aws_rds_engine_version.default.engine
+  engine_version          = data.aws_rds_engine_version.default.version
+  master_username         = "tfacctest"
+  master_password         = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = %[4]d
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[1]q
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  engine             = data.aws_rds_engine_version.default.engine
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  apply_immediately  = true
+}
+`, instanceID, clusterID, tfrds.ClusterEngineAuroraMySQL, backupRetentionPeriod)
+}
+
+func testAccClusterConfig_identifierRenameApplyImmediately(clusterID string, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+  apply_immediately   = %[3]t
+}
+`, clusterID, tfrds.ClusterEngineAuroraMySQL, applyImmediately)
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {

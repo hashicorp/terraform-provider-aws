@@ -80,6 +80,85 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 	})
 }
 
+// Renaming a cluster instance must update in place, not recreate.
+func TestAccRDSClusterInstance_identifierRename(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceIDUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_identifierRename(rName, instanceID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, instanceID),
+				),
+			},
+			{
+				Config: testAccClusterInstanceConfig_identifierRename(rName, instanceIDUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// Renaming must be an in-place update, never a replacement.
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckClusterInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, instanceIDUpdated),
+				),
+			},
+			{
+				// The renamed instance's ID must still be a valid import handle.
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
+				},
+			},
+		},
+	})
+}
+
+// Renaming without apply_immediately must fail fast rather than defer the rename.
+func TestAccRDSClusterInstance_identifierRenameRequiresApplyImmediately(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceIDUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_identifierRenameApplyImmediately(rName, instanceID, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				Config:      testAccClusterInstanceConfig_identifierRenameApplyImmediately(rName, instanceIDUpdated, false),
+				ExpectError: regexache.MustCompile(`renaming RDS Cluster Instance \(.+\) requires apply_immediately = true`),
+			},
+		},
+	})
+}
+
 func TestAccRDSClusterInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1159,6 +1238,16 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context, t *testing.T) resou
 	}
 }
 
+func testAccCheckClusterInstanceNotRecreated(i, j *types.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(i.DbiResourceId) != aws.ToString(j.DbiResourceId) {
+			return fmt.Errorf("RDS Cluster Instance was recreated (%s -> %s)", aws.ToString(i.DbiResourceId), aws.ToString(j.DbiResourceId))
+		}
+
+		return nil
+	}
+}
+
 func testAccClusterInstanceConfig_orderableEngineBase(engine string, performanceInsights bool) string {
 	if performanceInsights {
 		return fmt.Sprintf(`
@@ -1232,6 +1321,30 @@ resource "aws_db_parameter_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccClusterInstanceConfig_identifierRename(rName, instanceID string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[2]q
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  apply_immediately  = true
+}
+`, rName, instanceID))
+}
+
+func testAccClusterInstanceConfig_identifierRenameApplyImmediately(rName, instanceID string, applyImmediately bool) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[2]q
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  apply_immediately  = %[3]t
+}
+`, rName, instanceID, applyImmediately))
 }
 
 func testAccClusterInstanceConfig_identifierGenerated(rName string) string {

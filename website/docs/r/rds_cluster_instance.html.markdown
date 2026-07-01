@@ -25,13 +25,15 @@ For more information on Amazon Aurora, see [Aurora on Amazon RDS](https://docs.a
 
 ~> **NOTE:** `aurora` is no longer a valid `engine` because of [Amazon Aurora's MySQL-Compatible Edition version 1 end of life](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.MySQL56.EOL.html).
 
+~> **Note:** Changing `identifier` renames the instance in place and requires `apply_immediately = true`. The rename reboots the instance and changes its endpoint, so update anything that references the old endpoint.
+
 ## Example Usage
 
 ```terraform
 resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
-  cluster_identifier = aws_rds_cluster.default.id
+  cluster_identifier = aws_rds_cluster.default.cluster_identifier
   instance_class     = "db.r4.large"
   engine             = aws_rds_cluster.default.engine
   engine_version     = aws_rds_cluster.default.engine_version
@@ -55,7 +57,7 @@ This resource supports the following arguments:
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `availability_zone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
 * `ca_cert_identifier` - (Optional) Identifier of the CA certificate for the DB instance.
-* `cluster_identifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
+* `cluster_identifier` - (Required) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) to launch this instance in. You can't move instances between clusters by changing this value.
 * `copy_tags_to_snapshot` - (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
@@ -65,7 +67,7 @@ This resource supports the following arguments:
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `force_destroy` - (Optional) Forces an instance to be destroyed when a part of a read replica cluster. **Note:** will promote the read replica to a standalone cluster before instance deletion.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
-* `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
+* `identifier` - (Optional) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier. Changing this value renames the instance in place rather than recreating it; `apply_immediately` must be set to `true` for the rename to take effect. Note that renaming changes the instance's endpoint and reboots the instance.
 * `instance_class` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Managing.html). Aurora uses `db.*` instance classes/types. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
 * `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.

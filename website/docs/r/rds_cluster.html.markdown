@@ -20,6 +20,8 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 ~> **Note:** using `apply_immediately` can result in a brief downtime as the server reboots. See the AWS Docs on [RDS Maintenance](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html) for more information.
 
+~> **Note:** Changing `cluster_identifier` renames the cluster in place and requires `apply_immediately = true`. The rename reboots the cluster and changes its endpoints, so update anything that references the old endpoints. Attached `aws_rds_cluster_instance` resources are not recreated; reference the cluster from them with `cluster_identifier = aws_rds_cluster.example.cluster_identifier` so the rename propagates in the same apply (referencing `.id` instead reconciles on the next plan).
+
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
@@ -122,7 +124,7 @@ resource "aws_rds_cluster" "example" {
 }
 
 resource "aws_rds_cluster_instance" "example" {
-  cluster_identifier = aws_rds_cluster.example.id
+  cluster_identifier = aws_rds_cluster.example.cluster_identifier
   instance_class     = "db.serverless"
   engine             = aws_rds_cluster.example.engine
   engine_version     = aws_rds_cluster.example.engine_version
@@ -210,7 +212,7 @@ This resource supports the following arguments:
 * `backtrack_window` - (Optional) Target backtrack window, in seconds. Only available for `aurora` and `aurora-mysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backup_retention_period` - (Optional) Days to retain backups for. Default `1`
 * `ca_certificate_identifier` - (Optional) The CA certificate identifier to use for the DB cluster's server certificate.
-* `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
+* `cluster_identifier` - (Optional) The cluster identifier. If omitted, Terraform will assign a random, unique identifier. Changing this value renames the cluster in place and requires `apply_immediately = true` (see the note above).
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_scalability_type` - (Optional, Forces new resources) Specifies the scalability mode of the Aurora DB cluster. When set to `limitless`, the cluster operates as an Aurora Limitless Database. When set to `standard` (the default), the cluster uses normal DB instance creation. Valid values: `limitless`, `standard`.
 * `copy_tags_to_snapshot` - (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
@@ -387,7 +389,7 @@ resource "aws_rds_cluster" "example" {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
-* `id` - RDS Cluster Identifier
+* `id` - RDS Cluster Identifier. Use `cluster_identifier` instead.
 * `cluster_identifier` - RDS Cluster Identifier
 * `cluster_resource_id` - RDS Cluster Resource ID
 * `cluster_members` - List of RDS Instances that are a part of this cluster
