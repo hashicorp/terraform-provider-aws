@@ -7,6 +7,7 @@ package pinpointsmsvoicev2
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -181,6 +182,15 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.ValueString())
 		return
 	}
+
+	// Post-Delete readback waits for AWS eventual-consistency propagation
+	// so a subsequent refresh does not observe the policy still attached.
+	if _, err := tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return findResourcePolicyByARN(ctx, conn, state.ResourceARN.ValueString())
+	}); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.ValueString())
+		return
+	}
 }
 
 func findResourcePolicyByARN(ctx context.Context, conn *pinpointsmsvoicev2.Client, arn string) (*pinpointsmsvoicev2.GetResourcePolicyOutput, error) {
@@ -197,6 +207,13 @@ func findResourcePolicyByARN(ctx context.Context, conn *pinpointsmsvoicev2.Clien
 	}
 	if output == nil || output.Policy == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+	// when no user policy is attached — including after a successful
+	// DeleteResourcePolicy — AWS returns HTTP 200 with the literal string "{}"
+	// in the Policy field. Treat that as NotFound so Read removes the
+	// resource from state and the post-Delete readback converges.
+	if aws.ToString(output.Policy) == "{}" {
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: fmt.Errorf("no resource policy attached to %s", arn)})
 	}
 
 	return output, nil
