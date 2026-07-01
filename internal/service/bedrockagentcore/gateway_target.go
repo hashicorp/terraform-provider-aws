@@ -1652,6 +1652,8 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 		switch {
 		case !httpData.AgentcoreRuntime.IsNull():
 			return "http_agentcore_runtime"
+		case !httpData.Passthrough.IsNull():
+			return "http_passthrough"
 		}
 	}
 	if !m.MCP.IsNull() {
