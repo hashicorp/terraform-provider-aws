@@ -5,16 +5,6 @@ page_title: "AWS: aws_pinpointsmsvoicev2_resource_policy"
 description: |-
   Manages an AWS End User Messaging SMS Resource Policy.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_pinpointsmsvoicev2_resource_policy
 
@@ -25,7 +15,28 @@ Manages an AWS End User Messaging SMS Resource Policy.
 ### Basic Usage
 
 ```terraform
+resource "aws_pinpointsmsvoicev2_phone_number" "example" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sms-voice:SendTextMessage"]
+    resources = [aws_pinpointsmsvoicev2_phone_number.example.arn]
+    principals {
+      type        = "AWS"
+      identifiers = ["123456789012"]
+    }
+  }
+}
+
 resource "aws_pinpointsmsvoicev2_resource_policy" "example" {
+  resource_arn = aws_pinpointsmsvoicev2_phone_number.example.arn
+  policy       = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -33,26 +44,16 @@ resource "aws_pinpointsmsvoicev2_resource_policy" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Brief description of the required argument.
+* `policy` - (Required) Resource-based policy document in JSON format.
+* `resource_arn` - (Required) ARN of the End User Messaging SMS resource — phone number, opt-out list, pool, or sender ID — to attach the policy to.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-options.html#cli-configure-options-region). Defaults to the region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Resource Policy.
-* `example_attribute` - Brief description of the attribute.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+This resource exports no additional attributes.
 
 ## Import
 
@@ -62,9 +63,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_pinpointsmsvoicev2_resource_policy.example
   identity = {
-<!---
-Add only required attributes in this example.
---->
+    resource_arn = "arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789"
   }
 }
 
@@ -76,35 +75,25 @@ resource "aws_pinpointsmsvoicev2_resource_policy" "example" {
 ### Identity Schema
 
 #### Required
-<!---
-Required attributes here:
-> ARN Identity:
-* `arn` - ARN of the Resource Policy.
-> Parameterized Identity:
-* `example_id_arg` - ID argument of the Resource Policy.
-> Singleton Identity: no required attributes.
---->
+
+* `resource_arn` (String) ARN of the End User Messaging SMS resource the policy is attached to.
 
 #### Optional
-<!---
-Optional attributes here:
-> ARN Identity: no optional attributes.
-> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
---->
+
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import End User Messaging SMS Resource Policy using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the resource policy using the parent resource ARN. For example:
 
 ```terraform
 import {
   to = aws_pinpointsmsvoicev2_resource_policy.example
-  id = "resource_policy-id-12345678"
+  id = "arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789"
 }
 ```
 
-Using `terraform import`, import End User Messaging SMS Resource Policy using the `example_id_arg`. For example:
+Using `terraform import`, import the resource policy using the parent resource ARN. For example:
 
 ```console
-% terraform import aws_pinpointsmsvoicev2_resource_policy.example resource_policy-id-12345678
+% terraform import aws_pinpointsmsvoicev2_resource_policy.example arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789
 ```
