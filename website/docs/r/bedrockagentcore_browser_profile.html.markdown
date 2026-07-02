@@ -78,7 +78,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrockagentcore_browser_profile.example
   identity = {
-    harness_id = "browser-profile-id-12345678"
+    profile_id = "browser-profile-id-12345678"
   }
 }
 
