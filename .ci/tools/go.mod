@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/YakDriver/copyplop v0.10.0
-	github.com/YakDriver/swissshepherd v0.15.0
+	github.com/YakDriver/swissshepherd v0.16.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.12.2
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
