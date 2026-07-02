@@ -80,7 +80,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"capacity_status": framework.ResourceComputedListOfObjectsAttribute[capacityStatusModel](ctx, listplanmodifier.UseStateForUnknown()),
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:   true,
 				CustomType: timetypes.RFC3339Type{},
 				PlanModifiers: []planmodifier.String{
@@ -141,7 +141,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.StringEnumType[awstypes.PoolsRunningMode](),
 				Required:   true,
 			},
-			"s3_bucket_name": schema.StringAttribute{
+			names.AttrS3BucketName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -364,7 +364,7 @@ func waitPoolCreated(ctx context.Context, conn *workspaces.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(statusCreating, statusUpdating),
 		Target:                    enum.Slice(statusStopped, statusRunning, statusStarting),
-		Refresh:                   statusPool(ctx, conn, id),
+		Refresh:                   statusPool(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -382,7 +382,7 @@ func waitPoolUpdated(ctx context.Context, conn *workspaces.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(statusUpdating, statusCreating),
 		Target:                    enum.Slice(statusStopped, statusRunning, statusStarting),
-		Refresh:                   statusPool(ctx, conn, id),
+		Refresh:                   statusPool(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -400,7 +400,7 @@ func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(statusDeleting, statusStopping),
 		Target:  []string{},
-		Refresh: statusPool(ctx, conn, id),
+		Refresh: statusPool(conn, id),
 		Timeout: timeout,
 	}
 
@@ -412,7 +412,7 @@ func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, ti
 	return nil, smarterr.NewError(err)
 }
 
-func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
+func statusPool(conn *workspaces.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findPoolByID(ctx, conn, id)
 		if retry.NotFound(err) {

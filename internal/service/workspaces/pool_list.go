@@ -61,15 +61,17 @@ func (l *poolListResource) List(ctx context.Context, request list.ListRequest, s
 
 func listPools(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspacesPoolsInput) iter.Seq2[awstypes.WorkspacesPool, error] {
 	return func(yield func(awstypes.WorkspacesPool, error) bool) {
-		err := describeWorkspacesPoolsPages(ctx, conn, input, func(page *workspaces.DescribeWorkspacesPoolsOutput, lastPage bool) bool {
+		var stopped bool
+		err := describeWorkSpacesPoolsPages(ctx, conn, input, func(page *workspaces.DescribeWorkspacesPoolsOutput, lastPage bool) bool {
 			for _, item := range page.WorkspacesPools {
 				if !yield(item, nil) {
+					stopped = true
 					return false
 				}
 			}
 			return true
 		})
-		if err != nil {
+		if !stopped && err != nil {
 			yield(awstypes.WorkspacesPool{}, fmt.Errorf("listing WorkSpaces Pools: %w", err))
 		}
 	}

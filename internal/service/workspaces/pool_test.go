@@ -13,7 +13,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,12 +27,12 @@ import (
 func testAccPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.WorkspacesPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 	resourceBundleName := "data.aws_workspaces_bundle.standard"
 	resourceDirectory := "aws_workspaces_directory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
@@ -79,10 +78,10 @@ func testAccPool_disappears(t *testing.T) {
 	}
 
 	var pool awstypes.WorkspacesPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
@@ -177,9 +176,9 @@ func testAccPreCheckPool(ctx context.Context, t *testing.T) {
 func testAccPool_ApplicationSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.WorkspacesPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
@@ -196,7 +195,7 @@ func testAccPool_ApplicationSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", "test"),
-					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrS3BucketName),
 				),
 			},
 		},
@@ -206,9 +205,9 @@ func testAccPool_ApplicationSettings(t *testing.T) {
 func testAccPool_TimeoutSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.WorkspacesPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))

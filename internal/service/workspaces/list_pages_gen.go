@@ -61,7 +61,7 @@ func describeWorkspaceImagesPages(ctx context.Context, conn *workspaces.Client, 
 	}
 	return nil
 }
-func describeWorkspacesPoolsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspacesPoolsInput, fn func(*workspaces.DescribeWorkspacesPoolsOutput, bool) bool, optFns ...func(*workspaces.Options)) error {
+func describeWorkSpacesPoolsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspacesPoolsInput, fn func(*workspaces.DescribeWorkspacesPoolsOutput, bool) bool, optFns ...func(*workspaces.Options)) error {
 	for {
 		output, err := conn.DescribeWorkspacesPools(ctx, input, optFns...)
 		if err != nil {
