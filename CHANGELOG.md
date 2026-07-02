@@ -1,5 +1,14 @@
 ## 6.54.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_ssoadmin_region: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#48126](https://github.com/hashicorp/terraform-provider-aws/issues/48126))
+
+FEATURES:
+
+* **New List Resource:** `aws_ssoadmin_region` ([#48126](https://github.com/hashicorp/terraform-provider-aws/issues/48126))
+* **New Resource:** `aws_ssoadmin_region` ([#48126](https://github.com/hashicorp/terraform-provider-aws/issues/48126))
+
 ## 6.53.0 (July 1, 2026)
 
 BREAKING CHANGES:
