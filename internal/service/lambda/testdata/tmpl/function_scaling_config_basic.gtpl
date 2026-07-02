@@ -118,7 +118,32 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
         "ec2:DescribeInstanceTypeOfferings",
         "ec2:RunInstances",
         "ec2:TerminateInstances",
-        "ec2:AttachNetworkInterface"
+        "ec2:AttachNetworkInterface",
+        "ec2:CreateTags",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeCapacityReservations",
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeInstanceTypes",
+        "ec2:DescribeVpcEncryptionControls"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "SNS:Publish"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments"
       ],
       "Resource": [
         "*"
