@@ -5,6 +5,7 @@ package vpclattice
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -72,7 +73,7 @@ func (d *dataSourceServiceNetworkResourceAssociations) Read(ctx context.Context,
 		data.ID = types.StringValue(snID)
 
 		if _, err := findServiceNetworkByID(ctx, conn, snID); err != nil {
-			resp.Diagnostics.AddError("reading VPC Lattice Service Network ("+snID+")", err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("reading VPC Lattice Service Network (%s)", snID), err.Error())
 			return
 		}
 
@@ -90,7 +91,7 @@ func (d *dataSourceServiceNetworkResourceAssociations) Read(ctx context.Context,
 		data.ID = types.StringValue(rcID)
 
 		if _, err := findResourceConfigurationByID(ctx, conn, rcID); err != nil {
-			resp.Diagnostics.AddError("reading VPC Lattice Resource Configuration ("+rcID+")", err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("reading VPC Lattice Resource Configuration (%s)", rcID), err.Error())
 			return
 		}
 
