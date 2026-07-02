@@ -72,7 +72,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Browser Profile using the `profile_id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_browser_profile.example
+  identity = {
+    harness_id = "browser-profile-id-12345678"
+  }
+}
+
+resource "aws_bedrockagentcore_browser_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `profile_id` (String) ID of the browser profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Browser Profiles using `profile_id`. For example:
 
 ```terraform
 import {
@@ -81,7 +107,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Browser Profile using the `profile_id`. For example:
+Using `terraform import`, import Bedrock AgentCore Browser Profiles using `profile_id`. For example:
 
 ```console
 % terraform import aws_bedrockagentcore_browser_profile.example browser-profile-id-12345678

@@ -38,7 +38,12 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_browser_profile", name="Browser Profile")
 // @Tags(identifierAttribute="profile_arn")
+// @IdentityAttribute("profile_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetBrowserProfileOutput")
+// @Testing(generator="testAccRandomBrowserProfileName(t)")
 // @Testing(tagsTest=false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="profile_id")
 func newBrowserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &browserProfileResource{}
 
@@ -51,13 +56,12 @@ func newBrowserProfileResource(_ context.Context) (resource.ResourceWithConfigur
 type browserProfileResource struct {
 	framework.ResourceWithModel[browserProfileResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *browserProfileResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"profile_arn": framework.ARNAttributeComputedOnly(),
-			"profile_id":  framework.IDAttribute(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -76,6 +80,8 @@ func (r *browserProfileResource) Schema(ctx context.Context, request resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"profile_arn":     framework.ARNAttributeComputedOnly(),
+			"profile_id":      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -121,6 +127,8 @@ func (r *browserProfileResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	if _, err := waitBrowserProfileCreated(ctx, conn, profileID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("profile_id"), profileID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, profileID)
 		return
 	}
@@ -184,10 +192,6 @@ func (r *browserProfileResource) Delete(ctx context.Context, request resource.De
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, profileID)
 		return
 	}
-}
-
-func (r *browserProfileResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("profile_id"), request, response)
 }
 
 func waitBrowserProfileCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserProfileOutput, error) {
@@ -268,10 +272,10 @@ func findBrowserProfile(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 type browserProfileResourceModel struct {
 	framework.WithRegionModel
-	ProfileARN  types.String   `tfsdk:"profile_arn"`
-	ProfileID   types.String   `tfsdk:"profile_id"`
 	Description types.String   `tfsdk:"description"`
 	Name        types.String   `tfsdk:"name"`
+	ProfileARN  types.String   `tfsdk:"profile_arn"`
+	ProfileID   types.String   `tfsdk:"profile_id"`
 	Tags        tftags.Map     `tfsdk:"tags"`
 	TagsAll     tftags.Map     `tfsdk:"tags_all"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`

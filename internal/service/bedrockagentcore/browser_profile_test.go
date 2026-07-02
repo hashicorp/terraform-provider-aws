@@ -24,10 +24,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomBrowserProfileName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
+func checkBrowserProfileARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-profile/`+name+`-[a-zA-Z0-9]{10}`))
+}
+
 func TestAccBedrockAgentCoreBrowserProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browserProfile bedrockagentcorecontrol.GetBrowserProfileOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserProfileName(t)
 	resourceName := "aws_bedrockagentcore_browser_profile.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -51,7 +59,7 @@ func TestAccBedrockAgentCoreBrowserProfile_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("profile_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-profile/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("profile_arn"), checkBrowserProfileARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("profile_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
@@ -70,7 +78,7 @@ func TestAccBedrockAgentCoreBrowserProfile_basic(t *testing.T) {
 func TestAccBedrockAgentCoreBrowserProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browserProfile bedrockagentcorecontrol.GetBrowserProfileOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserProfileName(t)
 	resourceName := "aws_bedrockagentcore_browser_profile.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -106,7 +114,7 @@ func TestAccBedrockAgentCoreBrowserProfile_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreBrowserProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browserProfile bedrockagentcorecontrol.GetBrowserProfileOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserProfileName(t)
 	resourceName := "aws_bedrockagentcore_browser_profile.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -182,7 +190,7 @@ func TestAccBedrockAgentCoreBrowserProfile_tags(t *testing.T) {
 func TestAccBedrockAgentCoreBrowserProfile_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browserProfile bedrockagentcorecontrol.GetBrowserProfileOutput
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserProfileName(t)
 	resourceName := "aws_bedrockagentcore_browser_profile.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
