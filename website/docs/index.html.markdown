@@ -68,18 +68,18 @@ which are applied in the following order:
 1. Instance profile credentials and Region
 
 This order matches the precedence used by the
-[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence)
-and the [AWS SDKs](https://aws.amazon.com/tools/).
+[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#configure-precedence)
+and the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/configure-gosdk.html).
 
 The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
-or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
+or in [a named profile](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html#file-format-profile).
 If configuring the role in the provider configuration, the provider supports IAM Role Chaining by specifying a list of roles to assume.
 
 The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html#webidentity).
 This can be configured either using environment variables or in a named profile.
 
-When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
+When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html).
 
 ### Provider Configuration
 
@@ -131,7 +131,7 @@ Other environment variables related to authorization are:
 
 ### Shared Configuration and Credentials Files
 
-The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html).
 By default, these files are located at `$HOME/.aws/config` and `$HOME/.aws/credentials` on Linux and macOS,
 and `"%USERPROFILE%\.aws\config"` and `"%USERPROFILE%\.aws\credentials"` on Windows.
 
@@ -217,7 +217,7 @@ provider "aws" {
 
 ### Using an External Credentials Process
 
-To use an [external process to source credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html),
+To use an [external process to source credentials](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html),
 the process must be configured in a named profile, including the `default` profile.
 The profile is configured in a shared configuration file.
 
@@ -268,7 +268,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 
 Note that environment variables are not supported for assuming IAM roles.
 
-See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
+See the [assume role documentation](https://docs.aws.amazon.com/sdkref/latest/guide/feature-assume-role-credentials.html) for more information.
 
 |Setting|Provider|[Shared Config][config]|
 |-------|--------|-----------------------|
