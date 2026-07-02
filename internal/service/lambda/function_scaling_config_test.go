@@ -146,7 +146,7 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 			functionName := rs.Primary.Attributes["function_name"]
 			qualifier := rs.Primary.Attributes["qualifier"]
 
-			out, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
+			_, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 			if retry.NotFound(err) {
 				continue
 			}
@@ -154,14 +154,7 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 				return err
 			}
 
-			// The resource is "destroyed" if the scaling config has no min/max set.
-			if out.RequestedFunctionScalingConfig == nil ||
-				(out.RequestedFunctionScalingConfig.MinExecutionEnvironments == nil &&
-					out.RequestedFunctionScalingConfig.MaxExecutionEnvironments == nil) {
-				return nil
-			}
-
-			return fmt.Errorf("Lambda Function Scaling Config %s:%s still exists", functionName, qualifier)
+			return fmt.Errorf("Lambda Function Scaling Config %s%s%s still exists", functionName, intflex.ResourceIdSeparator, qualifier)
 		}
 
 		return nil
