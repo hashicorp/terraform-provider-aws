@@ -32,6 +32,10 @@ func checkBrowserProfileARN(name string) knownvalue.Check {
 	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-profile/`+name+`-[a-zA-Z0-9]{10}`))
 }
 
+func checkBrowserProfileARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("bedrock-agentcore", regexache.MustCompile(`browser-profile/`+name+`-[a-zA-Z0-9]{10}`))
+}
+
 func TestAccBedrockAgentCoreBrowserProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browserProfile bedrockagentcorecontrol.GetBrowserProfileOutput
@@ -214,8 +218,6 @@ func TestAccBedrockAgentCoreBrowserProfile_description(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("profile_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-profile/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("profile_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description")),
 				},
 			},

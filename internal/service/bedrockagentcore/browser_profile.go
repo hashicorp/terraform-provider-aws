@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -157,7 +158,7 @@ func (r *browserProfileResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -192,6 +193,12 @@ func (r *browserProfileResource) Delete(ctx context.Context, request resource.De
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, profileID)
 		return
 	}
+}
+
+func (r *browserProfileResource) flatten(ctx context.Context, browserProfile any, data *browserProfileResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, browserProfile, data)...)
+	return diags
 }
 
 func waitBrowserProfileCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserProfileOutput, error) {
