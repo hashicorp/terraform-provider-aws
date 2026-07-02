@@ -452,7 +452,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 			envvars:        map[string]string{},
 			expectedConfig: nil,
 		},
-		"config": {
+		"token config": {
 			tfMap: map[string]any{
 				"duration":           "1h",
 				"policy":             "my-policy",
@@ -467,14 +467,14 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				WebIdentityToken: "my-token",
 			},
 		},
-		"envvar": {
+		"token envvar": {
 			tfMap: map[string]any{
 				"duration":     "1h",
 				"policy":       "my-policy",
 				"session_name": "my-session",
 			},
 			envvars: map[string]string{
-				WebIdentityTokenEnvVar: "my-token",
+				tfWebIdentityTokenEnvVar: "my-token",
 			},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
 				Duration:         1 * time.Hour,
@@ -483,7 +483,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				WebIdentityToken: "my-token",
 			},
 		},
-		"envvar and config": {
+		"token envvar and config": {
 			tfMap: map[string]any{
 				"duration":           "1h",
 				"policy":             "my-policy",
@@ -491,13 +491,61 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				"web_identity_token": "token2",
 			},
 			envvars: map[string]string{
-				WebIdentityTokenEnvVar: "token1",
+				tfWebIdentityTokenEnvVar: "token1",
 			},
 			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
 				Duration:         1 * time.Hour,
 				Policy:           "my-policy",
 				SessionName:      "my-session",
 				WebIdentityToken: "token2",
+			},
+		},
+		"token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars: map[string]string{},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
+		},
+		"token_file envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
+		},
+		"token_file envvar and config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "token-file2",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "token-file1",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "token-file2",
 			},
 		},
 	}
