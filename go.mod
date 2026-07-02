@@ -230,7 +230,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rum v1.31.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.104.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.71.7
-	github.com/aws/aws-sdk-go-v2/service/s3files v1.1.2
+	github.com/aws/aws-sdk-go-v2/service/s3files v1.1.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.8.1
