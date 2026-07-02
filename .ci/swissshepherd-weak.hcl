@@ -2307,27 +2307,6 @@ check "import_section" {
   require_identity_section = true
 
   ignore_targets = [
-    "resource/aws_acmpca_policy",
-    "resource/aws_backup_region_settings",
-    "resource/aws_cloudtrail",
-    "resource/aws_codebuild_resource_policy",
-    "resource/aws_dx_gateway",
-    "resource/aws_dynamodb_resource_policy",
-    "resource/aws_ebs_snapshot_block_public_access",
-    "resource/aws_glue_resource_policy",
-    "resource/aws_iam_outbound_web_identity_federation",
-    "resource/aws_inspector2_filter",
-    "resource/aws_invoicing_invoice_unit",
-    "resource/aws_iot_event_configurations",
-    "resource/aws_kinesis_resource_policy",
-    "resource/aws_lakeformation_identity_center_configuration",
-    "resource/aws_lambda_capacity_provider",
-    "resource/aws_lb_target_group_attachment",
-    "resource/aws_macie2_classification_export_configuration",
-    "resource/aws_msk_topic",
-    "resource/aws_prometheus_rule_group_namespace",
-    "resource/aws_ram_resource_share_associations_exclusive",
-    "resource/aws_rds_certificate",
   ]
 }
 
