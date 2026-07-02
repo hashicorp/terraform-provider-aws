@@ -45,6 +45,7 @@ func testAccSSOAdminRegion_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
+			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
@@ -79,6 +80,7 @@ func testAccSSOAdminRegion_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
+			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
