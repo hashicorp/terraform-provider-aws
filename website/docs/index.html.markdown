@@ -284,7 +284,7 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 
 ### Assume Role with Web Identity Configuration Reference
 
-Configuration for assuming an IAM role using web identify federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
+Configuration for assuming an IAM role using web identity federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role_with_web_identity` block.
 
 See the assume role documentation [section on web identities](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html) for more information.
