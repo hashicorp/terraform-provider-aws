@@ -167,6 +167,32 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
 }
 ```
 
+### Custom Strategy with Self-Managed Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
+  name                      = "self-managed-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Self-managed processing strategy"
+  namespaces                = ["{sessionId}"]
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed {
+      historical_context_window_size = 10
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.example.arn
+        payload_delivery_bucket_name = aws_s3_bucket.example.bucket
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -180,8 +206,8 @@ The following arguments are optional:
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration` Block](#configuration-block) below.
 * `description` - (Optional) Description of the memory strategy.
 * `memory_execution_role_arn` - (Optional, **Deprecated**) ARN of the IAM role that the memory service assumes to perform operations.
-* `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured.
-* `namespaces` - (Optional, **Deprecated**) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
+* `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured unless the custom configuration type is `SELF_MANAGED`, in which case both must be omitted.
+* `namespaces` - (Optional, **Deprecated**) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured unless the custom configuration type is `SELF_MANAGED`, in which case both must be omitted. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
 * `reflection_configuration` - (Optional) Configuration for the reflections created with the episodic memory strategy. Valid when `type` is `EPISODIC`, must be omitted for other types. See [`reflection_configuration` Block](#reflection_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
@@ -189,10 +215,25 @@ The following arguments are optional:
 
 The `configuration` block supports the following arguments:
 
-* `consolidation` - (Optional) Consolidation configuration for the memory strategy. See [`consolidation` Block](#consolidation-block) below. Once added, this block cannot be removed without recreating the resource.
-* `extraction` - (Optional) Extraction configuration for the memory strategy. See [`extraction` Block](#extraction-block) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
+* `consolidation` - (Optional) Consolidation configuration for the memory strategy. See [`consolidation` Block](#consolidation-block) below. Cannot be used with `type` set to `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
+* `extraction` - (Optional) Extraction configuration for the memory strategy. See [`extraction` Block](#extraction-block) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE` or `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
 * `reflection` - (Optional) Reflection configuration for the memory strategy. See [`reflection` Block](#reflection-block) below. Can only be used, and is required, with `type` set to `EPISODIC_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
-* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
+* `self_managed` - (Optional) Self-managed processing configuration. Required when `type` is `SELF_MANAGED` and only valid for that type. See [`self_managed` Block](#self_managed-block) below.
+* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`, `SELF_MANAGED`. Changing this forces a new resource.
+
+### `self_managed` Block
+
+The `self_managed` block supports the following:
+
+* `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
+* `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
+
+### `invocation_configuration` Block
+
+The `invocation_configuration` block supports the following:
+
+* `payload_delivery_bucket_name` - (Required) S3 bucket name for event payload delivery.
+* `topic_arn` - (Required) ARN of the SNS topic for job notifications.
 
 ### `consolidation` Block
 
@@ -227,6 +268,7 @@ The `reflection_configuration` supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
+* `configuration.self_managed.trigger_conditions` - Normalized set of conditions that trigger memory processing, as returned by the service. Each element contains one of `message_based_trigger` (`message_count`), `token_based_trigger` (`token_count`), or `time_based_trigger` (`idle_session_timeout`). The service populates the full set with defaults, so this is read-only.
 
 ## Timeouts
 
