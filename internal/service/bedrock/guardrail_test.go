@@ -40,7 +40,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
@@ -97,7 +97,7 @@ func TestAccBedrockGuardrail_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrail, resourceName),
 				),
@@ -133,7 +133,7 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_kmsKey(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
@@ -166,7 +166,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
@@ -186,7 +186,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 			},
 			{
 				Config: testAccGuardrailConfig_update(rName, "test", "test", "MEDIUM", "^\\d{3}-\\d{2}-\\d{4}$", "NAME", "investment_topic", "HATE"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
@@ -199,7 +199,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 			},
 			{
 				Config: testAccGuardrailConfig_update(rName, "update", "update", "HIGH", "^\\d{4}-\\d{2}-\\d{4}$", "USERNAME", "earnings_topic", "HATRED"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "update"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "update"),
@@ -231,7 +231,7 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_wordConfigAction(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
@@ -268,7 +268,7 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 			},
 			{
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
@@ -319,7 +319,7 @@ func TestAccBedrockGuardrail_crossRegion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_crossRegion(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
@@ -358,7 +358,7 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_contentPolicyConfigAction(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
@@ -372,7 +372,8 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", string(types.GuardrailFilterStrengthMedium)),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_action", string(types.GuardrailContentFilterActionNone)),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.*", "IMAGE"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_strength", string(types.GuardrailFilterStrengthMedium)),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -777,7 +778,7 @@ func TestAccBedrockGuardrail_enhancedActions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_enhancedActions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "1"),
