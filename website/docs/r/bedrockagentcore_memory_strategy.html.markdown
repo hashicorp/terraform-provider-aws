@@ -66,6 +66,23 @@ resource "aws_bedrockagentcore_memory_strategy" "episodic" {
 }
 ```
 
+
+### Episodic Strategy with Custom Reflection Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "episodic_reflection" {
+  name        = "episodic-reflection-strategy"
+  memory_id   = aws_bedrockagentcore_memory.example.id
+  type        = "EPISODIC"
+  description = "Episodic strategy with custom reflection namespaces"
+  namespaces  = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+
+  reflection_configuration {
+    namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/reflections"]
+  }
+}
+```
+
 ### Custom Strategy with Semantic Override
 
 ```terraform
@@ -167,6 +184,40 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
 }
 ```
 
+
+### Custom Strategy with Episodic Override and Reflection
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "custom_episodic_reflection" {
+  name                      = "custom-episodic-reflection-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Custom episodic strategy with reflection override"
+  namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+
+  configuration {
+    type = "EPISODIC_OVERRIDE"
+
+    consolidation {
+      append_to_prompt = "Consolidate episodic memories into coherent narratives"
+      model_id         = "anthropic.claude-3-sonnet-20240229-v1:0"
+    }
+
+    extraction {
+      append_to_prompt = "Extract key events and episodes from interactions"
+      model_id         = "anthropic.claude-3-haiku-20240307-v1:0"
+    }
+
+    reflection {
+      append_to_prompt    = "Identify successful patterns and recurring failure modes across episodes"
+      model_id            = "anthropic.claude-3-sonnet-20240229-v1:0"
+      namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/reflections"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -180,6 +231,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the memory strategy.
+* `reflection_configuration` - (Optional) Reflection configuration block for built-in `EPISODIC` strategies. Controls where reflections (cross-episode insights) are stored. Must be omitted when `type` is not `EPISODIC`. See [`reflection_configuration`](#reflection_configuration) below.
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration`](#configuration) below.
 
 ### `configuration`
@@ -189,6 +241,7 @@ The `configuration` block supports the following:
 * `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
 * `consolidation` - (Optional) Consolidation configuration for processing and organizing memory content. See [`consolidation`](#consolidation) below. Once added, this block cannot be removed without recreating the resource.
 * `extraction` - (Optional) Extraction configuration for identifying and extracting relevant information. See [`extraction`](#extraction) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
+* `reflection` - (Optional) Reflection configuration for customizing the reflection step. Only valid when `type` is `EPISODIC_OVERRIDE`. See [`reflection`](#reflection) below. Once added, this block cannot be removed without recreating the resource.
 
 ### `consolidation`
 
@@ -203,6 +256,21 @@ The `extraction` block supports the following:
 
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for extraction processing.
 * `model_id` - (Required) ID of the foundation model to use for extraction processing.
+
+### `reflection`
+
+The `reflection` block supports the following (only valid when `configuration.type` is `EPISODIC_OVERRIDE`):
+
+* `append_to_prompt` - (Required) Additional text to append to the model prompt for reflection processing.
+* `model_id` - (Required) ID of the foundation model to use for reflection processing.
+* `namespace_templates` - (Optional) Set of namespace templates where reflection records are stored. Can be less nested than episode namespaces.
+
+### `reflection_configuration`
+
+The `reflection_configuration` block supports the following (only valid when `type` is `EPISODIC`):
+
+* `namespace_templates` - (Optional) Set of namespace templates where reflection records are stored. Can be less nested than episode namespaces. If omitted, defaults to the episodic namespaces.
+
 
 ## Attribute Reference
 
