@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -246,15 +246,15 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(types.GuardrailManagedWordsTypeProfanity)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(awstypes.GuardrailManagedWordsTypeProfanity)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
 				),
@@ -287,7 +287,7 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_enabled"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_enabled"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(types.GuardrailManagedWordsTypeProfanity)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(awstypes.GuardrailManagedWordsTypeProfanity)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled"),
@@ -365,16 +365,16 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_action", string(types.GuardrailContentFilterActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_action", string(awstypes.GuardrailContentFilterActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.*", "TEXT"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", string(types.GuardrailFilterStrengthMedium)),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_action", string(types.GuardrailContentFilterActionNone)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", string(awstypes.GuardrailFilterStrengthMedium)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_action", string(awstypes.GuardrailContentFilterActionNone)),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.*", "IMAGE"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_strength", string(types.GuardrailFilterStrengthMedium)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_strength", string(awstypes.GuardrailFilterStrengthMedium)),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -421,7 +421,7 @@ func testAccCheckGuardrailDestroy(ctx context.Context, t *testing.T) resource.Te
 			version := rs.Primary.Attributes[names.AttrVersion]
 
 			_, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, id, version)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
