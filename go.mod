@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.40.8
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.61.1
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.54.5
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.23.6
