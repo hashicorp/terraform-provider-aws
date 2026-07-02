@@ -73,3 +73,48 @@ The `additional_configuration` block supports the following:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_guardduty_detector_feature.s3_protection
+  identity = {
+    detector_id = "12abc34d567e8fa901bc2d34eexample"
+    name        = "S3_DATA_EVENTS"
+  }
+}
+
+resource "aws_guardduty_detector_feature" "s3_protection" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `detector_id` (String) Amazon GuardDuty detector ID.
+* `name` (String) Name of the detector feature.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty Detector Features using the `detector_id` and `name` separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_guardduty_detector_feature.s3_protection
+  id = "12abc34d567e8fa901bc2d34eexample/S3_DATA_EVENTS"
+}
+```
+
+Using `terraform import`, import GuardDuty Detector Features using the `detector_id` and `name` separated by a forward slash (`/`). For example:
+
+```console
+% terraform import aws_guardduty_detector_feature.s3_protection 12abc34d567e8fa901bc2d34eexample/S3_DATA_EVENTS
+```
