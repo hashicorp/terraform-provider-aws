@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -198,7 +199,7 @@ func testAccFunctionScalingConfigImportStateIDFunc(resourceName string) resource
 		functionName := rs.Primary.Attributes["function_name"]
 		qualifier := rs.Primary.Attributes["qualifier"]
 
-		return fmt.Sprintf("%s:%s", functionName, qualifier), nil
+		return functionName + intflex.ResourceIdSeparator + qualifier, nil
 	}
 }
 

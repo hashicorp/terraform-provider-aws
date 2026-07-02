@@ -5,6 +5,7 @@ package lambda
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,15 +23,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lambda_function_scaling_config", name="Function Scaling Config")
+// @IdentityAttribute("function_name")
+// @IdentityAttribute("qualifier")
+// @ImportIDHandler("functionScalingConfigImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttributes="function_name;qualifier", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetFunctionScalingConfigOutput")
+// @Testing(preCheck="testAccCapacityProviderPreCheck")
 func newFunctionScalingConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &functionScalingConfigResource{}, nil
 }
@@ -43,6 +52,7 @@ const (
 
 type functionScalingConfigResource struct {
 	framework.ResourceWithModel[functionScalingConfigResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -230,20 +240,6 @@ func (r *functionScalingConfigResource) Delete(ctx context.Context, req resource
 	}
 }
 
-func (r *functionScalingConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			"Expected import identifier with format: function_name:qualifier",
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("qualifier"), parts[1])...)
-}
-
 func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, qualifier string) (*lambda.GetFunctionScalingConfigOutput, error) {
 	in := &lambda.GetFunctionScalingConfigInput{
 		FunctionName: aws.String(functionName),
@@ -278,4 +274,22 @@ type functionScalingConfigResourceModel struct {
 type functionScalingConfigModel struct {
 	MaxExecutionEnvironments types.Int32 `tfsdk:"max_execution_environments"`
 	MinExecutionEnvironments types.Int32 `tfsdk:"min_execution_environments"`
+}
+
+var _ inttypes.ImportIDParser = functionScalingConfigImportID{}
+
+type functionScalingConfigImportID struct{}
+
+func (functionScalingConfigImportID) Parse(id string) (string, map[string]any, error) {
+	functionName, qualifier, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found || functionName == "" || qualifier == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <function-name>%s<qualifier>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"function_name": functionName,
+		"qualifier":     qualifier,
+	}
+
+	return id, result, nil
 }
