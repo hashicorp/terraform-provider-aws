@@ -63,8 +63,7 @@ func (r *listResourceKeyValueStore) List(ctx context.Context, request list.ListR
 			output, err := findKeyValueStoreByName(ctx, conn, aws.ToString(item.Name))
 			if err != nil {
 				tflog.Error(ctx, "Reading CloudFront Key Value Store", map[string]any{
-					names.AttrID: id,
-					"error":      err.Error(),
+					"error": err.Error(),
 				})
 				continue
 			}

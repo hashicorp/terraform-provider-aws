@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +21,7 @@ import (
 func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.DescribeContributorInsightsOutput
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	indexName := fmt.Sprintf("%s-index", rName)
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
@@ -57,7 +57,7 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 func TestAccDynamoDBContributorInsights_ModeAccessedAndThrottled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.DescribeContributorInsightsOutput
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	indexName := fmt.Sprintf("%s-index", rName)
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
@@ -93,7 +93,7 @@ func TestAccDynamoDBContributorInsights_ModeAccessedAndThrottled(t *testing.T) {
 func TestAccDynamoDBContributorInsights_ModeThrottledOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.DescribeContributorInsightsOutput
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	indexName := fmt.Sprintf("%s-index", rName)
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
@@ -129,7 +129,7 @@ func TestAccDynamoDBContributorInsights_ModeThrottledOnly(t *testing.T) {
 func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.DescribeContributorInsightsOutput
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -145,6 +145,14 @@ func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceContributorInsights(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

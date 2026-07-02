@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -38,56 +37,58 @@ func resourceSnapshot() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accounts_with_provisioned_restore_access": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accounts_with_provisioned_restore_access": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"accounts_with_restore_access": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"accounts_with_restore_access": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"admin_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"owner_account": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  -1,
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"admin_username": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"owner_account": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRetentionPeriod: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  -1,
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -198,9 +199,8 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	output, err := conn.GetSnapshot(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "snapshot") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -215,8 +215,8 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	return output.Snapshot, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshot(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -232,10 +232,10 @@ func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name s
 }
 
 func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusAvailable),
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -249,10 +249,10 @@ func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client,
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusAvailable),
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 

@@ -29,7 +29,6 @@ import (
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.15.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
@@ -37,27 +36,29 @@ func ResourceContact() *schema.Resource {
 		UpdateWithoutTimeout: resourceContactUpdate,
 		DeleteWithoutTimeout: resourceContactDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDisplayName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDisplayName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

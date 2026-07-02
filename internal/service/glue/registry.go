@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,7 +31,6 @@ import (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue;glue.GetRegistryOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryCreate,
@@ -40,27 +38,29 @@ func resourceRegistry() *schema.Resource {
 		UpdateWithoutTimeout: resourceRegistryUpdate,
 		DeleteWithoutTimeout: resourceRegistryDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			"registry_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#-]+$`), ""),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				"registry_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#-]+$`), ""),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -177,9 +177,8 @@ func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	output, err := conn.GetRegistry(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -190,11 +189,9 @@ func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	return output, nil
 }
 
-func statusRegistry(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
-	const (
-		registryStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusRegistry(conn *glue.Client, id string) retry.StateRefreshFunc {
+	const registryStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRegistryByID(ctx, conn, id)
 		if err != nil {
 			return nil, registryStatusUnknown, err
@@ -213,10 +210,10 @@ func waitRegistryDeleted(ctx context.Context, conn *glue.Client, registryID stri
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RegistryStatusDeleting),
 		Target:  []string{},
-		Refresh: statusRegistry(ctx, conn, registryID),
+		Refresh: statusRegistry(conn, registryID),
 		Timeout: timeout,
 	}
 

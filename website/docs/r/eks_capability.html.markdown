@@ -109,17 +109,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_eks_capability.example
-  id = "my-cluster,my-capability"
+  identity = {
+    cluster_name    = "example-cluster"
+    capability_name = "example-capability"
+  }
+}
+
+resource "aws_eks_capability" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `capability_name` (String) Name of the capability.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Capabilities using `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_eks_capability.example
+  id = "example-cluster,example-capability"
+}
+```
+
+Using `terraform import`, import Capabilities using `cluster_name` and `capability_name` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_eks_capability.example my-cluster,my-capability
+% terraform import aws_eks_capability.example example-cluster,example-capability
 ```

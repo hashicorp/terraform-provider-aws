@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -36,48 +36,96 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_type_profile_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"content_type_profiles": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrContentType: {
-													Type:     schema.TypeString,
-													Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_type_profile_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"content_type_profiles": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrContentType: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrFormat: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.Format](),
+													},
+													"profile_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
-												names.AttrFormat: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.Format](),
-												},
-												"profile_id": {
-													Type:     schema.TypeString,
-													Optional: true,
+											},
+										},
+									},
+								},
+							},
+							"forward_when_content_type_is_unknown": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"query_arg_profile_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"forward_when_query_arg_profile_is_unknown": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"query_arg_profiles": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										attrItems: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"profile_id": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"query_arg": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
@@ -85,55 +133,9 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 								},
 							},
 						},
-						"forward_when_content_type_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"query_arg_profile_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"forward_when_query_arg_profile_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"query_arg_profiles": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"items": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"profile_id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"query_arg": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			}
 		},
 	}
 }
@@ -143,7 +145,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	apiObject := &awstypes.FieldLevelEncryptionConfig{
-		CallerReference: aws.String(id.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -318,7 +320,7 @@ func expandContentTypeProfiles(tfMap map[string]any) *awstypes.ContentTypeProfil
 
 	apiObject := &awstypes.ContentTypeProfiles{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandContentTypeProfileItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -400,7 +402,7 @@ func expandQueryArgProfiles(tfMap map[string]any) *awstypes.QueryArgProfiles {
 
 	apiObject := &awstypes.QueryArgProfiles{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandQueryArgProfileItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -479,7 +481,7 @@ func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[str
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenContentTypeProfileItems(v)
+		tfMap[attrItems] = flattenContentTypeProfileItems(v)
 	}
 
 	return tfMap
@@ -547,7 +549,7 @@ func flattenQueryArgProfiles(apiObject *awstypes.QueryArgProfiles) map[string]an
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenQueryArgProfileItems(v)
+		tfMap[attrItems] = flattenQueryArgProfileItems(v)
 	}
 
 	return tfMap

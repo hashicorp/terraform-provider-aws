@@ -12,8 +12,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -28,7 +28,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	var conf awstypes.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
-	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
+	queueName := testAccGameSessionQueuePrefix + acctest.RandString(t, 8)
 	playerLatencyPolicies := []awstypes.PlayerLatencyPolicy{
 		{
 			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(100),
@@ -121,7 +121,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 	var conf awstypes.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
-	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
+	queueName := testAccGameSessionQueuePrefix + acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -172,7 +172,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	var conf awstypes.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
-	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
+	queueName := testAccGameSessionQueuePrefix + acctest.RandString(t, 8)
 	playerLatencyPolicies := []awstypes.PlayerLatencyPolicy{
 		{
 			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(100),
@@ -203,6 +203,14 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceGameSessionQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,71 +44,73 @@ func ResourceContainerService() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"is_disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z]{1,2}|[0-9a-z][0-9a-z-]+[0-9a-z]$`), ""),
-				),
-			},
-			"power": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(flattenContainerServicePowerValues(types.ContainerServicePowerName("").Values()), false),
-			},
-			"power_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"principal_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_domain_names": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCertificate: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"certificate_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"domain_names": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"is_disabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z]{1,2}|[0-9a-z][0-9a-z-]+[0-9a-z]$`), ""),
+					),
+				},
+				"power": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(flattenContainerServicePowerValues(types.ContainerServicePowerName("").Values()), false),
+				},
+				"power_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"principal_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_domain_names": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificate: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"certificate_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"domain_names": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
 									},
 								},
@@ -117,54 +118,54 @@ func ResourceContainerService() *schema.Resource {
 						},
 					},
 				},
-			},
-			"private_registry_access": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ecr_image_puller_role": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_active": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"principal_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
+				"private_registry_access": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ecr_image_puller_role": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"is_active": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"principal_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"scale": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 20),
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"scale": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 20),
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -493,9 +494,8 @@ func findContainerServices(ctx context.Context, conn *lightsail.Client, input *l
 	output, err := conn.GetContainerServices(ctx, input)
 
 	if IsANotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

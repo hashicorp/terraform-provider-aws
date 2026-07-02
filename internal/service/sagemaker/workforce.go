@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,165 +36,167 @@ func resourceWorkforce() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cognito_config": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				ExactlyOneOf: []string{"oidc_config", "cognito_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"user_pool": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"oidc_config": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: []string{"oidc_config", "cognito_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_request_extra_params": {
-							Type:     schema.TypeMap,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Optional: true,
-						},
-						"authorization_endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 500),
-								validation.IsURLWithHTTPS,
-							),
-						},
-						names.AttrClientID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						names.AttrClientSecret: {
-							Type:         schema.TypeString,
-							Required:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						names.AttrIssuer: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 500),
-								validation.IsURLWithHTTPS,
-							)},
-						"jwks_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 500),
-								validation.IsURLWithHTTPS,
-							)},
-						"logout_endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 500),
-								validation.IsURLWithHTTPS,
-							)},
-						names.AttrScope: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"token_endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 500),
-								validation.IsURLWithHTTPS,
-							)},
-						"user_info_endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 500),
-								validation.IsURLWithHTTPS,
-							),
-						},
-					},
-				},
-			},
-			"source_ip_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidrs": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 10,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsCIDR,
+				"cognito_config": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					ExactlyOneOf: []string{"oidc_config", "cognito_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"user_pool": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"subdomain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workforce_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"workforce_vpc_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 5,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Optional: true,
+				"oidc_config": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     1,
+					ExactlyOneOf: []string{"oidc_config", "cognito_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_request_extra_params": {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+							},
+							"authorization_endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 500),
+									validation.IsURLWithHTTPS,
+								),
+							},
+							names.AttrClientID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							names.AttrClientSecret: {
+								Type:         schema.TypeString,
+								Required:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							names.AttrIssuer: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 500),
+									validation.IsURLWithHTTPS,
+								)},
+							"jwks_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 500),
+									validation.IsURLWithHTTPS,
+								)},
+							"logout_endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 500),
+									validation.IsURLWithHTTPS,
+								)},
+							names.AttrScope: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"token_endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 500),
+									validation.IsURLWithHTTPS,
+								)},
+							"user_info_endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 500),
+									validation.IsURLWithHTTPS,
+								),
+							},
 						},
 					},
 				},
-			},
+				"source_ip_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cidrs": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: 10,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsCIDR,
+								},
+							},
+						},
+					},
+				},
+				"subdomain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workforce_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"workforce_vpc_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 5,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 16,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -346,9 +347,8 @@ func findWorkforceByName(ctx context.Context, conn *sagemaker.Client, name strin
 	output, err := conn.DescribeWorkforce(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No workforce") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

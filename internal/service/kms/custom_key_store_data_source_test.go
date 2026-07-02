@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,11 +20,11 @@ func testAccCustomKeyStoreDataSource_basic(t *testing.T) {
 
 	clusterID := acctest.SkipIfEnvVarNotSet(t, "CLOUD_HSM_CLUSTER_ID")
 	trustAnchorCertificate := acctest.SkipIfEnvVarNotSet(t, "TRUST_ANCHOR_CERTIFICATE")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kms_custom_key_store.test"
 	resourceName := "aws_kms_custom_key_store.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

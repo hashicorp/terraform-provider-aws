@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,99 +44,101 @@ func resourceFindingsFilter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FindingsFilterAction](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"finding_criteria": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"criterion": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"eq": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"eq_exact_match": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrField: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"gt": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"gte": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"lt": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"lte": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"neq": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FindingsFilterAction](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"finding_criteria": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"criterion": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"eq": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"eq_exact_match": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrField: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"gt": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"gte": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"lt": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"lte": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"neq": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(3, 64),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(3, 64-id.UniqueIDSuffixLength),
-			},
-			"position": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(3, 64),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(3, 64-sdkid.UniqueIDSuffixLength),
+				},
+				"position": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -153,7 +154,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateFindingsFilterInput{
 		Action:      awstypes.FindingsFilterAction(d.Get(names.AttrAction).(string)),
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
@@ -298,9 +299,8 @@ func findFindingsFilter(ctx context.Context, conn *macie2.Client, input *macie2.
 	output, err := conn.GetFindingsFilter(ctx, input)
 
 	if isFindingsFilterNotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketWebsiteConfiguration_Identity_Basic(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_website_configuration.test"
@@ -33,7 +33,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -105,7 +105,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketWebsiteConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_website_configuration.test"
@@ -193,7 +193,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_website_configuration.test"
@@ -205,7 +205,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -214,7 +214,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -250,7 +250,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource(t *testing.T)
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_website_configuration.test"
@@ -262,7 +262,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource_NoRefresh_NoC
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -276,7 +276,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource_NoRefresh_NoC
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -307,7 +307,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_ExistingResource_NoRefresh_NoC
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_Identity_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_website_configuration.test"
@@ -319,7 +319,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create with Identity version 0
 			{
@@ -328,7 +328,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -364,7 +364,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade(t *testing.T) {
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade_NoRefresh(t *testing.T) {
+func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade_noRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_website_configuration.test"
@@ -376,7 +376,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade_NoRefresh(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketWebsiteConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -390,7 +390,7 @@ func TestAccS3BucketWebsiteConfiguration_Identity_Upgrade_NoRefresh(t *testing.T
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),

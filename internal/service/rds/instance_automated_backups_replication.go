@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -52,31 +51,33 @@ func resourceInstanceAutomatedBackupsReplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"pre_signed_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeInt,
-				ForceNew: true,
-				Optional: true,
-				Default:  7,
-			},
-			"source_db_instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"pre_signed_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrRetentionPeriod: {
+					Type:     schema.TypeInt,
+					ForceNew: true,
+					Optional: true,
+					Default:  7,
+				},
+				"source_db_instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -86,7 +87,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	sourceDBInstanceARN := d.Get("source_db_instance_arn").(string)
-	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
+	input := rds.StartDBInstanceAutomatedBackupsReplicationInput{
 		BackupRetentionPeriod: aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int))),
 		SourceDBInstanceArn:   aws.String(sourceDBInstanceARN),
 	}
@@ -99,7 +100,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 		input.PreSignedUrl = aws.String(v.(string))
 	}
 
-	output, err := conn.StartDBInstanceAutomatedBackupsReplication(ctx, input)
+	output, err := conn.StartDBInstanceAutomatedBackupsReplication(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting RDS Instance Automated Backups Replication (%s): %s", sourceDBInstanceARN, err)
@@ -158,9 +159,10 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 
 	log.Printf("[DEBUG] Stopping RDS Instance Automated Backups Replication: %s", d.Id())
 	sourceDBInstanceARN := d.Get("source_db_instance_arn").(string)
-	_, err = conn.StopDBInstanceAutomatedBackupsReplication(ctx, &rds.StopDBInstanceAutomatedBackupsReplicationInput{
+	input := rds.StopDBInstanceAutomatedBackupsReplicationInput{
 		SourceDBInstanceArn: aws.String(sourceDBInstanceARN),
-	})
+	}
+	_, err = conn.StopDBInstanceAutomatedBackupsReplication(ctx, &input)
 
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
 		return diags
@@ -187,10 +189,10 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 }
 
 func findDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.Client, arn string) (*types.DBInstanceAutomatedBackup, error) {
-	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
+	input := rds.DescribeDBInstanceAutomatedBackupsInput{
 		DBInstanceAutomatedBackupsArn: aws.String(arn),
 	}
-	output, err := findDBInstanceAutomatedBackup(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstanceAutomatedBackup]())
+	output, err := findDBInstanceAutomatedBackup(ctx, conn, &input, tfslices.PredicateTrue[types.DBInstanceAutomatedBackup]())
 
 	if err != nil {
 		return nil, err
@@ -198,24 +200,21 @@ func findDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.Client, a
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceAutomatedBackupsArn) != arn {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	// AWS flip-flop on the capitalization of status codes. Case-insensitive comparison.
 	if status := aws.ToString(output.Status); strings.EqualFold(status, instanceAutomatedBackupStatusRetained) {
 		// If the automated backup is retained, the replication is stopped.
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
 	return output, nil
 }
 
-func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstanceAutomatedBackupsInput, filter tfslices.Predicate[*types.DBInstanceAutomatedBackup]) (*types.DBInstanceAutomatedBackup, error) {
+func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstanceAutomatedBackupsInput, filter tfslices.Predicate[types.DBInstanceAutomatedBackup]) (*types.DBInstanceAutomatedBackup, error) {
 	output, err := findDBInstanceAutomatedBackups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -225,7 +224,7 @@ func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, input 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstanceAutomatedBackupsInput, filter tfslices.Predicate[*types.DBInstanceAutomatedBackup]) ([]types.DBInstanceAutomatedBackup, error) {
+func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstanceAutomatedBackupsInput, filter tfslices.Predicate[types.DBInstanceAutomatedBackup]) ([]types.DBInstanceAutomatedBackup, error) {
 	var output []types.DBInstanceAutomatedBackup
 
 	pages := rds.NewDescribeDBInstanceAutomatedBackupsPaginator(conn, input)
@@ -233,9 +232,8 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -244,7 +242,7 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 		}
 
 		for _, v := range page.DBInstanceAutomatedBackups {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -253,8 +251,8 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 	return output, nil
 }
 
-func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstanceAutomatedBackup(conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceAutomatedBackupByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -271,10 +269,10 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn 
 }
 
 func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*types.DBInstanceAutomatedBackup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{instanceAutomatedBackupStatusPending},
 		Target:  []string{instanceAutomatedBackupStatusReplicating},
-		Refresh: statusDBInstanceAutomatedBackup(ctx, conn, arn),
+		Refresh: statusDBInstanceAutomatedBackup(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -288,8 +286,6 @@ func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client,
 }
 
 func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBInstance, error) {
-	var output *types.DBInstance
-
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func(ctx context.Context) (bool, error) {
 		dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceID, optFns...)
 
@@ -301,8 +297,6 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 			return false, err
 		}
 
-		output = dbInstance
-
 		return slices.ContainsFunc(dbInstance.DBInstanceAutomatedBackupsReplications, func(v types.DBInstanceAutomatedBackupsReplication) bool {
 			return aws.ToString(v.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupsARN
 		}), nil
@@ -312,5 +306,22 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 		return nil, err
 	}
 
-	return output, nil
+	// "InvalidDBInstanceState: Cannot create a snapshot because the database instance ... is not currently in the available state".
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			instanceStatusModifying,
+			instanceStatusBackingUp,
+		},
+		Target:  []string{instanceStatusAvailable},
+		Refresh: statusDBInstance(conn, dbInstanceID, optFns...),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }

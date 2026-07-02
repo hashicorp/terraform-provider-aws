@@ -21,20 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCodeArtifactDomainPermissionsPolicy_IdentitySerial(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic,
-		"ExistingResource":          testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride,
+		acctest.CtBasic:             testAccCodeArtifactDomainPermissionsPolicy_Identity_basic,
+		"ExistingResource":          testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccCodeArtifactDomainPermissionsPolicy_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
@@ -119,7 +119,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
@@ -239,7 +239,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride(t *testi
 	})
 }
 
-func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
@@ -317,7 +317,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource(t *tes
 	})
 }
 
-func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"

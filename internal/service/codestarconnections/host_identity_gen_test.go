@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeStarConnectionsHost_Identity_Basic(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v codestarconnections.GetHostOutput
@@ -108,7 +108,7 @@ func TestAccCodeStarConnectionsHost_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_RegionOverride(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarconnections_host.test"
@@ -228,7 +228,7 @@ func TestAccCodeStarConnectionsHost_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v codestarconnections.GetHostOutput
@@ -307,7 +307,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v codestarconnections.GetHostOutput

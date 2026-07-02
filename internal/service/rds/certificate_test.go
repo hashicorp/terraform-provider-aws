@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +24,7 @@ func TestAccRDSCertificate_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccCertificate_basic,
 		acctest.CtDisappears: testAccCertificate_disappears,
-		"Identity":           testAccRDSCertificate_IdentitySerial,
+		"Identity":           testAccRDSCertificate_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -35,16 +35,16 @@ func testAccCertificate_basic(t *testing.T) {
 	var v types.Certificate
 	resourceName := "aws_rds_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-rsa4096-g1"),
 				),
 			},
@@ -56,7 +56,7 @@ func testAccCertificate_basic(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_basic("rds-ca-ecc384-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-ecc384-g1"),
 				),
 			},
@@ -64,7 +64,7 @@ func testAccCertificate_basic(t *testing.T) {
 	})
 }
 
-// func testAccRDSCertificate_Identity_Basic(t *testing.T) {
+// func testAccRDSCertificate_Identity_basic(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	var v types.Certificate
 // 	resourceName := "aws_rds_certificate.test"
@@ -124,7 +124,7 @@ func testAccCertificate_basic(t *testing.T) {
 // 	})
 // }
 
-// func testAccRDSCertificate_Identity_RegionOverride(t *testing.T) {
+// func testAccRDSCertificate_Identity_regionOverride(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	resourceName := "aws_rds_certificate.test"
 
@@ -185,27 +185,35 @@ func testAccCertificate_disappears(t *testing.T) {
 	var v types.Certificate
 	resourceName := "aws_rds_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCertificateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_certificate" {
@@ -229,14 +237,14 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckCertificateExists(ctx context.Context, n string, v *types.Certificate) resource.TestCheckFunc {
+func testAccCheckCertificateExists(ctx context.Context, t *testing.T, n string, v *types.Certificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDefaultCertificate(ctx, conn)
 

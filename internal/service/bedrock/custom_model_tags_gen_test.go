@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -25,25 +26,25 @@ func testAccBedrockCustomModel_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccBedrockCustomModel_tags,
-		"null":                                      testAccBedrockCustomModel_tags_null,
-		"EmptyMap":                                  testAccBedrockCustomModel_tags_EmptyMap,
-		"AddOnUpdate":                               testAccBedrockCustomModel_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccBedrockCustomModel_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccBedrockCustomModel_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccBedrockCustomModel_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccBedrockCustomModel_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccBedrockCustomModel_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccBedrockCustomModel_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccBedrockCustomModel_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccBedrockCustomModel_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccBedrockCustomModel_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccBedrockCustomModel_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccBedrockCustomModel_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccBedrockCustomModel_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccBedrockCustomModel_Tags_null,
+		"EmptyMap":                                  testAccBedrockCustomModel_Tags_emptyMap,
+		"AddOnUpdate":                               testAccBedrockCustomModel_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccBedrockCustomModel_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccBedrockCustomModel_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccBedrockCustomModel_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccBedrockCustomModel_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccBedrockCustomModel_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccBedrockCustomModel_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccBedrockCustomModel_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccBedrockCustomModel_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccBedrockCustomModel_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccBedrockCustomModel_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccBedrockCustomModel_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccBedrockCustomModel_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccBedrockCustomModel_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccBedrockCustomModel_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccBedrockCustomModel_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccBedrockCustomModel_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -60,7 +61,10 @@ func testAccBedrockCustomModel_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -247,7 +251,7 @@ func testAccBedrockCustomModel_tags(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_null(t *testing.T) {
+func testAccBedrockCustomModel_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -258,7 +262,10 @@ func testAccBedrockCustomModel_tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -314,7 +321,7 @@ func testAccBedrockCustomModel_tags_null(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_EmptyMap(t *testing.T) {
+func testAccBedrockCustomModel_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -325,7 +332,10 @@ func testAccBedrockCustomModel_tags_EmptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -369,7 +379,7 @@ func testAccBedrockCustomModel_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_AddOnUpdate(t *testing.T) {
+func testAccBedrockCustomModel_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -380,7 +390,10 @@ func testAccBedrockCustomModel_tags_AddOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -456,7 +469,7 @@ func testAccBedrockCustomModel_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccBedrockCustomModel_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -467,7 +480,10 @@ func testAccBedrockCustomModel_tags_EmptyTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -556,7 +572,7 @@ func testAccBedrockCustomModel_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccBedrockCustomModel_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -567,7 +583,10 @@ func testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -705,7 +724,7 @@ func testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccBedrockCustomModel_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -716,7 +735,10 @@ func testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -802,7 +824,7 @@ func testAccBedrockCustomModel_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -813,7 +835,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_providerOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -999,7 +1024,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1010,7 +1035,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1172,7 +1200,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1183,7 +1211,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_overlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1361,7 +1392,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1372,7 +1403,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_updateToProviderOnly(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1458,7 +1492,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_updateToProviderOnly(t *testing.
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1469,7 +1503,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_updateToResourceOnly(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1554,7 +1591,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_updateToResourceOnly(t *testing.
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1565,7 +1602,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1627,7 +1667,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1638,7 +1678,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1692,7 +1735,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1703,7 +1746,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_nullOverlappingResourceTag(t *te
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1766,7 +1812,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_nullOverlappingResourceTag(t *te
 	})
 }
 
-func testAccBedrockCustomModel_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccBedrockCustomModel_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1777,7 +1823,10 @@ func testAccBedrockCustomModel_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1842,7 +1891,7 @@ func testAccBedrockCustomModel_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 	})
 }
 
-func testAccBedrockCustomModel_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccBedrockCustomModel_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1853,7 +1902,10 @@ func testAccBedrockCustomModel_tags_ComputedTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1904,7 +1956,7 @@ func testAccBedrockCustomModel_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccBedrockCustomModel_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -1915,7 +1967,10 @@ func testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2008,7 +2063,7 @@ func testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccBedrockCustomModel_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -2019,7 +2074,10 @@ func testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2102,7 +2160,7 @@ func testAccBedrockCustomModel_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccBedrockCustomModel_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -2113,7 +2171,10 @@ func testAccBedrockCustomModel_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2268,7 +2329,7 @@ func testAccBedrockCustomModel_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 	})
 }
 
-func testAccBedrockCustomModel_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccBedrockCustomModel_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -2279,7 +2340,10 @@ func testAccBedrockCustomModel_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{

@@ -12,6 +12,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -190,6 +191,14 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbudgets.ResourceBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -381,7 +390,7 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 	emailAddress3 := acctest.RandomEmailAddress(domain)
@@ -547,6 +556,122 @@ func TestAccBudgetsBudget_billingViewARN(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBudgetsBudget_filterExpression(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_filterExpression(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "1000.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+					resource.TestCheckResourceAttr(resourceName, "metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metrics.0", "UnblendedCost"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.0.key", "SERVICE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.0.dimensions.0.values.*", "Amazon Elastic Compute Cloud - Compute"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.1.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.1.tags.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.1.tags.0.values.*", "production"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.and.2.cost_categories.0.values.*", "production"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.key", "REGION"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.1.not.0.dimensions.0.values.*", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBudgetConfig_filterExpressionUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metrics.0", "NetUnblendedCost"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.0.tags.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.0.tags.0.values.*", "staging"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.cost_categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.or.1.cost_categories.0.key", "Environment"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.or.1.cost_categories.0.values.*", "staging"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBudgetsBudget_metrics(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_metrics(rName, "UnblendedCost"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "1000.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+					resource.TestCheckResourceAttr(resourceName, "metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metrics.0", "UnblendedCost"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.dimensions.0.key", "SERVICE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.dimensions.0.values.*", "Amazon Elastic Compute Cloud - Compute"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBudgetConfig_metrics(rName, "NetUnblendedCost"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metrics.0", "NetUnblendedCost"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_expression.0.dimensions.0.key", "SERVICE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "filter_expression.0.dimensions.0.values.*", "Amazon Elastic Compute Cloud - Compute"),
+				),
 			},
 		},
 	})
@@ -843,6 +968,98 @@ resource "aws_budgets_budget" "test" {
 
 }
 `, rName)
+}
+
+func testAccBudgetConfig_filterExpression(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "1000.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+  metrics      = ["UnblendedCost"]
+
+  filter_expression {
+    or {
+      and {
+        dimensions {
+          key    = "SERVICE"
+          values = ["Amazon Elastic Compute Cloud - Compute"]
+        }
+      }
+      and {
+        tags {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+      and {
+        cost_categories {
+          key    = "Environment"
+          values = ["production"]
+        }
+      }
+    }
+    or {
+      not {
+        dimensions {
+          key    = "REGION"
+          values = [%[2]q]
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.Region())
+}
+
+func testAccBudgetConfig_filterExpressionUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "1000.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+  metrics      = ["NetUnblendedCost"]
+
+  filter_expression {
+    or {
+      tags {
+        key    = "Environment"
+        values = ["staging"]
+      }
+    }
+    or {
+      cost_categories {
+        key    = "Environment"
+        values = ["staging"]
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBudgetConfig_metrics(rName, metric string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "1000.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+  metrics      = [%[2]q]
+
+  filter_expression {
+    dimensions {
+      key    = "SERVICE"
+      values = ["Amazon Elastic Compute Cloud - Compute"]
+    }
+  }
+}
+`, rName, metric)
 }
 
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {

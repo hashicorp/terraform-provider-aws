@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
+func TestAccAppFlowConnectorProfile_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ConnectorProfile
@@ -119,7 +119,7 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
+func TestAccAppFlowConnectorProfile_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_appflow_connector_profile.test"

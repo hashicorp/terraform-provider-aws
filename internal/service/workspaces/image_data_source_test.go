@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +26,7 @@ func testAccImageDataSource_basic(t *testing.T) {
 	imageID := os.Getenv("AWS_WORKSPACES_IMAGE_ID")
 	dataSourceName := "data.aws_workspaces_image.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccImagePreCheck(t)
@@ -38,7 +37,7 @@ func testAccImageDataSource_basic(t *testing.T) {
 			{
 				Config: testAccImageDataSourceConfig_basic(imageID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageExists(ctx, dataSourceName, &image),
+					testAccCheckImageExists(ctx, t, dataSourceName, &image),
 					testAccCheckImageAttributes(dataSourceName, &image),
 				),
 			},
@@ -62,14 +61,14 @@ data aws_workspaces_image test {
 `, imageID)
 }
 
-func testAccCheckImageExists(ctx context.Context, n string, image *types.WorkspaceImage) resource.TestCheckFunc {
+func testAccCheckImageExists(ctx context.Context, t *testing.T, n string, image *types.WorkspaceImage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 		input := workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []string{rs.Primary.ID},
 		}

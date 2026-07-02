@@ -28,11 +28,11 @@ func testAccAppMeshServiceMeshDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccAppMeshServiceMeshDataSource_tags,
-		"NullMap":                        testAccAppMeshServiceMeshDataSource_tags_NullMap,
-		"EmptyMap":                       testAccAppMeshServiceMeshDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccAppMeshServiceMeshDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccAppMeshServiceMeshDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccAppMeshServiceMeshDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccAppMeshServiceMeshDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshServiceMeshDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshServiceMeshDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -70,7 +70,7 @@ func testAccAppMeshServiceMeshDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshServiceMeshDataSource_tags_NullMap(t *testing.T) {
+func testAccAppMeshServiceMeshDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -98,7 +98,7 @@ func testAccAppMeshServiceMeshDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshServiceMeshDataSource_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshServiceMeshDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -126,7 +126,7 @@ func testAccAppMeshServiceMeshDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshServiceMeshDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshServiceMeshDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -162,7 +162,7 @@ func testAccAppMeshServiceMeshDataSource_tags_DefaultTags_nonOverlapping(t *test
 	})
 }
 
-func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshServiceMeshDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -204,7 +204,7 @@ func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *t
 	})
 }
 
-func testAccAppMeshServiceMeshDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshServiceMeshDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_mesh.test"

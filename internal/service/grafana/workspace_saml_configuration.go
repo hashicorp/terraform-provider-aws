@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -43,71 +42,73 @@ func resourceWorkspaceSAMLConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"admin_role_values": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"allowed_organizations": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"editor_role_values": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"email_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"groups_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"idp_metadata_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"idp_metadata_xml": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"login_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"login_validity_duration": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"name_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"org_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"role_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"admin_role_values": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"allowed_organizations": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"editor_role_values": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"email_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"groups_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"idp_metadata_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"idp_metadata_xml": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"login_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"login_validity_duration": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"name_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"org_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"role_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -282,9 +283,8 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	output, err := conn.DescribeWorkspaceAuthentication(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -297,17 +297,16 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	}
 
 	if status := output.Authentication.Saml.Status; status == awstypes.SamlConfigurationStatusNotConfigured {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output.Authentication.Saml, nil
 }
 
-func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspaceSAMLConfiguration(conn *grafana.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSAMLConfigurationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -323,10 +322,10 @@ func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client,
 }
 
 func waitWorkspaceSAMLConfigurationCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.SamlAuthentication, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.SamlConfigurationStatusConfigured),
-		Refresh: statusWorkspaceSAMLConfiguration(ctx, conn, id),
+		Refresh: statusWorkspaceSAMLConfiguration(conn, id),
 		Timeout: timeout,
 	}
 

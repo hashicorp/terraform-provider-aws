@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,19 +29,19 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccIoTTopicRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
@@ -83,21 +82,29 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 
 func TestAccIoTTopicRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceTopicRule(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -106,19 +113,19 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 
 func TestAccIoTTopicRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -131,7 +138,7 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -140,7 +147,7 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -151,19 +158,19 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_cloudWatchAlarm(rName, "myalarm"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_alarm.*", map[string]string{
 						"alarm_name":   "myalarm",
@@ -200,7 +207,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_cloudWatchAlarm(rName, "differentName"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_alarm.*", map[string]string{
 						"alarm_name":   "differentName",
@@ -235,19 +242,19 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_cloudWatchLogs(rName, "mylogs1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
@@ -285,7 +292,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_cloudWatchLogs(rName, "updatedlogs1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
@@ -321,19 +328,19 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_cloudWatchLogsBatchMode(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
@@ -369,7 +376,7 @@ func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_cloudWatchLogsBatchMode(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
@@ -403,19 +410,19 @@ func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_cloudWatchMetric(rName, "TestName"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "1"),
@@ -447,7 +454,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_cloudWatchMetric(rName, "OtherName"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "1"),
@@ -487,19 +494,19 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 
 func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_dynamoDB(rName, "tn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -537,7 +544,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_dynamoDBRangeKey(rName, "tn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -577,19 +584,19 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 
 func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_dynamoDBv2(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -619,7 +626,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_dynamoDBv2(rName, "updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -652,19 +659,19 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 
 func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_elasticSearch(rName, "myindex"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -700,7 +707,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_elasticSearch(rName, "updatedindex"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -734,19 +741,19 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 
 func TestAccIoTTopicRule_firehose(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_firehose(rName, "mystream1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -786,7 +793,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_firehose(rName, "updatedstream1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -824,19 +831,19 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 
 func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_firehoseSeparator(rName, "\n"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -871,7 +878,7 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_firehoseSeparator(rName, ","),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -904,19 +911,19 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 
 func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_firehoseBatchMode(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -951,7 +958,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_firehoseBatchMode(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -984,19 +991,19 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_http(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1032,7 +1039,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_httpConfirmationURL(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1063,7 +1070,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_httpHeaders(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1098,7 +1105,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_httpErrorAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1152,19 +1159,19 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_analytics(rName, "fakedata"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1193,7 +1200,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_analytics(rName, "differentdata"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1225,19 +1232,19 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_analytics(rName, "fakedata"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1267,7 +1274,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_analyticsBatchMode(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1300,19 +1307,19 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_events(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1345,19 +1352,19 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_events(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1388,7 +1395,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_eventsBatchMode(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1423,19 +1430,19 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 func TestAccIoTTopicRule_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_kafka(rName, "fake_topic", "b-1.localhost:9094"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1477,7 +1484,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_kafka(rName, "different_topic", "b-2.localhost:9094"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1520,7 +1527,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_kafka(rName, "different_topic", "b-3.localhost:9094"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1574,19 +1581,19 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 
 func TestAccIoTTopicRule_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_kinesis(rName, "mystream"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1615,7 +1622,7 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_kinesis(rName, "otherstream"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1652,19 +1659,19 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 
 func TestAccIoTTopicRule_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1698,19 +1705,19 @@ func TestAccIoTTopicRule_lambda(t *testing.T) {
 
 func TestAccIoTTopicRule_republish(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_republish(rName, "mytopic"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1745,7 +1752,7 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_republish(rName, "othertopic"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1778,19 +1785,19 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 
 func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_republishQoS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1828,19 +1835,19 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 
 func TestAccIoTTopicRule_s3(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_s3(rName, "mybucket"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1871,7 +1878,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_s3(rName, "yourbucket"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1910,19 +1917,19 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 
 func TestAccIoTTopicRule_sns(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_sns(rName, "RAW"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1951,7 +1958,7 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_sns(rName, "JSON"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -1988,19 +1995,19 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 
 func TestAccIoTTopicRule_sqs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_sqs(rName, "fakedata"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2030,7 +2037,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_sqs(rName, "yourdata"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2068,19 +2075,19 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 
 func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_stepFunctions(rName, "mystatemachine"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2110,7 +2117,7 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_stepFunctions(rName, "yourstatemachine"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2148,19 +2155,19 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 
 func TestAccIoTTopicRule_Timestream(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_timestream(rName, "dim1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2202,7 +2209,7 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_timestream(rName, "dim3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2252,19 +2259,19 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 
 func TestAccIoTTopicRule_errorAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_kinesisErrorAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2322,19 +2329,19 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16115
 func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicRuleConfig_kinesis(rName, "mystream"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2363,7 +2370,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 			{
 				Config: testAccTopicRuleConfig_kinesisErrorAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, resourceName),
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
@@ -2418,9 +2425,9 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	})
 }
 
-func testAccCheckTopicRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTopicRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_topic_rule" {
@@ -2444,7 +2451,7 @@ func testAccCheckTopicRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTopicRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTopicRuleExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2455,7 +2462,7 @@ func testAccCheckTopicRuleExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No IoT Topic Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		_, err := tfiot.FindTopicRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -2463,8 +2470,8 @@ func testAccCheckTopicRuleExists(ctx context.Context, n string) resource.TestChe
 	}
 }
 
-func testAccTopicRuleName() string {
-	return fmt.Sprintf("tf_acc_test_%[1]s", sdkacctest.RandString(20))
+func testAccTopicRuleName(t *testing.T) string {
+	return fmt.Sprintf("tf_acc_test_%[1]s", acctest.RandString(t, 20))
 }
 
 func testAccTopicRuleConfig_destinationRole(rName string) string {

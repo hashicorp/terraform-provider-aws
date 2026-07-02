@@ -23,11 +23,11 @@ func testAccSSMContactsRotationDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccSSMContactsRotationDataSource_tags,
-		"NullMap":                        testAccSSMContactsRotationDataSource_tags_NullMap,
-		"EmptyMap":                       testAccSSMContactsRotationDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccSSMContactsRotationDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccSSMContactsRotationDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccSSMContactsRotationDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccSSMContactsRotationDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccSSMContactsRotationDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccSSMContactsRotationDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -65,7 +65,7 @@ func testAccSSMContactsRotationDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotationDataSource_tags_NullMap(t *testing.T) {
+func testAccSSMContactsRotationDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
@@ -93,7 +93,7 @@ func testAccSSMContactsRotationDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotationDataSource_tags_EmptyMap(t *testing.T) {
+func testAccSSMContactsRotationDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
@@ -121,7 +121,7 @@ func testAccSSMContactsRotationDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotationDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccSSMContactsRotationDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
@@ -157,7 +157,7 @@ func testAccSSMContactsRotationDataSource_tags_DefaultTags_nonOverlapping(t *tes
 	})
 }
 
-func testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccSSMContactsRotationDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
@@ -199,7 +199,7 @@ func testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *
 	})
 }
 
-func testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccSSMContactsRotationDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"

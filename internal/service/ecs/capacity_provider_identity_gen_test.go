@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECSCapacityProvider_Identity_Basic(t *testing.T) {
+func TestAccECSCapacityProvider_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.CapacityProvider
@@ -109,7 +109,7 @@ func TestAccECSCapacityProvider_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECSCapacityProvider_Identity_RegionOverride(t *testing.T) {
+func TestAccECSCapacityProvider_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecs_capacity_provider.test"
@@ -230,7 +230,7 @@ func TestAccECSCapacityProvider_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccECSCapacityProvider_Identity_ExistingResource(t *testing.T) {
+func TestAccECSCapacityProvider_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.CapacityProvider
@@ -309,7 +309,7 @@ func TestAccECSCapacityProvider_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccECSCapacityProvider_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccECSCapacityProvider_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.CapacityProvider

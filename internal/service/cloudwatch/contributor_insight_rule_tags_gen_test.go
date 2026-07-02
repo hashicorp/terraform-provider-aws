@@ -77,11 +77,11 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -131,11 +131,11 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -179,11 +179,11 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -215,18 +215,18 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -283,19 +283,19 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -340,19 +340,19 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -430,18 +430,18 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -498,11 +498,11 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -534,18 +534,18 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -639,11 +639,11 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -687,18 +687,18 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -786,18 +786,18 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -853,11 +853,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -905,11 +905,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -953,11 +953,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -991,18 +991,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1068,11 +1068,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1132,11 +1132,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1170,18 +1170,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1245,11 +1245,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1309,11 +1309,11 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 			{
@@ -1365,18 +1365,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1464,18 +1464,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1562,18 +1562,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1637,18 +1637,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1704,18 +1704,18 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1779,19 +1779,19 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1857,19 +1857,19 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1922,18 +1922,18 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -2028,18 +2028,18 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -2124,18 +2124,18 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccContributorInsightRuleImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "rule_name",
 				ImportStateVerifyIgnore: []string{
-					"rule_definition", "rule_state",
+					"rule_definition",
 				},
 			},
 		},
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -2301,7 +2301,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,7 @@ import (
 func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var assoc awstypes.TenantResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +57,7 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var assoc awstypes.TenantResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

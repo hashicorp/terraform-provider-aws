@@ -37,27 +37,29 @@ func resourceConditionalForwarder() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dns_ips": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			"remote_domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// Documentation is incorrect, the API call fails if a trailing period is included
-				ValidateFunc: domainValidator,
-			},
+				"dns_ips": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"remote_domain_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					// Documentation is incorrect, the API call fails if a trailing period is included
+					ValidateFunc: domainValidator,
+				},
+			}
 		},
 	}
 }

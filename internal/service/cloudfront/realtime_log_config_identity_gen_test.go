@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCloudFrontRealtimeLogConfig_Identity_Basic(t *testing.T) {
+func TestAccCloudFrontRealtimeLogConfig_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.RealtimeLogConfig
@@ -106,7 +106,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource(t *testing.T) {
+func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.RealtimeLogConfig
@@ -185,7 +185,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource(t *testing.T) 
 	})
 }
 
-func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.RealtimeLogConfig

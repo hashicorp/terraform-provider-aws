@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinvoicing "github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,7 +30,7 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 		acctest.CtBasic: testAccInvoicingInvoiceUnit_basic,
 		// acctest.CtDisappears: testAccInvoicingInvoiceUnit_disappears,
 		"regionOverride": testAccInvoicingInvoiceUnit_regionOverride,
-		"Identity":       testAccInvoicingInvoiceUnit_IdentitySerial,
+		"Identity":       testAccInvoicingInvoiceUnit_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -44,14 +42,14 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_TESTS_ENABLED")
 
 	var invoiceUnit invoicing.GetInvoiceUnitOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_invoicing_invoice_unit.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvoiceUnitConfig_basic(rName),
@@ -62,7 +60,7 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
@@ -96,7 +94,7 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
@@ -132,14 +130,14 @@ func testAccInvoicingInvoiceUnit_regionOverride(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_TESTS_ENABLED")
 
 	var invoiceUnit invoicing.GetInvoiceUnitOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_invoicing_invoice_unit.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvoiceUnitConfig_region(rName, acctest.AlternateRegion()),
@@ -150,7 +148,7 @@ func testAccInvoicingInvoiceUnit_regionOverride(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 				),
 			},
@@ -180,7 +178,7 @@ func testAccInvoicingInvoiceUnit_regionOverride(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
@@ -188,14 +186,14 @@ func testAccInvoicingInvoiceUnit_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccCheckInvoiceUnitExists(ctx context.Context, n string, v *invoicing.GetInvoiceUnitOutput) resource.TestCheckFunc {
+func testAccCheckInvoiceUnitExists(ctx context.Context, t *testing.T, n string, v *invoicing.GetInvoiceUnitOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InvoicingClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InvoicingClient(ctx)
 
 		output, err := tfinvoicing.FindInvoiceUnitByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
@@ -208,9 +206,9 @@ func testAccCheckInvoiceUnitExists(ctx context.Context, n string, v *invoicing.G
 	}
 }
 
-func testAccCheckInvoiceUnitDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInvoiceUnitDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InvoicingClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InvoicingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_invoicing_invoice_unit" {

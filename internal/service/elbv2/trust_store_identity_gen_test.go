@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccELBV2TrustStore_Identity_Basic(t *testing.T) {
+func TestAccELBV2TrustStore_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TrustStore
@@ -115,7 +115,7 @@ func TestAccELBV2TrustStore_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TrustStore_Identity_RegionOverride(t *testing.T) {
+func TestAccELBV2TrustStore_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lb_trust_store.test"
@@ -248,7 +248,7 @@ func TestAccELBV2TrustStore_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccELBV2TrustStore_Identity_ExistingResource(t *testing.T) {
+func TestAccELBV2TrustStore_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TrustStore
@@ -304,7 +304,7 @@ func TestAccELBV2TrustStore_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccELBV2TrustStore_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccELBV2TrustStore_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TrustStore

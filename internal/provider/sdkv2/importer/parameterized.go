@@ -41,13 +41,14 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, i
 	if !ok {
 		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
-	val, ok := valRaw.(string)
-	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-	}
-	setAttribute(rd, attr.ResourceAttributeName(), val)
+
+	setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 
 	if attr.ResourceAttributeName() != names.AttrID {
+		val, ok := valRaw.(string)
+		if !ok {
+			return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
+		}
 		rd.SetId(val)
 	}
 
@@ -79,13 +80,14 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, ide
 	if !ok {
 		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
-	val, ok := valRaw.(string)
-	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-	}
-	setAttribute(rd, attr.ResourceAttributeName(), val)
+
+	setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 
 	if attr.ResourceAttributeName() != names.AttrID {
+		val, ok := valRaw.(string)
+		if !ok {
+			return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
+		}
 		rd.SetId(val)
 	}
 
@@ -127,11 +129,8 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 				if attr.Required() && !ok {
 					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
-				val, ok := valRaw.(string)
-				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-				}
-				setAttribute(rd, attr.ResourceAttributeName(), val)
+
+				setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 			}
 		}
 
@@ -172,11 +171,8 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, i
 				if attr.Required() && !ok {
 					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
-				val, ok := valRaw.(string)
-				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-				}
-				setAttribute(rd, attr.ResourceAttributeName(), val)
+
+				setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 			}
 		}
 

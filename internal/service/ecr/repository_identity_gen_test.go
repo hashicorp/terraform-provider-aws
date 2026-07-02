@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECRRepository_Identity_Basic(t *testing.T) {
+func TestAccECRRepository_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Repository
@@ -111,7 +111,7 @@ func TestAccECRRepository_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepository_Identity_RegionOverride(t *testing.T) {
+func TestAccECRRepository_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecr_repository.test"
@@ -200,7 +200,7 @@ func TestAccECRRepository_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccECRRepository_Identity_ExistingResource(t *testing.T) {
+func TestAccECRRepository_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Repository
@@ -258,7 +258,7 @@ func TestAccECRRepository_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccECRRepository_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccECRRepository_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Repository

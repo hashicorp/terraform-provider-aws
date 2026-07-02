@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,21 +46,23 @@ func resourceHostedZoneDNSSEC() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"signing_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  serveSignatureSigning,
-				ValidateFunc: validation.StringInSlice([]string{
-					serveSignatureSigning,
-					serveSignatureNotSigning,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"signing_status": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  serveSignatureSigning,
+					ValidateFunc: validation.StringInSlice([]string{
+						serveSignatureSigning,
+						serveSignatureNotSigning,
+					}, false),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -226,9 +227,8 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	output, err := conn.GetDNSSEC(ctx, input)
 
 	if errs.IsA[*awstypes.DNSSECNotFound](err) || errs.IsA[*awstypes.NoSuchHostedZone](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -243,8 +243,8 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	return output, nil
 }
 
-func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Client, hostedZoneID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHostedZoneDNSSEC(conn *route53.Client, hostedZoneID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
 		if retry.NotFound(err) {
@@ -263,9 +263,9 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
+		Refresh:    statusHostedZoneDNSSEC(conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
 		Timeout:    timeout,
 	}

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeBuildSourceCredential_Identity_Basic(t *testing.T) {
+func TestAccCodeBuildSourceCredential_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SourceCredentialsInfo
@@ -115,7 +115,7 @@ func TestAccCodeBuildSourceCredential_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildSourceCredential_Identity_RegionOverride(t *testing.T) {
+func TestAccCodeBuildSourceCredential_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codebuild_source_credential.test"
@@ -247,7 +247,7 @@ func TestAccCodeBuildSourceCredential_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildSourceCredential_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeBuildSourceCredential_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SourceCredentialsInfo
@@ -326,7 +326,7 @@ func TestAccCodeBuildSourceCredential_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildSourceCredential_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCodeBuildSourceCredential_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SourceCredentialsInfo

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -37,44 +36,46 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"code_repository": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"ec2": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"ecr": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"lambda": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"lambda_code": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"code_repository": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"ec2": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"ecr": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"lambda": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"lambda_code": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"max_account_limit_reached": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"max_account_limit_reached": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -180,9 +181,8 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Invoking account does not have access to describe the organization configuration") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

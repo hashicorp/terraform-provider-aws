@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketACL_Identity_Basic(t *testing.T) {
+func TestAccS3BucketACL_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_acl.test"
@@ -43,7 +43,7 @@ func TestAccS3BucketACL_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -108,7 +108,7 @@ func TestAccS3BucketACL_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketACL_Identity_RegionOverride(t *testing.T) {
+func TestAccS3BucketACL_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_acl.test"
@@ -199,7 +199,7 @@ func TestAccS3BucketACL_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccS3BucketACL_Identity_ExistingResource(t *testing.T) {
+func TestAccS3BucketACL_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_acl.test"
@@ -220,7 +220,7 @@ func TestAccS3BucketACL_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -256,7 +256,7 @@ func TestAccS3BucketACL_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccS3BucketACL_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3BucketACL_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_acl.test"
@@ -282,7 +282,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_NoRefresh_NoChange(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -313,7 +313,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_NoRefresh_NoChange(t *testing.
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketACL_Identity_Upgrade(t *testing.T) {
+func TestAccS3BucketACL_Identity_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_acl.test"
@@ -334,7 +334,7 @@ func TestAccS3BucketACL_Identity_Upgrade(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -370,7 +370,7 @@ func TestAccS3BucketACL_Identity_Upgrade(t *testing.T) {
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketACL_Identity_Upgrade_NoRefresh(t *testing.T) {
+func TestAccS3BucketACL_Identity_Upgrade_noRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_acl.test"
@@ -396,7 +396,7 @@ func TestAccS3BucketACL_Identity_Upgrade_NoRefresh(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEventsRule_Identity_Basic(t *testing.T) {
+func TestAccEventsRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v eventbridge.DescribeRuleOutput
@@ -107,7 +107,7 @@ func TestAccEventsRule_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEventsRule_Identity_RegionOverride(t *testing.T) {
+func TestAccEventsRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -195,7 +195,7 @@ func TestAccEventsRule_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccEventsRule_Identity_ExistingResource(t *testing.T) {
+func TestAccEventsRule_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v eventbridge.DescribeRuleOutput
@@ -253,7 +253,7 @@ func TestAccEventsRule_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccEventsRule_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccEventsRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v eventbridge.DescribeRuleOutput

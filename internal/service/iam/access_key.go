@@ -17,12 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,6 +31,12 @@ import (
 )
 
 // @SDKResource("aws_iam_access_key", name="Access Key")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;awstypes;awstypes.AccessKeyMetadata")
+// @Testing(importIgnore="encrypted_secret;key_fingerprint;pgp_key;secret;ses_smtp_password_v4;encrypted_ses_smtp_password_v4")
+// @Testing(preIdentityVersion="v6.45.0")
+// @Testing(plannableImportAction="NoOp")
+// @CustomImport
 func resourceAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessKeyCreate,
@@ -43,6 +49,10 @@ func resourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
 				conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
@@ -65,49 +75,51 @@ func resourceAccessKey() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_secret": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_ses_smtp_password_v4": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pgp_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"secret": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"ses_smtp_password_v4": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.StatusTypeActive,
-				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
-			},
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_secret": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_ses_smtp_password_v4": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pgp_key": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"secret": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"ses_smtp_password_v4": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.StatusTypeActive,
+					ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
+				},
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -180,7 +192,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		createResp.AccessKey.Status = awstypes.StatusTypeInactive
 	}
 
-	resourceAccessKeyReadResult(d, &awstypes.AccessKeyMetadata{
+	resourceAccessKeyFlatten(d, &awstypes.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
 		CreateDate:  createResp.AccessKey.CreateDate,
 		Status:      createResp.AccessKey.Status,
@@ -206,21 +218,12 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading IAM Access Key (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.ToString(key.AccessKeyId))
-
-	if key.CreateDate != nil {
-		d.Set("create_date", aws.ToTime(key.CreateDate).Format(time.RFC3339))
-	} else {
-		d.Set("create_date", nil)
-	}
-
-	d.Set(names.AttrStatus, key.Status)
-	d.Set("user", key.UserName)
+	resourceAccessKeyFlatten(d, key)
 
 	return diags
 }
 
-func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
+func resourceAccessKeyFlatten(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
 	d.SetId(aws.ToString(key.AccessKeyId))
 
 	if key.CreateDate != nil {
@@ -315,9 +318,8 @@ func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccess
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

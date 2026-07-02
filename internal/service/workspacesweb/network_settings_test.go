@@ -10,11 +10,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,9 +28,9 @@ func TestAccWorkSpacesWebNetworkSettings_basic(t *testing.T) {
 	subnetResourceName2 := "aws_subnet.test.1"
 	securityGroupResourceName1 := "aws_security_group.test.0"
 	securityGroupResourceName2 := "aws_security_group.test.1"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -39,12 +38,12 @@ func TestAccWorkSpacesWebNetworkSettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
+					testAccCheckNetworkSettingsExists(ctx, t, resourceName, &networkSettings),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName1, names.AttrID),
@@ -70,9 +69,9 @@ func TestAccWorkSpacesWebNetworkSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var networkSettings awstypes.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -80,15 +79,23 @@ func TestAccWorkSpacesWebNetworkSettings_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
+					testAccCheckNetworkSettingsExists(ctx, t, resourceName, &networkSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceNetworkSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -108,9 +115,9 @@ func TestAccWorkSpacesWebNetworkSettings_update(t *testing.T) {
 	securityGroupResourceName2 := "aws_security_group.test.1"
 	securityGroupResourceName3 := "aws_security_group.test2.0"
 	securityGroupResourceName4 := "aws_security_group.test2.1"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -118,12 +125,12 @@ func TestAccWorkSpacesWebNetworkSettings_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
+					testAccCheckNetworkSettingsExists(ctx, t, resourceName, &networkSettings),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName1, names.AttrID),
@@ -143,7 +150,7 @@ func TestAccWorkSpacesWebNetworkSettings_update(t *testing.T) {
 			{
 				Config: testAccNetworkSettingsConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
+					testAccCheckNetworkSettingsExists(ctx, t, resourceName, &networkSettings),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName2, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", subnetResourceName3, names.AttrID),
@@ -164,9 +171,9 @@ func TestAccWorkSpacesWebNetworkSettings_update(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNetworkSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_network_settings" {
@@ -190,14 +197,14 @@ func testAccCheckNetworkSettingsDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckNetworkSettingsExists(ctx context.Context, n string, v *awstypes.NetworkSettings) resource.TestCheckFunc {
+func testAccCheckNetworkSettingsExists(ctx context.Context, t *testing.T, n string, v *awstypes.NetworkSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindNetworkSettingsByARN(ctx, conn, rs.Primary.Attributes["network_settings_arn"])
 

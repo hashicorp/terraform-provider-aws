@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -46,89 +45,91 @@ func resourceReservedInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"currency_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrInstanceCount: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  1,
-			},
-			"lease_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"offering_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"offering_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"product_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"recurring_charges": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recurring_charge_amount": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"recurring_charge_frequency": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"currency_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"fixed_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrInstanceCount: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+					Default:  1,
+				},
+				"lease_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"offering_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"offering_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"product_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"recurring_charges": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"recurring_charge_amount": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"recurring_charge_frequency": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"reservation_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"reservation_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrStartTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -218,9 +219,7 @@ func findReservedDBInstanceByID(ctx context.Context, conn *rds.Client, id string
 
 	// Eventual consistency check.
 	if aws.ToString(output.ReservedDBInstanceId) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -244,9 +243,8 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ReservedDBInstanceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -264,8 +262,8 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 	return output, nil
 }
 
-func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReservedInstance(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReservedDBInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -281,10 +279,10 @@ func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) sd
 }
 
 func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.ReservedDBInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{reservedInstanceStatePaymentPending},
 		Target:         []string{reservedInstanceStateActive},
-		Refresh:        statusReservedInstance(ctx, conn, id),
+		Refresh:        statusReservedInstance(conn, id),
 		NotFoundChecks: 5,
 		Timeout:        timeout,
 		MinTimeout:     10 * time.Second,

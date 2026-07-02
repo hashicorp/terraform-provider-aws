@@ -281,6 +281,14 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -2624,7 +2632,7 @@ resource "aws_lambda_function" "test" {
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
 }
 
 resource "aws_iam_role" "test" {

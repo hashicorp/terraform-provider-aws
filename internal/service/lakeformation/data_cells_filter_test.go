@@ -11,11 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
@@ -26,10 +25,10 @@ func testAccDataCellsFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
@@ -37,12 +36,12 @@ func testAccDataCellsFilter_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCellsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					testAccCheckDataCellsFilterExists(ctx, t, resourceName, &datacellsfilter),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
@@ -63,10 +62,10 @@ func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
@@ -74,12 +73,12 @@ func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCellsFilterConfig_columnWildcard(rName, "my_column_12"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					testAccCheckDataCellsFilterExists(ctx, t, resourceName, &datacellsfilter),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
@@ -96,10 +95,10 @@ func testAccDataCellsFilter_columnWildcardMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
@@ -107,13 +106,13 @@ func testAccDataCellsFilter_columnWildcardMultiple(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Test with columns in non-alphabetical order to verify no ordering issues
 				Config: testAccDataCellsFilterConfig_columnWildcardMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					testAccCheckDataCellsFilterExists(ctx, t, resourceName, &datacellsfilter),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.*", "my_column_12"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.*", "my_column_22"),
@@ -132,10 +131,10 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
@@ -143,14 +142,22 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCellsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					testAccCheckDataCellsFilterExists(ctx, t, resourceName, &datacellsfilter),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceDataCellsFilter, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -161,7 +168,7 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
 	filterExpression := `
@@ -170,7 +177,7 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 	allRowsildcard := `
   all_rows_wildcard {}
 `
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
@@ -178,12 +185,12 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCellsFilterConfig_rowFilter(rName, filterExpression),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					testAccCheckDataCellsFilterExists(ctx, t, resourceName, &datacellsfilter),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
@@ -195,7 +202,7 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 			{
 				Config: testAccDataCellsFilterConfig_rowFilter(rName, allRowsildcard),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					testAccCheckDataCellsFilterExists(ctx, t, resourceName, &datacellsfilter),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
@@ -208,9 +215,9 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 	})
 }
 
-func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataCellsFilterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_data_cells_filter" {
@@ -234,7 +241,7 @@ func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckDataCellsFilterExists(ctx context.Context, name string, datacellsfilter *awstypes.DataCellsFilter) resource.TestCheckFunc {
+func testAccCheckDataCellsFilterExists(ctx context.Context, t *testing.T, name string, datacellsfilter *awstypes.DataCellsFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -245,7 +252,7 @@ func testAccCheckDataCellsFilterExists(ctx context.Context, name string, datacel
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameDataCellsFilter, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 		resp, err := tflakeformation.FindDataCellsFilterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -259,7 +266,7 @@ func testAccCheckDataCellsFilterExists(ctx context.Context, name string, datacel
 }
 
 func testAccDataCellsFilterPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 	input := &lakeformation.ListDataCellsFilterInput{}
 	_, err := conn.ListDataCellsFilter(ctx, input)

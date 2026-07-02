@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
@@ -20,8 +19,8 @@ const (
 	serviceStatusUnknown  = "UNKNOWN"
 )
 
-func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBotVersion(conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBotVersionByName(ctx, conn, name, version)
 
 		if retry.NotFound(err) {
@@ -36,8 +35,8 @@ func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client,
 	}
 }
 
-func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSlotType(conn *lexmodelbuildingservice.Client, name, version string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSlotTypeVersionByName(ctx, conn, name, version)
 
 		if retry.NotFound(err) {
@@ -52,8 +51,8 @@ func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, n
 	}
 }
 
-func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIntent(conn *lexmodelbuildingservice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := conn.GetIntentVersions(ctx, &lexmodelbuildingservice.GetIntentVersionsInput{
 			Name: aws.String(id),
 		})
@@ -72,8 +71,8 @@ func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.Client, id 
 	}
 }
 
-func statusBotAlias(ctx context.Context, conn *lexmodelbuildingservice.Client, botAliasName, botName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBotAlias(conn *lexmodelbuildingservice.Client, botAliasName, botName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),

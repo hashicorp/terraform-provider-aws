@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,36 +41,38 @@ func resourceTargetGroupAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrTarget: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrTarget: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
-			"target_group_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"target_group_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -210,9 +211,8 @@ func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice
 		page, err := paginator.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -226,8 +226,8 @@ func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice
 	return output, nil
 }
 
-func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTarget(conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
 		if retry.NotFound(err) {
@@ -243,10 +243,10 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, t
 }
 
 func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetStatusInitial),
 		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy, types.TargetStatusUnused, types.TargetStatusUnavailable),
-		Refresh:                   statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
+		Refresh:                   statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -263,10 +263,10 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
-		Refresh: statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
+		Refresh: statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout: timeout,
 	}
 

@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -31,10 +30,18 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_user_profile", name="User Profile")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("user_identifier")
+// @ImportIDHandler("userProfileImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetUserProfileOutput", checkDestroyNoop=true)
+// @Testing(importStateIdFunc="testAccUserProfileImportStateFunc", importStateIdAttribute="domain_identifier")
+// @Testing(importIgnore="user_type", plannableImportAction=Replace)
+// @Testing(preIdentityVersion="v6.47.0")
 func newUserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userProfileResource{}
 
@@ -52,6 +59,7 @@ type userProfileResource struct {
 	framework.ResourceWithModel[userProfileResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
+	framework.WithImportByIdentity
 }
 
 func (r *userProfileResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -125,7 +133,7 @@ func (r *userProfileResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(create.UniqueId(ctx))
 	out, err := conn.CreateUserProfile(ctx, in)
 	if resp.Diagnostics.HasError() {
 		return
@@ -249,19 +257,6 @@ func (r *userProfileResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *userProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 3 {
-		resp.Diagnostics.AddError("resource import invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "user_identifier,domain_identifier,type"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrType), parts[2])...)
-}
-
 func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId string, userId string, userProfileType awstypes.UserProfileType) (*datazone.GetUserProfileOutput, error) {
 	in := &datazone.GetUserProfileInput{
 		UserIdentifier:   aws.String(userId),
@@ -286,6 +281,24 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	}
 
 	return out, nil
+}
+
+type userProfileImportID struct{}
+
+var _ inttypes.ImportIDParser = userProfileImportID{}
+
+func (userProfileImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, ",", 3)
+	if len(parts) != 3 {
+		return "", nil, fmt.Errorf("id %q should be in the format <user-identifier>,<domain-identifier>,<type>", id)
+	}
+
+	result := map[string]any{
+		"user_identifier":   parts[0],
+		"domain_identifier": parts[1],
+	}
+
+	return id, result, nil
 }
 
 type userProfileResourceModel struct {

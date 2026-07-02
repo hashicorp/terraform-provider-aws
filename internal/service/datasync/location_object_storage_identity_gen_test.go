@@ -22,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncLocationObjectStorage_Identity_Basic(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -116,12 +116,12 @@ func TestAccDataSyncLocationObjectStorage_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -246,13 +246,13 @@ func TestAccDataSyncLocationObjectStorage_Identity_RegionOverride(t *testing.T) 
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -332,13 +332,13 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

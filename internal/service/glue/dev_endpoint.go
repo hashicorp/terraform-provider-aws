@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,132 +45,134 @@ func resourceDevEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"extra_jars_s3_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"extra_python_libs_s3_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"glue_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"number_of_nodes": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"number_of_workers", "worker_type"},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "0"
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arguments": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				ValidateFunc: validation.IntAtLeast(2),
-			},
-			"number_of_workers": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntAtLeast(2),
-				ConflictsWith: []string{"number_of_nodes"},
-			},
-			names.AttrPublicKey: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"public_keys"},
-			},
-			"public_keys": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-				ConflictsWith: []string{names.AttrPublicKey},
-				MaxItems:      5,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				Set:          schema.HashString,
-				RequiredWith: []string{names.AttrSubnetID},
-			},
-			names.AttrSubnetID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{names.AttrSecurityGroupIDs},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"private_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"yarn_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"zeppelin_remote_spark_interpreter_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"worker_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
-				ConflictsWith:    []string{"number_of_nodes"},
-				ForceNew:         true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"failure_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"extra_jars_s3_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"extra_python_libs_s3_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"glue_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"number_of_nodes": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"number_of_workers", "worker_type"},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return new == "0"
+					},
+					ValidateFunc: validation.IntAtLeast(2),
+				},
+				"number_of_workers": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntAtLeast(2),
+					ConflictsWith: []string{"number_of_nodes"},
+				},
+				names.AttrPublicKey: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"public_keys"},
+				},
+				"public_keys": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					Set:           schema.HashString,
+					ConflictsWith: []string{names.AttrPublicKey},
+					MaxItems:      5,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"security_configuration": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					Set:          schema.HashString,
+					RequiredWith: []string{names.AttrSubnetID},
+				},
+				names.AttrSubnetID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{names.AttrSecurityGroupIDs},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"private_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"yarn_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"zeppelin_remote_spark_interpreter_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"worker_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+					ConflictsWith:    []string{"number_of_nodes"},
+					ForceNew:         true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"failure_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -518,9 +519,8 @@ func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	output, err := conn.GetDevEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -535,8 +535,8 @@ func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	return output.DevEndpoint, nil
 }
 
-func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDevEndpoint(conn *glue.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDevEndpointByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -552,10 +552,10 @@ func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) sdkr
 }
 
 func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{devEndpointStatusProvisioning},
 		Target:  []string{devEndpointStatusReady},
-		Refresh: statusDevEndpoint(ctx, conn, name),
+		Refresh: statusDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
@@ -573,10 +573,10 @@ func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string)
 }
 
 func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{devEndpointStatusTerminating},
 		Target:  []string{},
-		Refresh: statusDevEndpoint(ctx, conn, name),
+		Refresh: statusDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 

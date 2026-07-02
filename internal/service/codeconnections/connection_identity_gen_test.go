@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeConnectionsConnection_Identity_Basic(t *testing.T) {
+func TestAccCodeConnectionsConnection_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Connection
@@ -108,7 +108,7 @@ func TestAccCodeConnectionsConnection_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeConnectionsConnection_Identity_RegionOverride(t *testing.T) {
+func TestAccCodeConnectionsConnection_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeconnections_connection.test"
@@ -228,7 +228,7 @@ func TestAccCodeConnectionsConnection_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccCodeConnectionsConnection_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeConnectionsConnection_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Connection
@@ -308,7 +308,7 @@ func TestAccCodeConnectionsConnection_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCodeConnectionsConnection_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCodeConnectionsConnection_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Connection

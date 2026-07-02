@@ -36,7 +36,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -49,7 +49,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -100,7 +100,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -155,7 +155,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -203,7 +203,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -236,7 +236,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_null(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -252,7 +252,7 @@ func TestAccKMSReplicaKey_tags_null(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -265,7 +265,7 @@ func TestAccKMSReplicaKey_tags_null(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -318,7 +318,7 @@ func TestAccKMSReplicaKey_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_EmptyMap(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -334,7 +334,7 @@ func TestAccKMSReplicaKey_tags_EmptyMap(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -345,7 +345,7 @@ func TestAccKMSReplicaKey_tags_EmptyMap(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -396,7 +396,7 @@ func TestAccKMSReplicaKey_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_AddOnUpdate(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -412,7 +412,7 @@ func TestAccKMSReplicaKey_tags_AddOnUpdate(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -423,7 +423,7 @@ func TestAccKMSReplicaKey_tags_AddOnUpdate(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -449,7 +449,7 @@ func TestAccKMSReplicaKey_tags_AddOnUpdate(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -492,7 +492,7 @@ func TestAccKMSReplicaKey_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -508,7 +508,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnCreate(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -521,7 +521,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnCreate(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -568,7 +568,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnCreate(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -601,7 +601,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -617,7 +617,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -630,7 +630,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -664,7 +664,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -717,7 +717,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -760,7 +760,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -776,7 +776,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -789,7 +789,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -822,7 +822,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -864,7 +864,7 @@ func TestAccKMSReplicaKey_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -880,7 +880,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -894,7 +894,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -943,7 +943,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -994,7 +994,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1039,7 +1039,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1072,7 +1072,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1088,7 +1088,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1104,7 +1104,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1163,7 +1163,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1221,7 +1221,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1254,7 +1254,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1270,7 +1270,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_overlapping(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1286,7 +1286,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_overlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1344,7 +1344,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_overlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1406,7 +1406,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_overlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1452,7 +1452,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1468,7 +1468,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1481,7 +1481,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1515,7 +1515,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1555,7 +1555,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1571,7 +1571,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1585,7 +1585,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1614,7 +1614,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1657,7 +1657,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1673,7 +1673,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1689,7 +1689,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1734,7 +1734,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1750,7 +1750,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1764,7 +1764,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1803,7 +1803,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1819,7 +1819,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1835,7 +1835,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1877,7 +1877,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 	})
 }
 
-func TestAccKMSReplicaKey_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1893,7 +1893,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1909,7 +1909,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1951,7 +1951,7 @@ func TestAccKMSReplicaKey_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 	})
 }
 
-func TestAccKMSReplicaKey_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -1967,7 +1967,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnCreate(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1978,7 +1978,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnCreate(t *testing.T) {
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2018,7 +2018,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -2034,7 +2034,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -2047,7 +2047,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2080,7 +2080,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2128,7 +2128,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -2144,7 +2144,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -2157,7 +2157,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2188,7 +2188,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2228,7 +2228,7 @@ func TestAccKMSReplicaKey_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -2244,7 +2244,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2264,7 +2264,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2314,7 +2314,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2364,7 +2364,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2400,7 +2400,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccKMSReplicaKey_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -2416,7 +2416,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx),
+		CheckDestroy: testAccCheckReplicaKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2434,7 +2434,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2498,7 +2498,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2562,7 +2562,7 @@ func TestAccKMSReplicaKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicaKeyExists(ctx, resourceName, &v),
+					testAccCheckReplicaKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

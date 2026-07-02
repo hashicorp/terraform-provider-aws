@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,166 +44,168 @@ func resourceConfigurationSetEventDestination() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"configuration_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"event_destination": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloud_watch_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"event_destination.0.cloud_watch_destination",
-								"event_destination.0.event_bridge_destination",
-								"event_destination.0.kinesis_firehose_destination",
-								"event_destination.0.pinpoint_destination",
-								"event_destination.0.sns_destination",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dimension_configuration": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"default_dimension_value": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 256),
-												},
-												"dimension_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 256),
-												},
-												"dimension_value_source": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.DimensionValueSource](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"configuration_set_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"event_destination": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloud_watch_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"event_destination.0.cloud_watch_destination",
+									"event_destination.0.event_bridge_destination",
+									"event_destination.0.kinesis_firehose_destination",
+									"event_destination.0.pinpoint_destination",
+									"event_destination.0.sns_destination",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimension_configuration": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"default_dimension_value": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+													"dimension_name": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+													"dimension_value_source": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.DimensionValueSource](),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"event_bridge_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"event_destination.0.cloud_watch_destination",
-								"event_destination.0.event_bridge_destination",
-								"event_destination.0.kinesis_firehose_destination",
-								"event_destination.0.pinpoint_destination",
-								"event_destination.0.sns_destination",
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
 							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_bus_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							"event_bridge_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"event_destination.0.cloud_watch_destination",
+									"event_destination.0.event_bridge_destination",
+									"event_destination.0.kinesis_firehose_destination",
+									"event_destination.0.pinpoint_destination",
+									"event_destination.0.sns_destination",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"event_bus_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"kinesis_firehose_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"event_destination.0.cloud_watch_destination",
-								"event_destination.0.event_bridge_destination",
-								"event_destination.0.kinesis_firehose_destination",
-								"event_destination.0.pinpoint_destination",
-								"event_destination.0.sns_destination",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"delivery_stream_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrIAMRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							"kinesis_firehose_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"event_destination.0.cloud_watch_destination",
+									"event_destination.0.event_bridge_destination",
+									"event_destination.0.kinesis_firehose_destination",
+									"event_destination.0.pinpoint_destination",
+									"event_destination.0.sns_destination",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"delivery_stream_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrIAMRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"matching_event_types": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.EventType](),
+							"matching_event_types": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.EventType](),
+								},
 							},
-						},
-						"pinpoint_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"event_destination.0.cloud_watch_destination",
-								"event_destination.0.event_bridge_destination",
-								"event_destination.0.kinesis_firehose_destination",
-								"event_destination.0.pinpoint_destination",
-								"event_destination.0.sns_destination",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"application_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							"pinpoint_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"event_destination.0.cloud_watch_destination",
+									"event_destination.0.event_bridge_destination",
+									"event_destination.0.kinesis_firehose_destination",
+									"event_destination.0.pinpoint_destination",
+									"event_destination.0.sns_destination",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"application_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"sns_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"event_destination.0.cloud_watch_destination",
-								"event_destination.0.event_bridge_destination",
-								"event_destination.0.kinesis_firehose_destination",
-								"event_destination.0.pinpoint_destination",
-								"event_destination.0.sns_destination",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrTopicARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+							"sns_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"event_destination.0.cloud_watch_destination",
+									"event_destination.0.event_bridge_destination",
+									"event_destination.0.kinesis_firehose_destination",
+									"event_destination.0.pinpoint_destination",
+									"event_destination.0.sns_destination",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrTopicARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"event_destination_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"event_destination_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -389,9 +390,8 @@ func findConfigurationSetEventDestinations(ctx context.Context, conn *sesv2.Clie
 	output, err := conn.GetConfigurationSetEventDestinations(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

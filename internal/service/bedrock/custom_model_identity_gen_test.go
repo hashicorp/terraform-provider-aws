@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,20 +23,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccBedrockCustomModel_IdentitySerial(t *testing.T) {
+func testAccBedrockCustomModel_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccBedrockCustomModel_Identity_Basic,
-		"ExistingResource":          testAccBedrockCustomModel_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccBedrockCustomModel_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccBedrockCustomModel_Identity_RegionOverride,
+		acctest.CtBasic:             testAccBedrockCustomModel_Identity_basic,
+		"ExistingResource":          testAccBedrockCustomModel_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccBedrockCustomModel_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccBedrockCustomModel_Identity_Basic(t *testing.T) {
+func testAccBedrockCustomModel_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -46,7 +46,10 @@ func testAccBedrockCustomModel_Identity_Basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -128,139 +131,7 @@ func testAccBedrockCustomModel_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_Identity_RegionOverride(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_bedrock_custom_model.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.Test(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/CustomModel/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("job_arn"), compare.ValuesSame()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						"job_arn": knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("job_arn")),
-				},
-			},
-
-			// Step 2: Import command with appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/CustomModel/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"base_model_identifier",
-				},
-			},
-
-			// Step 3: Import command without appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/CustomModel/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"base_model_identifier",
-				},
-			},
-
-			// Step 4: Import block with Import ID and appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/CustomModel/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("job_arn")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-			},
-
-			// Step 5: Import block with Import ID and no appended "@<region>"
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/CustomModel/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("job_arn")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-			},
-
-			// Step 6: Import block with Resource Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/CustomModel/region_override/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
-				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("job_arn")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccBedrockCustomModel_Identity_ExistingResource(t *testing.T) {
+func testAccBedrockCustomModel_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -271,7 +142,10 @@ func testAccBedrockCustomModel_Identity_ExistingResource(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -340,7 +214,7 @@ func testAccBedrockCustomModel_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccBedrockCustomModel_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccBedrockCustomModel_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrock.GetModelCustomizationJobOutput
@@ -351,7 +225,10 @@ func testAccBedrockCustomModel_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
 		CheckDestroy: testAccCheckCustomModelDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{

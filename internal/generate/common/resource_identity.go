@@ -100,6 +100,23 @@ func (r ResourceIdentity) IdentityAttributeName() string {
 	return ""
 }
 
+func (r ResourceIdentity) IdentityAttributeResourceAttribute() string {
+	return namesgen.ConstOrQuote(r.IdentityAttributeResourceAttributeName())
+}
+
+func (r ResourceIdentity) IdentityAttributeResourceAttributeName() string {
+	if r.identityAttributeName != "" {
+		return r.identityAttributeName
+	}
+	if len(r.IdentityAttributes) == 1 {
+		if r.IdentityAttributes[0].ResourceAttributeName_ != "" {
+			return r.IdentityAttributes[0].ResourceAttributeName_
+		}
+		return r.IdentityAttributes[0].Name_
+	}
+	return ""
+}
+
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrNames) > 0
 }
@@ -124,6 +141,7 @@ type IdentityAttribute struct {
 	Optional               bool
 	ResourceAttributeName_ string
 	TestNotNull            bool
+	ValueType              string
 }
 
 func (a IdentityAttribute) Name() string {
@@ -220,6 +238,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 				} else {
 					identityAttribute.TestNotNull = b
 				}
+
+			case "valueType":
+				identityAttribute.ValueType = args.Keyword[k]
 
 			default:
 				errs = errors.Join(errs, fmt.Errorf("annotation \"@IdentityAttribute\": unexpected keyword parameter %q", k))

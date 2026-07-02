@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccARCRegionSwitchPlan_Identity_Basic(t *testing.T) {
+func TestAccARCRegionSwitchPlan_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Plan
@@ -38,7 +38,7 @@ func TestAccARCRegionSwitchPlan_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccARCRegionSwitchPlan_Identity_Basic(t *testing.T) {
 					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &v),
+					testAccCheckPlanExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -115,7 +115,7 @@ func TestAccARCRegionSwitchPlan_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccARCRegionSwitchPlan_Identity_RegionOverride(t *testing.T) {
+func TestAccARCRegionSwitchPlan_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_arcregionswitch_plan.test"
@@ -131,7 +131,7 @@ func TestAccARCRegionSwitchPlan_Identity_RegionOverride(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -191,7 +191,7 @@ func TestAccARCRegionSwitchPlan_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.30.0
-func TestAccARCRegionSwitchPlan_Identity_ExistingResource(t *testing.T) {
+func TestAccARCRegionSwitchPlan_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Plan
@@ -208,7 +208,7 @@ func TestAccARCRegionSwitchPlan_Identity_ExistingResource(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
-		CheckDestroy: testAccCheckPlanDestroy(ctx),
+		CheckDestroy: testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -218,7 +218,7 @@ func TestAccARCRegionSwitchPlan_Identity_ExistingResource(t *testing.T) {
 					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &v),
+					testAccCheckPlanExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -253,7 +253,7 @@ func TestAccARCRegionSwitchPlan_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.30.0
-func TestAccARCRegionSwitchPlan_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccARCRegionSwitchPlan_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Plan
@@ -270,7 +270,7 @@ func TestAccARCRegionSwitchPlan_Identity_ExistingResource_NoRefresh_NoChange(t *
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
-		CheckDestroy: testAccCheckPlanDestroy(ctx),
+		CheckDestroy: testAccCheckPlanDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -285,7 +285,7 @@ func TestAccARCRegionSwitchPlan_Identity_ExistingResource_NoRefresh_NoChange(t *
 					"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &v),
+					testAccCheckPlanExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

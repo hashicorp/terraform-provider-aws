@@ -126,25 +126,25 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             {{ template "testname" . }}_tags,
-		"null":                                      {{ template "testname" . }}_tags_null,
-		"EmptyMap":                                  {{ template "testname" . }}_tags_EmptyMap,
-		"AddOnUpdate":                               {{ template "testname" . }}_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         {{ template "testname" . }}_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  {{ template "testname" . }}_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   {{ template "testname" . }}_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      {{ template "testname" . }}_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      {{ template "testname" . }}_Tags_null,
+		"EmptyMap":                                  {{ template "testname" . }}_Tags_emptyMap,
+		"AddOnUpdate":                               {{ template "testname" . }}_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         {{ template "testname" . }}_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  {{ template "testname" . }}_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                {{ template "testname" . }}_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   {{ template "testname" . }}_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          {{ template "testname" . }}_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          {{ template "testname" . }}_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              {{ template "testname" . }}_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    {{ template "testname" . }}_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": {{ template "testname" . }}_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      {{ template "testname" . }}_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             {{ template "testname" . }}_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
@@ -411,7 +411,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_null(t *testing.T) {
+func {{ template "testname" . }}_Tags_null(t *testing.T) {
 {{- if .SkipNullTags }}
 	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
@@ -522,7 +522,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
+func {{ template "testname" . }}_Tags_emptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -618,7 +618,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
+func {{ template "testname" . }}_Tags_addOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -724,7 +724,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
+func {{ template "testname" . }}_Tags_EmptyTag_onCreate(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -852,7 +852,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -1038,7 +1038,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -1157,7 +1157,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_providerOnly(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1425,7 +1425,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1646,7 +1646,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_overlapping(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1877,7 +1877,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1992,7 +1992,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2106,7 +2106,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -2195,7 +2195,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -2276,7 +2276,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 {{- if .SkipNullTags }}
 	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
@@ -2374,7 +2374,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 {{- if .SkipNullTags }}
 	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
@@ -2474,7 +2474,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 	})
 }
 
-func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
+func {{ template "testname" . }}_Tags_ComputedTag_onCreate(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2544,7 +2544,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2666,7 +2666,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2778,7 +2778,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 	})
 }
 
-func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2965,7 +2965,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 	})
 }
 
-func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{

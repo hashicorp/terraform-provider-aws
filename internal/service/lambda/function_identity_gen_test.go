@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaFunction_Identity_Basic(t *testing.T) {
+func TestAccLambdaFunction_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambda.GetFunctionOutput
@@ -36,7 +36,7 @@ func TestAccLambdaFunction_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccLambdaFunction_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &v),
+					testAccCheckFunctionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("function_name"), compare.ValuesSame()),
@@ -118,7 +118,7 @@ func TestAccLambdaFunction_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_Identity_RegionOverride(t *testing.T) {
+func TestAccLambdaFunction_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lambda_function.test"
@@ -214,7 +214,7 @@ func TestAccLambdaFunction_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccLambdaFunction_Identity_ExistingResource(t *testing.T) {
+func TestAccLambdaFunction_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambda.GetFunctionOutput
@@ -227,7 +227,7 @@ func TestAccLambdaFunction_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckFunctionDestroy(ctx),
+		CheckDestroy: testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -236,7 +236,7 @@ func TestAccLambdaFunction_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &v),
+					testAccCheckFunctionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -272,7 +272,7 @@ func TestAccLambdaFunction_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccLambdaFunction_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccLambdaFunction_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambda.GetFunctionOutput
@@ -285,7 +285,7 @@ func TestAccLambdaFunction_Identity_ExistingResource_NoRefresh_NoChange(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckFunctionDestroy(ctx),
+		CheckDestroy: testAccCheckFunctionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -299,7 +299,7 @@ func TestAccLambdaFunction_Identity_ExistingResource_NoRefresh_NoChange(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &v),
+					testAccCheckFunctionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

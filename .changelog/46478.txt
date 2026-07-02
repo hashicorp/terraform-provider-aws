@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_route53_records: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `name_regex` is an invalid regular expression
+```

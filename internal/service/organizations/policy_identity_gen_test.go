@@ -22,19 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsPolicy_IdentitySerial(t *testing.T) {
+func testAccOrganizationsPolicy_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsPolicy_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsPolicy_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsPolicy_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsPolicy_Identity_basic,
+		"ExistingResource":          testAccOrganizationsPolicy_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsPolicy_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsPolicy_Identity_Basic(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -50,7 +50,7 @@ func testAccOrganizationsPolicy_Identity_Basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -60,7 +60,7 @@ func testAccOrganizationsPolicy_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -119,7 +119,7 @@ func testAccOrganizationsPolicy_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicy_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -135,7 +135,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -144,7 +144,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -179,7 +179,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -195,7 +195,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -209,7 +209,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

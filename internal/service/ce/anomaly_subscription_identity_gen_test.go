@@ -22,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
+func TestAccCEAnomalySubscription_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email_address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -111,13 +111,13 @@ func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
+func TestAccCEAnomalySubscription_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email_address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -195,13 +195,13 @@ func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCEAnomalySubscription_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email_address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

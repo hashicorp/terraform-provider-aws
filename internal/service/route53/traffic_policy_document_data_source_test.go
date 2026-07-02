@@ -18,7 +18,7 @@ import (
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
@@ -36,7 +36,7 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_complete(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),

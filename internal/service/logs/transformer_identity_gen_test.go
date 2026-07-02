@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsTransformer_Identity_Basic(t *testing.T) {
+func TestAccLogsTransformer_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cloudwatchlogs.GetTransformerOutput
@@ -106,7 +106,7 @@ func TestAccLogsTransformer_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsTransformer_Identity_RegionOverride(t *testing.T) {
+func TestAccLogsTransformer_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_log_transformer.test"

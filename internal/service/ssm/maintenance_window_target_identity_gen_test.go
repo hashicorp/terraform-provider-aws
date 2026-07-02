@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMMaintenanceWindowTarget_Identity_Basic(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.MaintenanceWindowTarget
@@ -35,7 +35,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &v),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -113,7 +113,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMMaintenanceWindowTarget_Identity_RegionOverride(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_maintenance_window_target.test"
@@ -205,7 +205,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.MaintenanceWindowTarget
@@ -218,7 +218,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -227,7 +227,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &v),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -265,7 +265,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.MaintenanceWindowTarget
@@ -278,7 +278,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource_NoRefresh_NoCha
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy: testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -292,7 +292,7 @@ func TestAccSSMMaintenanceWindowTarget_Identity_ExistingResource_NoRefresh_NoCha
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &v),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

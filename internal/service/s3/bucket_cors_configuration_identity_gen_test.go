@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketCORSConfiguration_Identity_Basic(t *testing.T) {
+func TestAccS3BucketCORSConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -33,7 +33,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckBucketCORSConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketCORSConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+					testAccCheckBucketCORSConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -108,7 +108,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketCORSConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccS3BucketCORSConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -199,7 +199,7 @@ func TestAccS3BucketCORSConfiguration_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketCORSConfiguration_Identity_ExistingResource(t *testing.T) {
+func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -211,7 +211,7 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -220,7 +220,7 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+					testAccCheckBucketCORSConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -256,7 +256,7 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -268,7 +268,7 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_NoRefresh_NoChan
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -282,7 +282,7 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+					testAccCheckBucketCORSConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -313,7 +313,7 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_NoRefresh_NoChan
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketCORSConfiguration_Identity_Upgrade(t *testing.T) {
+func TestAccS3BucketCORSConfiguration_Identity_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -325,7 +325,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Upgrade(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create with Identity version 0
 			{
@@ -334,7 +334,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Upgrade(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+					testAccCheckBucketCORSConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -370,7 +370,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Upgrade(t *testing.T) {
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketCORSConfiguration_Identity_Upgrade_NoRefresh(t *testing.T) {
+func TestAccS3BucketCORSConfiguration_Identity_Upgrade_noRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_cors_configuration.test"
@@ -382,7 +382,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Upgrade_NoRefresh(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -396,7 +396,7 @@ func TestAccS3BucketCORSConfiguration_Identity_Upgrade_NoRefresh(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+					testAccCheckBucketCORSConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),

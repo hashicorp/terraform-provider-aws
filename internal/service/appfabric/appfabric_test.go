@@ -31,7 +31,7 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"upgradeFromV5WithUpdatePlanRefreshFalse":    testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse,
 			"upgradeFromV5WithDefaultRegionRefreshFalse": testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse,
 			"upgradeFromV5WithNewRegionRefreshFalse":     testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse,
-			"Identity":                                   testAccAppFabricAppBundle_IdentitySerial,
+			"Identity":                                   testAccAppFabricAppBundle_identitySerial,
 		},
 		"AppAuthorization": {
 			acctest.CtBasic:      testAccAppAuthorization_basic,

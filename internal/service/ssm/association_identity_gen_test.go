@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMAssociation_Identity_Basic(t *testing.T) {
+func TestAccSSMAssociation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_association.test"
@@ -34,7 +34,7 @@ func TestAccSSMAssociation_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -44,7 +44,7 @@ func TestAccSSMAssociation_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName),
+					testAccCheckAssociationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrAssociationID), compare.ValuesSame()),
@@ -109,7 +109,7 @@ func TestAccSSMAssociation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMAssociation_Identity_RegionOverride(t *testing.T) {
+func TestAccSSMAssociation_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_association.test"
@@ -198,7 +198,7 @@ func TestAccSSMAssociation_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMAssociation_Identity_ExistingResource(t *testing.T) {
+func TestAccSSMAssociation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_association.test"
@@ -210,7 +210,7 @@ func TestAccSSMAssociation_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -219,7 +219,7 @@ func TestAccSSMAssociation_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName),
+					testAccCheckAssociationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -255,7 +255,7 @@ func TestAccSSMAssociation_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMAssociation_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSSMAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_association.test"
@@ -267,7 +267,7 @@ func TestAccSSMAssociation_Identity_ExistingResource_NoRefresh_NoChange(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckAssociationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -281,7 +281,7 @@ func TestAccSSMAssociation_Identity_ExistingResource_NoRefresh_NoChange(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName),
+					testAccCheckAssociationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

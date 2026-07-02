@@ -16,9 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -50,44 +50,46 @@ func resourceResourceShareAccepter() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"invitation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"receiver_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResources: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"invitation_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"share_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sender_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"share_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"receiver_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResources: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"share_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sender_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"share_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -117,7 +119,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	}
 
 	input := ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(id.UniqueId()),
+		ClientToken:                aws.String(create.UniqueId(ctx)),
 		ResourceShareInvitationArn: aws.String(invitationARN),
 	}
 
@@ -211,7 +213,7 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 	}
 
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(id.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Principals:       []string{receiverAccountID},
 		ResourceShareArn: aws.String(d.Id()),
 	}

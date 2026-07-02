@@ -36,7 +36,7 @@ This resource supports the following arguments:
 * `record_fields` - (Optional) The list of record fields to be delivered to the destination, in order.
 * `s3_delivery_configuration` - (Optional) Parameters that are valid only when the delivery's delivery destination is an S3 bucket.
     * `enable_hive_compatible_path` - (Optional) This parameter causes the S3 objects that contain delivered logs to use a prefix structure that allows for integration with Apache Hive.
-    * `suffix_path` - (Optional) This string allows re-configuring the S3 object prefix to contain either static or variable sections. The valid variables to use in the suffix path will vary by each log source.
+    * `suffix_path` - (Optional) This string allows re-configuring the S3 object prefix to contain either static or variable sections. The valid variables to use in the suffix path will vary by each log source. **Note:** AWS automatically prepends account and service-specific prefixes (e.g., `AWSLogs/{account-id}/CloudFront/` for CloudFront sources) to the configured value. Specify only your custom suffix path without these AWS-managed prefixes.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -49,7 +49,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Delivery using the `id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_delivery.example
+  identity = {
+    id = "jsoGVi4Zq8VlYp9n"
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the delivery.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Deliveries using `id`. For example:
 
 ```terraform
 import {
@@ -58,7 +84,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Delivery using the `id`. For example:
+Using `terraform import`, import Deliveries using `id`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_delivery.example jsoGVi4Zq8VlYp9n

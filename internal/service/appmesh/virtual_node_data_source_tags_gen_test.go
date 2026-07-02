@@ -28,11 +28,11 @@ func testAccAppMeshVirtualNodeDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccAppMeshVirtualNodeDataSource_tags,
-		"NullMap":                        testAccAppMeshVirtualNodeDataSource_tags_NullMap,
-		"EmptyMap":                       testAccAppMeshVirtualNodeDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccAppMeshVirtualNodeDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshVirtualNodeDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshVirtualNodeDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccAppMeshVirtualNodeDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccAppMeshVirtualNodeDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccAppMeshVirtualNodeDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshVirtualNodeDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshVirtualNodeDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -70,7 +70,7 @@ func testAccAppMeshVirtualNodeDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualNodeDataSource_tags_NullMap(t *testing.T) {
+func testAccAppMeshVirtualNodeDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_node.test"
@@ -98,7 +98,7 @@ func testAccAppMeshVirtualNodeDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualNodeDataSource_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshVirtualNodeDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_node.test"
@@ -126,7 +126,7 @@ func testAccAppMeshVirtualNodeDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualNodeDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshVirtualNodeDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_node.test"
@@ -162,7 +162,7 @@ func testAccAppMeshVirtualNodeDataSource_tags_DefaultTags_nonOverlapping(t *test
 	})
 }
 
-func testAccAppMeshVirtualNodeDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshVirtualNodeDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_node.test"
@@ -204,7 +204,7 @@ func testAccAppMeshVirtualNodeDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *t
 	})
 }
 
-func testAccAppMeshVirtualNodeDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshVirtualNodeDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_node.test"

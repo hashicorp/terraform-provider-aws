@@ -25,25 +25,25 @@ func testAccAppMeshVirtualService_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshVirtualService_tags,
-		"null":                                      testAccAppMeshVirtualService_tags_null,
-		"EmptyMap":                                  testAccAppMeshVirtualService_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAppMeshVirtualService_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAppMeshVirtualService_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAppMeshVirtualService_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAppMeshVirtualService_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAppMeshVirtualService_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAppMeshVirtualService_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAppMeshVirtualService_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAppMeshVirtualService_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAppMeshVirtualService_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAppMeshVirtualService_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAppMeshVirtualService_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAppMeshVirtualService_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAppMeshVirtualService_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAppMeshVirtualService_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAppMeshVirtualService_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAppMeshVirtualService_Tags_null,
+		"EmptyMap":                                  testAccAppMeshVirtualService_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAppMeshVirtualService_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAppMeshVirtualService_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAppMeshVirtualService_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAppMeshVirtualService_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAppMeshVirtualService_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAppMeshVirtualService_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAppMeshVirtualService_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAppMeshVirtualService_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAppMeshVirtualService_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAppMeshVirtualService_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAppMeshVirtualService_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAppMeshVirtualService_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAppMeshVirtualService_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAppMeshVirtualService_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAppMeshVirtualService_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAppMeshVirtualService_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAppMeshVirtualService_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -239,7 +239,7 @@ func testAccAppMeshVirtualService_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_null(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -311,7 +311,7 @@ func testAccAppMeshVirtualService_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -379,7 +379,7 @@ func testAccAppMeshVirtualService_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_AddOnUpdate(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -465,7 +465,7 @@ func testAccAppMeshVirtualService_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -560,7 +560,7 @@ func testAccAppMeshVirtualService_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -703,7 +703,7 @@ func testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -797,7 +797,7 @@ func testAccAppMeshVirtualService_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -986,7 +986,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1153,7 +1153,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_nonOverlapping(t *testing.T) 
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1336,7 +1336,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1431,7 +1431,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_updateToProviderOnly(t *testi
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1525,7 +1525,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_updateToResourceOnly(t *testi
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1595,7 +1595,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_emptyResourceTag(t *testing.T
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1657,7 +1657,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1724,7 +1724,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_nullOverlappingResourceTag(t 
 	})
 }
 
-func testAccAppMeshVirtualService_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1791,7 +1791,7 @@ func testAccAppMeshVirtualService_tags_DefaultTags_nullNonOverlappingResourceTag
 	})
 }
 
-func testAccAppMeshVirtualService_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1851,7 +1851,7 @@ func testAccAppMeshVirtualService_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -1953,7 +1953,7 @@ func testAccAppMeshVirtualService_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualService_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -2045,7 +2045,7 @@ func testAccAppMeshVirtualService_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 	})
 }
 
-func testAccAppMeshVirtualService_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData
@@ -2211,7 +2211,7 @@ func testAccAppMeshVirtualService_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 	})
 }
 
-func testAccAppMeshVirtualService_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshVirtualService_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.VirtualServiceData

@@ -35,149 +35,151 @@ func resourceIndexingConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceIndexingConfigurationPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"thing_group_indexing_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
-									},
-								},
-							},
-						},
-						"managed_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
-									},
-								},
-							},
-						},
-						"thing_group_indexing_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThingGroupIndexingMode](),
-						},
-					},
-				},
-				AtLeastOneOf: []string{"thing_group_indexing_configuration", "thing_indexing_configuration"},
-			},
-			"thing_indexing_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
-									},
-								},
-							},
-						},
-						"device_defender_indexing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DeviceDefenderIndexingModeOff,
-							ValidateDiagFunc: enum.Validate[awstypes.DeviceDefenderIndexingMode](),
-						},
-						names.AttrFilter: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"named_shadow_names": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 64),
-												validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
-											),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"thing_group_indexing_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
 										},
 									},
 								},
 							},
-						},
-						"managed_field": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+							"managed_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+										},
 									},
 								},
 							},
-						},
-						"named_shadow_indexing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.NamedShadowIndexingModeOff,
-							ValidateDiagFunc: enum.Validate[awstypes.NamedShadowIndexingMode](),
-						},
-						"thing_connectivity_indexing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ThingConnectivityIndexingModeOff,
-							ValidateDiagFunc: enum.Validate[awstypes.ThingConnectivityIndexingMode](),
-						},
-						"thing_indexing_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThingIndexingMode](),
+							"thing_group_indexing_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThingGroupIndexingMode](),
+							},
 						},
 					},
+					AtLeastOneOf: []string{"thing_group_indexing_configuration", "thing_indexing_configuration"},
 				},
-				AtLeastOneOf: []string{"thing_indexing_configuration", "thing_group_indexing_configuration"},
-			},
+				"thing_indexing_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+										},
+									},
+								},
+							},
+							"device_defender_indexing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.DeviceDefenderIndexingModeOff,
+								ValidateDiagFunc: enum.Validate[awstypes.DeviceDefenderIndexingMode](),
+							},
+							names.AttrFilter: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"named_shadow_names": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(1, 64),
+													validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
+												),
+											},
+										},
+									},
+								},
+							},
+							"managed_field": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
+										},
+									},
+								},
+							},
+							"named_shadow_indexing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.NamedShadowIndexingModeOff,
+								ValidateDiagFunc: enum.Validate[awstypes.NamedShadowIndexingMode](),
+							},
+							"thing_connectivity_indexing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ThingConnectivityIndexingModeOff,
+								ValidateDiagFunc: enum.Validate[awstypes.ThingConnectivityIndexingMode](),
+							},
+							"thing_indexing_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThingIndexingMode](),
+							},
+						},
+					},
+					AtLeastOneOf: []string{"thing_indexing_configuration", "thing_group_indexing_configuration"},
+				},
+			}
 		},
 	}
 }

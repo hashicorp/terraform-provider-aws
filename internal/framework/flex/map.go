@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func ExpandFrameworkStringMap(ctx context.Context, v basetypes.MapValuable) map[string]*string {
@@ -41,6 +42,30 @@ func FlattenFrameworkStringValueMap(ctx context.Context, v map[string]string) ty
 	must(Flatten(ctx, v, &output))
 
 	return output
+}
+
+func FlattenFrameworkStringValueMapOfString(ctx context.Context, v map[string]string) fwtypes.MapOfString {
+	return fwtypes.MapValueOf[basetypes.StringValue]{MapValue: FlattenFrameworkStringValueMap(ctx, v)}
+}
+
+// FlattenFrameworkStringValueMapOfMap converts a map of map of strings to a framework Map value.
+//
+// A nil map is converted to a null Map.
+// An empty map is converted to a null Map.
+func FlattenFrameworkStringValueMapOfMap(ctx context.Context, v map[string]map[string]string) types.Map {
+	if len(v) == 0 {
+		return types.MapNull(types.MapType{ElemType: types.StringType})
+	}
+
+	var output types.Map
+
+	must(Flatten(ctx, v, &output))
+
+	return output
+}
+
+func FlattenFrameworkStringValueMapOfMapOfString(ctx context.Context, v map[string]map[string]string) fwtypes.MapOfMapOfString {
+	return fwtypes.MapValueOf[fwtypes.MapOfString]{MapValue: FlattenFrameworkStringValueMapOfMap(ctx, v)}
 }
 
 // FlattenFrameworkStringValueMapLegacy has no Plugin SDK equivalent as schema.ResourceData.Set can be passed string value maps directly.

@@ -16,7 +16,7 @@ func testAccFindingIDsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_guardduty_finding_ids.test"
 	detectorDataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)

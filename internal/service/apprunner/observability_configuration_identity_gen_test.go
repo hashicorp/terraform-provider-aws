@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppRunnerObservabilityConfiguration_Identity_Basic(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -106,7 +106,7 @@ func TestAccAppRunnerObservabilityConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -226,7 +226,7 @@ func TestAccAppRunnerObservabilityConfiguration_Identity_RegionOverride(t *testi
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -304,7 +304,7 @@ func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource(t *tes
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"

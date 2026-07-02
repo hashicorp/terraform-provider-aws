@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -31,7 +31,7 @@ func testAccEnabler_basic(t *testing.T) {
 	resourceName := "aws_inspector2_enabler.test"
 	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeEcr}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -40,12 +40,12 @@ func testAccEnabler_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -68,7 +68,7 @@ func testAccEnabler_accountID(t *testing.T) {
 	resourceName := "aws_inspector2_enabler.test"
 	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeEc2, types.ResourceScanTypeEcr}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -77,12 +77,12 @@ func testAccEnabler_accountID(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -106,7 +106,7 @@ func testAccEnabler_disappears(t *testing.T) {
 	resourceName := "aws_inspector2_enabler.test"
 	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeEcr}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -115,14 +115,22 @@ func testAccEnabler_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceEnabler(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -137,7 +145,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 	update1ResourceTypes := []types.ResourceScanType{types.ResourceScanTypeEc2, types.ResourceScanTypeLambda}
 	update2ResourceTypes := []types.ResourceScanType{types.ResourceScanTypeLambda}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -146,12 +154,12 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(originalResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, originalResourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, originalResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -162,7 +170,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(update1ResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, update1ResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, update1ResourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, update1ResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -174,7 +182,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(update2ResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, update2ResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, update2ResourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, update2ResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -193,7 +201,7 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 	originalResourceTypes := []types.ResourceScanType{types.ResourceScanTypeEc2}
 	updatedResourceTypes := []types.ResourceScanType{types.ResourceScanTypeEcr}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -202,12 +210,12 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(originalResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, originalResourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, originalResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -218,7 +226,7 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(updatedResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, updatedResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, updatedResourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, updatedResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -236,7 +244,7 @@ func testAccEnabler_lambda(t *testing.T) {
 	resourceName := "aws_inspector2_enabler.test"
 	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeLambda}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -245,12 +253,12 @@ func testAccEnabler_lambda(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -273,7 +281,7 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 	resourceName := "aws_inspector2_enabler.test"
 	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeLambda, types.ResourceScanTypeLambdaCode}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -284,12 +292,12 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -313,7 +321,7 @@ func testAccEnabler_codeRepository(t *testing.T) {
 	resourceName := "aws_inspector2_enabler.test"
 	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeCodeRepository}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -322,12 +330,12 @@ func testAccEnabler_codeRepository(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerID(ctx, resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
@@ -352,7 +360,7 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -362,12 +370,12 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_MemberAccount(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.member", names.AttrAccountID),
@@ -387,7 +395,7 @@ func testAccEnabler_memberAccount_disappearsMemberAssociation(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -397,14 +405,22 @@ func testAccEnabler_memberAccount_disappearsMemberAssociation(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_MemberAccount(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceMemberAssociation(), "aws_inspector2_member_association.member"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -419,7 +435,7 @@ func testAccEnabler_memberAccount_multiple(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -430,12 +446,12 @@ func testAccEnabler_memberAccount_multiple(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_MemberAccount_Multiple(t, resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
@@ -459,7 +475,7 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -470,12 +486,12 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_MemberAccount_UpdateMemberAccountsAlternate(t, resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 					),
@@ -488,7 +504,7 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_MemberAccount_UpdateMemberAccountsMultiple(t, resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
@@ -503,7 +519,7 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_MemberAccount_UpdateMemberAccountsThird(t, resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
@@ -527,7 +543,7 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -538,12 +554,12 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
-		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_MemberAccount_UpdateMemberAccountsAlternate(t, originalResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, originalResourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, originalResourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 					),
@@ -556,7 +572,7 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 			{
 				Config: testAccEnablerConfig_MemberAccount_UpdateMemberAccountsMultiple(t, update1ResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, update1ResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, update1ResourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, update1ResourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
@@ -572,7 +588,7 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 			{
 				Config: testAccEnablerConfig_MemberAccount_UpdateMemberAccountsThird(t, update2ResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceName, update2ResourceTypes),
+					testAccCheckEnablerExists(ctx, t, resourceName, update2ResourceTypes),
 					testAccCheckEnablerIDProvider(ctx, resourceName, update2ResourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
 					),
@@ -586,9 +602,9 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 	})
 }
 
-func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEnablerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_enabler" {
@@ -628,7 +644,7 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEnablerExists(ctx context.Context, name string, t []types.ResourceScanType) resource.TestCheckFunc {
+func testAccCheckEnablerExists(ctx context.Context, t *testing.T, name string, scanTypes []types.ResourceScanType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -639,14 +655,14 @@ func testAccCheckEnablerExists(ctx context.Context, name string, t []types.Resou
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		accountIDs, _, err := tfinspector2.ParseEnablerID(rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, err)
 		}
 
-		id := tfinspector2.EnablerID(accountIDs, t)
+		id := tfinspector2.EnablerID(accountIDs, scanTypes)
 		st, err := tfinspector2.AccountStatuses(ctx, conn, accountIDs)
 		if err != nil {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, err)

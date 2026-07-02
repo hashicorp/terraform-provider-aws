@@ -8,9 +8,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +26,7 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 		acctest.CtBasic:      testAccAccountRegistration_basic,
 		acctest.CtDisappears: testAccAccountRegistration_disappears,
 		"kms key":            testAccAccountRegistration_optionalKMSKey,
-		"Identity":           testAccAuditManagerAccountRegistration_IdentitySerial,
+		"Identity":           testAccAuditManagerAccountRegistration_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -71,17 +75,23 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				// deregister_on_destroy must be enabled for the disappears helper to disable
-				// audit manager on destroy and trigger the non-empty plan after state refresh
 				Config: testAccAccountRegistrationConfig_deregisterOnDestroy(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccoountRegistrationExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceAccountRegistration, resourceName),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfauditmanager.ResourceAccountRegistration, resourceName, func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+						// Set deregister_on_destroy to match the intended configuration
+						return fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("deregister_on_destroy"), true))
+					}),
 				),
-			},
-			{
-				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

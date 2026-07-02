@@ -50,7 +50,7 @@ func TestAccAppConfigConfigurationProfileDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigConfigurationProfileDataSource_tags_NullMap(t *testing.T) {
+func TestAccAppConfigConfigurationProfileDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appconfig_configuration_profile.test"
@@ -78,7 +78,7 @@ func TestAccAppConfigConfigurationProfileDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigConfigurationProfileDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccAppConfigConfigurationProfileDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appconfig_configuration_profile.test"
@@ -106,7 +106,7 @@ func TestAccAppConfigConfigurationProfileDataSource_tags_EmptyMap(t *testing.T) 
 	})
 }
 
-func TestAccAppConfigConfigurationProfileDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccAppConfigConfigurationProfileDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appconfig_configuration_profile.test"
@@ -142,7 +142,7 @@ func TestAccAppConfigConfigurationProfileDataSource_tags_DefaultTags_nonOverlapp
 	})
 }
 
-func TestAccAppConfigConfigurationProfileDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccAppConfigConfigurationProfileDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appconfig_configuration_profile.test"
@@ -184,7 +184,7 @@ func TestAccAppConfigConfigurationProfileDataSource_tags_IgnoreTags_Overlap_Defa
 	})
 }
 
-func TestAccAppConfigConfigurationProfileDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccAppConfigConfigurationProfileDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appconfig_configuration_profile.test"

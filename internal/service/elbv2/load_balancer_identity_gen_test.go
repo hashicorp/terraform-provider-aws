@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
+func TestAccELBV2LoadBalancer_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.LoadBalancer
@@ -108,7 +108,7 @@ func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
+func TestAccELBV2LoadBalancer_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lb.test"
@@ -228,7 +228,7 @@ func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_Identity_ExistingResource(t *testing.T) {
+func TestAccELBV2LoadBalancer_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.LoadBalancer
@@ -307,7 +307,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccELBV2LoadBalancer_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.LoadBalancer

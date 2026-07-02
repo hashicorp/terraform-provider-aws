@@ -12,11 +12,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,10 +24,10 @@ import (
 
 func TestAccLightsailContainerService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -36,12 +35,12 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
@@ -66,7 +65,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 			{
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
 				),
 			},
@@ -76,10 +75,10 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 
 func TestAccLightsailContainerService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -87,15 +86,23 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceContainerService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -103,11 +110,11 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 
 func TestAccLightsailContainerService_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -115,19 +122,19 @@ func TestAccLightsailContainerService_name(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -137,10 +144,10 @@ func TestAccLightsailContainerService_name(t *testing.T) {
 
 func TestAccLightsailContainerService_isDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -148,19 +155,19 @@ func TestAccLightsailContainerService_isDisabled(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", acctest.CtTrue),
 				),
 			},
@@ -170,10 +177,10 @@ func TestAccLightsailContainerService_isDisabled(t *testing.T) {
 
 func TestAccLightsailContainerService_power(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -181,19 +188,19 @@ func TestAccLightsailContainerService_power(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_power(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameMicro)),
 				),
 			},
@@ -203,9 +210,9 @@ func TestAccLightsailContainerService_power(t *testing.T) {
 
 func TestAccLightsailContainerService_publicDomainNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -213,7 +220,7 @@ func TestAccLightsailContainerService_publicDomainNames(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccContainerServiceConfig_publicDomainNames(rName),
@@ -225,10 +232,10 @@ func TestAccLightsailContainerService_publicDomainNames(t *testing.T) {
 
 func TestAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -236,12 +243,12 @@ func TestAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_privateRegistryAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", acctest.CtTrue),
@@ -254,10 +261,10 @@ func TestAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 
 func TestAccLightsailContainerService_scale(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -265,19 +272,19 @@ func TestAccLightsailContainerService_scale(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
 				),
 			},
@@ -287,10 +294,10 @@ func TestAccLightsailContainerService_scale(t *testing.T) {
 
 func TestAccLightsailContainerService_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -298,12 +305,12 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -316,7 +323,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 			{
 				Config: testAccContainerServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -325,7 +332,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 			{
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -336,10 +343,10 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 
 func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -347,12 +354,12 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
@@ -365,7 +372,7 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccContainerServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
@@ -374,7 +381,7 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerServiceExists(ctx, resourceName),
+					testAccCheckContainerServiceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
@@ -383,9 +390,9 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 	})
 }
 
-func testAccCheckContainerServiceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContainerServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		for _, r := range s.RootModule().Resources {
 			if r.Type != "aws_lightsail_container_service" {
@@ -407,7 +414,7 @@ func testAccCheckContainerServiceDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckContainerServiceExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckContainerServiceExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -418,7 +425,7 @@ func testAccCheckContainerServiceExists(ctx context.Context, resourceName string
 			return fmt.Errorf("no Lightsail Container Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		_, err := tflightsail.FindContainerServiceByName(ctx, conn, rs.Primary.ID)
 

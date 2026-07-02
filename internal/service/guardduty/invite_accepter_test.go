@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,7 +25,7 @@ func testAccInviteAccepter_basic(t *testing.T) {
 	resourceName := "aws_guardduty_invite_accepter.test"
 	_, email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -34,12 +33,12 @@ func testAccInviteAccepter_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInviteAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckInviteAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInviteAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInviteAccepterExists(ctx, resourceName),
+					testAccCheckInviteAccepterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, names.AttrAccountID),
 				),
@@ -54,9 +53,9 @@ func testAccInviteAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInviteAccepterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_invite_accepter" {
@@ -88,7 +87,7 @@ func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInviteAccepterExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -99,7 +98,7 @@ func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("Resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		input := &guardduty.GetMasterAccountInput{
 			DetectorId: aws.String(rs.Primary.ID),

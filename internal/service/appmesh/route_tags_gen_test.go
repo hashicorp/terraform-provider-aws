@@ -25,25 +25,25 @@ func testAccAppMeshRoute_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppMeshRoute_tags,
-		"null":                                      testAccAppMeshRoute_tags_null,
-		"EmptyMap":                                  testAccAppMeshRoute_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAppMeshRoute_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAppMeshRoute_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAppMeshRoute_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAppMeshRoute_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAppMeshRoute_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAppMeshRoute_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAppMeshRoute_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAppMeshRoute_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAppMeshRoute_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAppMeshRoute_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAppMeshRoute_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAppMeshRoute_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAppMeshRoute_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAppMeshRoute_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAppMeshRoute_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAppMeshRoute_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAppMeshRoute_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAppMeshRoute_Tags_null,
+		"EmptyMap":                                  testAccAppMeshRoute_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAppMeshRoute_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAppMeshRoute_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAppMeshRoute_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAppMeshRoute_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAppMeshRoute_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAppMeshRoute_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAppMeshRoute_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAppMeshRoute_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAppMeshRoute_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAppMeshRoute_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAppMeshRoute_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAppMeshRoute_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAppMeshRoute_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAppMeshRoute_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAppMeshRoute_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAppMeshRoute_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAppMeshRoute_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -239,7 +239,7 @@ func testAccAppMeshRoute_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_null(t *testing.T) {
+func testAccAppMeshRoute_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -311,7 +311,7 @@ func testAccAppMeshRoute_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshRoute_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -379,7 +379,7 @@ func testAccAppMeshRoute_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_AddOnUpdate(t *testing.T) {
+func testAccAppMeshRoute_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -465,7 +465,7 @@ func testAccAppMeshRoute_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAppMeshRoute_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -560,7 +560,7 @@ func testAccAppMeshRoute_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAppMeshRoute_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -703,7 +703,7 @@ func testAccAppMeshRoute_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppMeshRoute_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -797,7 +797,7 @@ func testAccAppMeshRoute_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -986,7 +986,7 @@ func testAccAppMeshRoute_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1153,7 +1153,7 @@ func testAccAppMeshRoute_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1336,7 +1336,7 @@ func testAccAppMeshRoute_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1431,7 +1431,7 @@ func testAccAppMeshRoute_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1525,7 +1525,7 @@ func testAccAppMeshRoute_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1595,7 +1595,7 @@ func testAccAppMeshRoute_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1657,7 +1657,7 @@ func testAccAppMeshRoute_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1724,7 +1724,7 @@ func testAccAppMeshRoute_tags_DefaultTags_nullOverlappingResourceTag(t *testing.
 	})
 }
 
-func testAccAppMeshRoute_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAppMeshRoute_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1791,7 +1791,7 @@ func testAccAppMeshRoute_tags_DefaultTags_nullNonOverlappingResourceTag(t *testi
 	})
 }
 
-func testAccAppMeshRoute_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAppMeshRoute_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1851,7 +1851,7 @@ func testAccAppMeshRoute_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAppMeshRoute_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -1953,7 +1953,7 @@ func testAccAppMeshRoute_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppMeshRoute_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -2045,7 +2045,7 @@ func testAccAppMeshRoute_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshRoute_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData
@@ -2211,7 +2211,7 @@ func testAccAppMeshRoute_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func testAccAppMeshRoute_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshRoute_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.RouteData

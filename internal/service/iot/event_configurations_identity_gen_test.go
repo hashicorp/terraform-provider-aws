@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccIoTEventConfigurations_IdentitySerial(t *testing.T) {
+func testAccIoTEventConfigurations_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccIoTEventConfigurations_Identity_Basic,
-		"ExistingResource":          testAccIoTEventConfigurations_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccIoTEventConfigurations_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccIoTEventConfigurations_Identity_RegionOverride,
+		acctest.CtBasic:             testAccIoTEventConfigurations_Identity_basic,
+		"ExistingResource":          testAccIoTEventConfigurations_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccIoTEventConfigurations_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccIoTEventConfigurations_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccIoTEventConfigurations_Identity_Basic(t *testing.T) {
+func testAccIoTEventConfigurations_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_event_configurations.test"
@@ -106,7 +106,7 @@ func testAccIoTEventConfigurations_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccIoTEventConfigurations_Identity_RegionOverride(t *testing.T) {
+func testAccIoTEventConfigurations_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_event_configurations.test"
@@ -216,7 +216,7 @@ func testAccIoTEventConfigurations_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccIoTEventConfigurations_Identity_ExistingResource(t *testing.T) {
+func testAccIoTEventConfigurations_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_event_configurations.test"
@@ -282,7 +282,7 @@ func testAccIoTEventConfigurations_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccIoTEventConfigurations_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccIoTEventConfigurations_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_event_configurations.test"

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,8 @@ import (
 
 const (
 	// Allow IAM role to become visible to the index
-	propagationTimeout = 2 * time.Minute
+	propagationTimeout         = 2 * time.Minute
+	athenaRolePropagationDelay = 10 * time.Second
 
 	// accessDeniedExceptionMessage describes the error returned when the IAM role has not yet propagated
 	accessDeniedExceptionAssumeRoleMessage              = "Failed to assume your role. Verify the trust relationships of the role in the IAM console"
@@ -44,7 +44,6 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSource")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -104,10 +103,12 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	dataSourceID := d.Get("data_source_id").(string)
 	id := dataSourceCreateResourceID(awsAccountID, dataSourceID)
+
+	dataSourceParameters := quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]any))
 	input := &quicksight.CreateDataSourceInput{
 		AwsAccountId:         aws.String(awsAccountID),
 		DataSourceId:         aws.String(dataSourceID),
-		DataSourceParameters: quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]any)),
+		DataSourceParameters: dataSourceParameters,
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
 		Tags:                 getTagsIn(ctx),
 		Type:                 awstypes.DataSourceType(d.Get(names.AttrType).(string)),
@@ -127,6 +128,16 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]any))
+	}
+
+	// If an IAM role is being passed to an Athena Data Source, the retry logic below does not work
+	// (i.e. does not throw an assume role error on initial creation, but when waiting for successful creation)
+	// and we need to wait for propagation before attempting to create the Data Source
+	switch v := dataSourceParameters.(type) {
+	case *awstypes.DataSourceParametersMemberAthenaParameters:
+		if v.Value.RoleArn != nil {
+			time.Sleep(athenaRolePropagationDelay)
+		}
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -153,6 +164,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(id)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
 
 	if _, err := waitDataSourceCreated(ctx, conn, awsAccountID, dataSourceID); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting from QuickSight Data Source (%s) create: %s", d.Id(), err)
@@ -356,9 +368,8 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	output, err := conn.DescribeDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -386,9 +397,8 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	output, err := conn.DescribeDataSourcePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -403,8 +413,8 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	return output.Permissions, nil
 }
 
-func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataSource(conn *quicksight.Client, awsAccountID, dataSourceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
 		if retry.NotFound(err) {
@@ -423,10 +433,10 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
-		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
+		Refresh: statusDataSource(conn, awsAccountID, dataSourceID),
 		Timeout: timeout,
 	}
 
@@ -447,10 +457,10 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful),
-		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
+		Refresh: statusDataSource(conn, awsAccountID, dataSourceID),
 		Timeout: timeout,
 	}
 

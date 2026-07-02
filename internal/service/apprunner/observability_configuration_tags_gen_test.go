@@ -204,7 +204,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_null(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -274,7 +274,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_EmptyMap(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -340,7 +340,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_AddOnUpdate(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -424,7 +424,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -516,7 +516,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_EmptyTag_OnCreate(t *testin
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -656,7 +656,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_EmptyTag_OnUpdate_Add(t *te
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -748,7 +748,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_EmptyTag_OnUpdate_Replace(t
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -932,7 +932,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_providerOnly(t 
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1095,7 +1095,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nonOverlapping(
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1274,7 +1274,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_overlapping(t *
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1367,7 +1367,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_updateToProvide
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1459,7 +1459,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_updateToResourc
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1527,7 +1527,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_emptyResourceTa
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1587,7 +1587,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_emptyProviderOn
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1652,7 +1652,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nullOverlapping
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1717,7 +1717,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_DefaultTags_nullNonOverlapp
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1775,7 +1775,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnCreate(t *tes
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1875,7 +1875,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnUpdate_Add(t 
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -1965,7 +1965,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_ComputedTag_OnUpdate_Replac
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -2130,7 +2130,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags_IgnoreTags_Overlap_DefaultT
 	})
 }
 
-func TestAccAppRunnerObservabilityConfiguration_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccAppRunnerObservabilityConfiguration_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_apprunner_observability_configuration.test"

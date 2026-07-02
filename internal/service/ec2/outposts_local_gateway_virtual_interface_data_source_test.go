@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,7 +17,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,6 +29,8 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.
 					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "local_gateway_virtual_interface_group_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "outpost_lag_id"),
 					resource.TestMatchResourceAttr(dataSourceName, "peer_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "peer_bgp_asn", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "vlan", regexache.MustCompile(`^\d+$`)),
@@ -43,7 +44,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,6 +56,8 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "local_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_bgp_asn", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "local_gateway_virtual_interface_group_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "outpost_lag_id"),
 					resource.TestMatchResourceAttr(dataSourceName, "peer_address", regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+/\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "peer_bgp_asn", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "vlan", regexache.MustCompile(`^\d+$`)),
@@ -66,11 +69,11 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 
 func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDataSourceName := "data.aws_ec2_local_gateway_virtual_interface.source"
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,6 +85,8 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_tags(t *testing.T)
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_address", sourceDataSourceName, "local_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_bgp_asn", sourceDataSourceName, "local_bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_gateway_id", sourceDataSourceName, "local_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "local_gateway_virtual_interface_group_id", sourceDataSourceName, "local_gateway_virtual_interface_group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_lag_id", sourceDataSourceName, "outpost_lag_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_address", sourceDataSourceName, "peer_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_bgp_asn", sourceDataSourceName, "peer_bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vlan", sourceDataSourceName, "vlan"),

@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -598,9 +597,8 @@ func findFirewall(ctx context.Context, conn *networkfirewall.Client, input *netw
 	output, err := conn.DescribeFirewall(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -623,8 +621,8 @@ func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn st
 	return findFirewall(ctx, conn, &input)
 }
 
-func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewall(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -639,8 +637,8 @@ func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn strin
 	}
 }
 
-func statusFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewallTransitGatewayAttachment(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -660,10 +658,10 @@ func statusFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfi
 }
 
 func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
-		Refresh: statusFirewall(ctx, conn, arn),
+		Refresh: statusFirewall(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -677,10 +675,10 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, time
 }
 
 func waitFirewallTransitGatewayAttachmentCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatusCreating),
 		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStatusPendingAcceptance, awstypes.TransitGatewayAttachmentStatusReady),
-		Refresh: statusFirewallTransitGatewayAttachment(ctx, conn, arn),
+		Refresh: statusFirewallTransitGatewayAttachment(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -694,10 +692,10 @@ func waitFirewallTransitGatewayAttachmentCreated(ctx context.Context, conn *netw
 }
 
 func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
-		Refresh: statusFirewall(ctx, conn, arn),
+		Refresh: statusFirewall(conn, arn),
 		Timeout: timeout,
 		// Delay added to account for Associate/DisassociateSubnet calls that return
 		// a READY status immediately after the method is called instead of immediately
@@ -715,10 +713,10 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.Client, time
 }
 
 func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueDeleting, awstypes.FirewallStatusValueProvisioning),
 		Target:  []string{},
-		Refresh: statusFirewall(ctx, conn, arn),
+		Refresh: statusFirewall(conn, arn),
 		Timeout: timeout,
 	}
 
