@@ -1,3 +1,9 @@
-```release-note:bug
+```release-note:enhancement
 resource/aws_lambda_function: Add `use_resource_timeout_for_propagation` argument
+```
+```release-note:enhancement
+resource/aws_lambda_permission: Add configurable resource timeouts. Defaults to `5m` for `create`, `read`, and `delete`.
+```
+```release-note:enhancement
+resource/aws_lambda_permission: Hard-coded timeouts to account for eventual consistency have been replaced with configurable resource timeouts
 ```
