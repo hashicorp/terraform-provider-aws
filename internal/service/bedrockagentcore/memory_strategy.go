@@ -152,6 +152,134 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					},
 				},
 			},
+			"memory_record_schema": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[memoryRecordSchemaModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"metadata_schema": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[metadataSchemaEntryModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrKey: schema.StringAttribute{
+										Required: true,
+									},
+									"extraction_type": schema.StringAttribute{
+										// The API may populate this when unset, so it must be Computed.
+										Optional:   true,
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.ExtractionType](),
+									},
+									names.AttrType: schema.StringAttribute{
+										// The API may populate this when unset, so it must be Computed.
+										Optional:   true,
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.MetadataValueType](),
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"extraction_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[extractionConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"llm_extraction_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[llmExtractionConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"definition": schema.StringAttribute{
+																Required: true,
+															},
+															"llm_extraction_instruction": schema.StringAttribute{
+																// The API defaults this to "LATEST_VALUE" when unset, so it must be Computed.
+																Optional: true,
+																Computed: true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"validation": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[validationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"string_validation": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[stringValidationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																				listvalidator.ExactlyOneOf(
+																					path.MatchRelative().AtParent().AtName("string_validation"),
+																					path.MatchRelative().AtParent().AtName("number_validation"),
+																					path.MatchRelative().AtParent().AtName("string_list_validation"),
+																				),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"allowed_values": schema.ListAttribute{
+																						CustomType:  fwtypes.ListOfStringType,
+																						ElementType: types.StringType,
+																						Required:    true,
+																					},
+																				},
+																			},
+																		},
+																		"number_validation": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[numberValidationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"min_value": schema.Float64Attribute{
+																						Optional: true,
+																					},
+																					"max_value": schema.Float64Attribute{
+																						Optional: true,
+																					},
+																				},
+																			},
+																		},
+																		"string_list_validation": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[stringListValidationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"allowed_values": schema.ListAttribute{
+																						CustomType:  fwtypes.ListOfStringType,
+																						ElementType: types.StringType,
+																						Optional:    true,
+																					},
+																					"max_items": schema.Int32Attribute{
+																						Optional: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -614,6 +742,7 @@ type memoryStrategyResourceModel struct {
 	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
 	Description            types.String                                              `tfsdk:"description"`
 	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
+	MemoryRecordSchema     fwtypes.ListNestedObjectValueOf[memoryRecordSchemaModel]  `tfsdk:"memory_record_schema"`
 	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
 	MemoryID               types.String                                              `tfsdk:"memory_id"`
 	Name                   types.String                                              `tfsdk:"name"`
@@ -628,6 +757,176 @@ func (m *memoryStrategyResourceModel) GetIdentifier() string {
 	} else {
 		return m.Name.ValueString()
 	}
+}
+
+type memoryRecordSchemaModel struct {
+	MetadataSchema fwtypes.ListNestedObjectValueOf[metadataSchemaEntryModel] `tfsdk:"metadata_schema"`
+}
+
+type metadataSchemaEntryModel struct {
+	Key              types.String                                           `tfsdk:"key"`
+	ExtractionConfig fwtypes.ListNestedObjectValueOf[extractionConfigModel] `tfsdk:"extraction_config"`
+	ExtractionType   fwtypes.StringEnum[awstypes.ExtractionType]            `tfsdk:"extraction_type"`
+	Type             fwtypes.StringEnum[awstypes.MetadataValueType]         `tfsdk:"type"`
+}
+
+// extractionConfigModel maps the single-member awstypes.ExtractionConfig union
+// (currently only llmExtractionConfig).
+type extractionConfigModel struct {
+	LLMExtractionConfig fwtypes.ListNestedObjectValueOf[llmExtractionConfigModel] `tfsdk:"llm_extraction_config"`
+}
+
+var (
+	_ fwflex.Expander  = extractionConfigModel{}
+	_ fwflex.Flattener = &extractionConfigModel{}
+)
+
+func (m extractionConfigModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	if m.LLMExtractionConfig.IsNull() {
+		return nil, diags
+	}
+	var r awstypes.ExtractionConfigMemberLlmExtractionConfig
+	llm, d := m.LLMExtractionConfig.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return nil, diags
+	}
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, llm, &r.Value))
+	if diags.HasError() {
+		return nil, diags
+	}
+	return &r, diags
+}
+
+func (m *extractionConfigModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ExtractionConfigMemberLlmExtractionConfig:
+		var llm llmExtractionConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &llm))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.LLMExtractionConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &llm)
+		smerr.AddEnrich(ctx, &diags, d)
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("extraction config flatten: %s", reflect.TypeOf(v).String()),
+		)
+	}
+	return diags
+}
+
+type llmExtractionConfigModel struct {
+	Definition               types.String                                     `tfsdk:"definition"`
+	LLMExtractionInstruction types.String                                     `tfsdk:"llm_extraction_instruction"`
+	Validation               fwtypes.ListNestedObjectValueOf[validationModel] `tfsdk:"validation"`
+}
+
+// validationModel maps the awstypes.Validation union
+// (string / number / string-list validation rules).
+type validationModel struct {
+	StringValidation     fwtypes.ListNestedObjectValueOf[stringValidationModel]     `tfsdk:"string_validation"`
+	NumberValidation     fwtypes.ListNestedObjectValueOf[numberValidationModel]     `tfsdk:"number_validation"`
+	StringListValidation fwtypes.ListNestedObjectValueOf[stringListValidationModel] `tfsdk:"string_list_validation"`
+}
+
+type stringValidationModel struct {
+	AllowedValues fwtypes.ListOfString `tfsdk:"allowed_values"`
+}
+
+type numberValidationModel struct {
+	MinValue types.Float64 `tfsdk:"min_value"`
+	MaxValue types.Float64 `tfsdk:"max_value"`
+}
+
+type stringListValidationModel struct {
+	AllowedValues fwtypes.ListOfString `tfsdk:"allowed_values"`
+	MaxItems      types.Int32          `tfsdk:"max_items"`
+}
+
+var (
+	_ fwflex.Expander  = validationModel{}
+	_ fwflex.Flattener = &validationModel{}
+)
+
+func (m validationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.StringValidation.IsNull():
+		var r awstypes.ValidationMemberStringValidation
+		p, d := m.StringValidation.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	case !m.NumberValidation.IsNull():
+		var r awstypes.ValidationMemberNumberValidation
+		p, d := m.NumberValidation.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	case !m.StringListValidation.IsNull():
+		var r awstypes.ValidationMemberStringListValidation
+		p, d := m.StringListValidation.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+func (m *validationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	var d diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.ValidationMemberStringValidation:
+		var model stringValidationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.StringValidation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+	case awstypes.ValidationMemberNumberValidation:
+		var model numberValidationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.NumberValidation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+	case awstypes.ValidationMemberStringListValidation:
+		var model stringListValidationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.StringListValidation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("validation flatten: %s", reflect.TypeOf(v).String()),
+		)
+	}
+	return diags
 }
 
 var (
@@ -699,6 +998,14 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		// of the episodic namespace. Set it to match the episodic namespaces.
 		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
 			Namespaces: r.Value.Namespaces,
+		}
+		// This branch is hand-built (auto-flex is not used), so memory_record_schema
+		// must be expanded explicitly.
+		if !m.MemoryRecordSchema.IsNull() {
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.MemoryRecordSchema, &r.Value.MemoryRecordSchema))
+			if diags.HasError() {
+				return nil, diags
+			}
 		}
 		return &r, diags
 	default:
