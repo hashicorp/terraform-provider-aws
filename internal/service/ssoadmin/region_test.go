@@ -26,9 +26,12 @@ func TestAccSSOAdminRegion_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccSSOAdminRegion_basic,
-		acctest.CtDisappears: testAccSSOAdminRegion_disappears,
-		"Identity":           testAccSSOAdminRegion_identitySerial,
+		acctest.CtBasic:       testAccSSOAdminRegion_basic,
+		acctest.CtDisappears:  testAccSSOAdminRegion_disappears,
+		"Identity":            testAccSSOAdminRegion_identitySerial,
+		"ListBasic":           testAccSSOAdminRegion_listBasic,
+		"ListIncludeResource": testAccSSOAdminRegion_listIncludeResource,
+		"ListRegionOverride":  testAccSSOAdminRegion_listRegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
