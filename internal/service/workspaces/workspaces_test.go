@@ -42,6 +42,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			acctest.CtDisappears:  testAccPool_disappears,
 			"applicationSettings": testAccPool_ApplicationSettings,
 			"timeoutSettings":     testAccPool_TimeoutSettings,
+			"Identity":            testAccWorkSpacesPool_identitySerial,
 		},
 		"Workspace": {
 			acctest.CtBasic:          testAccWorkspace_basic,

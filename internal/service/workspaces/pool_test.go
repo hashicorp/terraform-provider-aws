@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -41,12 +41,12 @@ func testAccPool_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpaces),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &pool),
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pool_arn", "workspaces", regexache.MustCompile(`workspacespool/wspool-[0-9a-z]+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", resourceBundleName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.desired_user_sessions", "1"),
@@ -90,12 +90,12 @@ func testAccPool_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpaces),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &pool),
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspaces.ResourcePool, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,9 +109,10 @@ func testAccPool_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPoolDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	t.Helper()
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspaces_pool" {
@@ -133,7 +134,8 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPoolExists(ctx context.Context, name string, pool *awstypes.WorkspacesPool) resource.TestCheckFunc {
+func testAccCheckPoolExists(ctx context.Context, t *testing.T, name string, pool *awstypes.WorkspacesPool) resource.TestCheckFunc {
+	t.Helper()
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -144,7 +146,7 @@ func testAccCheckPoolExists(ctx context.Context, name string, pool *awstypes.Wor
 			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNamePool, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 
 		resp, err := tfworkspaces.FindPoolByID(ctx, conn, rs.Primary.Attributes["pool_id"])
 		if err != nil {
@@ -185,12 +187,12 @@ func testAccPool_ApplicationSettings(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_ApplicationSettings(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &pool),
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", "test"),
@@ -214,12 +216,12 @@ func testAccPool_TimeoutSettings(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_TimeoutSettings(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &pool),
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.0.disconnect_timeout_in_seconds", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_settings.0.idle_disconnect_timeout_in_seconds", "2000"),
