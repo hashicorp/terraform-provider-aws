@@ -117,6 +117,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newHarnessEndpointResource,
+			TypeName: "aws_bedrockagentcore_harness_endpoint",
+			Name:     "Harness Endpoint",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "harness_endpoint_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newMemoryResource,
 			TypeName: "aws_bedrockagentcore_memory",
 			Name:     "Memory",
