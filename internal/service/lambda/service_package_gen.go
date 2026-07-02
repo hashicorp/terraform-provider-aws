@@ -73,6 +73,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_lambda_function_scaling_config",
 			Name:     "Function Scaling Config",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("qualifier", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionScalingConfigImportID{},
+			},
 		},
 		{
 			Factory:  newRuntimeManagementConfigResource,
