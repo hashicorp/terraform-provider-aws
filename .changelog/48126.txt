@@ -1,5 +1,5 @@
 ```release-note:new-resource
-resource/aws_ssoadmin_region: Add new resource
+aws_ssoadmin_region
 ```
 
 ```release-note:new-list-resource
