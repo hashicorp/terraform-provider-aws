@@ -5,3 +5,7 @@ aws_ssoadmin_region
 ```release-note:new-list-resource
 aws_ssoadmin_region
 ```
+
+```release-note:note
+resource/aws_ssoadmin_region: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```
