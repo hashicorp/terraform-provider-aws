@@ -160,7 +160,8 @@ func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.
 	conn := r.Meta().ComputeOptimizerClient(ctx)
 
 	input := &computeoptimizer.UpdateEnrollmentStatusInput{
-		Status: awstypes.Status(fwflex.StringValueFromFramework(ctx, new.Status)),
+		IncludeMemberAccounts: fwflex.BoolValueFromFramework(ctx, new.MemberAccountsEnrolled),
+		Status:                awstypes.Status(fwflex.StringValueFromFramework(ctx, new.Status)),
 	}
 
 	_, err := conn.UpdateEnrollmentStatus(ctx, input)
