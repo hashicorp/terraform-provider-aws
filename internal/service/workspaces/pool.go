@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -39,6 +38,12 @@ import (
 
 // @FrameworkResource("aws_workspaces_pool", name="Pool")
 // @Tags(identifierAttribute="pool_id")
+// @IdentityAttribute("pool_id")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspaces/types;awstypes;awstypes.WorkspacesPool")
+// @Testing(importStateIdAttribute="pool_id")
+// @Testing(importIgnore="capacity")
+// @Testing(serialize=true)
 func newResourcePool(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePool{}
 
@@ -55,6 +60,7 @@ const (
 
 type resourcePool struct {
 	framework.ResourceWithModel[resourcePoolModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -421,10 +427,6 @@ func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.S
 
 		return out, string(out.State), nil
 	}
-}
-
-func (r *resourcePool) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("pool_id"), request, response)
 }
 
 func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*awstypes.WorkspacesPool, error) {

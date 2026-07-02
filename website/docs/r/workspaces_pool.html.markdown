@@ -147,6 +147,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_workspaces_pool.example
+  identity = {
+    "pool_id" = "wspool-12345678"
+  }
+}
+
+resource "aws_workspaces_pool" "example" {
+  # Configuration omitted for brevity
+}
+```
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces Pool using the pool ID. For example:
 
 ```terraform
@@ -161,3 +176,14 @@ Using `terraform import`, import WorkSpaces Pool using the pool ID. For example:
 ```console
 % terraform import aws_workspaces_pool.example wspool-12345678
 ```
+
+### Identity Schema
+
+#### Required
+
+* `pool_id` (String) WorkSpaces Pool identifier.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
