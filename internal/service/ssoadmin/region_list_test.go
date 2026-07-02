@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminRegion_List_basic(t *testing.T) {
+func testAccSSOAdminRegion_listBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ssoadmin_region.test[0]"
@@ -30,7 +30,7 @@ func TestAccSSOAdminRegion_List_basic(t *testing.T) {
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -88,14 +88,14 @@ func TestAccSSOAdminRegion_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminRegion_List_includeResource(t *testing.T) {
+func testAccSSOAdminRegion_listIncludeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ssoadmin_region.test[0]"
 
 	identity1 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -149,14 +149,14 @@ func TestAccSSOAdminRegion_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminRegion_List_regionOverride(t *testing.T) {
+func testAccSSOAdminRegion_listRegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_ssoadmin_region.test[0]"
 
 	identity1 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
