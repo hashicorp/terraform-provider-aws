@@ -592,10 +592,10 @@ The `assume_role_with_web_identity` configuration block supports the following a
 * `session_name` - (Optional) Session name to use when assuming the role.
   Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
 * `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token` or `web_identity_token_file` is required.
+  Either `web_identity_token` or `web_identity_token_file` must be provided (via provider configuration or supported environment variables).
   Can also be set with the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token_file` or `web_identity_token` is required.
+  Either `web_identity_token_file` or `web_identity_token` must be provided (via provider configuration or supported environment variables).
   Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block
