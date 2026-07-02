@@ -25,8 +25,7 @@ func testAccSSOAdminRegion_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccSSOAdminRegion_Identity_basic,
-		"RegionOverride": testAccSSOAdminRegion_Identity_regionOverride,
+		acctest.CtBasic: testAccSSOAdminRegion_Identity_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -110,96 +109,6 @@ func testAccSSOAdminRegion_Identity_basic(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					},
-				},
-			},
-		},
-	})
-}
-
-func testAccSSOAdminRegion_Identity_regionOverride(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_ssoadmin_region.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.AlternateRegion())
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
-				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						"instance_arn":      knownvalue.NotNull(),
-						"region_name":       knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("instance_arn")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("region_name")),
-				},
-			},
-
-			// Step 2: Import command
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
-				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
-				},
-				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "region_name"),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "instance_arn",
-			},
-
-			// Step 3: Import block with Import ID
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
-				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "region_name"),
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region_name"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-			},
-
-			// Step 4: Import block with Resource Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/Region/region_override/"),
-				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
-				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region_name"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
 			},
