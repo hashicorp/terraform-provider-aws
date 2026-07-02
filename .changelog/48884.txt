@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `vpc_config` argument
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `explainer_config` argument
+```

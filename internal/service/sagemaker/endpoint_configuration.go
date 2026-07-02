@@ -233,6 +233,178 @@ func resourceEndpointConfiguration() *schema.Resource {
 						},
 					},
 				},
+				"explainer_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"clarify_explainer_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enable_explanations": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"inference_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"content_template": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													"feature_headers": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+													"feature_types": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[awstypes.ClarifyFeatureType](),
+														},
+													},
+													"features_attribute": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													"label_attribute": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													"label_headers": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+													"label_index": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													"max_payload_in_mb": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													"max_record_count": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													"probability_attribute": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													"probability_index": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+												},
+											},
+										},
+										"shap_config": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"number_of_samples": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													"seed": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														ForceNew: true,
+													},
+													"shap_baseline_config": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"mime_type": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																"shap_baseline": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																"shap_baseline_uri": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+															},
+														},
+													},
+													"text_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"granularity": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ForceNew:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ClarifyTextGranularity](),
+																},
+																"language": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ForceNew:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ClarifyTextLanguage](),
+																},
+															},
+														},
+													},
+													"use_logit": {
+														Type:     schema.TypeBool,
+														Optional: true,
+														ForceNew: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrKMSKeyARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -676,6 +848,32 @@ func resourceEndpointConfiguration() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
 			}
 		},
 
@@ -771,12 +969,20 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("explainer_config"); ok {
+		input.ExplainerConfig = expandEndpointConfigExplainerConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]any)) > 0 {
 		input.ShadowProductionVariants = expandProductionVariants(v.([]any))
+	}
+
+	if v, ok := d.GetOk("vpc_config"); ok {
+		input.VpcConfig = expandEndpointConfigVpcConfig(v.([]any))
 	}
 
 	_, err := conn.CreateEndpointConfig(ctx, &input)
@@ -821,6 +1027,14 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 	if err := d.Set("shadow_production_variants", flattenProductionVariants(endpointConfig.ShadowProductionVariants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants: %s", err)
+	}
+
+	if err := d.Set("vpc_config", flattenEndpointConfigVpcConfig(endpointConfig.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("explainer_config", flattenEndpointConfigExplainerConfig(endpointConfig.ExplainerConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting explainer_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1510,4 +1724,377 @@ func flattenCapacityReservationConfig(apiObject *awstypes.ProductionVariantCapac
 	}
 
 	return []any{tfMap}
+}
+
+func expandEndpointConfigVpcConfig(configured []any) *awstypes.VpcConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.VpcConfig{}
+
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+		c.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+		c.Subnets = flex.ExpandStringValueSet(v)
+	}
+
+	return c
+}
+
+func flattenEndpointConfigVpcConfig(config *awstypes.VpcConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.SecurityGroupIds != nil {
+		cfg[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(config.SecurityGroupIds)
+	}
+
+	if config.Subnets != nil {
+		cfg[names.AttrSubnetIDs] = flex.FlattenStringValueSet(config.Subnets)
+	}
+
+	return []map[string]any{cfg}
+}
+
+func expandEndpointConfigExplainerConfig(configured []any) *awstypes.ExplainerConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ExplainerConfig{}
+
+	if v, ok := m["clarify_explainer_config"].([]any); ok && len(v) > 0 {
+		c.ClarifyExplainerConfig = expandClarifyExplainerConfig(v)
+	}
+
+	return c
+}
+
+func expandClarifyExplainerConfig(configured []any) *awstypes.ClarifyExplainerConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ClarifyExplainerConfig{}
+
+	if v, ok := m["enable_explanations"].(string); ok && v != "" {
+		c.EnableExplanations = aws.String(v)
+	}
+
+	if v, ok := m["shap_config"].([]any); ok && len(v) > 0 {
+		c.ShapConfig = expandClarifyShapConfig(v)
+	}
+
+	if v, ok := m["inference_config"].([]any); ok && len(v) > 0 {
+		c.InferenceConfig = expandClarifyInferenceConfig(v)
+	}
+
+	return c
+}
+
+func expandClarifyShapConfig(configured []any) *awstypes.ClarifyShapConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ClarifyShapConfig{}
+
+	if v, ok := m["number_of_samples"].(int); ok && v > 0 {
+		c.NumberOfSamples = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["seed"].(int); ok && v > 0 {
+		c.Seed = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["use_logit"].(bool); ok && v {
+		c.UseLogit = aws.Bool(v)
+	}
+
+	if v, ok := m["shap_baseline_config"].([]any); ok && len(v) > 0 {
+		c.ShapBaselineConfig = expandClarifyShapBaselineConfig(v)
+	}
+
+	if v, ok := m["text_config"].([]any); ok && len(v) > 0 {
+		c.TextConfig = expandClarifyTextConfig(v)
+	}
+
+	return c
+}
+
+func expandClarifyShapBaselineConfig(configured []any) *awstypes.ClarifyShapBaselineConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ClarifyShapBaselineConfig{}
+
+	if v, ok := m["mime_type"].(string); ok && v != "" {
+		c.MimeType = aws.String(v)
+	}
+
+	if v, ok := m["shap_baseline"].(string); ok && v != "" {
+		c.ShapBaseline = aws.String(v)
+	}
+
+	if v, ok := m["shap_baseline_uri"].(string); ok && v != "" {
+		c.ShapBaselineUri = aws.String(v)
+	}
+
+	return c
+}
+
+func expandClarifyTextConfig(configured []any) *awstypes.ClarifyTextConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ClarifyTextConfig{}
+
+	if v, ok := m["granularity"].(string); ok && v != "" {
+		c.Granularity = awstypes.ClarifyTextGranularity(v)
+	}
+
+	if v, ok := m["language"].(string); ok && v != "" {
+		c.Language = awstypes.ClarifyTextLanguage(v)
+	}
+
+	return c
+}
+
+func expandClarifyInferenceConfig(configured []any) *awstypes.ClarifyInferenceConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ClarifyInferenceConfig{}
+
+	if v, ok := m["content_template"].(string); ok && v != "" {
+		c.ContentTemplate = aws.String(v)
+	}
+
+	if v, ok := m["feature_headers"].([]any); ok && len(v) > 0 {
+		c.FeatureHeaders = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := m["feature_types"].([]any); ok && len(v) > 0 {
+		featureTypes := make([]awstypes.ClarifyFeatureType, 0, len(v))
+		for _, val := range v {
+			featureTypes = append(featureTypes, awstypes.ClarifyFeatureType(val.(string)))
+		}
+		c.FeatureTypes = featureTypes
+	}
+
+	if v, ok := m["features_attribute"].(string); ok && v != "" {
+		c.FeaturesAttribute = aws.String(v)
+	}
+
+	if v, ok := m["label_attribute"].(string); ok && v != "" {
+		c.LabelAttribute = aws.String(v)
+	}
+
+	if v, ok := m["label_headers"].([]any); ok && len(v) > 0 {
+		c.LabelHeaders = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := m["label_index"].(int); ok && v > 0 {
+		c.LabelIndex = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["max_payload_in_mb"].(int); ok && v > 0 {
+		c.MaxPayloadInMB = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["max_record_count"].(int); ok && v > 0 {
+		c.MaxRecordCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["probability_attribute"].(string); ok && v != "" {
+		c.ProbabilityAttribute = aws.String(v)
+	}
+
+	if v, ok := m["probability_index"].(int); ok && v > 0 {
+		c.ProbabilityIndex = aws.Int32(int32(v))
+	}
+
+	return c
+}
+
+func flattenEndpointConfigExplainerConfig(config *awstypes.ExplainerConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.ClarifyExplainerConfig != nil {
+		cfg["clarify_explainer_config"] = flattenClarifyExplainerConfig(config.ClarifyExplainerConfig)
+	}
+
+	return []map[string]any{cfg}
+}
+
+func flattenClarifyExplainerConfig(config *awstypes.ClarifyExplainerConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.EnableExplanations != nil {
+		cfg["enable_explanations"] = aws.ToString(config.EnableExplanations)
+	}
+
+	if config.ShapConfig != nil {
+		cfg["shap_config"] = flattenClarifyShapConfig(config.ShapConfig)
+	}
+
+	if config.InferenceConfig != nil {
+		cfg["inference_config"] = flattenClarifyInferenceConfig(config.InferenceConfig)
+	}
+
+	return []map[string]any{cfg}
+}
+
+func flattenClarifyShapConfig(config *awstypes.ClarifyShapConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.NumberOfSamples != nil {
+		cfg["number_of_samples"] = aws.ToInt32(config.NumberOfSamples)
+	}
+
+	if config.Seed != nil {
+		cfg["seed"] = aws.ToInt32(config.Seed)
+	}
+
+	if config.UseLogit != nil {
+		cfg["use_logit"] = aws.ToBool(config.UseLogit)
+	}
+
+	if config.ShapBaselineConfig != nil {
+		cfg["shap_baseline_config"] = flattenClarifyShapBaselineConfig(config.ShapBaselineConfig)
+	}
+
+	if config.TextConfig != nil {
+		cfg["text_config"] = flattenClarifyTextConfig(config.TextConfig)
+	}
+
+	return []map[string]any{cfg}
+}
+
+func flattenClarifyShapBaselineConfig(config *awstypes.ClarifyShapBaselineConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.MimeType != nil {
+		cfg["mime_type"] = aws.ToString(config.MimeType)
+	}
+
+	if config.ShapBaseline != nil {
+		cfg["shap_baseline"] = aws.ToString(config.ShapBaseline)
+	}
+
+	if config.ShapBaselineUri != nil {
+		cfg["shap_baseline_uri"] = aws.ToString(config.ShapBaselineUri)
+	}
+
+	return []map[string]any{cfg}
+}
+
+func flattenClarifyTextConfig(config *awstypes.ClarifyTextConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{
+		"granularity": string(config.Granularity),
+		"language":    string(config.Language),
+	}
+
+	return []map[string]any{cfg}
+}
+
+func flattenClarifyInferenceConfig(config *awstypes.ClarifyInferenceConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.ContentTemplate != nil {
+		cfg["content_template"] = aws.ToString(config.ContentTemplate)
+	}
+
+	if config.FeatureHeaders != nil {
+		cfg["feature_headers"] = flex.FlattenStringValueList(config.FeatureHeaders)
+	}
+
+	if config.FeatureTypes != nil {
+		featureTypes := make([]string, 0, len(config.FeatureTypes))
+		for _, v := range config.FeatureTypes {
+			featureTypes = append(featureTypes, string(v))
+		}
+		cfg["feature_types"] = featureTypes
+	}
+
+	if config.FeaturesAttribute != nil {
+		cfg["features_attribute"] = aws.ToString(config.FeaturesAttribute)
+	}
+
+	if config.LabelAttribute != nil {
+		cfg["label_attribute"] = aws.ToString(config.LabelAttribute)
+	}
+
+	if config.LabelHeaders != nil {
+		cfg["label_headers"] = flex.FlattenStringValueList(config.LabelHeaders)
+	}
+
+	if config.LabelIndex != nil {
+		cfg["label_index"] = aws.ToInt32(config.LabelIndex)
+	}
+
+	if config.MaxPayloadInMB != nil {
+		cfg["max_payload_in_mb"] = aws.ToInt32(config.MaxPayloadInMB)
+	}
+
+	if config.MaxRecordCount != nil {
+		cfg["max_record_count"] = aws.ToInt32(config.MaxRecordCount)
+	}
+
+	if config.ProbabilityAttribute != nil {
+		cfg["probability_attribute"] = aws.ToString(config.ProbabilityAttribute)
+	}
+
+	if config.ProbabilityIndex != nil {
+		cfg["probability_index"] = aws.ToInt32(config.ProbabilityIndex)
+	}
+
+	return []map[string]any{cfg}
 }

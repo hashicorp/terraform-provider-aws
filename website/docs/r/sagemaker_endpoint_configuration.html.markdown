@@ -38,6 +38,7 @@ This resource supports the following arguments:
 * `async_inference_config` - (Optional) How an endpoint performs asynchronous inference.
 * `data_capture_config` - (Optional) Parameters to capture input/output of SageMaker AI models endpoints. Fields are documented below.
 * `execution_role_arn` - (Optional) ARN of an IAM role that SageMaker AI can assume to perform actions on your behalf. Required when `model_name` is not specified in `production_variants` to support Inference Components.
+* `explainer_config` - (Optional) Configuration for Clarify real-time explainability. [See below](#explainer_config).
 * `kms_key_arn` - (Optional) ARN of a AWS KMS key that SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name_prefix` - (Optional) Unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
 * `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
@@ -45,6 +46,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shadow_production_variants` - (Optional) Models that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on `production_variants`. If you use this field, you can only specify one variant for `production_variants` and one variant for `shadow_production_variants`. [See below](#production_variants) (same arguments as `production_variants`).
 * `tags` - (Optional) Mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_config` - (Optional) VPC configuration for the endpoint. Cannot be used when `model_name` is specified in `production_variants`. [See below](#vpc_config).
 
 ### production_variants
 
@@ -130,6 +132,54 @@ This resource supports the following arguments:
 * `error_topic` - (Optional) SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.
 * `include_inference_response_in` - (Optional) SNS topics where you want the inference response to be included. Valid values are `SUCCESS_NOTIFICATION_TOPIC` and `ERROR_NOTIFICATION_TOPIC`.
 * `success_topic` - (Optional) SNS topic to post a notification to when inference completes successfully. If no topic is provided, no notification is sent on success.
+
+### explainer_config
+
+* `clarify_explainer_config` - (Required) Configuration for Clarify explainer. [See below](#clarify_explainer_config).
+
+#### clarify_explainer_config
+
+* `enable_explanations` - (Optional) A JMESPath boolean expression used to filter which records to explain. Refer to the [SageMaker AI documentation](https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-online-explainability-create-endpoint.html#clarify-online-explainability-create-endpoint-enable) for more information.
+* `inference_config` - (Optional) The inference configuration parameter for the model container. [See below](#inference_config).
+* `shap_config` - (Required) The SHAP baseline configuration. [See below](#shap_config).
+
+#### shap_config
+
+* `number_of_samples` - (Optional) The number of samples to be used for analysis by the Kernal SHAP algorithm.
+* `seed` - (Optional) The starting value used to initialize the random number generator in the explainer.
+* `shap_baseline_config` - (Required) The configuration for the SHAP baseline. [See below](#shap_baseline_config).
+* `text_config` - (Optional) Configuration for text explainability. [See below](#text_config).
+* `use_logit` - (Optional) A Boolean toggle to indicate if you want to use the logit function (true) or log-odds units (false).
+
+##### shap_baseline_config
+
+* `mime_type` - (Optional) The MIME type of the baseline data. Choose from `text/csv` or `application/jsonlines`.
+* `shap_baseline` - (Optional) The inline SHAP baseline data in string format.
+* `shap_baseline_uri` - (Optional) The S3 URI where the SHAP baseline file is stored.
+
+##### text_config
+
+* `granularity` - (Required) The unit of granularity for the analysis of text features. Valid values are `token`, `sentence`, and `paragraph`.
+* `language` - (Required) The language of the text features. Valid values include language codes such as `en`, `fr`, `de`, `es`, etc.
+
+#### inference_config
+
+* `content_template` - (Optional) A template string used to format a JSON record into an acceptable model container input.
+* `feature_headers` - (Optional) The names of the features.
+* `feature_types` - (Optional) A list of data types of the features. Valid values are `numerical`, `categorical`, and `text`.
+* `features_attribute` - (Optional) Provides the JMESPath expression to extract the features from a model container input in JSON Lines format.
+* `label_attribute` - (Optional) Provides the JMESPath expression to extract the label from a model container output in JSON Lines format.
+* `label_headers` - (Optional) The names of the label classes.
+* `label_index` - (Optional) Zero-based index used to extract a label header from the model container output in CSV format.
+* `max_payload_in_mb` - (Optional) The maximum payload size (MB) allowed of a request from the explainer to the model container.
+* `max_record_count` - (Optional) The maximum number of records in a request that the model container can process when querying the model container for the predictions of a synthetic dataset.
+* `probability_attribute` - (Optional) Provides the JMESPath expression to extract the probability (or score) from the model container output if the model container is in JSON Lines format.
+* `probability_index` - (Optional) Zero-based index used to extract a probability value (score) from the model container output in CSV format.
+
+### vpc_config
+
+* `security_group_ids` - (Required) Set of security group IDs.
+* `subnet_ids` - (Required) Set of subnet IDs.
 
 ## Attribute Reference
 
