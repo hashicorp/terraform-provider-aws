@@ -42,7 +42,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 				Config: testAccGuardrailConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
@@ -168,7 +168,7 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
@@ -233,7 +233,7 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 				Config: testAccGuardrailConfig_wordConfigAction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
@@ -270,7 +270,7 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
@@ -360,7 +360,7 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 				Config: testAccGuardrailConfig_contentPolicyConfigAction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
