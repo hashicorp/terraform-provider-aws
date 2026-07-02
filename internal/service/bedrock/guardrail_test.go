@@ -52,7 +52,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
@@ -467,7 +467,6 @@ resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
-  description               = "test"
 
   content_policy_config {
     filters_config {
