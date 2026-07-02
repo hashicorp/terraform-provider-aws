@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
@@ -159,7 +158,7 @@ func testAccCheckPoolExists(ctx context.Context, t *testing.T, name string, pool
 }
 
 func testAccPreCheckPool(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).WorkSpacesClient(ctx)
 
 	input := &workspaces.DescribeWorkspacesPoolsInput{}
 
