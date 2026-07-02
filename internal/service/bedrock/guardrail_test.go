@@ -13,9 +13,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
@@ -45,9 +49,6 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "0"),
@@ -59,14 +60,84 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"filters_config": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeHate),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthHigh),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthHigh),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeViolence),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"topics_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"definition": knownvalue.StringExact("Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."),
+									"examples": knownvalue.ListExact([]knownvalue.Check{
+										tfknownvalue.StringExact("Where should I invest my money?"),
+									}),
+									names.AttrName: knownvalue.StringExact("investment_topic"),
+									names.AttrType: tfknownvalue.StringExact(awstypes.GuardrailTopicTypeDeny),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("self-assured"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
