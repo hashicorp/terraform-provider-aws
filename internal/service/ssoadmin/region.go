@@ -250,7 +250,7 @@ func waitRegionActive(ctx context.Context, conn *ssoadmin.Client, instanceARN, r
 
 func waitRegionDeleted(ctx context.Context, conn *ssoadmin.Client, instanceARN, regionName string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.RegionStatusRemoving),
+		Pending: enum.Slice(awstypes.RegionStatusActive, awstypes.RegionStatusAdding, awstypes.RegionStatusRemoving),
 		Target:  []string{},
 		Refresh: statusRegion(conn, instanceARN, regionName),
 		Timeout: timeout,
