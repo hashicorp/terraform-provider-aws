@@ -1004,7 +1004,7 @@ const (
 	// Environment variable specifying a web identity token file.
 	//
 	// Any value read from this environment variable is superseded by any value in `assume_role_with_web_identity.web_identity_token_file`.
-	awsWebIdentityTokenFileEnvVar = "AWS_WEB_IDENTITY_TOKEN_FILE"
+	awsWebIdentityTokenFileEnvVar = "AWS_WEB_IDENTITY_TOKEN_FILE" // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 
 	// Environment variable specifying a web identity token.
 	//
