@@ -39,6 +39,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
+// @Testing(identityRegionOverrideTest=false)
 // @Testing(importStateIdAttributes="instance_arn;region_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newRegionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &regionResource{}
