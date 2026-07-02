@@ -272,6 +272,8 @@ func testAccTrustStoreConfig_acmBase() string {
 data "aws_partition" "current" {}
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   type = "ROOT"
 
   certificate_authority_configuration {

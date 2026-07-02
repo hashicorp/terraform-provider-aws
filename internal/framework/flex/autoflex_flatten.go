@@ -567,21 +567,22 @@ func flattenTime(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isN
 		return diags
 	}
 
-	if !vFrom.Elem().CanInterface() {
-		diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
-		return diags
+	// Only dereference if the value is a pointer or interface
+	if vFrom.Kind() == reflect.Pointer || vFrom.Kind() == reflect.Interface {
+		if !vFrom.Elem().CanInterface() {
+			diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
+			return diags
+		}
+
+		// *time.Time --> timetypes.RFC3339
+		if from, ok := vFrom.Elem().Interface().(time.Time); ok {
+			vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
+			return diags
+		}
 	}
 
-	// *time.Time --> timetypes.RFC3339
-	if from, ok := vFrom.Elem().Interface().(time.Time); ok {
-		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
-		return diags
-	}
-
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
-		logAttrKeyFrom: vFrom.Kind(),
-		logAttrKeyTo:   vTo,
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+	diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), vTo.Type()))
 
 	return diags
 }
@@ -896,10 +897,7 @@ func flattenSlice(ctx context.Context, flattener *autoFlattener, sourcePath path
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
-		logAttrKeyFrom: vFrom.Kind(),
-		logAttrKeyTo:   tTo,
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
 
 	return diags
 }
@@ -1081,6 +1079,9 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 		case reflect.Pointer:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
+				//
+				// map[string]*struct -> fwtypes.ListNestedObjectOf[Object]
+				//
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattenStructMapToObjectList(ctx, flattener, sourcePath, vFrom, targetPath, tTo, vTo)...)
 					return diags
@@ -1090,10 +1091,13 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				switch tTo := tTo.(type) {
 				case basetypes.ListTypable:
 					//
-					// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
+					// map[string]*string -> fwtypes.ListNestedObjectOf[Object]
 					//
-					if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
-						diags.Append(flattenStructMapToObjectList(ctx, flattener, sourcePath, vFrom, targetPath, tTo, vTo)...)
+					// Previously caused a panic when structMapToObjectList attempted
+					// to call flattenStruct on a dereferenced *string value.
+					if _, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+						tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+						diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), vTo.Type()))
 						return diags
 					}
 
@@ -1436,23 +1440,6 @@ func flattenSliceOfPrimitiveToList(ctx context.Context, _ *autoFlattener, vFrom 
 		}
 	} else {
 		if vFrom.IsNil() {
-			if fieldOpts.legacy {
-				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListValue (empty for nil in legacy mode)")
-				list, d := types.ListValue(elementType, []attr.Value{})
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				to, d := tTo.ValueFromList(ctx, list)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-
 			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListNull")
 			to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
 			diags.Append(d...)
@@ -1522,24 +1509,6 @@ func flattenSliceOfPrimitiveToSet(ctx context.Context, _ *autoFlattener, vFrom r
 			if fieldOpts.omitempty {
 				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetNull (omitempty)")
 				to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-
-			// If legacy mode, return empty set
-			if fieldOpts.legacy {
-				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetValue (empty for nil in legacy mode)")
-				set, d := types.SetValue(elementType, []attr.Value{})
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				to, d := tTo.ValueFromSet(ctx, set)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags

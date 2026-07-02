@@ -139,14 +139,14 @@ func resourceDefaultSubnet() *schema.Resource {
 				"map_customer_owned_ip_on_launch": {
 					Type:         schema.TypeBool,
 					Optional:     true,
-					RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
+					RequiredWith: []string{"customer_owned_ipv4_pool", names.AttrOutpostARN},
 				},
 				"map_public_ip_on_launch": {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},

@@ -148,7 +148,7 @@ func (r *glossaryResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameProject, state.Id.String(), err),
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, ResNameGlossary, state.Id.String(), err),
 			err.Error(),
 		)
 		return

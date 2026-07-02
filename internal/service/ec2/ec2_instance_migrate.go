@@ -676,7 +676,7 @@ func resourceInstanceV1() *schema.Resource {
 						},
 					},
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},

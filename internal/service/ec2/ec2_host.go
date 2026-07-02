@@ -55,7 +55,7 @@ func resourceHost() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					RequiredWith: []string{"outpost_arn"},
+					RequiredWith: []string{names.AttrOutpostARN},
 					Computed:     true,
 				},
 				"auto_placement": {
@@ -85,7 +85,7 @@ func resourceHost() *schema.Resource {
 					Optional:     true,
 					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -126,7 +126,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -169,7 +169,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set(names.AttrInstanceType, host.HostProperties.InstanceType)
-	d.Set("outpost_arn", host.OutpostArn)
+	d.Set(names.AttrOutpostARN, host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 
 	setTagsOut(ctx, host.Tags)

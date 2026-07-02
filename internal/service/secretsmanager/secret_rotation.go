@@ -47,54 +47,56 @@ func resourceSecretRotation() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"rotate_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"rotation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"rotation_lambda_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"rotation_rules": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automatically_after_days": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
-							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							ValidateFunc:  validation.IntBetween(1, 1000),
-						},
-						names.AttrDuration: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
-						},
-						names.AttrScheduleExpression: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
-							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"rotate_immediately": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"rotation_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"rotation_lambda_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"rotation_rules": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automatically_after_days": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
+								ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+								ValidateFunc:  validation.IntBetween(1, 1000),
+							},
+							names.AttrDuration: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
+							},
+							names.AttrScheduleExpression: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
+								ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+								ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
+							},
 						},
 					},
 				},
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"secret_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

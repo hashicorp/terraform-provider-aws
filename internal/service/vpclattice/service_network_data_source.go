@@ -34,40 +34,42 @@ func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auth_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"number_of_associated_services": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"number_of_associated_vpcs": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"service_network_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auth_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"number_of_associated_services": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"number_of_associated_vpcs": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"service_network_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

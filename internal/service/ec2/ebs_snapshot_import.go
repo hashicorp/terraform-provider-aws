@@ -147,7 +147,7 @@ func resourceEBSSnapshotImport() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},

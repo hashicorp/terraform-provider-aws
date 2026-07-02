@@ -145,6 +145,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Interconnect
 Invoicing
 IoT Core
 IoT Greengrass

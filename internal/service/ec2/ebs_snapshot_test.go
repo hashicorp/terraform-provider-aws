@@ -37,7 +37,7 @@ func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 					testAccCheckSnapshotExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "storage_tier", "standard"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -129,7 +129,7 @@ func TestAccEC2EBSSnapshot_outpost(t *testing.T) {
 				Config: testAccEBSSnapshotConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{

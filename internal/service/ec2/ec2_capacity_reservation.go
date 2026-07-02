@@ -103,7 +103,7 @@ func resourceCapacityReservation() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: verify.ValidARN,
@@ -163,7 +163,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 		input.InstanceMatchCriteria = awstypes.InstanceMatchCriteria(v.(string))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -220,7 +220,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("instance_match_criteria", reservation.InstanceMatchCriteria)
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set(names.AttrInstanceType, reservation.InstanceType)
-	d.Set("outpost_arn", reservation.OutpostArn)
+	d.Set(names.AttrOutpostARN, reservation.OutpostArn)
 	d.Set(names.AttrOwnerID, reservation.OwnerId)
 	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)

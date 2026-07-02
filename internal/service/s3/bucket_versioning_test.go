@@ -70,6 +70,7 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, t, resourceName),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action -- Versioning is a sub-resource of the bucket; "disappearing" it suspends versioning, so the plan is an update, not a create.
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketVersioning(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,7 +79,7 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_s3_bucket_versioning.test", plancheck.ResourceActionUpdate),
 					},
 				},
 			},

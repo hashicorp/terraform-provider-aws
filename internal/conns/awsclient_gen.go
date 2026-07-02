@@ -134,6 +134,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/interconnect"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -785,6 +786,10 @@ func (c *AWSClient) InspectorClient(ctx context.Context) *inspector.Client {
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2.Client {
 	return errs.Must(client[*inspector2.Client](ctx, c, names.Inspector2, make(map[string]any)))
+}
+
+func (c *AWSClient) InterconnectClient(ctx context.Context) *interconnect.Client {
+	return errs.Must(client[*interconnect.Client](ctx, c, names.Interconnect, make(map[string]any)))
 }
 
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.Client {

@@ -337,18 +337,24 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
+	return resourceRouteFlatten(d, route)
+}
+
+func resourceRouteFlatten(d *schema.ResourceData, route *awstypes.Route) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
 	d.Set(routeDestinationIPv6CIDRBlock, route.DestinationIpv6CidrBlock)
 	d.Set(routeDestinationPrefixListID, route.DestinationPrefixListId)
-	// VPC Endpoint ID is returned in Gateway ID field
-	if strings.HasPrefix(aws.ToString(route.GatewayId), "vpce-") {
-		d.Set("gateway_id", "")
-		d.Set(names.AttrVPCEndpointID, route.GatewayId)
+	// VPC Endpoint ID is returned in Gateway ID field.
+	if v := aws.ToString(route.GatewayId); strings.HasPrefix(v, "vpce-") {
+		d.Set("gateway_id", nil)
+		d.Set(names.AttrVPCEndpointID, v)
 	} else {
-		d.Set("gateway_id", route.GatewayId)
-		d.Set(names.AttrVPCEndpointID, "")
+		d.Set("gateway_id", v)
+		d.Set(names.AttrVPCEndpointID, nil)
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
@@ -356,7 +362,13 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
-	d.Set("odb_network_arn", route.OdbNetworkArn)
+	// ODB Network ARN is also returned in Gateway ID field.
+	if v := route.OdbNetworkArn; v != nil {
+		d.Set("gateway_id", nil)
+		d.Set("odb_network_arn", v)
+	} else {
+		d.Set("odb_network_arn", nil)
+	}
 	d.Set("origin", route.Origin)
 	d.Set(names.AttrState, route.State)
 	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)

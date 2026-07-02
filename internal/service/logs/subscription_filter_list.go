@@ -5,7 +5,6 @@ package logs
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -114,21 +114,6 @@ type listSubscriptionFilterModel struct {
 	LogGroupName types.String `tfsdk:"log_group_name"`
 }
 
-func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput) iter.Seq2[awstypes.SubscriptionFilter, error] {
-	return func(yield func(awstypes.SubscriptionFilter, error) bool) {
-		pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(inttypes.Zero[awstypes.SubscriptionFilter](), fmt.Errorf("listing CloudWatch Logs Subscription Filters: %w", err))
-				return
-			}
-
-			for _, item := range page.SubscriptionFilters {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.SubscriptionFilter, error] {
+	return tfiter.ConcatValuesWithError(listSubscriptionFilterPages(ctx, conn, input, optFns...))
 }

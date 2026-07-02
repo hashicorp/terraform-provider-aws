@@ -29,7 +29,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage Basic Authorization
+### Example Usage Basic Authorization
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage OAuth Authorization
+### Example Usage OAuth Authorization
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -88,7 +88,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage Invocation Http Parameters
+### Example Usage Invocation Http Parameters
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -131,7 +131,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage OAuth Authorization with Connectivity Parameters
+### Example Usage OAuth Authorization with Connectivity Parameters
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -167,7 +167,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage CMK Encryption
+### Example Usage CMK Encryption
 
 ```terraform
 data "aws_caller_identity" "current" {}

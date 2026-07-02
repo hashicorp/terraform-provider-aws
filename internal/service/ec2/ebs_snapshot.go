@@ -69,7 +69,7 @@ func resourceEBSSnapshot() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
@@ -127,7 +127,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -194,7 +194,7 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrDescription, snapshot.Description)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
-	d.Set("outpost_arn", snapshot.OutpostArn)
+	d.Set(names.AttrOutpostARN, snapshot.OutpostArn)
 	d.Set("owner_alias", snapshot.OwnerAlias)
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)

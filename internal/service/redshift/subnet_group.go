@@ -40,33 +40,35 @@ func resourceSubnetGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringNotInSlice([]string{"default"}, false),
-				),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+						validation.StringNotInSlice([]string{"default"}, false),
+					),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

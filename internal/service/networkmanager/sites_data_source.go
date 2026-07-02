@@ -23,17 +23,19 @@ func dataSourceSites() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSitesRead,
 
-		Schema: map[string]*schema.Schema{
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchema(),
+			}
 		},
 	}
 }

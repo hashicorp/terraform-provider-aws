@@ -19,7 +19,7 @@ resource "aws_appintegrations_event_integration" "example" {
   eventbridge_bus = "default"
 
   event_filter {
-    source = "aws.partner/examplepartner.com"
+    source = "aws.partner/example.com"
   }
 
   tags = {

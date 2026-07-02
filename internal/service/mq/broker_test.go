@@ -6,6 +6,7 @@ package mq_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -238,6 +239,218 @@ func TestDiffUsers(t *testing.T) {
 		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.UpdateUserInput{})); diff != "" {
 			t.Fatalf("unexpected UpdateUserInput diff (+wanted, -got): %s", diff)
 		}
+	}
+}
+
+func TestSortBrokerInstanceEndpoints(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		engineType types.EngineType
+		endpoints  []string
+		want       []string
+	}{
+		{
+			name:       "ActiveMQ empty slice",
+			engineType: types.EngineTypeActivemq,
+			endpoints:  []string{},
+			want:       []string{},
+		},
+		{
+			name:       "ActiveMQ nil slice",
+			engineType: types.EngineTypeActivemq,
+			endpoints:  nil,
+			want:       []string{},
+		},
+		{
+			name:       "ActiveMQ canonical order already sorted",
+			engineType: types.EngineTypeActivemq,
+			endpoints: []string{
+				"ssl://b-1.example.com:61617",
+				"amqp+ssl://b-1.example.com:5671",
+				"stomp+ssl://b-1.example.com:61614",
+				"mqtt+ssl://b-1.example.com:8883",
+				"wss://b-1.example.com:61619",
+			},
+			want: []string{
+				"ssl://b-1.example.com:61617",
+				"amqp+ssl://b-1.example.com:5671",
+				"stomp+ssl://b-1.example.com:61614",
+				"mqtt+ssl://b-1.example.com:8883",
+				"wss://b-1.example.com:61619",
+			},
+		},
+		{
+			name:       "ActiveMQ reverse order",
+			engineType: types.EngineTypeActivemq,
+			endpoints: []string{
+				"wss://b-1.example.com:61619",
+				"mqtt+ssl://b-1.example.com:8883",
+				"stomp+ssl://b-1.example.com:61614",
+				"amqp+ssl://b-1.example.com:5671",
+				"ssl://b-1.example.com:61617",
+			},
+			want: []string{
+				"ssl://b-1.example.com:61617",
+				"amqp+ssl://b-1.example.com:5671",
+				"stomp+ssl://b-1.example.com:61614",
+				"mqtt+ssl://b-1.example.com:8883",
+				"wss://b-1.example.com:61619",
+			},
+		},
+		{
+			name:       "ActiveMQ arbitrary order",
+			engineType: types.EngineTypeActivemq,
+			endpoints: []string{
+				"mqtt+ssl://b-1.example.com:8883",
+				"ssl://b-1.example.com:61617",
+				"wss://b-1.example.com:61619",
+				"stomp+ssl://b-1.example.com:61614",
+				"amqp+ssl://b-1.example.com:5671",
+			},
+			want: []string{
+				"ssl://b-1.example.com:61617",
+				"amqp+ssl://b-1.example.com:5671",
+				"stomp+ssl://b-1.example.com:61614",
+				"mqtt+ssl://b-1.example.com:8883",
+				"wss://b-1.example.com:61619",
+			},
+		},
+		{
+			name:       "RabbitMQ pre-4.2 single endpoint",
+			engineType: types.EngineTypeRabbitmq,
+			endpoints:  []string{"amqps://b-1.example.com:5671"},
+			want:       []string{"amqps://b-1.example.com:5671"},
+		},
+		{
+			name:       "RabbitMQ 4.2+ canonical order already sorted",
+			engineType: types.EngineTypeRabbitmq,
+			endpoints: []string{
+				"amqps://b-1.example.com:5671",
+				"https://b-1.example.com:16001",
+			},
+			want: []string{
+				"amqps://b-1.example.com:5671",
+				"https://b-1.example.com:16001",
+			},
+		},
+		{
+			name:       "RabbitMQ 4.2+ reverse order",
+			engineType: types.EngineTypeRabbitmq,
+			endpoints: []string{
+				"https://b-1.example.com:16001",
+				"amqps://b-1.example.com:5671",
+			},
+			want: []string{
+				"amqps://b-1.example.com:5671",
+				"https://b-1.example.com:16001",
+			},
+		},
+		{
+			name:       "ActiveMQ unknown endpoints sort last stable relative order preserved",
+			engineType: types.EngineTypeActivemq,
+			endpoints: []string{
+				"unknown://b-1.example.com:9999",
+				"wss://b-1.example.com:61619",
+				"another-unknown://b-1.example.com:8888",
+				"ssl://b-1.example.com:61617",
+			},
+			want: []string{
+				"ssl://b-1.example.com:61617",
+				"wss://b-1.example.com:61619",
+				"unknown://b-1.example.com:9999",
+				"another-unknown://b-1.example.com:8888",
+			},
+		},
+		{
+			name:       "ActiveMQ malformed endpoint without scheme separator sorts last",
+			engineType: types.EngineTypeActivemq,
+			endpoints:  []string{"ssl://b-1.example.com:61617", "not-a-url"},
+			want:       []string{"ssl://b-1.example.com:61617", "not-a-url"},
+		},
+		{
+			name:       "ActiveMQ malformed endpoint without port sorts last",
+			engineType: types.EngineTypeActivemq,
+			endpoints:  []string{"ssl://b-1.example.com:61617", "ssl://noport"},
+			want:       []string{"ssl://b-1.example.com:61617", "ssl://noport"},
+		},
+		{
+			name:       "ActiveMQ input slice is not mutated",
+			engineType: types.EngineTypeActivemq,
+			endpoints: []string{
+				"wss://b-1.example.com:61619",
+				"ssl://b-1.example.com:61617",
+			},
+			want: []string{
+				"ssl://b-1.example.com:61617",
+				"wss://b-1.example.com:61619",
+			},
+		},
+		{
+			name:       "ActiveMQ endpoints under RabbitMQ engine all treated as unknown preserve order",
+			engineType: types.EngineTypeRabbitmq,
+			endpoints: []string{
+				"wss://b-1.example.com:61619",
+				"ssl://b-1.example.com:61617",
+				"amqp+ssl://b-1.example.com:5671",
+			},
+			want: []string{
+				"wss://b-1.example.com:61619",
+				"ssl://b-1.example.com:61617",
+				"amqp+ssl://b-1.example.com:5671",
+			},
+		},
+		{
+			name:       "RabbitMQ endpoints under ActiveMQ engine all treated as unknown preserve order",
+			engineType: types.EngineTypeActivemq,
+			endpoints: []string{
+				"https://b-1.example.com:16001",
+				"amqps://b-1.example.com:5671",
+			},
+			want: []string{
+				"https://b-1.example.com:16001",
+				"amqps://b-1.example.com:5671",
+			},
+		},
+		{
+			name:       "unrecognized engine type all endpoints treated as unknown preserve order",
+			engineType: types.EngineType("UnknownEngine"),
+			endpoints: []string{
+				"ssl://b-1.example.com:61617",
+				"amqps://b-1.example.com:5671",
+			},
+			want: []string{
+				"ssl://b-1.example.com:61617",
+				"amqps://b-1.example.com:5671",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			originalCopy := make([]string, len(tt.endpoints))
+			copy(originalCopy, tt.endpoints)
+
+			got := tfmq.SortBrokerInstanceEndpoints(tt.endpoints, tt.engineType)
+
+			if tt.endpoints == nil {
+				if len(got) != 0 {
+					t.Errorf("SortBrokerInstanceEndpoints(nil) = %v, want empty", got)
+				}
+				return
+			}
+
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("SortBrokerInstanceEndpoints() =\n  %v\nwant\n  %v", got, tt.want)
+			}
+
+			if !slices.Equal(tt.endpoints, originalCopy) {
+				t.Errorf("SortBrokerInstanceEndpoints() mutated input: got %v, want %v", tt.endpoints, originalCopy)
+			}
+		})
 	}
 }
 

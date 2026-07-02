@@ -43,48 +43,50 @@ func resourceAlias() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"function_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
-			},
-			"function_version": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"routing_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"additional_version_weights": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeFloat},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"function_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
+				},
+				"function_version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"invoke_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"routing_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"additional_version_weights": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeFloat},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

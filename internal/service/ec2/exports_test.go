@@ -52,6 +52,7 @@ var (
 	ResourceKeyPair                                       = resourceKeyPair
 	ResourceLaunchTemplate                                = resourceLaunchTemplate
 	ResourceLocalGatewayRoute                             = resourceLocalGatewayRoute
+	ResourceLocalGatewayRouteTable                        = newLocalGatewayRouteTableResource
 	ResourceLocalGatewayRouteTableVIFGroupAssociation     = newLocalGatewayRouteTableVirtualInterfaceGroupAssociationResource
 	ResourceLocalGatewayRouteTableVPCAssociation          = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                     = resourceMainRouteTableAssociation
@@ -191,6 +192,7 @@ var (
 	FindKeyPairByName                                           = findKeyPairByName
 	FindLaunchTemplateByID                                      = findLaunchTemplateByID
 	FindLocalGatewayRouteByTwoPartKey                           = findLocalGatewayRouteByTwoPartKey
+	FindLocalGatewayRouteTableByID                              = findLocalGatewayRouteTableByID
 	FindLocalGatewayRouteTableVIFGroupAssociationByID           = findLocalGatewayRouteTableVIFGroupAssociationByID
 	FindLocalGatewayRouteTableVPCAssociationByID                = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                           = findMainRouteTableAssociationByID

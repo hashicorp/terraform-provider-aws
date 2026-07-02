@@ -92,7 +92,7 @@ func resourceSubnet() *schema.Resource {
 				"customer_owned_ipv4_pool": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
+					RequiredWith: []string{"map_customer_owned_ip_on_launch", names.AttrOutpostARN},
 				},
 				"enable_dns64": {
 					Type:     schema.TypeBool,
@@ -160,14 +160,14 @@ func resourceSubnet() *schema.Resource {
 				"map_customer_owned_ip_on_launch": {
 					Type:         schema.TypeBool,
 					Optional:     true,
-					RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
+					RequiredWith: []string{"customer_owned_ipv4_pool", names.AttrOutpostARN},
 				},
 				"map_public_ip_on_launch": {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
 				},
-				"outpost_arn": {
+				names.AttrOutpostARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
@@ -254,7 +254,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -780,7 +780,7 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	rd.Set("ipv6_native", subnet.Ipv6Native)
 	rd.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	rd.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	rd.Set("outpost_arn", subnet.OutpostArn)
+	rd.Set(names.AttrOutpostARN, subnet.OutpostArn)
 	rd.Set(names.AttrOwnerID, subnet.OwnerId)
 	rd.Set(names.AttrVPCID, subnet.VpcId)
 
@@ -853,6 +853,13 @@ func isVPCOwnedByAccount(ctx context.Context, conn *ec2.Client, vpcID, accountID
 // See: https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring-shared-vpc.html
 func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID, accountID string) error {
 	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrVPCID), vpcID)
+
+	// Without a VPC ID we cannot perform the ownership check or list endpoints.
+	// Bail early rather than failing the lookup and falsely reporting "no work to do."
+	if vpcID == "" {
+		tflog.Debug(ctx, "Skipping GuardDuty cleanup: empty VPC ID")
+		return nil
+	}
 
 	ownedByAccount, err := isVPCOwnedByAccount(ctx, conn, vpcID, accountID)
 	if err != nil {

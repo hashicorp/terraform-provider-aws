@@ -1185,7 +1185,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying),
+		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying, awstypes.DomainProcessingStatusTypeUpgrading),
 		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
 		Refresh: statusDomainProcessing(conn, domainName),
 		Timeout: timeout,
