@@ -1520,6 +1520,35 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 	})
 }
 
+func TestAccECSService_deploymentCircuitBreakerThresholdConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_deploymentCircuitBreakerThresholdConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.reset_on_healthy_task", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.threshold_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.threshold_configuration.0.type", "COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.threshold_configuration.0.value", "5"),
+				),
+			},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccECSService_loadBalancerChanges(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -7320,6 +7349,48 @@ resource "aws_ecs_service" "test" {
   deployment_circuit_breaker {
     enable   = true
     rollback = true
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_deploymentCircuitBreakerThresholdConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster         = aws_ecs_cluster.test.id
+  desired_count   = 1
+  name            = %[1]q
+  task_definition = aws_ecs_task_definition.test.arn
+
+  deployment_circuit_breaker {
+    enable                = true
+    rollback              = true
+    reset_on_healthy_task = false
+
+    threshold_configuration {
+      type  = "COUNT"
+      value = 5
+    }
   }
 }
 `, rName)
