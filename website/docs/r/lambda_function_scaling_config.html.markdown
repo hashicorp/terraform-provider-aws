@@ -67,10 +67,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `function_scaling_config` - (Optional) Scaling configuration block. See [`function_scaling_config`](#function_scaling_config) below.
+* `function_scaling_config` - (Optional) Scaling configuration block. See [`function_scaling_config` Block](#function_scaling_config-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `function_scaling_config`
+### `function_scaling_config` Block
 
 * `max_execution_environments` - (Optional) Maximum number of execution environments that can be provisioned for the function.
 * `min_execution_environments` - (Optional) Minimum number of execution environments to maintain for the function.
@@ -81,17 +81,45 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Scaling Config using the `function_name:qualifier`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_lambda_function_scaling_config.example
-  id = "my-function:$LATEST.PUBLISHED"
+  identity = {
+    function_name = "my-function"
+    qualifier     = "$LATEST.PUBLISHED"
+  }
+}
+
+resource "aws_lambda_function_scaling_config" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Lambda Function Scaling Config using the `function_name:qualifier`. For example:
+### Identity Schema
+
+#### Required
+
+* `function_name` (String) Name or ARN of the Lambda function.
+* `qualifier` (String) Qualifier for the scaling configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Scaling Config using the `function_name` and `qualifier` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_lambda_function_scaling_config.example
+  id = "my-function,$LATEST.PUBLISHED"
+}
+```
+
+Using `terraform import`, import Lambda Function Scaling Config using the `function_name` and `qualifier` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_lambda_function_scaling_config.example my-function:$LATEST.PUBLISHED
+% terraform import aws_lambda_function_scaling_config.example my-function,$LATEST.PUBLISHED
 ```
