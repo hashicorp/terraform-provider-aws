@@ -135,7 +135,7 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 				Config: testAccGuardrailConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
