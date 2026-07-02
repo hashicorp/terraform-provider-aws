@@ -151,8 +151,8 @@ github.com/aws/aws-sdk-go-v2/service/codedeploy v1.36.6 h1:CZ6FQLnsVw+4q03CCCAYS
 github.com/aws/aws-sdk-go-v2/service/codedeploy v1.36.6/go.mod h1:Xtjzn0NHOCb8Uf+KCv9fWSVHfJdli4yRox6S/QFXh2U=
 github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.30.8 h1:AGOuFtPhg6+9MVHxgDIMai7Wq+cAe81qZEIqJIuSZ+g=
 github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.30.8/go.mod h1:/0op86kjEMYOkALUAwSdOKB3E3W7hD0JrPcz/Glsjmc=
-github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.35.6 h1:PaOT2ciSs4gBD1WClfmtFf2wXNk7P5o+dlvO1Mps0Eo=
-github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.35.6/go.mod h1:fGvlkl8Cpga7q7dncf5kCQnXebYnOBZL18Q+QCt6Auk=
+github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.35.7 h1:g21cJVeKXRzC3yG4b+/PZ713lbIrkur6KCi7eF0aV68=
+github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.35.7/go.mod h1:gPtXHv1FrygcoZLjxnHqgEpH0kmPjBu9l+h5RqEG4O4=
 github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.5 h1:CtrW30v9cJj1YjPa+21F/Uk61f9YECn4rhyRJaJ1GPw=
 github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.5/go.mod h1:WX3sF7RcrXTLTXld80dBMBD0AvtZfWeloP8iX8VaGdw=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.36.6 h1:lsr3E4+f2TTvyQz6pTQ0gfUzsxQQ33DuiwOujAMvjP0=
