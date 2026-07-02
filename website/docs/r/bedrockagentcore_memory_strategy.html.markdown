@@ -167,6 +167,32 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
 }
 ```
 
+### Custom Strategy with Self-Managed Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
+  name                      = "self-managed-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Self-managed processing strategy"
+  namespaces                = ["{sessionId}"]
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed {
+      historical_context_window_size = 10
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.example.arn
+        payload_delivery_bucket_name = aws_s3_bucket.example.bucket
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -186,9 +212,24 @@ The following arguments are optional:
 
 The `configuration` block supports the following:
 
-* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
-* `consolidation` - (Optional) Consolidation configuration for processing and organizing memory content. See [`consolidation`](#consolidation) below. Once added, this block cannot be removed without recreating the resource.
-* `extraction` - (Optional) Extraction configuration for identifying and extracting relevant information. See [`extraction`](#extraction) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
+* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`, `SELF_MANAGED`. Changing this forces a new resource.
+* `consolidation` - (Optional) Consolidation configuration for processing and organizing memory content. See [`consolidation`](#consolidation) below. Once added, this block cannot be removed without recreating the resource. Cannot be used with `type` set to `SELF_MANAGED`.
+* `extraction` - (Optional) Extraction configuration for identifying and extracting relevant information. See [`extraction`](#extraction) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE` or `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
+* `self_managed` - (Optional) Self-managed processing configuration. Required when `type` is `SELF_MANAGED` and only valid for that type. See [`self_managed`](#self_managed) below.
+
+### `self_managed`
+
+The `self_managed` block supports the following:
+
+* `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration`](#invocation_configuration) below.
+* `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
+
+### `invocation_configuration`
+
+The `invocation_configuration` block supports the following:
+
+* `topic_arn` - (Required) ARN of the SNS topic for job notifications.
+* `payload_delivery_bucket_name` - (Required) S3 bucket name for event payload delivery.
 
 ### `consolidation`
 
@@ -209,6 +250,7 @@ The `extraction` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
+* `configuration.self_managed.trigger_conditions` - Normalized set of conditions that trigger memory processing, as returned by the service. Each element contains one of `message_based_trigger` (`message_count`), `token_based_trigger` (`token_count`), or `time_based_trigger` (`idle_session_timeout`). The service populates the full set with defaults, so this is read-only.
 
 ## Timeouts
 

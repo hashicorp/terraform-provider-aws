@@ -274,6 +274,100 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: memory + SNS topic + S3 bucket + execution role permissions
+			{
+				Config: testAccMemoryStrategyConfig_selfManagedBase(rName),
+			},
+			// Step 1: self_managed with message-based trigger and explicit window size
+			{
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SELF_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.invocation_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.topic_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.payload_delivery_bucket_name"),
+					// trigger_conditions is Computed; the service returns the normalized set.
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.trigger_conditions.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: update window size and trigger threshold (in-place)
+			{
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "25"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 3: Import test (against the valid Step 2 config)
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_selfManagedInvalidType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomMemoryName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// self_managed under a non-SELF_MANAGED type → ValidateConfig error.
+			// Isolated in its own test so the plan-time validation error leaves no
+			// resource to destroy.
+			{
+				Config:      testAccMemoryStrategyConfig_selfManagedInvalidType(rName),
+				ExpectError: regexache.MustCompile(`self_managed block is only valid`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -513,6 +607,149 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   type                      = "CUSTOM"
   description               = "Test custom strategy"
   namespaces                = ["default"]
+}
+`, rName))
+}
+
+// testAccMemoryStrategyConfig_selfManagedBase provisions the memory plus the SNS
+// topic and S3 bucket that a self-managed strategy's invocation_configuration
+// requires, granting the memory execution role permission to use them.
+func testAccMemoryStrategyConfig_selfManagedBase(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket_prefix = "tf-acc-test-agentcore"
+  force_destroy = true
+}
+
+resource "aws_iam_role_policy" "test_self_managed" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish",
+          "sns:GetTopicAttributes",
+          "sns:Subscribe",
+        ]
+        Resource = aws_sns_topic.test.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:DeleteObject",
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_sns_topic_policy" "test" {
+  arn = aws_sns_topic.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock-agentcore.amazonaws.com" }
+      Action    = ["sns:Publish"]
+      Resource  = aws_sns_topic.test.arn
+    }]
+  })
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock-agentcore.amazonaws.com" }
+      Action = [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+      ]
+      Resource = [
+        aws_s3_bucket.test.arn,
+        "${aws_s3_bucket.test.arn}/*",
+      ]
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_memory" "test" {
+  name                      = %[1]q
+  event_expiry_duration     = 7
+  memory_execution_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test_self_managed]
+}
+`, rName))
+}
+
+func testAccMemoryStrategyConfig_selfManaged(rName string, windowSize int) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_selfManagedBase(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test self-managed strategy"
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed {
+      historical_context_window_size = %[2]d
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.test.arn
+        payload_delivery_bucket_name = aws_s3_bucket.test.bucket
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test_self_managed, aws_sns_topic_policy.test, aws_s3_bucket_policy.test]
+}
+`, rName, windowSize))
+}
+
+func testAccMemoryStrategyConfig_selfManagedInvalidType(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_selfManagedBase(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test self-managed invalid type"
+  namespaces                = ["{sessionId}"]
+
+  configuration {
+    type = "SEMANTIC_OVERRIDE"
+
+    self_managed {
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.test.arn
+        payload_delivery_bucket_name = aws_s3_bucket.test.bucket
+      }
+    }
+  }
 }
 `, rName))
 }
