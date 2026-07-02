@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -223,11 +224,10 @@ func (r *resourcePool) Create(ctx context.Context, req resource.CreateRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolName.String())
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, pool, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, pool, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.S3BucketName = flex.StringToFramework(ctx, pool.ApplicationSettings.S3BucketName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -252,11 +252,10 @@ func (r *resourcePool) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.S3BucketName = flex.StringToFramework(ctx, out.ApplicationSettings.S3BucketName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -312,11 +311,10 @@ func (r *resourcePool) Update(ctx context.Context, req resource.UpdateRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PoolId.String())
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, pool, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, pool, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.S3BucketName = flex.StringToFramework(ctx, pool.ApplicationSettings.S3BucketName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -427,6 +425,16 @@ func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.S
 
 		return out, string(out.State), nil
 	}
+}
+
+func (r *resourcePool) flatten(ctx context.Context, apiObject *awstypes.WorkspacesPool, data *resourcePoolModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(flex.Flatten(ctx, apiObject, data)...)
+	if diags.HasError() {
+		return diags
+	}
+	data.S3BucketName = flex.StringToFramework(ctx, apiObject.ApplicationSettings.S3BucketName)
+	return diags
 }
 
 func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*awstypes.WorkspacesPool, error) {
