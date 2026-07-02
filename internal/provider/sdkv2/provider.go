@@ -989,7 +989,7 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 const (
 	// Environment variable specifying a web identity token.
 	//
-	// Any value read from this environment variable is superseded by any value in provider configuration.
+	// Any value read from this environment variable is superseded by any value in `assume_role_with_web_identity.web_identity_token`.
 	WebIdentityTokenEnvVar = "TF_AWS_WEB_IDENTITY_TOKEN"
 )
 
