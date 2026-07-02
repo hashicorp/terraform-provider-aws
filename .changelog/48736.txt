@@ -3,5 +3,5 @@ provider: Web identity tokens can be configured via the `TF_AWS_WEB_IDENTITY_TOK
 ```
 
 ```release-note:bug
-provider: Fix ``one of `assume_role_with_web_identity.0.web_identity_token,assume_role_with_web_identity.0.web_identity_token_file` must be specified`` errors, allowing any `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable value to be used
+provider: Fix "one of `assume_role_with_web_identity.0.web_identity_token,assume_role_with_web_identity.0.web_identity_token_file` must be specified" errors, allowing any `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable value to be used
 ```
