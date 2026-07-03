@@ -3,12 +3,12 @@ subcategory: "Route 53 Profiles"
 layout: "aws"
 page_title: "AWS: aws_route53profiles_profile"
 description: |-
-  Terraform data source for managing an AWS Route 53 Profile.
+  Provides details about an AWS Route 53 Profile.
 ---
 
 # Data Source: aws_route53profiles_profile
 
-Terraform data source for managing an AWS Route 53 Profile.
+Provides details about an AWS Route 53 Profile.
 
 ## Example Usage
 
