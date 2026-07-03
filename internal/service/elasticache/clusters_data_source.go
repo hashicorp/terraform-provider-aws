@@ -65,7 +65,7 @@ func (d *clustersDataSource) Read(ctx context.Context, request datasource.ReadRe
 	})
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
-	data.ClusterIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, clusterIDs)
+	data.ClusterIDs = fwflex.FlattenFrameworkStringValueListOfStringLegacy(ctx, clusterIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

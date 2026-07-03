@@ -65,7 +65,7 @@ func (d *replicationGroupsDataSource) Read(ctx context.Context, request datasour
 	})
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
-	data.ReplicationGroupIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, replicationGroupIDs)
+	data.ReplicationGroupIDs = fwflex.FlattenFrameworkStringValueListOfStringLegacy(ctx, replicationGroupIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
