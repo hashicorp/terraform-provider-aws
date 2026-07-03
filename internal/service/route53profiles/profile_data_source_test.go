@@ -35,7 +35,7 @@ func TestAccRoute53ProfilesProfileDataSource_byName(t *testing.T) {
 				Config: testAccProfileDataSourceConfig_byName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "profile_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrOwnerID),
@@ -68,7 +68,7 @@ func TestAccRoute53ProfilesProfileDataSource_byID(t *testing.T) {
 			{
 				Config: testAccProfileDataSourceConfig_byID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "profile_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
@@ -99,7 +99,7 @@ resource "aws_route53profiles_profile" "test" {
 }
 
 data "aws_route53profiles_profile" "test" {
-  profile_id = aws_route53profiles_profile.test.id
+  id = aws_route53profiles_profile.test.id
 }
 `, rName)
 }
