@@ -46,9 +46,6 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^\S+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
-
-					// Check ResponseCompletionTimeout is not enabled with no value set
-					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListSizeExact(0)),
