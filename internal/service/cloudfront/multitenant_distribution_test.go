@@ -587,11 +587,11 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssoc
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"function_association": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
 									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
 									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
 								}),
 							}),
@@ -645,11 +645,11 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssoc
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"function_association": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
 									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
 									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
 								}),
 							}),
@@ -716,12 +716,12 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctio
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
 									"include_body":        knownvalue.Bool(true),
-									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", endpoints.UsEast1RegionID, regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
 									"include_body":        knownvalue.Bool(false),
-									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", endpoints.UsEast1RegionID, regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
 								}),
 							}),
 						}),
@@ -784,12 +784,12 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctio
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
 									"include_body":        knownvalue.Bool(true),
-									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", endpoints.UsEast1RegionID, regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
 									"include_body":        knownvalue.Bool(false),
-									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", endpoints.UsEast1RegionID, regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
 								}),
 							}),
 						}),
@@ -847,11 +847,11 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_functionAssociation_
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"function_association": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
 									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
+									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
 									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
 								}),
 							}),
@@ -916,12 +916,12 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssoci
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
 									"include_body":        knownvalue.Bool(true),
-									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", endpoints.UsEast1RegionID, regexache.MustCompile(`function:viewer-request-`+rName+`:\d+`)),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":          tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
 									"include_body":        knownvalue.Bool(false),
-									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", "us-east-1", regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
+									"lambda_function_arn": tfknownvalue.RegionalARNRegexpRegion("lambda", endpoints.UsEast1RegionID, regexache.MustCompile(`function:viewer-response-`+rName+`:\d+`)),
 								}),
 							}),
 						}),
