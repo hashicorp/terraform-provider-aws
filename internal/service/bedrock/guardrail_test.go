@@ -254,32 +254,182 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("self-assured"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccGuardrailConfig_update(rName, "test", "test", "MEDIUM", "^\\d{3}-\\d{2}-\\d{4}$", "NAME", "investment_topic", "HATE"),
+				Config: testAccGuardrailConfig_update(rName, "test", "test", awstypes.GuardrailFilterStrengthMedium, "^\\d{3}-\\d{2}-\\d{4}$", awstypes.GuardrailPiiEntityTypeName, "investment_topic", "self-assured"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", "MEDIUM"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{3}-\\d{2}-\\d{4}$"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "NAME"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "investment_topic"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"filters_config": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeHate),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"topics_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"definition": knownvalue.StringExact("Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."),
+									"examples": knownvalue.ListExact([]knownvalue.Check{
+										tfknownvalue.StringExact("Where should I invest my money?"),
+									}),
+									names.AttrName: knownvalue.StringExact("investment_topic"),
+									names.AttrType: tfknownvalue.StringExact(awstypes.GuardrailTopicTypeDeny),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("self-assured"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccGuardrailConfig_update(rName, "update", "update", "HIGH", "^\\d{4}-\\d{2}-\\d{4}$", "USERNAME", "earnings_topic", "HATRED"),
+				Config: testAccGuardrailConfig_update(rName, "update", "update", awstypes.GuardrailFilterStrengthHigh, "^\\d{4}-\\d{2}-\\d{4}$", awstypes.GuardrailPiiEntityTypeUsername, "earnings_topic", "over-bored"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "update"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "update"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", "HIGH"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{4}-\\d{2}-\\d{4}$"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "USERNAME"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "earnings_topic"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATRED"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"filters_config": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthHigh),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeHate),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"topics_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"definition": knownvalue.StringExact("Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."),
+									"examples": knownvalue.ListExact([]knownvalue.Check{
+										tfknownvalue.StringExact("Where should I invest my money?"),
+									}),
+									names.AttrName: knownvalue.StringExact("earnings_topic"),
+									names.AttrType: tfknownvalue.StringExact(awstypes.GuardrailTopicTypeDeny),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("over-bored"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -364,7 +514,7 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_enabled"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "self-assured"),
 				),
 			},
 		},
@@ -583,9 +733,9 @@ resource "aws_bedrock_guardrail" "test" {
   topic_policy_config {
     topics_config {
       name       = "investment_topic"
-      examples   = ["Where should I invest my money ?"]
+      examples   = ["Where should I invest my money?"]
       type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."
     }
   }
 
@@ -594,7 +744,7 @@ resource "aws_bedrock_guardrail" "test" {
       type = "PROFANITY"
     }
     words_config {
-      text = "HATE"
+      text = "self-assured"
     }
   }
 }
@@ -641,7 +791,7 @@ resource "aws_bedrock_guardrail" "test" {
 `, rName)
 }
 
-func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig string) string {
+func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging string, inputStrength awstypes.GuardrailFilterStrength, regexPattern string, piiType awstypes.GuardrailPiiEntityType, topicName, wordConfig string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
@@ -673,9 +823,9 @@ resource "aws_bedrock_guardrail" "test" {
   topic_policy_config {
     topics_config {
       name       = %[7]q
-      examples   = ["Where should I invest my money ?"]
+      examples   = ["Where should I invest my money?"]
       type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."
     }
   }
 
@@ -704,7 +854,7 @@ resource "aws_bedrock_guardrail" "test" {
       type = "PROFANITY"
     }
     words_config {
-      text = "HATE"
+      text = "self-assured"
     }
   }
 }
@@ -802,9 +952,9 @@ resource "aws_bedrock_guardrail" "test" {
   topic_policy_config {
     topics_config {
       name       = "investment_topic"
-      examples   = ["Where should I invest my money ?"]
+      examples   = ["Where should I invest my money?"]
       type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."
     }
     tier_config {
       tier_name = "STANDARD"
