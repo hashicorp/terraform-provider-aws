@@ -123,10 +123,10 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 }
 
 func findProfileByName(ctx context.Context, conn *route53profiles.Client, name string) (*awstypes.ProfileSummary, error) {
-	input := &route53profiles.ListProfilesInput{}
+	var input route53profiles.ListProfilesInput
 
 	var results []awstypes.ProfileSummary
-	pages := route53profiles.NewListProfilesPaginator(conn, input)
+	pages := route53profiles.NewListProfilesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
