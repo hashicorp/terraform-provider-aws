@@ -24,11 +24,13 @@ output "example" {
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `replication_group_ids` - A list of all the ElastiCache Replication Group IDs found.
+* `replication_group_ids` - List of all the ElastiCache Replication Group IDs found.

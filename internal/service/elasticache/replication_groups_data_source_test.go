@@ -29,8 +29,6 @@ func TestAccElastiCacheReplicationGroupsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupsDataSourceConfig_basic(rName),
-				// The data source is account/region-wide, so assert membership
-				// (the created ID is present) rather than exact list equality.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "replication_group_ids.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "replication_group_ids.*", resourceName, "replication_group_id"),
@@ -58,7 +56,6 @@ func TestAccElastiCacheReplicationGroupsDataSource_multiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupsDataSourceConfig_multiple(rName),
-				// Each created identifier must appear in the aggregated list.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "replication_group_ids.#", 2),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "replication_group_ids.*", resourceName1, "replication_group_id"),
@@ -84,13 +81,63 @@ func TestAccElastiCacheReplicationGroupsDataSource_empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupsDataSourceConfig_empty(),
-				// The read succeeds and replication_group_ids is a valid list
-				// (possibly empty). In a shared account other replication groups
-				// may exist, so we only assert the attribute is present and a
-				// valid list.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "replication_group_ids.#", 0),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroupsDataSource_valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	dataSourceName := "data.aws_elasticache_replication_groups.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupsDataSourceConfig_valkey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "replication_group_ids.#", 1),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "replication_group_ids.*", resourceName, "replication_group_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroupsDataSource_valkeyMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName1 := "aws_elasticache_replication_group.test1"
+	resourceName2 := "aws_elasticache_replication_group.test2"
+	dataSourceName := "data.aws_elasticache_replication_groups.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupsDataSourceConfig_valkeyMultiple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "replication_group_ids.#", 2),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "replication_group_ids.*", resourceName1, "replication_group_id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "replication_group_ids.*", resourceName2, "replication_group_id"),
 				),
 			},
 		},
@@ -141,4 +188,47 @@ func testAccReplicationGroupsDataSourceConfig_empty() string {
 	return `
 data "aws_elasticache_replication_groups" "test" {}
 `
+}
+
+func testAccReplicationGroupsDataSourceConfig_valkey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  engine               = "valkey"
+  node_type            = "cache.t3.small"
+  num_cache_clusters   = 1
+  port                 = 6379
+}
+
+data "aws_elasticache_replication_groups" "test" {
+  depends_on = [aws_elasticache_replication_group.test]
+}
+`, rName)
+}
+
+func testAccReplicationGroupsDataSourceConfig_valkeyMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test1" {
+  replication_group_id = "%[1]s-1"
+  description          = "test description"
+  engine               = "valkey"
+  node_type            = "cache.t3.small"
+  num_cache_clusters   = 1
+  port                 = 6379
+}
+
+resource "aws_elasticache_replication_group" "test2" {
+  replication_group_id = "%[1]s-2"
+  description          = "test description"
+  engine               = "valkey"
+  node_type            = "cache.t3.small"
+  num_cache_clusters   = 1
+  port                 = 6379
+}
+
+data "aws_elasticache_replication_groups" "test" {
+  depends_on = [aws_elasticache_replication_group.test1, aws_elasticache_replication_group.test2]
+}
+`, rName)
 }

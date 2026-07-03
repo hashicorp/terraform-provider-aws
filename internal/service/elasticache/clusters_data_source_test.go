@@ -29,8 +29,6 @@ func TestAccElastiCacheClustersDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClustersDataSourceConfig_basic(rName),
-				// The data source is account/region-wide, so assert membership
-				// (the created ID is present) rather than exact list equality.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "cluster_ids.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_ids.*", resourceName, "cluster_id"),
@@ -58,7 +56,6 @@ func TestAccElastiCacheClustersDataSource_multiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClustersDataSourceConfig_multiple(rName),
-				// Each created identifier must appear in the aggregated list.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "cluster_ids.#", 2),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_ids.*", resourceName1, "cluster_id"),
@@ -84,9 +81,6 @@ func TestAccElastiCacheClustersDataSource_empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClustersDataSourceConfig_empty(),
-				// The read succeeds and cluster_ids is a valid list (possibly
-				// empty). In a shared account other clusters may exist, so we
-				// only assert the attribute is present and a valid list.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "cluster_ids.#", 0),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
@@ -100,10 +94,10 @@ func testAccClustersDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = %[1]q
-  engine          = "memcached"
+  engine          = "redis"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
-  port            = 11211
+  port            = 6379
 }
 
 data "aws_elasticache_clusters" "test" {
@@ -116,18 +110,18 @@ func testAccClustersDataSourceConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test1" {
   cluster_id      = "%[1]s-1"
-  engine          = "memcached"
+  engine          = "redis"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
-  port            = 11211
+  port            = 6379
 }
 
 resource "aws_elasticache_cluster" "test2" {
   cluster_id      = "%[1]s-2"
-  engine          = "memcached"
+  engine          = "redis"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
-  port            = 11211
+  port            = 6379
 }
 
 data "aws_elasticache_clusters" "test" {
