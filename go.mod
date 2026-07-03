@@ -72,21 +72,21 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.30.8
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.35.7
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.6
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.62.2
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.41.8
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.54.2
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.64.3
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/connect v1.179.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.42.8
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.29.8
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.65.3
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.62.7
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.64.6
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.42.8
@@ -196,7 +196,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.12
 	github.com/aws/aws-sdk-go-v2/service/osis v1.22.9
-	github.com/aws/aws-sdk-go-v2/service/outposts v1.62.2
+	github.com/aws/aws-sdk-go-v2/service/outposts v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.16.9
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.21.1
