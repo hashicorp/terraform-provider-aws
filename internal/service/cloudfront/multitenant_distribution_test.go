@@ -588,11 +588,11 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssoc
 							"function_association": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
-									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
+									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
-									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
+									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
 								}),
 							}),
 						}),
@@ -640,17 +640,17 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssoc
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("original")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("original")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"function_association": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
-									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
+									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
-									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
+									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
 								}),
 							}),
 						}),
@@ -669,7 +669,7 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssoc
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("updated")),
 					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("default_cache_behavior")),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -777,7 +777,7 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctio
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("original")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("original")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"lambda_function_association": knownvalue.SetExact([]knownvalue.Check{
@@ -808,7 +808,7 @@ func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_lambdaFunctio
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("updated")),
 					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("default_cache_behavior")),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -842,17 +842,17 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_functionAssociation_
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("original")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("original")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"function_association": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerRequest),
-									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
+									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-request-"+rName),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"event_type":   tfknownvalue.StringExact(awstypes.EventTypeViewerResponse),
-									"function_arn": tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
+									names.AttrFunctionARN: tfknownvalue.GlobalARNExact("cloudfront", "function/viewer-response-"+rName),
 								}),
 							}),
 						}),
@@ -871,7 +871,7 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_functionAssociation_
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("updated")),
 					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("cache_behavior")),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -909,7 +909,7 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssoci
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("original")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("original")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"lambda_function_association": knownvalue.SetExact([]knownvalue.Check{
@@ -940,7 +940,7 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssoci
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("comment"), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrComment), knownvalue.StringExact("updated")),
 					defaultCacheBehaviorNoChange.AddStateValue(resourceName, tfjsonpath.New("cache_behavior")),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
