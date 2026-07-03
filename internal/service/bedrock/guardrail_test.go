@@ -618,6 +618,50 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 	})
 }
 
+func TestAccBedrockGuardrail_contentPolicyConfig_ioModalities(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+	var guardrail bedrock.GetGuardrailOutput
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_contentPolicyConfig_ioModalities(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config").AtSliceIndex(0).AtMapKey("filters_config").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"input_modalities": knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(awstypes.GuardrailModalityImage),
+							tfknownvalue.StringExact(awstypes.GuardrailModalityText),
+						}),
+						"output_modalities": knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(awstypes.GuardrailModalityImage),
+							tfknownvalue.StringExact(awstypes.GuardrailModalityText),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
+			},
+		},
+	})
+}
+
 func testAccGuardrailImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1069,6 +1113,31 @@ resource "aws_bedrock_guardrail" "test" {
       output_action     = "NONE"
       output_enabled    = false
       output_modalities = ["IMAGE"]
+      output_strength   = "MEDIUM"
+      type              = "HATE"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccGuardrailConfig_contentPolicyConfig_ioModalities(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  content_policy_config {
+    filters_config {
+      input_action      = "BLOCK"
+      input_enabled     = true
+      input_modalities  = ["IMAGE", "TEXT"]
+      input_strength    = "MEDIUM"
+      output_action     = "NONE"
+      output_enabled    = false
+      output_modalities = ["IMAGE", "TEXT"]
       output_strength   = "MEDIUM"
       type              = "HATE"
     }

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -161,12 +162,12 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									"input_enabled": schema.BoolAttribute{
 										Optional: true,
 									},
-									"input_modalities": schema.ListAttribute{
+									"input_modalities": schema.SetAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.GuardrailModality](),
 										ElementType: types.StringType,
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
 										},
 									},
 									"input_strength": schema.StringAttribute{
@@ -180,12 +181,12 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									"output_enabled": schema.BoolAttribute{
 										Optional: true,
 									},
-									"output_modalities": schema.ListAttribute{
+									"output_modalities": schema.SetAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.GuardrailModality](),
 										ElementType: types.StringType,
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
 										},
 									},
 									"output_strength": schema.StringAttribute{
@@ -832,11 +833,11 @@ type guardrailContentPolicyConfigModel struct {
 type guardrailContentFilterConfigModel struct {
 	InputAction      fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"input_action"`
 	InputEnabled     types.Bool                                                `tfsdk:"input_enabled"`
-	InputModalities  fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"input_modalities"`
+	InputModalities  fwtypes.SetOfStringEnum[awstypes.GuardrailModality]       `tfsdk:"input_modalities"`
 	InputStrength    fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"input_strength"`
 	OutputAction     fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"output_action"`
 	OutputEnabled    types.Bool                                                `tfsdk:"output_enabled"`
-	OutputModalities fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"output_modalities"`
+	OutputModalities fwtypes.SetOfStringEnum[awstypes.GuardrailModality]       `tfsdk:"output_modalities"`
 	OutputStrength   fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"output_strength"`
 	Type             fwtypes.StringEnum[awstypes.GuardrailContentFilterType]   `tfsdk:"type"`
 }
