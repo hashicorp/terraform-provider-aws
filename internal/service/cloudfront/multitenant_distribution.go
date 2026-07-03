@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -851,7 +850,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
-		new.WebACLID = flex.NullAsEmptyString(new.WebACLID)
+		new.WebACLID = fwflex.NullAsEmptyString(new.WebACLID)
 
 		// The CloudFront API requires stub values for a number of features that are not supported for Mutli-Tenant Distributions
 		// Reusing the current result and overlaying with configured attributes
@@ -1014,7 +1013,7 @@ func flattenMultiTenantDistribution(ctx context.Context, output *cloudfront.GetD
 		return diags
 	}
 
-	data.WebACLID = flex.EmptyStringAsNull(data.WebACLID)
+	data.WebACLID = fwflex.EmptyStringAsNull(data.WebACLID)
 
 	return diags
 }
