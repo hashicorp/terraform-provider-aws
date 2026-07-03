@@ -113,7 +113,6 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	data.ProfileID = fwflex.StringToFramework(ctx, out.Id)
 
-	// Transparent tagging doesn't work for DataSource yet.
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
