@@ -14,10 +14,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -40,6 +42,7 @@ type startBuildActionModel struct {
 	SourceVersion                types.String                                              `tfsdk:"source_version"`
 	Timeout                      types.Int64                                               `tfsdk:"timeout"`
 	EnvironmentVariablesOverride fwtypes.ListNestedObjectValueOf[environmentVariableModel] `tfsdk:"environment_variables_override"`
+	HostKernelOverride           types.String                                              `tfsdk:"host_kernel_override"`
 	BuildID                      types.String                                              `tfsdk:"build_id"`
 }
 
@@ -60,6 +63,13 @@ func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest,
 			"source_version": schema.StringAttribute{
 				Description: "Version of the build input to be built",
 				Optional:    true,
+			},
+			"host_kernel_override": schema.StringAttribute{
+				Description: "Overrides the host operating system kernel for this build. Valid values: LINUX_KERNEL_4, LINUX_KERNEL_6, LINUX_KERNEL_LATEST.",
+				Optional:    true,
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.HostKernel](),
+				},
 			},
 			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds for the build operation",
