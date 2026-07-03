@@ -602,9 +602,7 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccGuardrailConfig_kmsKey(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -640,7 +638,7 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig string) string {
@@ -694,9 +692,7 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccGuardrailConfig_wordConfig_only(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -712,13 +708,11 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccGuardrailConfig_wordConfigAction(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -742,7 +736,7 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccGuardrailConfig_crossRegion(rName string) string {
@@ -909,9 +903,7 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccGuardrailConfig_contentPolicyConfigAction(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -932,5 +924,5 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
