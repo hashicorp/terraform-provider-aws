@@ -42,15 +42,15 @@ func (d *profileDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 			names.AttrOwnerID: schema.StringAttribute{
-				Computed: true,
-			},
-			"profile_id": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			"share_status": schema.StringAttribute{
@@ -73,7 +73,7 @@ func (d *profileDataSource) ConfigValidators(context.Context) []datasource.Confi
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrName),
-			path.MatchRoot("profile_id"),
+			path.MatchRoot(names.AttrID),
 		),
 	}
 }
@@ -88,7 +88,7 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	id := data.ProfileID.ValueString()
+	id := data.ID.ValueString()
 	if id == "" {
 		name := data.Name.ValueString()
 		summary, err := findProfileByName(ctx, conn, name)
@@ -110,8 +110,6 @@ func (d *profileDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	data.ProfileID = fwflex.StringToFramework(ctx, out.Id)
 
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
@@ -148,9 +146,9 @@ func findProfileByName(ctx context.Context, conn *route53profiles.Client, name s
 type profileDataSourceModel struct {
 	framework.WithRegionModel
 	ARN           types.String                               `tfsdk:"arn"`
+	ID            types.String                               `tfsdk:"id"`
 	Name          types.String                               `tfsdk:"name"`
 	OwnerId       types.String                               `tfsdk:"owner_id"`
-	ProfileID     types.String                               `tfsdk:"profile_id"`
 	ShareStatus   fwtypes.StringEnum[awstypes.ShareStatus]   `tfsdk:"share_status"`
 	Status        fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage types.String                               `tfsdk:"status_message"`
