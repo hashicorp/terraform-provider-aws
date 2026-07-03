@@ -26,6 +26,7 @@ func TestAccRoute53ProfilesProfileDataSource_byName(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53Profiles)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,6 +61,7 @@ func TestAccRoute53ProfilesProfileDataSource_byID(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53Profiles)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
