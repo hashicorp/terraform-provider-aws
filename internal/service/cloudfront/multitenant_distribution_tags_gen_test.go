@@ -25,7 +25,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -39,7 +38,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -70,7 +68,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -82,7 +79,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -118,7 +114,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -131,7 +126,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -162,7 +156,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -174,7 +167,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -195,7 +187,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -211,7 +202,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_null(t *testing.T) {
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -225,7 +215,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -256,7 +245,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -277,7 +265,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_emptyMap(t *testing.T) {
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -291,7 +278,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -312,7 +298,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
@@ -331,7 +316,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_addOnUpdate(t *testing.T) {
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -345,7 +329,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -366,7 +349,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -397,7 +379,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -415,7 +396,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_onCreate(t *testing.
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -429,7 +409,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_onCreate(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -460,7 +439,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_onCreate(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -472,7 +450,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_onCreate(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -493,7 +470,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_onCreate(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -509,7 +485,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_add(t *test
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -523,7 +498,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_add(t *test
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -554,7 +528,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_add(t *test
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -590,7 +563,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_add(t *test
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -603,7 +575,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_add(t *test
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -634,7 +605,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_add(t *test
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -652,7 +622,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_replace(t *
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -666,7 +635,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_replace(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -697,7 +665,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_replace(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -728,7 +695,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_EmptyTag_OnUpdate_replace(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -746,7 +712,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -760,7 +725,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -789,7 +753,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -803,7 +766,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -835,7 +797,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -850,7 +811,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -879,7 +839,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -893,7 +852,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -915,7 +873,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_providerOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -931,7 +888,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -945,7 +901,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -982,7 +937,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -998,7 +952,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1040,7 +993,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1057,7 +1009,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1079,7 +1030,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nonOverlapping(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -1095,7 +1045,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1109,7 +1058,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1144,7 +1092,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1160,7 +1107,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1201,7 +1147,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1219,7 +1164,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1254,7 +1198,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_overlapping(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1275,7 +1218,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToProviderO
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1289,7 +1231,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToProviderO
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1321,7 +1262,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToProviderO
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1350,7 +1290,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToProviderO
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1369,7 +1308,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToResourceO
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1383,7 +1321,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToResourceO
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1412,7 +1349,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToResourceO
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1444,7 +1380,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_updateToResourceO
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1462,7 +1397,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_emptyResourceTag(
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1476,7 +1410,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_emptyResourceTag(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1511,7 +1444,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_emptyResourceTag(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1532,7 +1464,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_emptyProviderOnly
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1546,7 +1477,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_emptyProviderOnly
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1575,7 +1505,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_emptyProviderOnly
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1594,7 +1523,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nullOverlappingRe
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1608,7 +1536,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nullOverlappingRe
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1643,7 +1570,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nullOverlappingRe
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1667,7 +1593,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nullNonOverlappin
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1681,7 +1606,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nullNonOverlappin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1718,7 +1642,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_DefaultTags_nullNonOverlappin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1742,7 +1665,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_onCreate(t *testi
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1756,7 +1678,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_onCreate(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1785,7 +1706,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_onCreate(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1801,7 +1721,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_add(t *t
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1815,7 +1734,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_add(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1847,7 +1765,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_add(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1884,7 +1801,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_add(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1902,7 +1818,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_replace(
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1916,7 +1831,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_replace(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1948,7 +1862,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_replace(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1977,7 +1890,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_ComputedTag_OnUpdate_replace(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
@@ -1993,7 +1905,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_defaultTag
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2008,7 +1919,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_defaultTag
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -2057,7 +1967,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_defaultTag
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -2106,7 +2015,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_defaultTag
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -2159,7 +2067,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_resourceTa
 
 	var v awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2174,7 +2081,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_resourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2232,7 +2138,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_resourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2289,7 +2194,6 @@ func TestAccCloudFrontMultiTenantDistribution_Tags_IgnoreTags_Overlap_resourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/MultiTenantDistribution/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),

@@ -63,12 +63,6 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
 
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "unknownTagKey" {
   type     = string
   nullable = false

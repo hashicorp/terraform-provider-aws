@@ -51,6 +51,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(name="MultiTenantDistribution")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
+// @Testing(generator=false)
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
