@@ -49,7 +49,8 @@ const (
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(name="MultiTenantDistribution")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
