@@ -94,7 +94,7 @@ This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` as well a
 
 #### Exists and Destroy Checks
 
-Most `Exists` functions used in acceptance tests take a pointer to the returned API object.
+Some `Exists` functions used in acceptance tests take a pointer to the returned API object.
 To specify the type of this parameter, use the annotation `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
 `<package path>;[<package alias>;]<function call>`.

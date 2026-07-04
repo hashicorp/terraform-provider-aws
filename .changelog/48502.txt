@@ -1,0 +1,55 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_account_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_anomaly_detector: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_data_protection_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_delivery_destination_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_delivery_destination: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_delivery_source: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_delivery: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_index_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_query_definition: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_query_definition: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_resource_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_stream: Add Resource Identity support
+```

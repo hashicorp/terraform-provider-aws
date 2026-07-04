@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
 // @Testing(tagsTest=false)
 // @Testing(preIdentityVersion="v6.47.0")
