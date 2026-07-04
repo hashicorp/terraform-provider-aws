@@ -536,6 +536,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("cluster_address", c.ConfigurationEndpoint.Address)
 	} else if len(c.CacheNodes) > 0 {
 		d.Set(names.AttrPort, c.CacheNodes[0].Endpoint.Port)
+		d.Set("cluster_address", aws.ToString(c.CacheNodes[0].Endpoint.Address))
 	}
 
 	d.Set("replication_group_id", c.ReplicationGroupId)

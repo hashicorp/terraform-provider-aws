@@ -95,3 +95,45 @@ data "aws_elasticache_cluster" "test" {
 }
 `, rName)
 }
+
+func TestAccElastiCacheClusterDataSource_Engine_redis(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+	dataSourceName := "data.aws_elasticache_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_engineRedis(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_address", resourceName, "cluster_address"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_address"),
+					resource.TestCheckResourceAttr(dataSourceName, "configuration_endpoint", ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterDataSourceConfig_engineRedis(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "redis"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+
+data "aws_elasticache_cluster" "test" {
+  cluster_id = aws_elasticache_cluster.test.cluster_id
+}
+`, rName)
+}
