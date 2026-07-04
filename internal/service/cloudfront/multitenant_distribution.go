@@ -832,15 +832,6 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 
 	hasUpdate := false
 
-	// Handle tag updates first
-	if !new.Tags.Equal(old.Tags) {
-		hasUpdate = true
-		if err := updateTags(ctx, conn, new.ARN.ValueString(), old.Tags, new.Tags); err != nil {
-			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution tags", err.Error())
-			return
-		}
-	}
-
 	// Check if distribution config needs updating (anything other than tags)
 	if mtDistributionHasChanges(old, new) {
 		hasUpdate = true
