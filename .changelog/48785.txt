@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Allow `warm_throughput` `read_units_per_second` and `write_units_per_second` values below the previous `12000`/`4000` minimums (the AWS API minimum is `1`), and fix a perpetual diff when such values are configured
+```
