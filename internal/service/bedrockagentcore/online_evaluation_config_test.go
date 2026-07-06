@@ -343,6 +343,49 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_filters(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightsAndClustering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_insightsAndClustering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("insight").AtSliceIndex(0).AtMapKey("insight_id"), knownvalue.StringExact("Builtin.Insight.FailureAnalysis")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("clustering_config").AtSliceIndex(0).AtMapKey("frequencies"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("DAILY"),
+						knownvalue.StringExact("WEEKLY"),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
+				ImportStateVerifyIgnore: []string{
+					"enable_on_create",
+				},
+			},
+		},
+	})
+}
+
 // Test helper functions.
 
 func testAccCheckOnlineEvaluationConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -616,6 +659,37 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 
     session_config {
       session_timeout_minutes = 20
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_insightsAndClustering(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  insight {
+    insight_id = "Builtin.Insight.FailureAnalysis"
+  }
+
+  clustering_config {
+    frequencies = ["DAILY", "WEEKLY"]
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
     }
   }
 }
