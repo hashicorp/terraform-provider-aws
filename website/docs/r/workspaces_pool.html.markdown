@@ -91,7 +91,7 @@ resource "aws_workspaces_pool" "example" {
 The following arguments are required:
 
 * `bundle_id` - (Required) ID of the bundle for the WorkSpaces Pool.
-* `capacity` - (Required) Capacity configuration for the WorkSpaces Pool. Defined below.
+* `capacity` - (Required) Capacity configuration for the WorkSpaces Pool. See [`capacity`](#capacity) below.
 * `description` - (Required) Description of the WorkSpaces Pool.
 * `directory_id` - (Required) ID of the directory for the WorkSpaces Pool.
 * `pool_name` - (Required) Name of the WorkSpaces Pool. This cannot be changed after creation.
@@ -99,10 +99,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `application_settings` - (Optional) Application settings configuration for the WorkSpaces Pool. Defined below.
+* `application_settings` - (Optional) Application settings configuration for the WorkSpaces Pool. See [`application_settings`](#application_settings) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout_settings` - (Optional) Timeout settings configuration for the WorkSpaces Pool. Defined below.
+* `timeout_settings` - (Optional) Timeout settings configuration for the WorkSpaces Pool. See [`timeout_settings`](#timeout_settings) below.
 
 ### `capacity` Block
 
@@ -123,7 +123,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `capacity_status` - Capacity status of the WorkSpaces Pool. Defined below.
+* `capacity_status` - Capacity status of the WorkSpaces Pool. See [`capacity_status`](#capacity_status) below.
 * `created_at` - Date and time the WorkSpaces Pool was created.
 * `pool_arn` - ARN of the WorkSpaces Pool.
 * `pool_id` - ID of the WorkSpaces Pool.
