@@ -91,6 +91,10 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 					resource.TestCheckResourceAttrSet(
 						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
 						"associations.0.private_dns_entry.0.domain_name"),
+					// created_at is flattened from the API summary.
+					resource.TestCheckResourceAttrSet(
+						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+						"associations.0.created_at"),
 					// private_dns_enabled is correctly reflected on each association.
 					resource.TestCheckTypeSetElemNestedAttrs(
 						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
