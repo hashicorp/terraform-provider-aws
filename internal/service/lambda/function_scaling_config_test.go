@@ -98,7 +98,7 @@ func TestAccLambdaFunctionScalingConfig_update(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunctionScalingConfig_disappears(t *testing.T) {
+func TestAccLambdaFunctionScalingConfig_disappears_Function(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -107,6 +107,7 @@ func TestAccLambdaFunctionScalingConfig_disappears(t *testing.T) {
 	var out lambda.GetFunctionScalingConfigOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_scaling_config.test"
+	functionResourceName := "aws_lambda_function.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -121,10 +122,17 @@ func TestAccLambdaFunctionScalingConfig_disappears(t *testing.T) {
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambda.ResourceFunctionScalingConfig, resourceName),
+					// The scaling config has no dedicated delete API and cannot be
+					// deleted independently. Disappear the parent function so that
+					// GetFunctionScalingConfig returns NotFound and Read removes the
+					// resource from state.
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), functionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -146,12 +154,20 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 			functionName := rs.Primary.Attributes["function_name"]
 			qualifier := rs.Primary.Attributes["qualifier"]
 
-			_, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
+			out, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
 				return err
+			}
+
+			// There is no dedicated delete API; the config is "destroyed" by resetting
+			// it, which leaves a result with no execution environment values.
+			if out.RequestedFunctionScalingConfig == nil ||
+				(out.RequestedFunctionScalingConfig.MinExecutionEnvironments == nil &&
+					out.RequestedFunctionScalingConfig.MaxExecutionEnvironments == nil) {
+				continue
 			}
 
 			return fmt.Errorf("Lambda Function Scaling Config %s%s%s still exists", functionName, intflex.ResourceIdSeparator, qualifier)

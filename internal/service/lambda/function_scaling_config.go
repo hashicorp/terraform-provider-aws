@@ -157,16 +157,22 @@ func (r *functionScalingConfigResource) Read(ctx context.Context, req resource.R
 
 	// Map the API response to the model. AutoFlex can't handle the field name mismatch
 	// (RequestedFunctionScalingConfig/AppliedFunctionScalingConfig vs FunctionScalingConfig).
-	scalingConfig := out.RequestedFunctionScalingConfig
-	if scalingConfig == nil {
+	var scalingConfig *awstypes.FunctionScalingConfig
+	if out.RequestedFunctionScalingConfig != nil {
+		scalingConfig = out.RequestedFunctionScalingConfig
+	} else if out.AppliedFunctionScalingConfig != nil {
 		scalingConfig = out.AppliedFunctionScalingConfig
 	}
 
-	model := functionScalingConfigModel{
-		MinExecutionEnvironments: types.Int32PointerValue(scalingConfig.MinExecutionEnvironments),
-		MaxExecutionEnvironments: types.Int32PointerValue(scalingConfig.MaxExecutionEnvironments),
+	if scalingConfig != nil {
+		model := functionScalingConfigModel{
+			MinExecutionEnvironments: types.Int32PointerValue(scalingConfig.MinExecutionEnvironments),
+			MaxExecutionEnvironments: types.Int32PointerValue(scalingConfig.MaxExecutionEnvironments),
+		}
+		state.FunctionScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	} else {
+		state.FunctionScalingConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*functionScalingConfigModel{})
 	}
-	state.FunctionScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -253,17 +259,6 @@ func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Cli
 
 	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
-	}
-
-	// There is no dedicated delete API; the scaling configuration is "removed" by
-	// resetting it (see Delete). After a reset, GetFunctionScalingConfig still returns
-	// a result but with no execution environment values, so treat that as not found.
-	scalingConfig := out.RequestedFunctionScalingConfig
-	if scalingConfig == nil {
-		scalingConfig = out.AppliedFunctionScalingConfig
-	}
-	if scalingConfig == nil || (scalingConfig.MinExecutionEnvironments == nil && scalingConfig.MaxExecutionEnvironments == nil) {
-		return nil, &retry.NotFoundError{}
 	}
 
 	return out, nil
