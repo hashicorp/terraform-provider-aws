@@ -40,6 +40,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` - Identifier used for the lookup: the `service_network_identifier` or `resource_configuration_identifier` supplied to the data source.
 * `associations` - List of Objects containing Service Network Resource Associations Summaries ([SDK](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/vpclattice/types#ServiceNetworkResourceAssociationSummary))
     * `arn` -  The Amazon Resource Name (ARN) of the association
     * `created_by` - The account that created the association.
