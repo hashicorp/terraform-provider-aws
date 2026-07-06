@@ -32,6 +32,7 @@ import (
 // @ImportIDHandler("detectorFeatureImportID")
 // @Testing(preIdentityVersion="v6.49.0")
 // @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceDetectorFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorFeaturePut,

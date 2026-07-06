@@ -11,11 +11,6 @@ resource "aws_guardduty_detector_feature" "test" {
   status      = "ENABLED"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 terraform {
   required_providers {
     aws = {
