@@ -2,6 +2,7 @@
 
 NOTES:
 
+* resource/aws_sagemaker_endpoint_configuration: Because we cannot easily test the behavior of `capacity_reservation_config`, it is best effort and we ask for community help in testing ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
 * resource/aws_ssoadmin_region: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#48126](https://github.com/hashicorp/terraform-provider-aws/issues/48126))
 
 FEATURES:
@@ -19,6 +20,8 @@ ENHANCEMENTS:
 * data-source/aws_mq_broker: Add `resource_share_arns` and `shared_resources` attributes ([#48729](https://github.com/hashicorp/terraform-provider-aws/issues/48729))
 * resource/aws_cloudfront_key_value_store: Add `tags` and `tags_all` attributes ([#48458](https://github.com/hashicorp/terraform-provider-aws/issues/48458))
 * resource/aws_mq_broker: Add `resource_share_arns` argument and `shared_resources` attribute ([#48729](https://github.com/hashicorp/terraform-provider-aws/issues/48729))
+* resource/aws_sagemaker_endpoint_configuration: Add Resource Identity support ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
+* resource/aws_sagemaker_endpoint_configuration: Add `production_variants.capacity_reservation_config` and `shadow_production_variants.capacity_reservation_config` configuration blocks ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
 
 BUG FIXES:
 
