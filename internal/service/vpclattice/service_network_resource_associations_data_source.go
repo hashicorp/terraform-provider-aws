@@ -36,9 +36,7 @@ func (d *dataSourceServiceNetworkResourceAssociations) Schema(ctx context.Contex
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"associations": framework.DataSourceComputedListOfObjectAttribute[associationModel](ctx),
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID:   framework.IDAttribute(),
 			"resource_configuration_identifier": schema.StringAttribute{
 				Optional:    true,
 				Description: "ID or ARN of the Resource Configuration.",
