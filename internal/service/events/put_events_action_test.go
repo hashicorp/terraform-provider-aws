@@ -32,7 +32,7 @@ func TestAccEventsPutEventsAction_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckBusDestroy(ctx, t),
+		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPutEventsActionConfig_basic(rName),
@@ -55,7 +55,7 @@ func TestAccEventsPutEventsAction_multipleEntries(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckBusDestroy(ctx, t),
+		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPutEventsActionConfig_multipleEntries(rName),
@@ -78,7 +78,7 @@ func TestAccEventsPutEventsAction_customBus(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckBusDestroy(ctx, t),
+		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPutEventsActionConfig_customBus(rName),

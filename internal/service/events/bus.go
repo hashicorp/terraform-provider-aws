@@ -28,16 +28,16 @@ import (
 
 // @SDKResource("aws_cloudwatch_event_bus", name="Event Bus")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEventBusOutput")
 func resourceBus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBusCreate,
 		ReadWithoutTimeout:   resourceBusRead,
 		UpdateWithoutTimeout: resourceBusUpdate,
 		DeleteWithoutTimeout: resourceBusDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
