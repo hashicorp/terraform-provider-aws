@@ -5,6 +5,7 @@ package lambda_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -159,7 +161,7 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 				continue
 			}
 			if err != nil {
-				return err
+				return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, tflambda.ResNameFunctionScalingConfig, functionName, err)
 			}
 
 			// There is no dedicated delete API; the config is "destroyed" by resetting
@@ -170,7 +172,7 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 				continue
 			}
 
-			return fmt.Errorf("Lambda Function Scaling Config %s%s%s still exists", functionName, intflex.ResourceIdSeparator, qualifier)
+			return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, tflambda.ResNameFunctionScalingConfig, functionName, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -181,22 +183,19 @@ func testAccCheckFunctionScalingConfigExists(ctx context.Context, t *testing.T, 
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", name)
+			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionScalingConfig, name, errors.New("not found in state"))
 		}
 
 		functionName := rs.Primary.Attributes["function_name"]
-		if functionName == "" {
-			return fmt.Errorf("resource %s: function_name not set", name)
-		}
 		qualifier := rs.Primary.Attributes["qualifier"]
-		if qualifier == "" {
-			return fmt.Errorf("resource %s: qualifier not set", name)
+		if functionName == "" || qualifier == "" {
+			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionScalingConfig, name, errors.New("function_name or qualifier not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 		resp, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 		if err != nil {
-			return err
+			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameFunctionScalingConfig, name, err)
 		}
 
 		*out = *resp
