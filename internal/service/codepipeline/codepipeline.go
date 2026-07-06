@@ -42,17 +42,16 @@ const (
 
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codepipeline/types;types.PipelineDeclaration")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
 		ReadWithoutTimeout:   resourcePipelineRead,
 		UpdateWithoutTimeout: resourcePipelineUpdate,
 		DeleteWithoutTimeout: resourcePipelineDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			conditionsSchema := func() map[string]*schema.Schema {
