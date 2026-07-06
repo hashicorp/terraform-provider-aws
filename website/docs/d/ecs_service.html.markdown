@@ -48,6 +48,7 @@ This data source exports the following attributes in addition to the arguments a
 * `iam_role` - ARN of the IAM role associated with the service
 * `launch_type` - Launch type for the ECS Service
 * `load_balancer` - Load balancers for the ECS Service. See [`load_balancer` Block](#load_balancer-block) for details.
+* `monitoring` - Monitoring configuration for the service. See [`monitoring` Block](#monitoring-block) for details.
 * `network_configuration` - Network configuration for the service. See [`network_configuration` Block](#network_configuration-block) for details.
 * `ordered_placement_strategy` - Placement strategy for tasks. See [`ordered_placement_strategy` Block](#ordered_placement_strategy-block) for details.
 * `pending_count` - Number of tasks in PENDING state
@@ -149,6 +150,21 @@ The `events` block exports the following attributes:
 * `created_at` - Time when event occurred (RFC3339 format)
 * `id` - Event ID
 * `message` - Event message
+
+### `monitoring` Block
+
+The `monitoring` block exports the following attributes:
+
+* `metric_configuration` - List of metric configurations for the service monitoring. See [`metric_configuration` Block](#metric_configuration-block) for details.
+
+-> **Note:** The monitoring configuration is returned by the [`DescribeServiceRevisions` API](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeServiceRevisions.html) rather than `DescribeServices`, so reading this attribute requires the `ecs:DescribeServiceRevisions` IAM permission.
+
+### `metric_configuration` Block
+
+The `metric_configuration` block exports the following attributes:
+
+* `metric_names` - Set of configured metric names.
+* `resolution_seconds` - Resolution, in seconds, at which the metrics are collected.
 
 ### `network_configuration` Block
 
