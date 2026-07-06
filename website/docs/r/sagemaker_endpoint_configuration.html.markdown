@@ -67,7 +67,7 @@ This resource supports the following arguments:
 
 #### capacity_reservation_config
 
-* `capacity_reservation_preference` - (Optional) Options that you can choose for the capacity reservation. Valid value is `capacity-reservations-only`. `capacity-reservations-only` SageMaker AI launches instances only into an ML capacity reservation. If no capacity is available, the instances fail to launch.
+* `capacity_reservation_preference` - (Optional) Capacity reservation preference. Valid value is `capacity-reservations-only`. When set to `capacity-reservations-only`, SageMaker AI launches instances only into an ML capacity reservation; if no capacity is available, the instances fail to launch.
 * `ml_reservation_arn` - (Optional) The Amazon Resource Name (ARN) that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
 
 #### core_dump_config
@@ -147,7 +147,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sagemaker_endpoint_configuration.example
   identity = {
-    name = "example-endpint-config"
+    name = "example-endpoint-config"
   }
 }
 
@@ -172,12 +172,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sagemaker_endpoint_configuration.example
-  id = "example-endpint-config"
+  id = "example-endpoint-config"
 }
 ```
 
 Using `terraform import`, import Endpoint Configurations using `name`. For example:
 
 ```console
-% terraform import aws_sagemaker_endpoint_configuration.example example-endpint-config
+% terraform import aws_sagemaker_endpoint_configuration.example example-endpoint-config
 ```

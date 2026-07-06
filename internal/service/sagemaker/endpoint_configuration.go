@@ -287,12 +287,12 @@ func resourceEndpointConfiguration() *schema.Resource {
 											ForceNew:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
 										},
-"ml_reservation_arn": {
-	Type:         schema.TypeString,
-	Optional:     true,
-	ForceNew:     true,
-	ValidateFunc: verify.ValidARN,
-},
+										"ml_reservation_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
@@ -495,9 +495,10 @@ func resourceEndpointConfiguration() *schema.Resource {
 											ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
 										},
 										"ml_reservation_arn": {
-											Type:     schema.TypeString,
-											Optional: true,
-											ForceNew: true,
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
 								},
@@ -1322,192 +1323,191 @@ func expandManagedInstanceScaling(configured []any) *awstypes.ProductionVariantM
 	return c
 }
 
-func expandCapacityReservationConfig(configured []any) *awstypes.ProductionVariantCapacityReservationConfig {
-	if len(configured) == 0 {
+func expandCapacityReservationConfig(tfList []any) *awstypes.ProductionVariantCapacityReservationConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ProductionVariantCapacityReservationConfig{}
 
-	c := &awstypes.ProductionVariantCapacityReservationConfig{}
-
-	if v, ok := m["capacity_reservation_preference"].(string); ok {
-		c.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
+	if v, ok := tfMap["capacity_reservation_preference"].(string); ok {
+		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
-	if v, ok := m["ml_reservation_arn"].(string); ok {
-		c.MlReservationArn = aws.String(v)
+	if v, ok := tfMap["ml_reservation_arn"].(string); ok {
+		apiObject.MlReservationArn = aws.String(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenEndpointConfigAsyncInferenceConfig(apiObject *awstypes.AsyncInferenceConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.ClientConfig != nil {
-		cfg["client_config"] = flattenEndpointConfigClientConfig(config.ClientConfig)
+	if apiObject.ClientConfig != nil {
+		tfMap["client_config"] = flattenEndpointConfigClientConfig(apiObject.ClientConfig)
 	}
 
-	if config.OutputConfig != nil {
-		cfg["output_config"] = flattenEndpointConfigOutputConfig(config.OutputConfig)
+	if apiObject.OutputConfig != nil {
+		tfMap["output_config"] = flattenEndpointConfigOutputConfig(apiObject.OutputConfig)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenEndpointConfigClientConfig(config *awstypes.AsyncInferenceClientConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenEndpointConfigClientConfig(apiObject *awstypes.AsyncInferenceClientConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.MaxConcurrentInvocationsPerInstance != nil {
-		cfg["max_concurrent_invocations_per_instance"] = aws.ToInt32(config.MaxConcurrentInvocationsPerInstance)
+	if apiObject.MaxConcurrentInvocationsPerInstance != nil {
+		tfMap["max_concurrent_invocations_per_instance"] = aws.ToInt32(apiObject.MaxConcurrentInvocationsPerInstance)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenEndpointConfigOutputConfig(config *awstypes.AsyncInferenceOutputConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenEndpointConfigOutputConfig(apiObject *awstypes.AsyncInferenceOutputConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		"s3_output_path": aws.ToString(config.S3OutputPath),
+	tfMap := map[string]any{
+		"s3_output_path": aws.ToString(apiObject.S3OutputPath),
 	}
 
-	if config.KmsKeyId != nil {
-		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
+	if apiObject.KmsKeyId != nil {
+		tfMap[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
 	}
 
-	if config.NotificationConfig != nil {
-		cfg["notification_config"] = flattenEndpointConfigNotificationConfig(config.NotificationConfig)
+	if apiObject.NotificationConfig != nil {
+		tfMap["notification_config"] = flattenEndpointConfigNotificationConfig(apiObject.NotificationConfig)
 	}
 
-	if config.S3FailurePath != nil {
-		cfg["s3_failure_path"] = aws.ToString(config.S3FailurePath)
+	if apiObject.S3FailurePath != nil {
+		tfMap["s3_failure_path"] = aws.ToString(apiObject.S3FailurePath)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenEndpointConfigNotificationConfig(config *awstypes.AsyncInferenceNotificationConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenEndpointConfigNotificationConfig(apiObject *awstypes.AsyncInferenceNotificationConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.ErrorTopic != nil {
-		cfg["error_topic"] = aws.ToString(config.ErrorTopic)
+	if apiObject.ErrorTopic != nil {
+		tfMap["error_topic"] = aws.ToString(apiObject.ErrorTopic)
 	}
 
-	if config.SuccessTopic != nil {
-		cfg["success_topic"] = aws.ToString(config.SuccessTopic)
+	if apiObject.SuccessTopic != nil {
+		tfMap["success_topic"] = aws.ToString(apiObject.SuccessTopic)
 	}
 
-	if config.IncludeInferenceResponseIn != nil {
-		cfg["include_inference_response_in"] = flex.FlattenStringyValueSet[awstypes.AsyncNotificationTopicTypes](config.IncludeInferenceResponseIn)
+	if apiObject.IncludeInferenceResponseIn != nil {
+		tfMap["include_inference_response_in"] = apiObject.IncludeInferenceResponseIn
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenRoutingConfig(config *awstypes.ProductionVariantRoutingConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenRoutingConfig(apiObject *awstypes.ProductionVariantRoutingConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		"routing_strategy": config.RoutingStrategy,
+	tfMap := map[string]any{
+		"routing_strategy": apiObject.RoutingStrategy,
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenServerlessConfig(config *awstypes.ProductionVariantServerlessConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenServerlessConfig(apiObject *awstypes.ProductionVariantServerlessConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.MaxConcurrency != nil {
-		cfg["max_concurrency"] = aws.ToInt32(config.MaxConcurrency)
+	if apiObject.MaxConcurrency != nil {
+		tfMap["max_concurrency"] = aws.ToInt32(apiObject.MaxConcurrency)
 	}
 
-	if config.MemorySizeInMB != nil {
-		cfg["memory_size_in_mb"] = aws.ToInt32(config.MemorySizeInMB)
+	if apiObject.MemorySizeInMB != nil {
+		tfMap["memory_size_in_mb"] = aws.ToInt32(apiObject.MemorySizeInMB)
 	}
 
-	if config.ProvisionedConcurrency != nil {
-		cfg["provisioned_concurrency"] = aws.ToInt32(config.ProvisionedConcurrency)
+	if apiObject.ProvisionedConcurrency != nil {
+		tfMap["provisioned_concurrency"] = aws.ToInt32(apiObject.ProvisionedConcurrency)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenCoreDumpConfig(config *awstypes.ProductionVariantCoreDumpConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenCoreDumpConfig(apiObject *awstypes.ProductionVariantCoreDumpConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.DestinationS3Uri != nil {
-		cfg["destination_s3_uri"] = aws.ToString(config.DestinationS3Uri)
+	if apiObject.DestinationS3Uri != nil {
+		tfMap["destination_s3_uri"] = aws.ToString(apiObject.DestinationS3Uri)
 	}
 
-	if config.KmsKeyId != nil {
-		cfg[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
+	if apiObject.KmsKeyId != nil {
+		tfMap[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInstanceScaling) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenManagedInstanceScaling(apiObject *awstypes.ProductionVariantManagedInstanceScaling) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.Status != "" {
-		cfg[names.AttrStatus] = config.Status
+	if apiObject.Status != "" {
+		tfMap[names.AttrStatus] = apiObject.Status
 	}
 
-	if config.MinInstanceCount != nil {
-		cfg["min_instance_count"] = aws.ToInt32(config.MinInstanceCount)
+	if apiObject.MinInstanceCount != nil {
+		tfMap["min_instance_count"] = aws.ToInt32(apiObject.MinInstanceCount)
 	}
 
-	if config.MaxInstanceCount != nil {
-		cfg["max_instance_count"] = aws.ToInt32(config.MaxInstanceCount)
+	if apiObject.MaxInstanceCount != nil {
+		tfMap["max_instance_count"] = aws.ToInt32(apiObject.MaxInstanceCount)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func flattenCapacityReservationConfig(config *awstypes.ProductionVariantCapacityReservationConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func flattenCapacityReservationConfig(apiObject *awstypes.ProductionVariantCapacityReservationConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{}
+	tfMap := map[string]any{}
 
-	if config.CapacityReservationPreference != "" {
-		cfg["capacity_reservation_preference"] = config.CapacityReservationPreference
+	if apiObject.CapacityReservationPreference != "" {
+		tfMap["capacity_reservation_preference"] = apiObject.CapacityReservationPreference
 	}
 
-	if config.MlReservationArn != nil {
-		cfg["ml_reservation_arn"] = aws.ToString(config.MlReservationArn)
+	if apiObject.MlReservationArn != nil {
+		tfMap["ml_reservation_arn"] = aws.ToString(apiObject.MlReservationArn)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
