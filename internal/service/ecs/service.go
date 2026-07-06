@@ -865,6 +865,35 @@ func resourceService() *schema.Resource {
 						},
 					},
 				},
+				"monitoring": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_names": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"resolution_seconds": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntInSlice([]int{20, 60}),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -1493,6 +1522,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.LoadBalancers = v
 	}
 
+	if v, ok := d.GetOk("monitoring"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Monitoring = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
 		apiObject, err := expandPlacementStrategy(v.([]any))
 		if err != nil {
@@ -1592,6 +1625,36 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
+	}
+
+	// The monitoring configuration is only returned on service revisions (DescribeServiceRevisions),
+	// not on the Service object itself.
+	var revisionARNs []string
+	for _, v := range service.CurrentServiceRevisions {
+		if arn := aws.ToString(v.Arn); arn != "" {
+			revisionARNs = append(revisionARNs, arn)
+		}
+	}
+	if len(revisionARNs) > 0 {
+		input := ecs.DescribeServiceRevisionsInput{
+			ServiceRevisionArns: revisionARNs,
+		}
+		revisions, err := findServiceRevisions(ctx, conn, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s) revisions: %s", d.Id(), err)
+		}
+
+		if len(revisions) > 0 {
+			// During a deployment there can be multiple current revisions.
+			// The newest one reflects the service's target configuration.
+			revision := slices.MaxFunc(revisions, func(a, b awstypes.ServiceRevision) int {
+				return aws.ToTime(a.CreatedAt).Compare(aws.ToTime(b.CreatedAt))
+			})
+			if err := d.Set("monitoring", flattenMonitoringConfiguration(revision.Monitoring)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting monitoring: %s", err)
+			}
+		}
 	}
 
 	return append(diags, resourceServiceFlatten(ctx, d, service, cluster)...)
@@ -1746,6 +1809,18 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		if d.HasChange("load_balancer") {
 			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
 				input.LoadBalancers = expandServiceLoadBalancers(v.List())
+			}
+		}
+
+		if d.HasChange("monitoring") {
+			// To remove the existing monitoring configuration, specify an explicitly
+			// empty metricConfigurations list.
+			input.Monitoring = &awstypes.MonitoringConfiguration{
+				MetricConfigurations: []awstypes.MetricConfiguration{},
+			}
+
+			if v, ok := d.GetOk("monitoring"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.Monitoring = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -2305,6 +2380,26 @@ func findServiceDeployments(ctx context.Context, conn *ecs.Client, input *ecs.De
 	return output.ServiceDeployments, nil
 }
 
+func findServiceRevisions(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServiceRevisionsInput) ([]awstypes.ServiceRevision, error) {
+	output, err := conn.DescribeServiceRevisions(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.ServiceRevisions, nil
+}
+
 func findServiceDeploymentBriefs(ctx context.Context, conn *ecs.Client, input *ecs.ListServiceDeploymentsInput) ([]awstypes.ServiceDeploymentBrief, error) {
 	var output []awstypes.ServiceDeploymentBrief
 
@@ -2543,6 +2638,72 @@ func flattenAlarms(apiObject *awstypes.DeploymentAlarms) map[string]any {
 	tfMap["rollback"] = apiObject.Rollback
 
 	return tfMap
+}
+
+func expandMonitoringConfiguration(tfMap map[string]any) *awstypes.MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MonitoringConfiguration{}
+
+	if v, ok := tfMap["metric_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.MetricConfigurations = expandMetricConfigurations(v)
+	}
+
+	return apiObject
+}
+
+func expandMetricConfigurations(tfList []any) []awstypes.MetricConfiguration {
+	apiObjects := make([]awstypes.MetricConfiguration, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.MetricConfiguration{}
+
+		if v, ok := tfMap["metric_names"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.MetricNames = flex.ExpandStringValueSet(v)
+		}
+
+		if v, ok := tfMap["resolution_seconds"].(int); ok {
+			apiObject.ResolutionSeconds = aws.Int32(int32(v))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenMonitoringConfiguration(apiObject *awstypes.MonitoringConfiguration) []any {
+	if apiObject == nil || len(apiObject.MetricConfigurations) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"metric_configuration": flattenMetricConfigurations(apiObject.MetricConfigurations),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMetricConfigurations(apiObjects []awstypes.MetricConfiguration) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"metric_names":       flex.FlattenStringValueSet(apiObject.MetricNames),
+			"resolution_seconds": aws.ToInt32(apiObject.ResolutionSeconds),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func expandDeploymentController(l []any) *awstypes.DeploymentController {

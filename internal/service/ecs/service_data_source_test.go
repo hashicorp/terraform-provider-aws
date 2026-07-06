@@ -166,6 +166,35 @@ func TestAccECSServiceDataSource_fullConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccECSServiceDataSource_monitoring(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_service.test"
+	resourceName := "aws_ecs_service.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_monitoring(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring.#", dataSourceName, "monitoring.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring.0.metric_configuration.#", dataSourceName, "monitoring.0.metric_configuration.#"),
+					resource.TestCheckResourceAttr(dataSourceName, "monitoring.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "monitoring.0.metric_configuration.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "monitoring.0.metric_configuration.0.resolution_seconds", "20"),
+					resource.TestCheckResourceAttr(dataSourceName, "monitoring.0.metric_configuration.0.metric_names.#", "2"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "monitoring.0.metric_configuration.0.metric_names.*", "CPUUtilization"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "monitoring.0.metric_configuration.0.metric_names.*", "MemoryUtilization"),
+				),
+			},
+		},
+	})
+}
+
 func testAccServiceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -235,6 +264,17 @@ func testAccServiceDataSourceConfig_canaryDeployment(rName string) string {
 data "aws_ecs_service" "test" {
   service_name = aws_ecs_service.test.name
   cluster_arn  = aws_ecs_cluster.main.arn
+}
+`)
+}
+
+func testAccServiceDataSourceConfig_monitoring(rName string) string {
+	return acctest.ConfigCompose(
+		testAccServiceConfig_monitoring(rName, 20),
+		`
+data "aws_ecs_service" "test" {
+  service_name = aws_ecs_service.test.name
+  cluster_arn  = aws_ecs_cluster.test.arn
 }
 `)
 }
