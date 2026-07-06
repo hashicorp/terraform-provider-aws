@@ -287,11 +287,12 @@ func resourceEndpointConfiguration() *schema.Resource {
 											ForceNew:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
 										},
-										"ml_reservation_arn": {
-											Type:     schema.TypeString,
-											Optional: true,
-											ForceNew: true,
-										},
+"ml_reservation_arn": {
+	Type:         schema.TypeString,
+	Optional:     true,
+	ForceNew:     true,
+	ValidateFunc: verify.ValidARN,
+},
 									},
 								},
 							},
