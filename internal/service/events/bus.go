@@ -266,7 +266,11 @@ func findEventBusByName(ctx context.Context, conn *eventbridge.Client, name stri
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeEventBus(ctx, &input)
+	return findEventBus(ctx, conn, &input)
+}
+
+func findEventBus(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeEventBusInput) (*eventbridge.DescribeEventBusOutput, error) {
+	output, err := conn.DescribeEventBus(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

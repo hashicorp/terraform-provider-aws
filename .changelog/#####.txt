@@ -5,3 +5,7 @@ resource/aws_cloudwatch_event_api_destination: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_cloudwatch_event_archive: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_bus_policy: Add Resource Identity support
+```

@@ -29,19 +29,19 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccBusPolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 			},
@@ -63,12 +63,12 @@ func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -101,12 +101,12 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -133,12 +133,12 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -155,7 +155,7 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 	})
 }
 
-func testAccCheckBusPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckEventBusPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
@@ -181,7 +181,7 @@ func testAccCheckBusPolicyDestroy(ctx context.Context, t *testing.T) resource.Te
 	}
 }
 
-func testAccCheckBusPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckEventBusPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[n]
 		if !ok {
