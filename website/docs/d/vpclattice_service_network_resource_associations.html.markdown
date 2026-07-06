@@ -49,6 +49,7 @@ This data source exports the following attributes in addition to the arguments a
     * `failure_code` - The failure code in cases the association failed.
     * `id` - The ID of the association.
     * `is_managed_association` - Specifies whether the association is managed by Amazon - E.g. when using ARN based resource configurations.
+    * `private_dns_enabled` - Indicates if private DNS is enabled for the association.
     * `private_dns_entry` - List of objects with private DNS names.
         * `domain_name` - The private domain name of the resource
         * `hosted_zone_id` - The ID of the hosted zone.

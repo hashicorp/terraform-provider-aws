@@ -19,6 +19,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 		t.Skip("skipping long-running test in short mode")
 	}
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := fmt.Sprintf("%s.example.com", rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -30,7 +31,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkResourceAssociationsDataSourceConfig_basic(rName),
+				Config: testAccServiceNetworkResourceAssociationsDataSourceConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// By service network: associations link back to the queried service network.
 					resource.TestCheckTypeSetElemAttrPair(
@@ -85,17 +86,30 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 						"associations.*.service_network_arn",
 						"aws_vpclattice_service_network.test-sn-1",
 						names.AttrARN),
-					// The headline feature: the DNS name of a dns_resource association is surfaced.
-					resource.TestCheckResourceAttrSet(
-						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
-						"associations.0.private_dns_entry.0.domain_name"),
+				// The headline feature: the DNS name of a dns_resource association is surfaced.
+				resource.TestCheckResourceAttrSet(
+					"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+					"associations.0.private_dns_entry.0.domain_name"),
+				// private_dns_enabled is correctly reflected on each association.
+				resource.TestCheckTypeSetElemNestedAttrs(
+					"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+					"associations.*",
+					map[string]string{
+						"private_dns_enabled": acctest.CtTrue,
+					}),
+				resource.TestCheckTypeSetElemNestedAttrs(
+					"data.aws_vpclattice_service_network_resource_associations.test-ip-resource",
+					"associations.*",
+					map[string]string{
+						"private_dns_enabled": acctest.CtFalse,
+					}),
 				),
 			},
 		},
 	})
 }
 
-func testAccServiceNetworkResourceAssociationsDataSourceConfig_basic(rName string) string {
+func testAccServiceNetworkResourceAssociationsDataSourceConfig_basic(rName, domainName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -132,13 +146,13 @@ resource "aws_vpclattice_resource_configuration" "dns-test" {
 
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
 
-  custom_domain_name = "example.com"
+  custom_domain_name = %[2]q
   port_ranges        = ["80"]
   protocol           = "TCP"
 
   resource_configuration_definition {
     dns_resource {
-      domain_name     = "example.com"
+      domain_name     = %[2]q
       ip_address_type = "IPV4"
     }
   }
@@ -208,5 +222,5 @@ data "aws_vpclattice_service_network_resource_associations" "test-parent-resourc
   resource_configuration_identifier = aws_vpclattice_resource_configuration.parent-test.id
   depends_on                        = [aws_vpclattice_service_network_resource_association.parent-test]
 }
-`, rName)
+`, rName, domainName)
 }

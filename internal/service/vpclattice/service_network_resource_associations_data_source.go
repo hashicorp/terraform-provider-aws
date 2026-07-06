@@ -51,6 +51,11 @@ func (d *dataSourceServiceNetworkResourceAssociations) Schema(ctx context.Contex
 			"service_network_identifier": schema.StringAttribute{
 				Optional:    true,
 				Description: "ID or ARN of the Service Network.",
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(
+						path.MatchRoot("resource_configuration_identifier"),
+					),
+				},
 			},
 		},
 	}
@@ -144,6 +149,7 @@ type associationModel struct {
 	FailureCode               types.String                                                         `tfsdk:"failure_code"`
 	ID                        types.String                                                         `tfsdk:"id"`
 	IsManagedAssociation      types.Bool                                                           `tfsdk:"is_managed_association"`
+	PrivateDNSEnabled         types.Bool                                                           `tfsdk:"private_dns_enabled"`
 	PrivateDNSEntry           fwtypes.ListNestedObjectValueOf[dnsEntryModel]                       `tfsdk:"private_dns_entry"`
 	ResourceConfigurationARN  types.String                                                         `tfsdk:"resource_configuration_arn"`
 	ResourceConfigurationID   types.String                                                         `tfsdk:"resource_configuration_id"`
