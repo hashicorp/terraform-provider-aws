@@ -51,11 +51,6 @@ func (d *dataSourceServiceNetworkResourceAssociations) Schema(ctx context.Contex
 			"service_network_identifier": schema.StringAttribute{
 				Optional:    true,
 				Description: "ID or ARN of the Service Network.",
-				Validators: []validator.String{
-					stringvalidator.ExactlyOneOf(
-						path.MatchRoot("resource_configuration_identifier"),
-					),
-				},
 			},
 		},
 	}
