@@ -71,7 +71,7 @@ func resourceRule() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ValidateFunc: validBusNameOrARN,
-					Default:      DefaultEventBusName,
+					Default:      defaultEventBusName,
 				},
 				"event_pattern": {
 					Type:         schema.TypeString,
@@ -342,7 +342,7 @@ var (
 const ruleResourceIDSeparator = "/"
 
 func ruleCreateResourceID(eventBusName, ruleName string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		return ruleName
 	}
 
@@ -356,7 +356,7 @@ func ruleParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ruleResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
+		return defaultEventBusName, parts[0], nil
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

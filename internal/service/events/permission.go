@@ -77,7 +77,7 @@ func resourcePermission() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ValidateFunc: validBusName,
-					Default:      DefaultEventBusName,
+					Default:      defaultEventBusName,
 				},
 				names.AttrPrincipal: {
 					Type:         schema.TypeString,
@@ -247,7 +247,7 @@ func findPermissionByTwoPartKey(ctx context.Context, conn *eventbridge.Client, e
 const permissionResourceIDSeparator = "/"
 
 func permissionCreateResourceID(eventBusName, statementID string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		return statementID
 	}
 
@@ -261,7 +261,7 @@ func permissionParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, permissionResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
+		return defaultEventBusName, parts[0], nil
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

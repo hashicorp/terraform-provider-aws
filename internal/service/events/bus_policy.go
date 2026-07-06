@@ -47,7 +47,7 @@ func resourceBusPolicy() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ValidateFunc: validBusName,
-					Default:      DefaultEventBusName,
+					Default:      defaultEventBusName,
 				},
 				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 			}
@@ -114,7 +114,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	eventBusName := d.Id()
 	if eventBusName == "" {
-		eventBusName = DefaultEventBusName
+		eventBusName = defaultEventBusName
 	}
 	d.Set("event_bus_name", eventBusName)
 

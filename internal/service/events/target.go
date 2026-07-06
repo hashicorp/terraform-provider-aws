@@ -261,7 +261,7 @@ func resourceTarget() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ValidateFunc: validBusNameOrARN,
-					Default:      DefaultEventBusName,
+					Default:      defaultEventBusName,
 				},
 				names.AttrForceDestroy: {
 					Type:     schema.TypeBool,
@@ -1406,7 +1406,7 @@ const (
 func targetCreateResourceID(eventBusName, ruleName, targetID string) string {
 	var parts []string
 
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		parts = []string{ruleName, targetID}
 	} else {
 		parts = []string{eventBusName, ruleName, targetID}
@@ -1421,7 +1421,7 @@ func targetParseImportID(id string) (string, string, string, error) {
 	parts := strings.Split(id, targetImportIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return DefaultEventBusName, parts[0], parts[1], nil
+		return defaultEventBusName, parts[0], parts[1], nil
 	}
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil
