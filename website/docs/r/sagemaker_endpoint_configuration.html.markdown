@@ -141,17 +141,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
-  id = "endpoint-config-foo"
+  to = aws_sagemaker_endpoint_configuration.example
+  identity = {
+    name = example-endpint-config"
+  }
+}
+
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import endpoint configurations using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the endpoint configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Endpoint Configurations using `name`. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.example
+  id = "example-endpint-config"
+}
+```
+
+Using `terraform import`, import Endpoint Configurations using `name`. For example:
 
 ```console
-% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+% terraform import aws_sagemaker_endpoint_configuration.example example-endpint-config
 ```

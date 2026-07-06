@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_sagemaker_endpoint_configuration: Add `production_variants.capacity_reservation_config` and `shadow_production_variants.capacity_reservation_config` configuration blocks
 ```
+
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add Resource Identity support
+```

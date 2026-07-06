@@ -35,6 +35,9 @@ import (
 
 // @SDKResource("aws_sagemaker_endpoint_configuration", name="Endpoint Configuration")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourceEndpointConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointConfigurationCreate,
