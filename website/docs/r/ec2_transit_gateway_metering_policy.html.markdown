@@ -79,7 +79,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ec2_transit_gateway_metering_policy.example
   identity = {
-    id = "tgw-mp-12345678"
+    transit_gateway_metering_policy_id = "tgw-mp-12345678"
   }
 }
 
@@ -92,7 +92,7 @@ resource "aws_ec2_transit_gateway_metering_policy" "example" {
 
 #### Required
 
-* `id` (String) ID of the EC2 Transit Gateway Metering Policy.
+* `transit_gateway_metering_policy_id` (String) ID of the EC2 Transit Gateway Metering Policy.
 
 #### Optional
 
