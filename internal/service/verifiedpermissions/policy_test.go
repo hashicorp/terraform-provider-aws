@@ -50,6 +50,7 @@ func TestAccVerifiedPermissionsPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatement),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_name"),
 				),
 			},
 			{
@@ -174,6 +175,93 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementResourceUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVerifiedPermissionsPolicy_policyName(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy verifiedpermissions.GetPolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_verifiedpermissions_policy.test"
+
+	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+	policyName1 := fmt.Sprintf("name/%s-1", rName)
+	policyName2 := fmt.Sprintf("name/%s-2", rName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_policyName(rName, policyStatement, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", policyName1),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+			{
+				Config:            testAccPolicyConfig_policyName(rName, policyStatement, policyName1),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPolicyConfig_policyName(rName, policyStatement, policyName2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", policyName2),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVerifiedPermissionsPolicy_policyNameComputed(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy verifiedpermissions.GetPolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_verifiedpermissions_policy.test"
+
+	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_basic(rName, policyStatement),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_name"),
 				),
 			},
 		},
@@ -316,6 +404,24 @@ resource "aws_verifiedpermissions_policy" "test" {
   }
 }
 `, rName, policyStatement))
+}
+
+func testAccPolicyConfig_policyName(rName, policyStatement, policyName string) string {
+	return acctest.ConfigCompose(
+		testAccPolicyConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_verifiedpermissions_policy" "test" {
+	policy_name     = %[3]q
+	policy_store_id = aws_verifiedpermissions_policy_store.test.id
+
+	definition {
+		static {
+			description = %[1]q
+			statement   = %[2]q
+		}
+	}
+}
+`, rName, policyStatement, policyName))
 }
 
 func testAccPolicyConfig_templateLinked(rName string) string {
