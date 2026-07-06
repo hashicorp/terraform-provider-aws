@@ -169,7 +169,13 @@ func testAccCheckFunctionScalingConfigExists(ctx context.Context, t *testing.T, 
 		}
 
 		functionName := rs.Primary.Attributes["function_name"]
+		if functionName == "" {
+			return fmt.Errorf("resource %s: function_name not set", name)
+		}
 		qualifier := rs.Primary.Attributes["qualifier"]
+		if qualifier == "" {
+			return fmt.Errorf("resource %s: qualifier not set", name)
+		}
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 		resp, err := tflambda.FindFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
