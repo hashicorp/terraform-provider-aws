@@ -91,6 +91,8 @@ func (r *harnessEndpointResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"target_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -98,8 +100,6 @@ func (r *harnessEndpointResource) Schema(ctx context.Context, request resource.S
 					stringvalidator.RegexMatches(regexache.MustCompile(`^([1-9][0-9]{0,4})$`), ""),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
