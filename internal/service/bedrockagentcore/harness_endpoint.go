@@ -150,6 +150,13 @@ func (r *harnessEndpointResource) Create(ctx context.Context, request resource.C
 	if response.Diagnostics.HasError() {
 		return
 	}
+	// The service only reports target_version while an update is transitioning;
+	// once the endpoint is READY it leaves target_version empty and reflects the
+	// served version in live_version. Fall back to live_version so an explicitly
+	// configured target_version round-trips and an unset one gets a stable value.
+	if data.TargetVersion.IsNull() {
+		data.TargetVersion = data.LiveVersion
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -178,6 +185,9 @@ func (r *harnessEndpointResource) Read(ctx context.Context, request resource.Rea
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Endpoint, &data))
 	if response.Diagnostics.HasError() {
 		return
+	}
+	if data.TargetVersion.IsNull() {
+		data.TargetVersion = data.LiveVersion
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
@@ -225,6 +235,9 @@ func (r *harnessEndpointResource) Update(ctx context.Context, request resource.U
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Endpoint, &new))
 		if response.Diagnostics.HasError() {
 			return
+		}
+		if new.TargetVersion.IsNull() {
+			new.TargetVersion = new.LiveVersion
 		}
 	} else {
 		new.LiveVersion = old.LiveVersion

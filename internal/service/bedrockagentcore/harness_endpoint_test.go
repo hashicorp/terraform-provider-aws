@@ -162,6 +162,53 @@ func TestAccBedrockAgentCoreHarnessEndpoint_update(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreHarnessEndpoint_targetVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harnessendpoint bedrockagentcorecontrol.GetHarnessEndpointOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_harness_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccHarnessEndpointPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessEndpointConfig_targetVersion(rName, "1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessEndpointExists(ctx, t, resourceName, &harnessendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					// An explicitly configured target_version that the service does not
+					// echo back must still round-trip: no diff on the post-apply refresh.
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_version"), knownvalue.StringExact("1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("live_version"), knownvalue.StringExact("1")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "harness_id", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+		},
+	})
+}
+
 func testAccCheckHarnessEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -292,4 +339,14 @@ resource "aws_bedrockagentcore_harness_endpoint" "test" {
   harness_id  = aws_bedrockagentcore_harness.test.harness_id
 }
 `, rName, description))
+}
+
+func testAccHarnessEndpointConfig_targetVersion(rName, targetVersion string) string {
+	return acctest.ConfigCompose(testAccHarnessEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness_endpoint" "test" {
+  name           = %[1]q
+  harness_id     = aws_bedrockagentcore_harness.test.harness_id
+  target_version = %[2]q
+}
+`, rName, targetVersion))
 }
