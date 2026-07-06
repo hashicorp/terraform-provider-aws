@@ -83,6 +83,7 @@ func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource
 			"function_scaling_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[functionScalingConfigModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{

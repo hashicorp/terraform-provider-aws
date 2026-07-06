@@ -63,11 +63,11 @@ resource "aws_lambda_function_scaling_config" "example" {
 The following arguments are required:
 
 * `function_name` - (Required) Name or ARN of the Lambda function. Changing this forces a new resource.
+* `function_scaling_config` - (Required) Scaling configuration block. See [`function_scaling_config` Block](#function_scaling_config-block) below.
 * `qualifier` - (Required) Qualifier for the scaling configuration. Valid values: `$LATEST.PUBLISHED` to target the latest published version, or a specific numeric version number (e.g., `1`). Changing this forces a new resource.
 
 The following arguments are optional:
 
-* `function_scaling_config` - (Optional) Scaling configuration block. See [`function_scaling_config` Block](#function_scaling_config-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `function_scaling_config` Block
