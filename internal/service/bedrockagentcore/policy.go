@@ -136,6 +136,9 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 								Attributes: map[string]schema.Attribute{
 									"statement": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(35, 10000),
+										},
 									},
 								},
 							},
@@ -154,6 +157,9 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 								Attributes: map[string]schema.Attribute{
 									"statement": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(35, 10000),
+										},
 									},
 								},
 							},
