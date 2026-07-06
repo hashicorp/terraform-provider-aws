@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -66,7 +67,7 @@ func (d *dataSourceServiceNetworkResourceAssociations) Read(ctx context.Context,
 	var associations []awstypes.ServiceNetworkResourceAssociationSummary
 
 	switch {
-	case !data.ServiceNetworkIdentifier.IsNull():
+	case !data.ServiceNetworkIdentifier.IsNull() && !data.ServiceNetworkIdentifier.IsUnknown():
 		snID := data.ServiceNetworkIdentifier.ValueString()
 		data.ID = types.StringValue(snID)
 
@@ -84,7 +85,7 @@ func (d *dataSourceServiceNetworkResourceAssociations) Read(ctx context.Context,
 			return
 		}
 		associations = output
-	case !data.ResourceConfigurationIdentifier.IsNull():
+	case !data.ResourceConfigurationIdentifier.IsNull() && !data.ResourceConfigurationIdentifier.IsUnknown():
 		rcID := data.ResourceConfigurationIdentifier.ValueString()
 		data.ID = types.StringValue(rcID)
 
@@ -137,6 +138,7 @@ type dataSourceServiceNetworkResourceAssociationsModel struct {
 
 type associationModel struct {
 	ARN                       types.String                                                         `tfsdk:"arn"`
+	CreatedAt                 timetypes.RFC3339                                                    `tfsdk:"created_at"`
 	CreatedBy                 types.String                                                         `tfsdk:"created_by"`
 	DNSEntry                  fwtypes.ListNestedObjectValueOf[dnsEntryModel]                       `tfsdk:"dns_entry"`
 	FailureCode               types.String                                                         `tfsdk:"failure_code"`

@@ -3,7 +3,7 @@ subcategory: "VPC Lattice"
 layout: "aws"
 page_title: "AWS: aws_vpclattice_service_network_resource_associations"
 description: |-
-  Terraform data source for managing an AWS VPC Lattice Service Network Resource Associations.
+  Terraform data source for listing AWS VPC Lattice Service Network Resource Associations.
 ---
 
 # Data Source: aws_vpclattice_service_network_resource_associations
@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Identifier used for the lookup: the `service_network_identifier` or `resource_configuration_identifier` supplied to the data source.
 * `associations` - List of Objects containing Service Network Resource Associations Summaries ([SDK](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/vpclattice/types#ServiceNetworkResourceAssociationSummary))
     * `arn` -  The Amazon Resource Name (ARN) of the association
+    * `created_at` - Date and time (RFC 3339 format) the association was created.
     * `created_by` - The account that created the association.
     * `dns_entry` - List of objects with public DNS names.
         * `domain_name` - The domain name of the resource.
