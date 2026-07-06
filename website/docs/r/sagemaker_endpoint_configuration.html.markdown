@@ -147,7 +147,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sagemaker_endpoint_configuration.example
   identity = {
-    name = example-endpint-config"
+    name = "example-endpint-config"
   }
 }
 
