@@ -751,38 +751,37 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-
-	createOpts := &sagemaker.CreateEndpointConfigInput{
+	input := sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]any)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
-		createOpts.ExecutionRoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
-		createOpts.KmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]any)) > 0 {
-		createOpts.ShadowProductionVariants = expandProductionVariants(v.([]any))
+	if v, ok := d.GetOk("async_inference_config"); ok {
+		input.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("data_capture_config"); ok {
-		createOpts.DataCaptureConfig = expandDataCaptureConfig(v.([]any))
+		input.DataCaptureConfig = expandDataCaptureConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("async_inference_config"); ok {
-		createOpts.AsyncInferenceConfig = expandEndpointConfigAsyncInferenceConfig(v.([]any))
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker AI Endpoint Configuration create config: %#v", *createOpts)
-	_, err := conn.CreateEndpointConfig(ctx, createOpts)
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]any)) > 0 {
+		input.ShadowProductionVariants = expandProductionVariants(v.([]any))
+	}
+
+	_, err := conn.CreateEndpointConfig(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint Configuration (%s): %s", name, err)
 	}
+
 	d.SetId(name)
 
 	return append(diags, resourceEndpointConfigurationRead(ctx, d, meta)...)
@@ -805,25 +804,21 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
-	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
+	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting async_inference_config: %s", err)
+	}
+	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting data_capture_config: %s", err)
+	}
 	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
-
+	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting production_variants: %s", err)
 	}
-
 	if err := d.Set("shadow_production_variants", flattenProductionVariants(endpointConfig.ShadowProductionVariants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_capture_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker AI Endpoint Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting shadow_production_variants: %s", err)
 	}
 
 	return diags
@@ -841,12 +836,11 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint Configuration: %s", d.Id())
+	input := sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker AI Endpoint Configuration: %s", d.Id())
-
-	_, err := conn.DeleteEndpointConfig(ctx, deleteOpts)
+	_, err := conn.DeleteEndpointConfig(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
 		return diags
@@ -860,10 +854,14 @@ func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.Resource
 }
 
 func findEndpointConfigByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
-	input := &sagemaker.DescribeEndpointConfigInput{
+	input := sagemaker.DescribeEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 	}
 
+	return findEndpointConfig(ctx, conn, &input)
+}
+
+func findEndpointConfig(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeEndpointConfigInput) (*sagemaker.DescribeEndpointConfigOutput, error) {
 	output, err := conn.DescribeEndpointConfig(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
