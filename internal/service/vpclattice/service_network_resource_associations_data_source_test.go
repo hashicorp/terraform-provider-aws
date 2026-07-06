@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -223,4 +224,39 @@ data "aws_vpclattice_service_network_resource_associations" "test-parent-resourc
   depends_on                        = [aws_vpclattice_service_network_resource_association.parent-test]
 }
 `, rName, domainName)
+}
+
+func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceNetworkResourceAssociationsDataSourceConfig_missingRequired(),
+				ExpectError: regexache.MustCompile(`No attribute specified when one \(and only one\) of`),
+			},
+			{
+				Config:      testAccServiceNetworkResourceAssociationsDataSourceConfig_tooManySet(),
+				ExpectError: regexache.MustCompile(`2 attributes specified when one \(and only one\) of`),
+			},
+		},
+	})
+}
+
+func testAccServiceNetworkResourceAssociationsDataSourceConfig_missingRequired() string {
+	return `
+data "aws_vpclattice_service_network_resource_associations" "test" {}
+`
+}
+
+func testAccServiceNetworkResourceAssociationsDataSourceConfig_tooManySet() string {
+	return `
+data "aws_vpclattice_service_network_resource_associations" "test" {
+  service_network_identifier        = "sn-1234567890abcdef0"
+  resource_configuration_identifier = "rcfg-1234567890abcdef0"
+}
+`
 }
