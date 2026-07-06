@@ -44,9 +44,6 @@ func resourceEndpointConfiguration() *schema.Resource {
 		ReadWithoutTimeout:   resourceEndpointConfigurationRead,
 		UpdateWithoutTimeout: resourceEndpointConfigurationUpdate,
 		DeleteWithoutTimeout: resourceEndpointConfigurationDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
