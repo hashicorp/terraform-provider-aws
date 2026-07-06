@@ -19,24 +19,25 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes, "aws_bedrockagentcore_agent_runtime_endpoint")
-	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints, "aws_bedrockagentcore_resource_policy")
+	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints)
 	awsv2.Register("aws_bedrockagentcore_workload_identity", sweepWorkloadIdentities)
 	awsv2.Register("aws_bedrockagentcore_code_interpreter", sweepCodeInterpreters)
 	awsv2.Register("aws_bedrockagentcore_browser", sweepBrowsers)
 	awsv2.Register("aws_bedrockagentcore_browser_profile", sweepBrowserProfiles)
 	awsv2.Register("aws_bedrockagentcore_api_key_credential_provider", sweepAPIKeyCredentialProviders)
 	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders)
-	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target", "aws_bedrockagentcore_resource_policy")
+	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 	awsv2.Register("aws_bedrockagentcore_harness", sweepHarnesses)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
 	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
-	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines)
+	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines, "aws_bedrockagentcore_policy")
 	awsv2.Register("aws_bedrockagentcore_evaluator", sweepEvaluators)
+	awsv2.Register("aws_bedrockagentcore_policy", sweepPolicies)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
+	var input bedrockagentcorecontrol.ListAgentRuntimesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -58,7 +59,7 @@ func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 }
 
 func sweepAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
+	var input bedrockagentcorecontrol.ListAgentRuntimesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -97,7 +98,7 @@ func sweepAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([
 }
 
 func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListGatewaysInput{}
+	var input bedrockagentcorecontrol.ListGatewaysInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -119,7 +120,7 @@ func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 }
 
 func sweepGatewayTargets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListGatewaysInput{}
+	var input bedrockagentcorecontrol.ListGatewaysInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -157,7 +158,7 @@ func sweepGatewayTargets(ctx context.Context, client *conns.AWSClient) ([]sweep.
 }
 
 func sweepBrowsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListBrowsersInput{}
+	var input bedrockagentcorecontrol.ListBrowsersInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -179,7 +180,7 @@ func sweepBrowsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 }
 
 func sweepBrowserProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListBrowserProfilesInput{}
+	var input bedrockagentcorecontrol.ListBrowserProfilesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -201,7 +202,7 @@ func sweepBrowserProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep
 }
 
 func sweepAPIKeyCredentialProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListApiKeyCredentialProvidersInput{}
+	var input bedrockagentcorecontrol.ListApiKeyCredentialProvidersInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -223,7 +224,7 @@ func sweepAPIKeyCredentialProviders(ctx context.Context, client *conns.AWSClient
 }
 
 func sweepOAuth2CredentialProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListOauth2CredentialProvidersInput{}
+	var input bedrockagentcorecontrol.ListOauth2CredentialProvidersInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -245,7 +246,7 @@ func sweepOAuth2CredentialProviders(ctx context.Context, client *conns.AWSClient
 }
 
 func sweepCodeInterpreters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListCodeInterpretersInput{}
+	var input bedrockagentcorecontrol.ListCodeInterpretersInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -267,7 +268,7 @@ func sweepCodeInterpreters(ctx context.Context, client *conns.AWSClient) ([]swee
 }
 
 func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListWorkloadIdentitiesInput{}
+	var input bedrockagentcorecontrol.ListWorkloadIdentitiesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -289,7 +290,7 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 }
 
 func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListPolicyEnginesInput{}
+	var input bedrockagentcorecontrol.ListPolicyEnginesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -311,7 +312,7 @@ func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 }
 
 func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListMemoriesInput{}
+	var input bedrockagentcorecontrol.ListMemoriesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -333,7 +334,7 @@ func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 }
 
 func sweepHarnesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListHarnessesInput{}
+	var input bedrockagentcorecontrol.ListHarnessesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -355,7 +356,7 @@ func sweepHarnesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 }
 
 func sweepOnlineEvaluationConfigs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput{}
+	var input bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -377,7 +378,7 @@ func sweepOnlineEvaluationConfigs(ctx context.Context, client *conns.AWSClient) 
 }
 
 func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListEvaluatorsInput{}
+	var input bedrockagentcorecontrol.ListEvaluatorsInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -398,6 +399,44 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluatorResource, client,
 				framework.NewAttribute("evaluator_id", evaluatorID)),
 			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input bedrockagentcorecontrol.ListPolicyEnginesInput
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListPolicyEnginesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.PolicyEngines {
+			policyEngineID := aws.ToString(v.PolicyEngineId)
+			input := bedrockagentcorecontrol.ListPoliciesInput{
+				PolicyEngineId: aws.String(policyEngineID),
+			}
+
+			pages := bedrockagentcorecontrol.NewListPoliciesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.Policies {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluatorResource, client,
+						framework.NewAttribute("policy_engine_id", policyEngineID),
+						framework.NewAttribute("policy_id", aws.ToString(v.PolicyId))),
+					)
+				}
+			}
 		}
 	}
 
