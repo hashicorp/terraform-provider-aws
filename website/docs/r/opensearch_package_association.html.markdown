@@ -59,3 +59,20 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `10m`)
 * `delete` - (Default `10m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Package Associations using the `domain_name` and `package_id` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_opensearch_package_association.example
+  id = "my-opensearch-domain,F1234567890"
+}
+```
+
+Using `terraform import`, import OpenSearch Package Associations using the `domain_name` and `package_id` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_opensearch_package_association.example my-opensearch-domain,F1234567890
+```

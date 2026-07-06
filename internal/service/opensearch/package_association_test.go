@@ -39,6 +39,12 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, names.AttrID),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPackageAssociationImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -73,6 +79,17 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPackageAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"]), nil
+	}
 }
 
 func testAccCheckPackageAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {

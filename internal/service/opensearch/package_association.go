@@ -20,11 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const packageAssociationResourceIDPartCount = 2
 
 // @SDKResource("aws_opensearch_package_association", name="Package Association")
 func resourcePackageAssociation() *schema.Resource {
@@ -34,7 +37,19 @@ func resourcePackageAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourcePackageAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				parts, err := flex.ExpandResourceId(d.Id(), packageAssociationResourceIDPartCount, false)
+				if err != nil {
+					return nil, err
+				}
+
+				domainName, packageID := parts[0], parts[1]
+				d.Set(names.AttrDomainName, domainName)
+				d.Set("package_id", packageID)
+				d.SetId(fmt.Sprintf("%s-%s", domainName, packageID))
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
