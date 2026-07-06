@@ -188,7 +188,7 @@ func (r *functionScalingConfigResource) Update(ctx context.Context, req resource
 			return
 		}
 
-		_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutFunctionScalingConfig(ctx, &input)
 		})
 		if err != nil {
@@ -214,13 +214,13 @@ func (r *functionScalingConfigResource) Delete(ctx context.Context, req resource
 		return
 	}
 
-	in := &lambda.PutFunctionScalingConfigInput{
+	input := lambda.PutFunctionScalingConfigInput{
 		FunctionName: state.FunctionName.ValueStringPointer(),
 		Qualifier:    state.Qualifier.ValueStringPointer(),
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutFunctionScalingConfig(ctx, in)
+		return conn.PutFunctionScalingConfig(ctx, &input)
 	})
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -235,12 +235,12 @@ func (r *functionScalingConfigResource) Delete(ctx context.Context, req resource
 }
 
 func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, qualifier string) (*lambda.GetFunctionScalingConfigOutput, error) {
-	in := &lambda.GetFunctionScalingConfigInput{
+	input := lambda.GetFunctionScalingConfigInput{
 		FunctionName: aws.String(functionName),
 		Qualifier:    aws.String(qualifier),
 	}
 
-	out, err := conn.GetFunctionScalingConfig(ctx, in)
+	out, err := conn.GetFunctionScalingConfig(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
