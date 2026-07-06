@@ -1,0 +1,6 @@
+make: Verifying source code with gofmt...
+==> Checking that code complies with gofmt requirements...
+gofmt needs running on the following files:
+./internal/service/vpclattice/service_network_resource_associations_data_source_test.go
+You can use the command: `make fmt` to reformat code.
+make: *** [fmt-check] Error 1

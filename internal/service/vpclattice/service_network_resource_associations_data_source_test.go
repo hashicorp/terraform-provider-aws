@@ -87,23 +87,23 @@ func TestAccVPCLatticeServiceNetworkResourceAssociationsDataSource_basic(t *test
 						"associations.*.service_network_arn",
 						"aws_vpclattice_service_network.test-sn-1",
 						names.AttrARN),
-				// The headline feature: the DNS name of a dns_resource association is surfaced.
-				resource.TestCheckResourceAttrSet(
-					"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
-					"associations.0.private_dns_entry.0.domain_name"),
-				// private_dns_enabled is correctly reflected on each association.
-				resource.TestCheckTypeSetElemNestedAttrs(
-					"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
-					"associations.*",
-					map[string]string{
-						"private_dns_enabled": acctest.CtTrue,
-					}),
-				resource.TestCheckTypeSetElemNestedAttrs(
-					"data.aws_vpclattice_service_network_resource_associations.test-ip-resource",
-					"associations.*",
-					map[string]string{
-						"private_dns_enabled": acctest.CtFalse,
-					}),
+					// The headline feature: the DNS name of a dns_resource association is surfaced.
+					resource.TestCheckResourceAttrSet(
+						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+						"associations.0.private_dns_entry.0.domain_name"),
+					// private_dns_enabled is correctly reflected on each association.
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"data.aws_vpclattice_service_network_resource_associations.test-dns-resource",
+						"associations.*",
+						map[string]string{
+							"private_dns_enabled": acctest.CtTrue,
+						}),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"data.aws_vpclattice_service_network_resource_associations.test-ip-resource",
+						"associations.*",
+						map[string]string{
+							"private_dns_enabled": acctest.CtFalse,
+						}),
 				),
 			},
 		},
