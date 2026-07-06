@@ -411,15 +411,15 @@ func testAccPolicyConfig_policyName(rName, policyStatement, policyName string) s
 		testAccPolicyConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_verifiedpermissions_policy" "test" {
-	policy_name     = %[3]q
-	policy_store_id = aws_verifiedpermissions_policy_store.test.id
+  policy_name     = %[3]q
+  policy_store_id = aws_verifiedpermissions_policy_store.test.id
 
-	definition {
-		static {
-			description = %[1]q
-			statement   = %[2]q
-		}
-	}
+  definition {
+    static {
+      description = %[1]q
+      statement   = %[2]q
+    }
+  }
 }
 `, rName, policyStatement, policyName))
 }
