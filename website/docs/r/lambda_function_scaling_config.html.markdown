@@ -3,7 +3,7 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function_scaling_config"
 description: |-
-  Terraform resource for managing an AWS Lambda Function Scaling Config.
+  Manages the scaling configuration for an AWS Lambda function.
 ---
 
 # Resource: aws_lambda_function_scaling_config
