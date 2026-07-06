@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -134,6 +135,23 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 														},
 													},
 												},
+												"log_group_name_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"log_group_name_pattern": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 512),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`(?:[\._\-/#A-Za-z0-9]+|\$\{[A-Za-z]+(?:\.[A-Za-z]+){1,2}\})+`), ""),
+																},
+															},
+														},
+													},
+												},
 												"logs_encryption_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[logsEncryptionConfigurationModel](ctx),
 													Validators: []validator.List{
@@ -152,6 +170,32 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"destination_metrics_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[destinationMetricsConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"backup_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[metricsBackupConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrRegion: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	fwvalidators.AWSRegion(),
+																},
 															},
 														},
 													},
@@ -195,11 +239,47 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"data_source_selection_criteria": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("*"),
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+														stringvalidator.AtLeastOneOf(
+															path.MatchRelative().AtParent().AtName("data_source_selection_criteria"),
+															path.MatchRelative().AtParent().AtName("log_group_selection_criteria"),
+														),
+													},
+												},
 												"encrypted_log_group_strategy": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.EncryptedLogGroupStrategy](),
 													Required:   true,
 												},
 												"log_group_selection_criteria": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("*"),
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+														stringvalidator.AtLeastOneOf(
+															path.MatchRelative().AtParent().AtName("data_source_selection_criteria"),
+															path.MatchRelative().AtParent().AtName("log_group_selection_criteria"),
+														),
+													},
+												},
+											},
+										},
+									},
+									"source_metrics_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sourceMetricsConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metrics_selection_criteria": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthAtLeast(1),
@@ -442,25 +522,29 @@ type centralizationRuleModel struct {
 }
 
 type centralizationRuleDestinationModel struct {
-	Account                      types.String                                                       `tfsdk:"account"`
-	DestinationLogsConfiguration fwtypes.ListNestedObjectValueOf[destinationLogsConfigurationModel] `tfsdk:"destination_logs_configuration"`
-	Region                       types.String                                                       `tfsdk:"region"`
+	Account                         types.String                                                          `tfsdk:"account"`
+	DestinationLogsConfiguration    fwtypes.ListNestedObjectValueOf[destinationLogsConfigurationModel]    `tfsdk:"destination_logs_configuration"`
+	DestinationMetricsConfiguration fwtypes.ListNestedObjectValueOf[destinationMetricsConfigurationModel] `tfsdk:"destination_metrics_configuration"`
+	Region                          types.String                                                          `tfsdk:"region"`
 }
 
 type centralizationRuleSourceModel struct {
-	Regions                 fwtypes.SetOfString                                           `tfsdk:"regions"`
-	Scope                   types.String                                                  `tfsdk:"scope"`
-	SourceLogsConfiguration fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel] `tfsdk:"source_logs_configuration"`
+	Regions                    fwtypes.SetOfString                                              `tfsdk:"regions"`
+	Scope                      types.String                                                     `tfsdk:"scope"`
+	SourceLogsConfiguration    fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel]    `tfsdk:"source_logs_configuration"`
+	SourceMetricsConfiguration fwtypes.ListNestedObjectValueOf[sourceMetricsConfigurationModel] `tfsdk:"source_metrics_configuration"`
 }
 
 type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
+	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
 }
 
 type sourceLogsConfigurationModel struct {
-	EncryptedLogGroupStrategy fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
-	LogGroupSelectionCriteria types.String                                           `tfsdk:"log_group_selection_criteria"`
+	DataSourceSelectionCriteria types.String                                           `tfsdk:"data_source_selection_criteria"`
+	EncryptedLogGroupStrategy   fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
+	LogGroupSelectionCriteria   types.String                                           `tfsdk:"log_group_selection_criteria"`
 }
 
 type logsBackupConfigurationModel struct {
@@ -468,8 +552,24 @@ type logsBackupConfigurationModel struct {
 	Region    types.String `tfsdk:"region"`
 }
 
+type logGroupNameConfigurationModel struct {
+	LogGroupNamePattern types.String `tfsdk:"log_group_name_pattern"`
+}
+
 type logsEncryptionConfigurationModel struct {
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
 	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
+}
+
+type destinationMetricsConfigurationModel struct {
+	BackupConfiguration fwtypes.ListNestedObjectValueOf[metricsBackupConfigurationModel] `tfsdk:"backup_configuration"`
+}
+
+type metricsBackupConfigurationModel struct {
+	Region types.String `tfsdk:"region"`
+}
+
+type sourceMetricsConfigurationModel struct {
+	MetricsSelectionCriteria types.String `tfsdk:"metrics_selection_criteria"`
 }

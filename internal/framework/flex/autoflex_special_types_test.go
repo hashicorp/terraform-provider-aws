@@ -10,12 +10,14 @@ package flex
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	smithydocument "github.com/aws/smithy-go/document"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -33,6 +35,22 @@ type awsRFC3339TimePointer struct {
 
 type awsRFC3339TimeValue struct {
 	CreationDateTime time.Time
+}
+
+type awsNonTimeStruct struct {
+	CreationDateTime struct{ X int }
+}
+
+type awsNonTimeStructPointer struct {
+	CreationDateTime *struct{ X int }
+}
+
+type awsStructField struct {
+	Field1 struct{ X int }
+}
+
+type tfStringField struct {
+	Field1 types.String `tfsdk:"field1"`
 }
 
 type tfSingleARNField struct {
@@ -115,6 +133,22 @@ func TestExpandSpecialTypes(t *testing.T) {
 					CreationDateTime: testTimeTime,
 				},
 			},
+			"incompatible struct target": {
+				Source: &tfRFC3339Time{
+					CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
+				},
+				Target:        &awsNonTimeStruct{},
+				WantTarget:    &awsNonTimeStruct{},
+				ExpectedDiags: diag.Diagnostics{diagExpandingIncompatibleTypes(reflect.TypeFor[timetypes.RFC3339](), reflect.TypeFor[struct{ X int }]())},
+			},
+			"incompatible pointer to struct target": {
+				Source: &tfRFC3339Time{
+					CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
+				},
+				Target:        &awsNonTimeStructPointer{},
+				WantTarget:    &awsNonTimeStructPointer{},
+				ExpectedDiags: diag.Diagnostics{diagExpandingIncompatibleTypes(reflect.TypeFor[timetypes.RFC3339](), reflect.TypeFor[*struct{ X int }]())},
+			},
 		},
 
 		"single ARN": {
@@ -149,7 +183,7 @@ func TestExpandSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -214,6 +248,20 @@ func TestFlattenSpecialTypes(t *testing.T) {
 					CreationDateTime: timetypes.NewRFC3339TimeValue(zeroTime),
 				},
 			},
+			"incompatible struct source": {
+				Source:        &awsNonTimeStruct{CreationDateTime: struct{ X int }{X: 42}},
+				Target:        &tfRFC3339Time{},
+				WantTarget:    &tfRFC3339Time{},
+				ExpectedDiags: diag.Diagnostics{DiagFlatteningIncompatibleTypes(reflect.TypeFor[struct{ X int }](), reflect.TypeFor[timetypes.RFC3339]())},
+			},
+		},
+
+		"struct to incompatible target": {
+			"struct to string field": {
+				Source:     &awsStructField{Field1: struct{ X int }{X: 42}},
+				Target:     &tfStringField{},
+				WantTarget: &tfStringField{},
+			},
 		},
 	}
 
@@ -221,7 +269,7 @@ func TestFlattenSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -311,5 +359,5 @@ func TestFlattenJSONInterfaceToStringTypable(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }

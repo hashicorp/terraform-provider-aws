@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -25,12 +26,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_conformance_pack", name="Organization Conformance Pack")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConformancePack")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
+// @Testing(importIgnore="template_body")
 func resourceOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConformancePackCreate,
@@ -38,90 +47,88 @@ func resourceOrganizationConformancePack() *schema.Resource {
 		UpdateWithoutTimeout: resourceOrganizationConformancePackUpdate,
 		DeleteWithoutTimeout: resourceOrganizationConformancePackDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delivery_s3_bucket": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
-				),
-			},
-			"delivery_s3_key_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"excluded_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"input_parameter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 60,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parameter_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"parameter_value": {
-							Type:     schema.TypeString,
-							Required: true,
+				"delivery_s3_bucket": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
+					),
+				},
+				"delivery_s3_key_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"excluded_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
+				},
+				"input_parameter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 60,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"parameter_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"parameter_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
-				),
-			},
-			"template_body": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 51200),
-					verify.ValidStringIsJSONOrYAML,
-				),
-				ConflictsWith: []string{"template_s3_uri"},
-			},
-			"template_s3_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
-				),
-				ConflictsWith: []string{"template_body"},
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+					),
+				},
+				"template_body": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 51200),
+						verify.ValidStringIsJSONOrYAML,
+					),
+					ConflictsWith: []string{"template_s3_uri"},
+				},
+				"template_s3_uri": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+					),
+					ConflictsWith: []string{"template_body"},
+				},
+			}
 		},
 	}
 }
@@ -131,7 +138,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutOrganizationConformancePackInput{
+	input := configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(name),
 	}
 
@@ -160,7 +167,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutOrganizationConformancePack(ctx, input)
+		return conn.PutOrganizationConformancePack(ctx, &input)
 	})
 
 	if err != nil {
@@ -208,7 +215,7 @@ func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.PutOrganizationConformancePackInput{
+	input := configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
 	}
 
@@ -236,7 +243,12 @@ func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.Re
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConformancePack(ctx, input)
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.PutOrganizationConformancePack(ctx, &input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating ConfigService Organization Conformance Pack (%s): %s", d.Id(), err)
@@ -253,14 +265,15 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Organization Conformance Pack: %s", d.Id())
 	const (
 		timeout = 5 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Organization Conformance Pack: %s", d.Id())
+	input := configservice.DeleteOrganizationConformancePackInput{
+		OrganizationConformancePackName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteOrganizationConformancePack(ctx, &configservice.DeleteOrganizationConformancePackInput{
-			OrganizationConformancePackName: aws.String(d.Id()),
-		})
+		return conn.DeleteOrganizationConformancePack(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
@@ -279,11 +292,11 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 }
 
 func findOrganizationConformancePackByName(ctx context.Context, conn *configservice.Client, name string) (*types.OrganizationConformancePack, error) {
-	input := &configservice.DescribeOrganizationConformancePacksInput{
+	input := configservice.DescribeOrganizationConformancePacksInput{
 		OrganizationConformancePackNames: []string{name},
 	}
 
-	return findOrganizationConformancePack(ctx, conn, input)
+	return findOrganizationConformancePack(ctx, conn, &input)
 }
 
 func findOrganizationConformancePack(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConformancePacksInput) (*types.OrganizationConformancePack, error) {
@@ -297,40 +310,52 @@ func findOrganizationConformancePack(ctx context.Context, conn *configservice.Cl
 }
 
 func findOrganizationConformancePacks(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConformancePacksInput) ([]types.OrganizationConformancePack, error) {
-	var output []types.OrganizationConformancePack
+	output, err := tfslices.CollectWithError(listOrganizationConformancePacks(ctx, conn, input))
 
-	pages := configservice.NewDescribeOrganizationConformancePacksPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.OrganizationConformancePacks...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
+func listOrganizationConformancePacks(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConformancePacksInput, optFns ...func(*configservice.Options)) iter.Seq2[types.OrganizationConformancePack, error] {
+	return func(yield func(types.OrganizationConformancePack, error) bool) {
+		pages := configservice.NewDescribeOrganizationConformancePacksPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[types.OrganizationConformancePack](), fmt.Errorf("listing ConfigService Organization Conformance Packs: %w", err))
+				return
+			}
+
+			for _, v := range page.OrganizationConformancePacks {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		}
+	}
+}
+
 func findOrganizationConformancePackStatusByName(ctx context.Context, conn *configservice.Client, name string) (*types.OrganizationConformancePackStatus, error) {
-	input := &configservice.DescribeOrganizationConformancePackStatusesInput{
+	input := configservice.DescribeOrganizationConformancePackStatusesInput{
 		OrganizationConformancePackNames: []string{name},
 	}
 
-	output, err := findOrganizationConformancePackStatus(ctx, conn, input)
+	output, err := findOrganizationConformancePackStatus(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -384,14 +409,14 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 }
 
 func findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx context.Context, conn *configservice.Client, name string, status types.OrganizationResourceDetailedStatus) ([]types.OrganizationConformancePackDetailedStatus, error) {
-	input := &configservice.GetOrganizationConformancePackDetailedStatusInput{
+	input := configservice.GetOrganizationConformancePackDetailedStatusInput{
 		Filters: &types.OrganizationResourceDetailedStatusFilters{
 			Status: status,
 		},
 		OrganizationConformancePackName: aws.String(name),
 	}
 
-	return findOrganizationConformancePackDetailedStatuses(ctx, conn, input)
+	return findOrganizationConformancePackDetailedStatuses(ctx, conn, &input)
 }
 
 func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *configservice.Client, input *configservice.GetOrganizationConformancePackDetailedStatusInput) ([]types.OrganizationConformancePackDetailedStatus, error) {
@@ -435,7 +460,28 @@ func statusOrganizationConformancePack(conn *configservice.Client, name string) 
 			return nil, "", err
 		}
 
-		return output, string(output.Status), err
+		status := output.Status
+
+		// The DescribeOrganizationConformancePackStatuses API may not
+		// transition the aggregate status from CREATE_IN_PROGRESS to
+		// CREATE_SUCCESSFUL when called from a delegated administrator
+		// account, even after all member accounts have completed
+		// deployment. Work around this by checking per-account detailed
+		// statuses: if no accounts are still in progress, the
+		// deployment has finished.
+		if status == types.OrganizationResourceStatusCreateInProgress {
+			if v, err := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusCreateInProgress); err == nil && len(v) == 0 {
+				status = types.OrganizationResourceStatusCreateSuccessful
+			}
+		}
+
+		if status == types.OrganizationResourceStatusUpdateInProgress {
+			if v, err := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusUpdateInProgress); err == nil && len(v) == 0 {
+				status = types.OrganizationResourceStatusUpdateSuccessful
+			}
+		}
+
+		return output, string(status), nil
 	}
 }
 

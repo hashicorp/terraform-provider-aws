@@ -10,8 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -26,7 +26,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 
 	trustProviderType := "user"
 	userTrustProviderType := "iam-identity-center"
-	description := sdkacctest.RandString(10)
+	description := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -66,7 +66,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 
 	trustProviderType := "device"
 	deviceTrustProviderType := "jamf"
-	tenantId := sdkacctest.RandString(10)
+	tenantId := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -105,7 +105,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 
 	trustProviderType := "user"
 	userTrustProviderType := "iam-identity-center"
-	description := sdkacctest.RandString(10)
+	description := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -125,6 +125,14 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessTrustProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -138,10 +146,10 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	trustProviderType := "user"
 	userTrustProviderType := "oidc"
 	authorizationEndpoint := "https://authorization.example.com"
-	clientId := sdkacctest.RandString(10)
-	clientSecret := sdkacctest.RandString(10)
+	clientId := acctest.RandString(t, 10)
+	clientSecret := acctest.RandString(t, 10)
 	issuer := "https://issuer.example.com"
-	scope := sdkacctest.RandString(10)
+	scope := acctest.RandString(t, 10)
 	tokenEndpoint := "https://token.example.com"
 	userInfoEndpoint := "https://user.example.com"
 
@@ -188,7 +196,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 
 	trustProviderType := "user"
 	userTrustProviderType := "iam-identity-center"
-	description := sdkacctest.RandString(10)
+	description := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

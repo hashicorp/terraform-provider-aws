@@ -18,6 +18,7 @@ import (
 	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -231,6 +232,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
 	client.tagPolicyConfig = c.TagPolicyConfig
 	client.terraformVersion = c.TerraformVersion
+
+	// Register the apicall recording middleware on the base aws.Config.
+	// Per-service NewFromConfig() inherits cfg.APIOptions, so this single
+	// registration covers every service. The middleware is a no-op unless a
+	// *apicall.Recorder is attached to the request context.
+	cfg.APIOptions = append(cfg.APIOptions, apicall.Middleware())
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg

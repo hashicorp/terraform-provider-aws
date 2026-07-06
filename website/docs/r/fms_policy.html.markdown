@@ -70,44 +70,44 @@ This resource supports the following arguments:
 * `security_service_policy_data` - (Required) The objects to include in Security Service Policy Data. See the [`security_service_policy_data`](#security_service_policy_data-configuration-block) block.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## `exclude_map` Configuration Block
+### `exclude_map` Configuration Block
 
 * `account` - (Optional) A list of AWS Organization member Accounts that you want to exclude from this AWS FMS Policy.
 * `orgunit` - (Optional) A list of IDs of the AWS Organizational Units that you want to exclude from this AWS FMS Policy. Specifying an OU is the equivalent of specifying all accounts in the OU and in any of its child OUs, including any child OUs and accounts that are added at a later time.
 
 You can specify inclusions or exclusions, but not both. If you specify an `include_map`, AWS Firewall Manager applies the policy to all accounts specified by the `include_map`, and does not evaluate any `exclude_map` specifications. If you do not specify an `include_map`, then Firewall Manager applies the policy to all accounts except for those specified by the `exclude_map`.
 
-## `include_map` Configuration Block
+### `include_map` Configuration Block
 
 * `account` - (Optional) A list of AWS Organization member Accounts that you want to include for this AWS FMS Policy.
 * `orgunit` - (Optional) A list of IDs of the AWS Organizational Units that you want to include for this AWS FMS Policy. Specifying an OU is the equivalent of specifying all accounts in the OU and in any of its child OUs, including any child OUs and accounts that are added at a later time.
 
 You can specify inclusions or exclusions, but not both. If you specify an `include_map`, AWS Firewall Manager applies the policy to all accounts specified by the `include_map`, and does not evaluate any `exclude_map` specifications. If you do not specify an `include_map`, then Firewall Manager applies the policy to all accounts except for those specified by the `exclude_map`.
 
-## `security_service_policy_data` Configuration Block
+### `security_service_policy_data` Configuration Block
 
 * `managed_service_data` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
 * `policy_option` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. See the [`policy_option`](#policy_option-configuration-block) block.
 * `type` - (Required, Forces new resource) The service that the policy is using to protect the resources. For the current list of supported types, please refer to the [AWS Firewall Manager SecurityServicePolicyData API Type Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html#fms-Type-SecurityServicePolicyData-Type).
 
-## `policy_option` Configuration Block
+### `policy_option` Configuration Block
 
 * `network_acl_common_policy` - (Optional) Defines NACL rules across accounts in their AWS Organization. See the [`network_acl_common_policy`](#network_acl_common_policy-configuration-block) block.
 * `network_firewall_policy` - (Optional) Defines the deployment model to use for the firewall policy.  See the [`network_firewall_policy`](#network_firewall_policy-configuration-block) block.
 * `thirdparty_firewall_policy` - (Optional) Defines the policy options for a third-party firewall policy. See the [`thirdparty_firewall_policy`](#thirdparty_firewall_policy-configuration-block) block.
 
-## `network_acl_common_policy` Configuration Block
+### `network_acl_common_policy` Configuration Block
 
 * `network_acl_entry_set` - (Optional) Defines NACL entries for Network ACL policy. See the [`network_acl_entry_set`](#network_acl_entry_set-configuration-block) block.
 
-## `network_acl_entry_set` Configuration Block
+### `network_acl_entry_set` Configuration Block
 
 * `first_entry` - (Optional) The rules that you want to run first in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 1 and 5000. See the [`first_entry`](#first_entry-configuration-block) block.
 * `last_entry` - (Optional) The rules that you want to run last in the Firewall Manager managed network ACLs. Firewall manager creates entries with ID value between 32000 and 32766. See the [`last_entry`](#last_entry-configuration-block) block.
 * `force_remediate_for_first_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
 * `force_remediate_for_last_entries` - (Required) A boolean value, if true Firewall Manager uses this setting when it finds policy violations that involve conflicts between the custom entries and the policy entries. If false Firewall Manager marks the network ACL as noncompliant and does not try to remediate.
 
-## `first_entry` Configuration Block
+### `first_entry` Configuration Block
 
 * `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
 * `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
@@ -117,7 +117,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 * `ipv6_cidr_block` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
 * `port_range` - (Optional) A configuration block for PortRange. See the [`port_range`](#port_range-configuration-block) block.
 
-## `last_entry` Configuration Block
+### `last_entry` Configuration Block
 
 * `egress` - (Required) - A boolean value, if true Firewall Manager creates egress rule. If false Firewall Manager creates ingress rule.
 * `protocol` - (Required) - The protocol number. A value of "-1" means all protocols.
@@ -127,21 +127,21 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 * `ipv6_cidr_block` - (Optional) A string value containing the IPv6 network range to allow or deny, in CIDR notation.
 * `port_range` - (Optional) A configuration block for PortRange. See the [`port_range`](#port_range-configuration-block) block.
 
-## `icmp_type_code` Configuration Block
+### `icmp_type_code` Configuration Block
 
 * `code` - (Optional) - An integer value containing ICMP code.
 * `type` - (Optional) - An integer value containing ICMP type.
 
-## `port_range` Configuration Block
+### `port_range` Configuration Block
 
 * `from` - (Optional) - The beginning port number of the range.
 * `to` - (Optional) - The ending port number of the range.
 
-## `network_firewall_policy` Configuration Block
+### `network_firewall_policy` Configuration Block
 
 * `firewall_deployment_model` - (Optional) Defines the deployment model to use for the firewall policy. To use a distributed model, remove the `policy_option` section. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
-## `thirdparty_firewall_policy` Configuration Block
+### `thirdparty_firewall_policy` Configuration Block
 
 * `firewall_deployment_model` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 

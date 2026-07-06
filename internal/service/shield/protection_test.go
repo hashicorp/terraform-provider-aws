@@ -11,8 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -24,7 +24,7 @@ import (
 func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -56,7 +56,7 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -88,7 +88,7 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 func TestAccShieldProtection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -107,6 +107,14 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfshield.ResourceProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_shield_protection.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_shield_protection.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -115,7 +123,7 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 func TestAccShieldProtection_alb(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -147,7 +155,7 @@ func TestAccShieldProtection_alb(t *testing.T) {
 func TestAccShieldProtection_elb(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -179,7 +187,7 @@ func TestAccShieldProtection_elb(t *testing.T) {
 func TestAccShieldProtection_cloudFront(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -212,7 +220,7 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -265,7 +273,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 func TestAccShieldProtection_route53(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

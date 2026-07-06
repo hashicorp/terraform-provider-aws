@@ -24,7 +24,7 @@ resource "aws_lambda_layer_version" "example" {
   filename            = "layer.zip"
   layer_name          = "shared_utilities"
   description         = "Common utilities for Lambda functions"
-  compatible_runtimes = ["nodejs20.x", "python3.12"]
+  compatible_runtimes = ["nodejs24.x", "python3.12"]
 }
 
 # Grant permission to specific AWS account

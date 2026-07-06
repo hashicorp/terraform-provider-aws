@@ -297,22 +297,22 @@ The `predictive_scaling_policy_configuration` `metric_specification` `customized
 
 The `predictive_scaling_policy_configuration` `metric_specification` `predefined_load_metric_specification` configuration block supports the following arguments:
 
-* `predefined_metric_type` - (Required) Metric type.
-* `resource_label` - (Optional) Label that uniquely identifies a target group.
+* `predefined_metric_type` - (Required) Predefined load metric type. See the [`PredictiveScalingPredefinedLoadMetricSpecification`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PredictiveScalingPredefinedLoadMetricSpecification.html) AWS API reference for valid values.
+* `resource_label` - (Optional) Label that uniquely identifies a target group. Required when `predefined_metric_type` is an ALB-based value.
 
 ### predictive_scaling_policy_configuration metric_specification predefined_metric_pair_specification
 
 The `predictive_scaling_policy_configuration` `metric_specification` `predefined_metric_pair_specification` configuration block supports the following arguments:
 
-* `predefined_metric_type` - (Required) Which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric.
-* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the total and average request count.
+* `predefined_metric_type` - (Required) Pair of predefined metrics (one load metric and one scaling metric) to use. See the [`PredictiveScalingPredefinedMetricPairSpecification`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PredictiveScalingPredefinedMetricPairSpecification.html) AWS API reference for valid values.
+* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the total and average request count. Required when `predefined_metric_type` is an ALB-based value.
 
 ### predictive_scaling_policy_configuration metric_specification predefined_scaling_metric_specification
 
 The `predictive_scaling_policy_configuration` `metric_specification` `predefined_scaling_metric_specification` configuration block supports the following arguments:
 
-* `predefined_metric_type` - (Required) Metric type.
-* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the average request count.
+* `predefined_metric_type` - (Required) Predefined scaling metric type. See the [`PredictiveScalingPredefinedScalingMetricSpecification`](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PredictiveScalingPredefinedScalingMetricSpecification.html) AWS API reference for valid values.
+* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the average request count. Required when `predefined_metric_type` is an ALB-based value.
 
 ### step_scaling_policy_configuration
 
@@ -457,6 +457,38 @@ This resource exports the following attributes in addition to the arguments abov
 * `policy_type` - Scaling policy's type.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_appautoscaling_policy.example
+  identity = {
+    service_namespace  = "ecs"
+    resource_id        = "service/cluster-name/service-name"
+    scalable_dimension = "ecs:service:DesiredCount"
+    name               = "example-policy"
+  }
+}
+
+resource "aws_appautoscaling_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the scaling policy.
+* `resource_id` - (String) Resource type and unique identifier string for the resource associated with the scaling policy.
+* `scalable_dimension` - (String) Scalable dimension of the scalable target.
+* `service_namespace` - (String) AWS service namespace of the scalable target.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 

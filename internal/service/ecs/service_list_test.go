@@ -39,13 +39,13 @@ func TestAccECSService_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -61,9 +61,8 @@ func TestAccECSService_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -97,13 +96,13 @@ func TestAccECSService_List_includeResource(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -119,9 +118,8 @@ func TestAccECSService_List_includeResource(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_include_resource/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -167,13 +165,13 @@ func TestAccECSService_List_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: nil,
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -190,9 +188,8 @@ func TestAccECSService_List_regionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -225,13 +222,13 @@ func TestAccECSService_List_launchType(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: testAccCheckServiceDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_launch_type/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_launch_type/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -247,9 +244,8 @@ func TestAccECSService_List_launchType(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Service/list_launch_type/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_launch_type/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -262,6 +258,60 @@ func TestAccECSService_List_launchType(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_ecs_service.test", identity2.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_ecs_service.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
 					tfquerycheck.ExpectNoResourceObject("aws_ecs_service.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSService_List_excludeExpressServices(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	expressServiceResourceName := "aws_ecs_express_gateway_service.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	expressServiceCluster := tfstatecheck.StateValue()
+	expressServiceName := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_exclude_express_services/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					expressServiceCluster.GetStateValue(expressServiceResourceName, tfjsonpath.New("cluster")),
+					// `service_name` on Express Service is equivalent to `name` on regular Service
+					expressServiceName.GetStateValue(expressServiceResourceName, tfjsonpath.New(names.AttrServiceName)),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Service/list_exclude_express_services/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectNoIdentity("aws_ecs_service.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						"cluster":           expressServiceCluster.ValueCheck(),
+						names.AttrName:      expressServiceName.ValueCheck(),
+					}),
 				},
 			},
 		},

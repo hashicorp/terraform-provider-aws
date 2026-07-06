@@ -11,8 +11,8 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -23,7 +23,7 @@ import (
 func TestAccWAFRegionalRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -54,7 +54,7 @@ func TestAccWAFRegionalRule_basic(t *testing.T) {
 func TestAccWAFRegionalRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -100,8 +100,8 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
-	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
+	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 func TestAccWAFRegionalRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -156,6 +156,14 @@ func TestAccWAFRegionalRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -164,7 +172,7 @@ func TestAccWAFRegionalRule_disappears(t *testing.T) {
 func TestAccWAFRegionalRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -197,7 +205,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 
 	var before, after awstypes.Rule
 	var idx int
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

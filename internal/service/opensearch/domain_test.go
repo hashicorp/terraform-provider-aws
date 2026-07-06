@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -254,7 +253,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -269,6 +268,8 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyCapacityOptimized)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
@@ -289,7 +290,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -328,7 +329,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 	customEndpoint := fmt.Sprintf("%s.example.com", rName)
 	certResourceName := "aws_acm_certificate.test"
@@ -380,7 +381,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain1, domain2, domain3, domain4 awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -444,7 +445,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -482,7 +483,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -540,7 +541,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -580,7 +581,7 @@ func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 func TestAccOpenSearchDomain_Cluster_dedicatedCoordinator(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -624,7 +625,7 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 	}
 
 	var input awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -662,7 +663,7 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -701,7 +702,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -749,7 +750,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -783,7 +784,7 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -815,7 +816,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -843,7 +844,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -883,7 +884,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -921,7 +922,7 @@ func TestAccOpenSearchDomain_VPC_ipAddressType(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -965,7 +966,7 @@ func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1009,7 +1010,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	resourceName := "aws_opensearch_domain.test"
 
@@ -1071,7 +1072,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1109,7 +1110,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_anonymousAuth(t *testing.T)
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1154,7 +1155,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1192,7 +1193,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1237,6 +1238,60 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptionsWithJwksURL(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName(t)
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsJWTOptionsWithJwksURL(rName, "OpenSearch", "3.5", names.AttrEmail, "groups", "https://example.com/.well-known/jwks.json"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.jwks_url", "https://example.com/.well-known/jwks.json"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.subject_key", names.AttrEmail),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.roles_key", "groups"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsJWTOptionsWithJwksURL(rName, "OpenSearch", "3.5", names.AttrEmail, "groups", "https://example2.com/.well-known/jwks.json"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.jwks_url", "https://example2.com/.well-known/jwks.json"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.subject_key", names.AttrEmail),
+					resource.TestCheckResourceAttr(resourceName, "advanced_security_options.0.jwt_options.0.roles_key", "groups"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions_versionValidation(t *testing.T) {
 	t.Parallel()
 
@@ -1274,7 +1329,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions_versionValidatio
 
 	for name, tc := range testCases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
-			rName := testAccRandomDomainName()
+			rName := testAccRandomDomainName(t)
 
 			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -1301,7 +1356,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1338,7 +1393,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1375,7 +1430,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1412,7 +1467,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1449,7 +1504,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1488,7 +1543,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_disable(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1582,7 +1637,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_multiple(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1692,7 +1747,7 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1736,7 +1791,7 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1781,7 +1836,7 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -1813,7 +1868,7 @@ func TestAccOpenSearchDomain_Policy_addPrincipal(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -1858,7 +1913,7 @@ func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -1900,7 +1955,7 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -1933,7 +1988,7 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -1965,7 +2020,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 	}
 
 	var domain1, domain2 awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2007,7 +2062,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 	}
 
 	var domain1, domain2 awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2042,7 +2097,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -2075,7 +2130,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 
 	var domain1, domain2 awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -2117,7 +2172,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
 
 	var domain1, domain2 awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -2157,7 +2212,7 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2219,7 +2274,7 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2270,7 +2325,7 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 	}
 
 	var input awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2327,7 +2382,7 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 	}
 
 	var input awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2375,7 +2430,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 
 	var domain awstypes.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -2409,7 +2464,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain1, domain2, domain3 awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2458,7 +2513,7 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2492,7 +2547,7 @@ func TestAccOpenSearchDomain_AIMLOptions_createEnabled(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 	enabledState := "ENABLED"
 
@@ -2540,7 +2595,7 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 	enabledState := "ENABLED"
 	disabledState := "DISABLED"
@@ -2625,7 +2680,7 @@ func TestAccOpenSearchDomain_identityCenterOptions(t *testing.T) {
 	}
 
 	var domain awstypes.DomainStatus
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2726,13 +2781,71 @@ func TestAccOpenSearchDomain_identityCenterOptions(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_deploymentStrategyOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName(t)
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_deploymentStrategyOptions(rName, string(awstypes.DeploymentStrategyCapacityOptimized)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyCapacityOptimized)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_deploymentStrategyOptions(rName, string(awstypes.DeploymentStrategyDefault)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_options.0.deployment_strategy", string(awstypes.DeploymentStrategyDefault)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2747,13 +2860,21 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccRandomDomainName() string {
-	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1)))
+func testAccRandomDomainName(t *testing.T) string {
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 28-(len(acctest.ResourcePrefix)+1)))
 }
 
 func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls awstypes.TLSSecurityPolicy, status *awstypes.DomainStatus) resource.TestCheckFunc {
@@ -4445,6 +4566,52 @@ resource "aws_opensearch_domain" "test" {
 `, rName, engineType, version, subjectKey, rolesKey)
 }
 
+func testAccDomainConfig_advancedSecurityOptionsJWTOptionsWithJwksURL(rName, engineType, version, subjectKey, rolesKey, jwksURL string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "%[2]s_%[3]s"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+    jwt_options {
+      enabled     = true
+      jwks_url    = %[6]q
+      subject_key = %[4]q
+      roles_key   = %[5]q
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, engineType, version, subjectKey, rolesKey, jwksURL)
+}
+
 func testAccDomainConfig_advancedSecurityOptionsDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
@@ -4987,4 +5154,21 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_deploymentStrategyOptions(rName, deploymentStrategy string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  deployment_strategy_options {
+    deployment_strategy = %[2]q
+  }
+}
+`, rName, deploymentStrategy)
 }

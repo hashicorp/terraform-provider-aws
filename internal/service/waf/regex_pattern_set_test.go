@@ -10,8 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -37,7 +37,7 @@ func TestAccWAFRegexPatternSet_serial(t *testing.T) {
 func testAccRegexPatternSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -69,7 +69,7 @@ func testAccRegexPatternSet_basic(t *testing.T) {
 func testAccRegexPatternSet_changePatterns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -111,7 +111,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 func testAccRegexPatternSet_noPatterns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var patternSet awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -140,7 +140,7 @@ func testAccRegexPatternSet_noPatterns(t *testing.T) {
 func testAccRegexPatternSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RegexPatternSet
-	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
+	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_regex_pattern_set.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -156,6 +156,14 @@ func testAccRegexPatternSet_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceRegexPatternSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

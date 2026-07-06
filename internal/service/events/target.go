@@ -19,10 +19,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -60,442 +60,444 @@ func resourceTarget() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"appsync_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"graphql_operation": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1048576)),
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"batch_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"array_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 10000),
-						},
-						"job_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
-						},
-						"job_definition": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"job_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"dead_letter_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"ecs_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCapacityProviderStrategy: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"base": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(0, 100000),
-									},
-									"capacity_provider": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrWeight: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(0, 1000),
-									},
-								},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appsync_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"graphql_operation": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1048576)),
 							},
 						},
-						"enable_ecs_managed_tags": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"enable_execute_command": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"launch_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.LaunchType](),
-						},
-						names.AttrNetworkConfiguration: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"assign_public_ip": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									names.AttrSecurityGroups: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrSubnets: {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
+					},
+				},
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"batch_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"array_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(2, 10000),
+							},
+							"job_attempts": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10),
+							},
+							"job_definition": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"job_name": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
 						},
-						"ordered_placement_strategy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 5,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrField: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
-									},
-								},
-							},
-						},
-						"placement_constraint": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrExpression: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
-									},
-								},
-							},
-						},
-						"platform_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1600),
-						},
-						names.AttrPropagateTags: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
-						},
-						names.AttrTags: tftags.TagsSchema(),
-						"task_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, math.MaxInt32),
-							Default:      1,
-						},
-						"task_definition_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
 					},
 				},
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"http_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"header_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: validation.AllDiag(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+,.^|~-]+$`), ""), // was "," meant to be included? +-. creates a range including: +,-.
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexache.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"path_parameter_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"query_string_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: validation.AllDiag(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexache.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexache.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"input": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringIsJSON,
-					validation.StringLenBetween(0, 8192),
-				),
-				ConflictsWith: []string{"input_path", "input_transformer"},
-				// We could be normalizing the JSON here,
-				// but for built-in targets input may not be JSON
-			},
-			"input_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 256),
-				ConflictsWith: []string{"input", "input_transformer"},
-			},
-			"input_transformer": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"input", "input_path"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_paths": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ValidateDiagFunc: validation.AllDiag(
-								verify.MapSizeAtMost(targetInputTransformerMaxInputPaths),
-								verify.MapKeyNoMatch(regexache.MustCompile(`^AWS.*$`), `must not start with "AWS"`),
-							),
-						},
-						"input_template": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 8192),
-						},
-					},
-				},
-			},
-			"kinesis_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"partition_key_path": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-					},
-				},
-			},
-			"redshift_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDatabase: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 64),
-						},
-						"db_user": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"secrets_manager_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"sql": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100000),
-						},
-						"statement_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 500),
-						},
-						"with_event": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"retry_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_event_age_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 86400),
-						},
-						"maximum_retry_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 185),
-						},
-					},
-				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRule: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRuleName,
-			},
-			"run_command_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
+				"dead_letter_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
 								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"ecs_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCapacityProviderStrategy: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"base": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 100000),
+										},
+										"capacity_provider": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrWeight: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 1000),
+										},
+									},
+								},
+							},
+							"enable_ecs_managed_tags": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"enable_execute_command": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"group": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"launch_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.LaunchType](),
+							},
+							names.AttrNetworkConfiguration: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"assign_public_ip": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										names.AttrSecurityGroups: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrSubnets: {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"ordered_placement_strategy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 5,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrField: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 255),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
+										},
+									},
+								},
+							},
+							"placement_constraint": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 10,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrExpression: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
+										},
+									},
+								},
+							},
+							"platform_version": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1600),
+							},
+							names.AttrPropagateTags: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.PropagateTags](),
+							},
+							names.AttrTags: tftags.TagsSchema(),
+							"task_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, math.MaxInt32),
+								Default:      1,
+							},
+							"task_definition_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusNameOrARN,
+					Default:      DefaultEventBusName,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"http_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"header_parameters": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ValidateDiagFunc: validation.AllDiag(
+									validation.MapKeyLenBetween(0, 512),
+									validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+,.^|~-]+$`), ""), // was "," meant to be included? +-. creates a range including: +,-.
+									validation.MapValueLenBetween(0, 512),
+									validation.MapValueMatch(regexache.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
+								),
+								Elem: &schema.Schema{Type: schema.TypeString},
+							},
+							"path_parameter_values": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"query_string_parameters": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ValidateDiagFunc: validation.AllDiag(
+									validation.MapKeyLenBetween(0, 512),
+									validation.MapKeyMatch(regexache.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
+									validation.MapValueLenBetween(0, 512),
+									validation.MapValueMatch(regexache.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
+								),
+								Elem: &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"input": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringIsJSON,
+						validation.StringLenBetween(0, 8192),
+					),
+					ConflictsWith: []string{"input_path", "input_transformer"},
+					// We could be normalizing the JSON here,
+					// but for built-in targets input may not be JSON
+				},
+				"input_path": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 256),
+					ConflictsWith: []string{"input", "input_transformer"},
+				},
+				"input_transformer": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"input", "input_path"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"input_paths": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								ValidateDiagFunc: validation.AllDiag(
+									verify.MapSizeAtMost(targetInputTransformerMaxInputPaths),
+									verify.MapKeyNoMatch(regexache.MustCompile(`^AWS.*$`), `must not start with "AWS"`),
+								),
+							},
+							"input_template": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 8192),
+							},
+						},
+					},
+				},
+				"kinesis_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"partition_key_path": {
+								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
 					},
 				},
-			},
-			"sagemaker_pipeline_target": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pipeline_parameter_list": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 200,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
+				"redshift_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabase: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+							"db_user": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"secrets_manager_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"sql": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100000),
+							},
+							"statement_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 500),
+							},
+							"with_event": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"retry_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maximum_event_age_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 86400),
+							},
+							"maximum_retry_attempts": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 185),
+							},
+						},
+					},
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrRule: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validateRuleName,
+				},
+				"run_command_targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 50,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 256),
+								},
+							},
+						},
+					},
+				},
+				"sagemaker_pipeline_target": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"pipeline_parameter_list": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 200,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"sqs_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"sqs_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"message_group_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"target_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateTargetID,
-			},
+				"target_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validateTargetID,
+				},
+			}
 		},
 	}
 }
@@ -509,7 +511,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
 	} else {
-		targetID = sdkid.UniqueId()
+		targetID = create.UniqueId(ctx)
 		d.Set("target_id", targetID)
 	}
 	var eventBusName string

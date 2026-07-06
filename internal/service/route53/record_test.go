@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -36,8 +35,8 @@ func TestAccRoute53Record_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -232,8 +231,8 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -248,6 +247,14 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceRecord(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -256,7 +263,7 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3, v4, v5 awstypes.ResourceRecordSet
-	zoneName := acctest.RandomDomain()
+	zoneName := acctest.RandomDomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -275,6 +282,14 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceRecord(), "aws_route53_record.test.0"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -816,9 +831,9 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	locationName := sdkacctest.RandString(16)
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	locationName := acctest.RandString(t, 16)
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1085,7 +1100,51 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_typeChange_allowOverwrite(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record1, record2 awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.managed"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_typeChangeAllowOverwritePre,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("TXT")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("phase1-txt"),
+					})),
+				},
+			},
+			{
+				Config: testAccRecordConfig_typeChangeAllowOverwritePost,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("192.0.2.10"),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -1736,8 +1795,8 @@ func TestAccRoute53Record_ttl0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1781,7 +1840,7 @@ func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomain()
+	zoneName := acctest.RandomDomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1809,7 +1868,7 @@ func TestAccRoute53Record_escapedSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := "0/24." + acctest.RandomDomain()
+	zoneName := "0/24." + acctest.RandomDomain(t)
 	recordName := "0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1837,7 +1896,7 @@ func TestAccRoute53Record_escapedSpace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
-	zoneName := "a\\040b." + acctest.RandomDomain()
+	zoneName := "a\\040b." + acctest.RandomDomain(t)
 	recordName := "0\\040to\\0401"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1866,7 +1925,7 @@ func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	// zone name always needs an escape code if any
-	zoneName := "a\\040b." + acctest.RandomDomain()
+	zoneName := "a\\040b." + acctest.RandomDomain(t)
 	// as for record name, r53 API can accept a space as is but will send the escaped version of it back
 	recordName := "0 to 1"
 
@@ -2996,6 +3055,61 @@ resource "aws_route53_record" "sample" {
   type    = "A"
   ttl     = "30"
   records = ["127.0.0.1", "8.8.8.8"]
+}
+`
+
+const testAccRecordConfig_typeChangeAllowOverwritePre = `
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "managed" {
+  allow_overwrite = true
+  zone_id         = aws_route53_zone.main.zone_id
+  name            = "sample"
+  type            = "TXT"
+  ttl             = 30
+  records         = ["phase1-txt"]
+
+  set_identifier = "primary"
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`
+
+const testAccRecordConfig_typeChangeAllowOverwritePost = `
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "conflict" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "sample"
+  type    = "A"
+  ttl     = 30
+  records = ["192.0.2.10"]
+
+  set_identifier = "primary"
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+
+resource "aws_route53_record" "managed" {
+  depends_on = [aws_route53_record.conflict]
+
+  allow_overwrite = true
+  zone_id         = aws_route53_zone.main.zone_id
+  name            = "sample"
+  type            = "A"
+  ttl             = 30
+  records         = ["192.0.2.10"]
+
+  set_identifier = "primary"
+  weighted_routing_policy {
+    weight = 1
+  }
 }
 `
 

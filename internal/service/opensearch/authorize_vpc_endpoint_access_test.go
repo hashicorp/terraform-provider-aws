@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -26,7 +27,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -60,7 +61,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -77,6 +78,14 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

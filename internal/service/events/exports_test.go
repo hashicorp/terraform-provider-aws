@@ -31,4 +31,9 @@ var (
 	PartnerEventBusPattern      = partnerEventBusPattern
 	TargetParseImportID         = targetParseImportID
 	TargetStateUpgradeV0        = targetStateUpgradeV0
+
+	ValidSourceName         = validSourceName
+	ValidCustomEventBusName = validCustomEventBusName
+	ValidBusNameOrARN       = validBusNameOrARN
+	ValidateRuleName        = validateRuleName
 )

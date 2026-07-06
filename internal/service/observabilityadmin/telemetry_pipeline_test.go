@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -40,7 +39,7 @@ func testAccTelemetryPipelinePreCheck(ctx context.Context, t *testing.T) {
 }
 
 func testAccRandomTelemetryPipelineName(t *testing.T) string {
-	return fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
+	return fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, acctest.CharSetAlpha))
 }
 
 func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -25,7 +25,7 @@ func TestAccSFNAlias_basic(t *testing.T) {
 	}
 
 	var alias sfn.DescribeStateMachineAliasOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	stateMachineName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	resourceName := "aws_sfn_alias.test"
@@ -63,7 +63,7 @@ func TestAccSFNAlias_disappears(t *testing.T) {
 	}
 
 	var alias sfn.DescribeStateMachineAliasOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	stateMachineName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	resourceName := "aws_sfn_alias.test"
@@ -81,6 +81,14 @@ func TestAccSFNAlias_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsfn.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sfn_alias.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sfn_alias.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -204,7 +212,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_iam_role_policy" "for_sfn" {

@@ -28,7 +28,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_basic(t *testing.T) {
 	var v awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -117,7 +117,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_regionOverride(t *testing.T)
 
 	resourceName := "aws_route53_resolver_rule_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -211,7 +211,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_basic(t *te
 	var v awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -272,7 +272,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_noRefreshNo
 	var v awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

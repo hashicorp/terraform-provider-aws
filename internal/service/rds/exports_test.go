@@ -61,6 +61,7 @@ var (
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
+	IntegrationIDFromARN                       = integrationIDFromARN
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterChunksForModify                   = parameterChunksForModify
@@ -93,4 +94,13 @@ var (
 	InstanceEngineSQLServerExpress     = instanceEngineSQLServerExpress
 	InstanceEngineSQLServerStandard    = instanceEngineSQLServerStandard
 	InstanceEngineSQLServerWeb         = instanceEngineSQLServerWeb
+
+	ValidEventSubscriptionName       = validEventSubscriptionName
+	ValidEventSubscriptionNamePrefix = validEventSubscriptionNamePrefix
+	ValidOptionGroupName             = validOptionGroupName
+	ValidOptionGroupNamePrefix       = validOptionGroupNamePrefix
+	ValidParamGroupName              = validParamGroupName
+	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
+	ValidSubnetGroupName             = validSubnetGroupName
+	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 )

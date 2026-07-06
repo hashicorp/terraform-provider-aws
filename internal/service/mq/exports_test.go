@@ -13,6 +13,10 @@ var (
 
 	NormalizeEngineVersion = normalizeEngineVersion
 
+	FlattenResourceShareARNs = flattenResourceShareARNs
+
+	SortBrokerInstanceEndpoints = sortBrokerInstanceEndpoints
+
 	WaitBrokerRebooted = waitBrokerRebooted
 	WaitBrokerDeleted  = waitBrokerDeleted
 )

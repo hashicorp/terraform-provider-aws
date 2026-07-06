@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -40,7 +41,7 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccLifecycleHookImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLifecycleHookImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -65,6 +66,14 @@ func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceLifecycleHook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -133,15 +142,8 @@ func testAccCheckLifecycleHookDestroy(ctx context.Context, t *testing.T) resourc
 	}
 }
 
-func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID), nil
-	}
+func testAccLifecycleHookImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", "autoscaling_group_name", names.AttrName)
 }
 
 func testAccLifecycleHookConfig_basic(rName string) string {
@@ -152,7 +154,7 @@ func testAccLifecycleHookConfig_basic(rName string) string {
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_sqs_queue" "test" {
@@ -215,7 +217,7 @@ resource "aws_autoscaling_lifecycle_hook" "test" {
 
   notification_metadata = <<EOF
 {
-  "foo": "bar"
+  "Key": "Value"
 }
 EOF
 
@@ -233,7 +235,7 @@ func testAccLifecycleHookConfig_omitDefaultResult(rName string) string {
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_sqs_queue" "test" {
@@ -295,7 +297,7 @@ resource "aws_autoscaling_lifecycle_hook" "test" {
 
   notification_metadata = <<EOF
 {
-  "foo": "bar"
+  "Key": "Value"
 }
 EOF
 

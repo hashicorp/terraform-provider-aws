@@ -70,6 +70,7 @@ func testAccDataLake_basic(t *testing.T) {
 	})
 }
 
+// TODO: Generate Resource Identity tests
 func testAccDataLake_identitySerial(t *testing.T) {
 	t.Helper()
 
@@ -204,6 +205,14 @@ func testAccDataLake_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceDataLake, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_data_lake.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_data_lake.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

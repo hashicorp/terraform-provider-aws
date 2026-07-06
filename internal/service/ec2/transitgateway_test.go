@@ -112,6 +112,24 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"tags":             testAccTransitGatewayPeeringAttachmentAccepter_tags,
 			"differentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
 		},
+		"MeteringPolicy": {
+			acctest.CtBasic:        testAccTransitGatewayMeteringPolicy_basic,
+			acctest.CtDisappears:   testAccTransitGatewayMeteringPolicy_disappears,
+			"tags":                 testAccTransitGatewayMeteringPolicy_tags,
+			"middleboxAttachments": testAccTransitGatewayMeteringPolicy_middleboxAttachments,
+			"Identity":             testAccTransitGatewayMeteringPolicy_identity,
+			"ListBasic":            testAccTransitGatewayMeteringPolicy_List_basic,
+			"ListIncludeResource":  testAccTransitGatewayMeteringPolicy_List_includeResource,
+			"ListRegionOverride":   testAccTransitGatewayMeteringPolicy_List_regionOverride,
+		},
+		"MeteringPolicyEntry": {
+			acctest.CtBasic:      testAccTransitGatewayMeteringPolicyEntry_basic,
+			acctest.CtDisappears: testAccTransitGatewayMeteringPolicyEntry_disappears,
+			"fullRule":           testAccTransitGatewayMeteringPolicyEntry_fullRule,
+			"portRanges":         testAccTransitGatewayMeteringPolicyEntry_portRanges,
+			"attachmentTypes":    testAccTransitGatewayMeteringPolicyEntry_attachmentTypes,
+			"attachmentIDs":      testAccTransitGatewayMeteringPolicyEntry_attachmentIDs,
+		},
 		"PolicyTable": {
 			acctest.CtBasic:            testAccTransitGatewayPolicyTable_basic,
 			acctest.CtDisappears:       testAccTransitGatewayPolicyTable_disappears,
@@ -250,6 +268,14 @@ func testAccTransitGateway_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

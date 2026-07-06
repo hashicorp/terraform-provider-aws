@@ -1617,7 +1617,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
   brand                    = "AWS"
 }
 
@@ -2740,6 +2740,35 @@ service "devicefarm" {
 
   provider_package_correct = "devicefarm"
   doc_prefix               = ["devicefarm_"]
+  brand                    = "AWS"
+}
+
+service "devopsagent" {
+  cli_v2_command {
+    aws_cli_v2_command           = "devops-agent"
+    aws_cli_v2_command_no_dashes = "devopsagent"
+  }
+
+  sdk {
+    id            = "DevOps Agent"
+    arn_namespace = "aidevops"
+  }
+
+  names {
+    provider_name_upper = "DevOpsAgent"
+    human_friendly      = "DevOps Agent"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListAgentSpaces"
+  }
+
+  resource_prefix {
+    correct = "aws_devopsagent_"
+  }
+
+  provider_package_correct = "devopsagent"
+  doc_prefix               = ["devopsagent_"]
   brand                    = "AWS"
 }
 
@@ -4203,8 +4232,9 @@ service "iam" {
   }
 
   names {
-    provider_name_upper = "IAM"
-    human_friendly      = "IAM (Identity & Access Management)"
+    provider_name_upper  = "IAM"
+    human_friendly       = "IAM (Identity & Access Management)"
+    human_friendly_short = "IAM"
   }
 
   env_var {
@@ -4271,6 +4301,30 @@ service "inspector2" {
 
   provider_package_correct = "inspector2"
   doc_prefix               = ["inspector2_"]
+  brand                    = "AWS"
+}
+
+service "interconnect" {
+  sdk {
+    id            = "Interconnect"
+    arn_namespace = "interconnect"
+  }
+
+  names {
+    provider_name_upper = "Interconnect"
+    human_friendly      = "Interconnect"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_interconnect_"
+  }
+
+  provider_package_correct = "interconnect"
+  doc_prefix               = ["interconnect_"]
   brand                    = "AWS"
 }
 
@@ -4781,7 +4835,7 @@ service "kinesis" {
   }
 
   provider_package_correct = "kinesis"
-  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings"]
   brand                    = "AWS"
 }
 
@@ -6590,7 +6644,7 @@ service "pinpoint" {
 
   names {
     provider_name_upper = "Pinpoint"
-    human_friendly      = "Pinpoint"
+    human_friendly      = "End User Messaging"
   }
 
   endpoint_info {
@@ -7171,7 +7225,6 @@ service "resourceexplorer2" {
     human_friendly      = "Resource Explorer"
   }
 
-
   endpoint_info {
     endpoint_api_call = "ListIndexes"
   }
@@ -7572,6 +7625,30 @@ service "s3tables" {
 
   doc_prefix = ["s3tables_"]
   brand      = "Amazon"
+}
+
+service "s3files" {
+  sdk {
+    id            = "S3Files"
+    arn_namespace = "s3files"
+  }
+
+  names {
+    provider_name_upper = "S3Files"
+    human_friendly      = "S3 Files"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListFileSystems"
+  }
+
+  resource_prefix {
+    correct = "aws_s3files_"
+  }
+
+  provider_package_correct = "s3files"
+  doc_prefix               = ["s3files_"]
+  brand                    = "AWS"
 }
 
 service "s3vectors" {
@@ -8864,7 +8941,6 @@ service "transfer" {
     human_friendly      = "Transfer Family"
   }
 
-
   endpoint_info {
     endpoint_api_call = "ListConnectors"
   }
@@ -8897,6 +8973,34 @@ service "translate" {
   doc_prefix               = ["translate_"]
   brand                    = "Amazon"
   not_implemented          = true
+}
+
+service "uxc" {
+  sdk {
+    id            = "UXC"
+    arn_namespace = "uxc"
+  }
+
+  names {
+    provider_name_upper = "UXC"
+    human_friendly      = "User Experience Customization"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListServices"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_uxc_"
+  }
+
+  provider_package_correct = "uxc"
+  doc_prefix               = ["uxc_"]
+  brand                    = "Amazon"
+  is_global                = true
 }
 
 service "vpclattice" {
@@ -9436,7 +9540,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "outposts_"
-    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway"]
+    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway", "ec2_service_link_virtual_interface"]
     brand               = "AWS"
     exclude             = true
     allowed_subcategory = true

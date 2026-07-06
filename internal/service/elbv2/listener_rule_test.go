@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -135,6 +134,14 @@ func TestAccELBV2ListenerRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListenerRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -196,9 +203,9 @@ func TestAccELBV2ListenerRule_updateForwardBasic(t *testing.T) {
 func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-weighted-%s", sdkacctest.RandString(13))
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	lbName := fmt.Sprintf("testrule-weighted-%s", acctest.RandString(t, 13))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
+	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 
 	resourceName := "aws_lb_listener_rule.weighted"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -825,8 +832,8 @@ func TestAccELBV2ListenerRule_ActionForward_IgnoreFields(t *testing.T) {
 func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(t, 13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 
 	resourceName := "aws_alb_listener_rule.static"
 	frontEndListenerResourceName := "aws_alb_listener.front_end"
@@ -873,7 +880,7 @@ func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
+	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandString(t, 14))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -963,7 +970,7 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-fixedresponse-%s", sdkacctest.RandString(9))
+	lbName := fmt.Sprintf("testrule-fixedresponse-%s", acctest.RandString(t, 9))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1003,7 +1010,7 @@ func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(t, 13))
 
 	resourceName := "aws_lb_listener_rule.static"
 
@@ -1509,7 +1516,7 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
+	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandString(t, 14))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1601,7 +1608,7 @@ func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandString(t, 12))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1642,7 +1649,7 @@ func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHostHeaderRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandString(t, 12))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1683,7 +1690,7 @@ func TestAccELBV2ListenerRule_conditionHostHeaderRegex(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
+	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandString(t, 12))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1737,7 +1744,7 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHTTPHeaderRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
+	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandString(t, 12))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1795,7 +1802,7 @@ func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-httpRequest-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-httpRequest-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1835,7 +1842,7 @@ func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1875,7 +1882,7 @@ func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionPathPatternRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1916,7 +1923,7 @@ func TestAccELBV2ListenerRule_conditionPathPatternRegex(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-queryString-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-queryString-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1980,7 +1987,7 @@ func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-sourceIp-%s", sdkacctest.RandString(14))
+	lbName := fmt.Sprintf("testrule-sourceIp-%s", acctest.RandString(t, 14))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -2020,7 +2027,7 @@ func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-mixed-%s", sdkacctest.RandString(17))
+	lbName := fmt.Sprintf("testrule-mixed-%s", acctest.RandString(t, 17))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -2099,7 +2106,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandString(t, 13))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -2183,7 +2190,7 @@ func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandString(t, 13))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -2299,8 +2306,8 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
 						"host_header_rewrite_config.#":                   "1",
 						"host_header_rewrite_config.0.rewrite.#":         "1",
-						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).com$",
-						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).test$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
 						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
@@ -2320,8 +2327,8 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
 						"host_header_rewrite_config.#":                   "1",
 						"host_header_rewrite_config.0.rewrite.#":         "1",
-						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite2-(.+).com$",
-						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite2-(.+).test$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
 						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
@@ -5120,8 +5127,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }
@@ -5170,8 +5177,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite2-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite2-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }

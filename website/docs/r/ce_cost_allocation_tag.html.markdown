@@ -14,9 +14,22 @@ Provides a CE Cost Allocation Tag.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_ce_cost_allocation_tag" "example" {
   tag_key = "example"
+  status  = "Active"
+}
+```
+
+### Account Tags as Cost Allocation Tags
+
+Cost Allocation tags support account tags to utilize existing AWS Organizations account tags directly in cost management tools. To activate account tags as Cost Allocation Tags the `tag_key` value needs to be prefixed with `accountTag/`.
+
+```terraform
+resource "aws_ce_cost_allocation_tag" "example" {
+  tag_key = "accountTag/example"
   status  = "Active"
 }
 ```

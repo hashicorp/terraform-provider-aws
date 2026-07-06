@@ -91,7 +91,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 
 	var (
 		t                             T
-		currentState                  S
+		currentState, priorState      S
 		err                           error
 		notFoundTick, targetOccurence int
 		l                             *backoff.Loop
@@ -100,6 +100,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		t, currentState, err = conf.refreshWithTimeout(ctx, l.Remaining())
 
 		if errors.Is(err, context.DeadlineExceeded) {
+			currentState = priorState
 			break
 		}
 
@@ -107,12 +108,21 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 			return t, err
 		}
 
+		// Save prior state in case next time round the loop the deadline's exceeded.
+		priorState = currentState
+
 		if inttypes.IsZero(t) {
 			// If we're waiting for the absence of a thing, then return.
 			if len(conf.Target) == 0 {
 				targetOccurence++
 				if conf.ContinuousTargetOccurence == targetOccurence {
 					return t, err
+				}
+
+				// https://github.com/hashicorp/terraform-provider-aws/issues/48682.
+				// Backwards compatibility with SDKv2 helper/retry.
+				if v, ok := delay.(backoff.DelayWithSetIncrementDelay); ok {
+					v.SetIncrementDelay(false)
 				}
 
 				continue

@@ -103,6 +103,14 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -127,6 +135,14 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sns_topic_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

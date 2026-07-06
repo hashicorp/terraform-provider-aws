@@ -30,12 +30,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_node_group", name="Node Group")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("node_group_name")
+// @ImportIDHandler("nodeGroupImportID")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Nodegroup")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,
@@ -43,337 +50,335 @@ func resourceNodeGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceNodeGroupUpdate,
 		DeleteWithoutTimeout: resourceNodeGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"ami_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.AMITypes](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.CapacityTypes](),
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			"disk_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"force_update_version": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"instance_types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"labels": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrLaunchTemplate: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"launch_template.0.name"},
-							ValidateFunc:  verify.ValidLaunchTemplateID,
-						},
-						names.AttrName: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"launch_template.0.id"},
-							ValidateFunc:  verify.ValidLaunchTemplateName,
-						},
-						names.AttrVersion: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"ami_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.AMITypes](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.CapacityTypes](),
+				},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				"disk_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"force_update_version": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"instance_types": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"labels": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrLaunchTemplate: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"launch_template.0.name"},
+								ValidateFunc:  verify.ValidLaunchTemplateID,
+							},
+							names.AttrName: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"launch_template.0.id"},
+								ValidateFunc:  verify.ValidLaunchTemplateName,
+							},
+							names.AttrVersion: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
 						},
 					},
 				},
-			},
-			"node_group_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"node_group_name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
-			},
-			"node_group_name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"node_group_name"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
-			},
-			"node_repair_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"max_parallel_nodes_repaired_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-							ConflictsWith: []string{
-								"node_repair_config.0.max_parallel_nodes_repaired_percentage",
+				"node_group_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"node_group_name_prefix"},
+					ValidateFunc:  validation.StringLenBetween(0, 63),
+				},
+				"node_group_name_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"node_group_name"},
+					ValidateFunc:  validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
+				},
+				"node_repair_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
-						},
-						"max_parallel_nodes_repaired_percentage": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 100),
-							ConflictsWith: []string{
-								"node_repair_config.0.max_parallel_nodes_repaired_count",
+							"max_parallel_nodes_repaired_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+								ConflictsWith: []string{
+									"node_repair_config.0.max_parallel_nodes_repaired_percentage",
+								},
 							},
-						},
-						"max_unhealthy_node_threshold_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-							ConflictsWith: []string{
-								"node_repair_config.0.max_unhealthy_node_threshold_percentage",
+							"max_parallel_nodes_repaired_percentage": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 100),
+								ConflictsWith: []string{
+									"node_repair_config.0.max_parallel_nodes_repaired_count",
+								},
 							},
-						},
-						"max_unhealthy_node_threshold_percentage": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 100),
-							ConflictsWith: []string{
-								"node_repair_config.0.max_unhealthy_node_threshold_count",
+							"max_unhealthy_node_threshold_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+								ConflictsWith: []string{
+									"node_repair_config.0.max_unhealthy_node_threshold_percentage",
+								},
 							},
-						},
-						"node_repair_config_overrides": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"min_repair_wait_time_mins": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"node_monitoring_condition": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"node_unhealthy_reason": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"repair_action": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.RepairAction](),
+							"max_unhealthy_node_threshold_percentage": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 100),
+								ConflictsWith: []string{
+									"node_repair_config.0.max_unhealthy_node_threshold_count",
+								},
+							},
+							"node_repair_config_overrides": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"min_repair_wait_time_mins": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+										"node_monitoring_condition": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"node_unhealthy_reason": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"repair_action": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.RepairAction](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"node_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"release_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"remote_access": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ec2_ssh_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"source_security_group_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"node_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"release_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"remote_access": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ec2_ssh_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"source_security_group_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrResources: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"autoscaling_groups": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
+				names.AttrResources: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"autoscaling_groups": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"remote_access_security_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"scaling_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"max_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"min_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-					},
-				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"taint": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 63),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 63),
-						},
-						"effect": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.TaintEffect](),
-						},
-					},
-				},
-			},
-			"update_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_unavailable": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 100),
-							ExactlyOneOf: []string{
-								"update_config.0.max_unavailable",
-								"update_config.0.max_unavailable_percentage",
+							"remote_access_security_group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						"max_unavailable_percentage": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 100),
-							ExactlyOneOf: []string{
-								"update_config.0.max_unavailable",
-								"update_config.0.max_unavailable_percentage",
+					},
+				},
+				"scaling_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"desired_size": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(0),
 							},
-						},
-						"update_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.NodegroupUpdateStrategies](),
+							"max_size": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"min_size": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
 						},
 					},
 				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"taint": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 63),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 63),
+							},
+							"effect": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.TaintEffect](),
+							},
+						},
+					},
+				},
+				"update_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_unavailable": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 100),
+								ExactlyOneOf: []string{
+									"update_config.0.max_unavailable",
+									"update_config.0.max_unavailable_percentage",
+								},
+							},
+							"max_unavailable_percentage": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 100),
+								ExactlyOneOf: []string{
+									"update_config.0.max_unavailable",
+									"update_config.0.max_unavailable_percentage",
+								},
+							},
+							"update_strategy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.NodegroupUpdateStrategies](),
+							},
+						},
+					},
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -385,9 +390,9 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := create.Name(ctx, d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
-	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	input := &eks.CreateNodegroupInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+	groupID := nodeGroupCreateResourceID(clusterName, nodeGroupName)
+	input := eks.CreateNodegroupInput{
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
@@ -447,7 +452,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Version = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateNodegroup(ctx, input)
+	_, err := conn.CreateNodegroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Node Group (%s): %s", groupID, err)
@@ -467,7 +472,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -542,15 +547,15 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Do any version update first.
 	if d.HasChanges(names.AttrLaunchTemplate, "release_version", names.AttrVersion) {
-		input := &eks.UpdateNodegroupVersionInput{
-			ClientRequestToken: aws.String(sdkid.UniqueId()),
+		input := eks.UpdateNodegroupVersionInput{
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 			Force:              d.Get("force_update_version").(bool),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -584,7 +589,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.Version = aws.String(v.(string))
 		}
 
-		output, err := conn.UpdateNodegroupVersion(ctx, input)
+		output, err := conn.UpdateNodegroupVersion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) version: %s", d.Id(), err)
@@ -601,8 +606,8 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
-		input := &eks.UpdateNodegroupConfigInput{
-			ClientRequestToken: aws.String(sdkid.UniqueId()),
+		input := eks.UpdateNodegroupConfigInput{
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			ClusterName:        aws.String(clusterName),
 			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -627,7 +632,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
-		output, err := conn.UpdateNodegroupConfig(ctx, input)
+		output, err := conn.UpdateNodegroupConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) config: %s", d.Id(), err)
@@ -648,16 +653,17 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
-	_, err = conn.DeleteNodegroup(ctx, &eks.DeleteNodegroupInput{
+	input := eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
-	})
+	}
+	_, err = conn.DeleteNodegroup(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -1287,4 +1293,47 @@ func flattenTaints(apiObjects []types.Taint) []any {
 	}
 
 	return tfList
+}
+
+const nodeGroupResourceIDSeparator = ":"
+
+func nodeGroupCreateResourceID(clusterName, nodeGroupName string) string {
+	parts := []string{clusterName, nodeGroupName}
+	id := strings.Join(parts, nodeGroupResourceIDSeparator)
+
+	return id
+}
+
+func nodeGroupParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, nodeGroupResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]snode-group-name", id, nodeGroupResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = nodeGroupImportID{}
+)
+
+type nodeGroupImportID struct{}
+
+func (nodeGroupImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, nodeGroupName, err := nodeGroupParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterName: clusterName,
+		"node_group_name":     nodeGroupName,
+	}
+
+	return id, result, nil
+}
+
+func (nodeGroupImportID) Create(d *schema.ResourceData) string {
+	return nodeGroupCreateResourceID(d.Get(names.AttrClusterName).(string), d.Get("node_group_name").(string))
 }

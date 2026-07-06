@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Change `outpost_config.control_plane_placement.group_name` to Optional
+```
+
+```release-note:enhancement
+resource/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` arguments
+```
+
+```release-note:enhancement
+data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement.spread_level`, `outpost_config.etcd_instance_type`, and `outpost_config.etcd_placement` attributes
+```
+
+```release-note:note
+resource/aws_eks_cluster: Because we cannot easily test the behavior of `outpost_config`, the changes are best effort and we ask for community help in testing
+```

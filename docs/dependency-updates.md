@@ -7,7 +7,7 @@ Generally, dependency updates are handled by maintainers.
 
 ## Changelog Entries for Dependency Updates
 
-**Inlcude a changelog entry for dependency updates that address:**
+**Include a changelog entry for dependency updates that address:**
 
 1. Security vulnerabilities
 2. Significant changes (e.g., AWS SDK authentication changes)
@@ -97,7 +97,7 @@ Merge if CI passes.
 
 Except for trivial changes, run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
 
-## tfproviderdocs Updates
+## swissshepherd Updates
 
 Merge if CI passes.
 

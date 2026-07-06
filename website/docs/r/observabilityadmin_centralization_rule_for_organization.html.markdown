@@ -49,7 +49,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "example"
 }
 ```
 
-### Advanced Configuration with Encryption and Backup
+### Advanced Configuration with Encryption, Backup and Log Group Name Configuration
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -70,6 +70,10 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "advanced
 
         backup_configuration {
           region = "us-west-1"
+        }
+
+        log_group_name_configuration {
+          log_group_name_pattern = "/centralized-logs/$${source.accountId}/$${source.region}/$${source.logGroup}"
         }
       }
     }
@@ -126,6 +130,39 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "filtered
 }
 ```
 
+### Metrics Centralization with Backup
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "metrics" {
+  rule_name = "metrics-centralization-rule"
+
+  rule {
+    destination {
+      region  = "eu-west-1"
+      account = data.aws_caller_identity.current.account_id
+
+      destination_metrics_configuration {
+        backup_configuration {
+          region = "us-west-1"
+        }
+      }
+    }
+
+    source {
+      regions = ["ap-southeast-1", "us-east-1"]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_metrics_configuration {
+        metrics_selection_criteria = "*"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -140,18 +177,20 @@ The following arguments are optional:
 
 ### rule
 
-* `destination` - (Required) Configuration block for the destination where logs will be centralized. See [`destination`](#destination) below.
+* `destination` - (Required) Configuration block for the destination where telemetry will be centralized. See [`destination`](#destination) below.
 * `source` - (Required) Configuration block for the source of logs to be centralized. See [`source`](#source) below.
 
 ### destination
 
-* `account` - (Required) AWS account ID where logs will be centralized.
-* `region` - (Required) AWS region where logs will be centralized.
+* `account` - (Required) AWS account ID where telemetry will be centralized.
+* `region` - (Required) AWS region where telemetry will be centralized.
 * `destination_logs_configuration` - (Optional) Configuration block for destination logs settings. See [`destination_logs_configuration`](#destination_logs_configuration) below.
+* `destination_metrics_configuration` - (Optional) Configuration block for destination metrics settings. See [`destination_metrics_configuration`](#destination_metrics_configuration) below.
 
 #### destination_logs_configuration
 
 * `backup_configuration` - (Optional) Configuration block for backup settings. See [`backup_configuration`](#backup_configuration) below.
+* `log_group_name_configuration` - (Optional) Configuration block for a naming pattern for destination log groups created during centralization. See [`log_group_name_configuration`](#log_group_name_configuration) below.
 * `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration`](#logs_encryption_configuration) below.
 
 ##### backup_configuration
@@ -159,22 +198,40 @@ The following arguments are optional:
 * `region` - (Required) AWS region for backup storage.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for backup encryption.
 
+##### log_group_name_configuration
+
+* `log_group_name_pattern` - (Required) Pattern used for generating destination log group names during centralization. The pattern can contain static text and dynamic variables that are replaced with source attributes. For supported dynamic variables, see the [AWS documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/API_LogGroupNameConfiguration.html). Note that `$` used in dynamic variables must be escaped as `$$` in Terraform configuration.
+
 ##### logs_encryption_configuration
 
 * `encryption_strategy` - (Required) Encryption strategy for logs. Valid values: `AWS_OWNED`, `CUSTOMER_MANAGED`.
 * `encryption_conflict_resolution_strategy` - (Optional) Strategy for resolving encryption conflicts. Valid values: `ALLOW`, `SKIP`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for encryption when `encryption_strategy` is `CUSTOMER_MANAGED`.
 
+#### destination_metrics_configuration
+
+* `backup_configuration` - (Optional) Configuration block for metrics backup settings. See [`destination_metrics_backup_configuration`](#destination_metrics_backup_configuration) below.
+
+##### destination_metrics_backup_configuration
+
+* `region` - (Required) AWS region for metrics backup destination.
+
 ### source
 
-* `regions` - (Required) Set of AWS regions from which to centralize logs. Must contain at least one region.
+* `regions` - (Required) Set of AWS regions from which to centralize telemetry. Must contain at least one region.
 * `scope` - (Required) Scope defining which resources to include. Use organization ID format: `OrganizationId = 'o-example123456'`.
 * `source_logs_configuration` - (Optional) Configuration block for source logs settings. See [`source_logs_configuration`](#source_logs_configuration) below.
+* `source_metrics_configuration` - (Optional) Configuration block for source metrics settings. See [`source_metrics_configuration`](#source_metrics_configuration) below.
 
 #### source_logs_configuration
 
 * `encrypted_log_group_strategy` - (Required) Strategy for handling encrypted log groups. Valid values: `ALLOW`, `SKIP`.
-* `log_group_selection_criteria` - (Required) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
+* `data_source_selection_criteria` - (Optional) Criteria for selecting data sources. Uses the same filter expression format as `log_group_selection_criteria`, but operates on Data Source Name and Data Source Type operands. When both `log_group_selection_criteria` and `data_source_selection_criteria` are specified, a log event must match both criteria to be centralized. Must be between 1 and 2000 characters.
+* `log_group_selection_criteria` - (Optional) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
+
+#### source_metrics_configuration
+
+* `metrics_selection_criteria` - (Required) Filter expression that selects which source metrics to centralize. Currently, only `*` (all metrics) is supported.
 
 ## Attribute Reference
 

@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_launch_configuration: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_traffic_source_attachment: Add import support
+```
+
+```release-note:bug
+resource/aws_autoscaling_traffic_source_attachment: Change `traffic_source` to Required
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_policy: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_notification: Add plan-time validation of `topic_arn`
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_lifecycle_hook: Add Resource Identity support
+```

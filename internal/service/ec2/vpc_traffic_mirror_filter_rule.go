@@ -16,10 +16,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -39,86 +39,88 @@ func resourceTrafficMirrorFilterRule() *schema.Resource {
 			StateContext: resourceTrafficMirrorFilterRuleImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"destination_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-			"destination_port_range": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"destination_cidr_block": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				"destination_port_range": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
 						},
 					},
 				},
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"rule_action": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrafficMirrorRuleAction](),
-			},
-			"rule_number": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"source_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-			"source_port_range": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
+				names.AttrProtocol: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"rule_action": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficMirrorRuleAction](),
+				},
+				"rule_number": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"source_cidr_block": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				"source_port_range": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+							},
 						},
 					},
 				},
-			},
-			"traffic_direction": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrafficDirection](),
-			},
-			"traffic_mirror_filter_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"traffic_direction": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficDirection](),
+				},
+				"traffic_mirror_filter_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -128,7 +130,7 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
-		ClientToken:           aws.String(sdkid.UniqueId()),
+		ClientToken:           aws.String(create.UniqueId(ctx)),
 		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
 		RuleAction:            awstypes.TrafficMirrorRuleAction(d.Get("rule_action").(string)),
 		RuleNumber:            aws.Int32(int32(d.Get("rule_number").(int))),

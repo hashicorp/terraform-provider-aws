@@ -44,137 +44,139 @@ func resourceBranch() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"app_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associated_resources": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"backend_environment_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"basic_auth_credentials": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// These credentials are ignored if basic auth is not enabled.
-					if d.Get("enable_basic_auth").(bool) {
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"app_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associated_resources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"backend_environment_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"basic_auth_credentials": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// These credentials are ignored if basic auth is not enabled.
+						if d.Get("enable_basic_auth").(bool) {
+							return old == new
+						}
+
+						return true
+					},
+				},
+				"branch_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
+				},
+				"custom_domains": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				"destination_branch": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDisplayName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
+				},
+				"enable_auto_build": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"enable_basic_auth": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_notification": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_performance_mode": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_pull_request_preview": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_skew_protection": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"environment_variables": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"framework": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"pull_request_environment_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 20),
+				},
+				"source_branch": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStage: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.Stage](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// API returns "NONE" by default.
+						if old == stageNone && new == "" {
+							return true
+						}
+
 						return old == new
-					}
-
-					return true
+					},
 				},
-			},
-			"branch_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
-			},
-			"custom_domains": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"destination_branch": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDisplayName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
-			},
-			"enable_auto_build": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_basic_auth": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_performance_mode": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_pull_request_preview": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_skew_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"environment_variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"framework": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"pull_request_environment_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 20),
-			},
-			"source_branch": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStage: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.Stage](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// API returns "NONE" by default.
-					if old == stageNone && new == "" {
-						return true
-					}
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"ttl": {
+					Type:     schema.TypeString,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// API returns "5" by default.
+						if old == "5" && new == "" {
+							return true
+						}
 
-					return old == new
+						return old == new
+					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// API returns "5" by default.
-					if old == "5" && new == "" {
-						return true
-					}
-
-					return old == new
-				},
-			},
+			}
 		},
 	}
 }

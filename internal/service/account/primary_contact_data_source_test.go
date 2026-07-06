@@ -95,7 +95,7 @@ resource "aws_account_primary_contact" "test" {
   phone_number       = "+64211111111"
   postal_code        = "98101"
   state_or_region    = "WA"
-  website_url        = "https://www.examplecorp.com"
+  website_url        = "https://www.example.com"
 }
 
 data "aws_account_primary_contact" "test" {
@@ -123,7 +123,7 @@ resource "aws_account_primary_contact" "test" {
   phone_number       = "+64211111111"
   postal_code        = "98101"
   state_or_region    = "WA"
-  website_url        = "https://www.examplecorp.com"
+  website_url        = "https://www.example.com"
 }
 
 data "aws_account_primary_contact" "test" {

@@ -13,6 +13,7 @@ var (
 	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
 	ResourceAPIKey                     = newAPIKeyResource
 	ResourceWebACLRuleGroupAssociation = newResourceWebACLRuleGroupAssociation
+	ResourceWebACLRule                 = newResourceWebACLRule
 
 	CloudFrontDistributionIDFromARN   = cloudFrontDistributionIDFromARN
 	FindAPIKeyByTwoPartKey            = findAPIKeyByTwoPartKey

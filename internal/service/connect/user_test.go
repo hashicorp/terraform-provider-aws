@@ -11,6 +11,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -111,7 +112,7 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 	rName3 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	rName4 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	rName5 := acctest.RandomWithPrefix(t, "resource-test-terraform")
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	emailOriginal := acctest.RandomEmailAddress(domain)
 	firstNameOriginal := "example-first-name-original"
 	lastNameOriginal := "example-last-name-original"
@@ -409,6 +410,14 @@ func testAccUser_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

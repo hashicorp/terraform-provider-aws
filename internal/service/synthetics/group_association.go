@@ -34,25 +34,27 @@ func ResourceGroupAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"canary_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"canary_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_acl.test"
 	dataSourceName := "data.aws_memorydb_acl.test"
-	userName1 := "tf-" + sdkacctest.RandString(8)
-	userName2 := "tf-" + sdkacctest.RandString(8)
+	userName1 := "tf-" + acctest.RandString(t, 8)
+	userName2 := "tf-" + acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
