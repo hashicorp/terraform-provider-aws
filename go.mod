@@ -253,7 +253,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signer v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.69.5
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.32.10
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.40.8
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.9.8
