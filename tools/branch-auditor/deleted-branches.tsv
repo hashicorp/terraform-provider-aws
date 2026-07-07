@@ -55,3 +55,12 @@
 2026-07-06	compliance/update-headers-batch-7	dc21a999bf3	45406	R1
 2026-07-06	compliance/update-headers-batch-8	d5b16164329	45404	R1
 2026-07-06	compliance/update-headers-batch-9	8449095c2d7	45418	R1
+2026-07-07	f-new-resource-instance	9091a1051892167bc4bfd4ffba01d6cac3aca78e	38061	R3
+2026-07-07	f/bedrock-model-eval-resource	adf5b5e30750d01ef9770363b2c82ab24d006972	38809	R3
+2026-07-07	b-cloudwatch-evidently-deprecate	8eb261859dce0bda340b8f65d17b2b73a4edea46	42203	R3
+2026-07-07	migrate-s3tables-to-smarterr	d0054113e571de662370a8244934c3cadf9c44be	-	R3
+2026-07-07	smarterr-datazone-migration	ad6561aeb92d60955269490ab39b46fcc8379054	-	R3
+2026-07-07	smarterr-migration-qbusiness	ff92dd6dfaff4486fb3691a5d23118052039e43c	-	R3
+2026-07-07	smarterr-migration-tool	18ee76d4eb327b7ecf20d11020d52bc012051b44	43524	R3
+2026-07-07	timestreaminfluxdb-smarterr-migration	5561fdb4315def69940cfd4cb2e38d3afd893c00	-	R3
+2026-07-07	jitendra/codereview-test	cdfdb84104b87a2d1c6942f6f01c583644adf63d	46180	R3
