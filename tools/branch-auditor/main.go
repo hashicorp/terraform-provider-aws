@@ -15,6 +15,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -66,8 +67,8 @@ var (
 type rank struct{ key, label, effort, likelihood string }
 
 var ranks = []rank{
-	{"R1", "Automation/bot, PR closed", "trivial (bot, job done)", "very high"},
-	{"R2", "Already in `main` — lossless, no open PR", "trivial (content preserved)", "very high"},
+	{"R1", "Automation/bot, no open PR", "trivial (bot, job done)", "very high"},
+	{"R2", "Content already in `main` (patch-equivalent), no open PR", "trivial (content preserved)", "very high"},
 	{"R3", "No current owner (departed/external), no open PR", "low–medium (skim commits)", "high"},
 	{"R4", "Current maintainer/team, stale >1yr, no open PR", "medium (confirm w/ owner)", "medium"},
 	{"R5", "Current maintainer/team, recent <1yr, no open PR", "medium", "low"},
@@ -89,10 +90,25 @@ type branch struct {
 	bucket         string
 }
 
-func git(args ...string) string {
-	out, _ := exec.Command("git", args...).Output()
+// run executes a command and fails fast with stderr context on error. A silent
+// git/gh failure could otherwise misclassify branches (e.g. an empty `git cherry`
+// looking like "in main", or a failed `gh` call looking like "no PR") and produce
+// a misleading worksheet.
+func run(name string, args ...string) string {
+	out, err := exec.Command(name, args...).Output()
+	if err != nil {
+		stderr := ""
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			stderr = strings.TrimSpace(string(ee.Stderr))
+		}
+		fmt.Fprintf(os.Stderr, "branch-auditor: `%s %s` failed: %v\n%s\n", name, strings.Join(args, " "), err, stderr)
+		os.Exit(1)
+	}
 	return strings.TrimSpace(string(out))
 }
+
+func git(args ...string) string { return run("git", args...) }
 
 // loadMaintainers parses current maintainer logins from the "Who are the
 // maintainers?" section of docs/faq.md (the authoritative roster).
@@ -226,10 +242,11 @@ func collect() []branch {
 }
 
 func prInfo(head string) (num, state, author string) {
-	out, _ := exec.Command("gh", "pr", "list", "--repo", repo, "--head", head, "--state", "all",
+	// A genuine "no PR" result exits 0 with empty fields; an actual gh failure
+	// (missing/unauthenticated/rate-limited) exits non-zero and is caught by run.
+	s := run("gh", "pr", "list", "--repo", repo, "--head", head, "--state", "all",
 		"--json", "number,state,author",
-		"--jq", `sort_by(.number)|last|"\(.number)\u001f\(.state)\u001f\(.author.login)"`).Output()
-	s := strings.TrimSpace(string(out))
+		"--jq", `sort_by(.number)|last|"\(.number)\u001f\(.state)\u001f\(.author.login)"`)
 	if s == "" {
 		return "", "none", ""
 	}
@@ -357,10 +374,10 @@ func line(b branch, checkbox bool) string {
 	if checkbox {
 		mark = "- [ ] "
 	}
-	lossless := ""
+	inMainMark := ""
 	if b.inMain {
-		lossless = " **[in-main → lossless]**"
+		inMainMark = " **[content in `main`]**"
 	}
 	return fmt.Sprintf("%s`%s` — %s (%dd), %s, owner `%s` (%s)%s",
-		mark, b.name, b.date, b.age, prRef(b.prNum), b.ownerWho, b.ownerStatus, lossless)
+		mark, b.name, b.date, b.age, prRef(b.prNum), b.ownerWho, b.ownerStatus, inMainMark)
 }
