@@ -128,6 +128,11 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"wait_for_deployment": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"web_acl_id": schema.StringAttribute{
 				Optional: true,
 				// Note: For multi-tenant distributions, this must be a WAF V2 web ACL if specified
@@ -743,12 +748,21 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	data.ID = types.StringValue(aws.ToString(output.Distribution.Id))
 	data.ARN = types.StringValue(aws.ToString(output.Distribution.ARN))
 
-	// Wait for distribution to be deployed
-	distro, err := waitDistributionDeployed(ctx, conn, data.ID.ValueString())
-	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) create", data.ID.ValueString()), err.Error())
-		return
+	var distro *cloudfront.GetDistributionOutput
+
+	if data.WaitForDeployment.ValueBool() {
+		distro, err = waitDistributionDeployed(ctx, conn, data.ID.ValueString())
+		if err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) create", data.ID.ValueString()), err.Error())
+			return
+		}
+	} else {
+		distro, err = findDistributionByID(ctx, conn, data.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Multi-tenant Distribution (%s)", data.ID.ValueString()), err.Error())
+			return
+		}
 	}
 
 	// Read the distribution to get consistent state
@@ -864,7 +878,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		}
 
 		// Wait for deployment if enabled
-		if new.Enabled.ValueBool() {
+		if new.WaitForDeployment.ValueBool() {
 			_, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
@@ -1075,6 +1089,7 @@ type multiTenantDistributionResourceModel struct {
 	TagsAll                       tftags.Map                                                   `tfsdk:"tags_all"`
 	TenantConfig                  fwtypes.ListNestedObjectValueOf[tenantConfigModel]           `tfsdk:"tenant_config"`
 	Timeouts                      timeouts.Value                                               `tfsdk:"timeouts"`
+	WaitForDeployment             types.Bool                                                   `tfsdk:"wait_for_deployment"`
 	ViewerCertificate             fwtypes.ListNestedObjectValueOf[viewerCertificateModel]      `tfsdk:"viewer_certificate"`
 	WebACLID                      types.String                                                 `tfsdk:"web_acl_id" autoflex:",omitempty"`
 }
