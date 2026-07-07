@@ -17,18 +17,17 @@
 //
 // # Usage
 //
-//	# TF-only (no AWS mapping):
-//	drift-detect --schema-json .cache/schema.json \
-//	             --resource aws_sqs_queue
-//	drift-detect --resource aws_prometheus_workspace
+//	# --resource is required and must be in the format aws_<service>_<resource>:
+//	drift-detect --resource aws_sqs_queue \
+//	             --schema-json .cache/schema.json
 //
-//	# TF + AWS side-by-side for a single resource:
-//	drift-detect --schema-json .cache/schema.json \
-//	             --mappings tools/drift-detect/mappings/aws_resources.yaml \
-//	             --resource aws_sqs_queue
+//	# TF + AWS side-by-side with explicit mappings file:
+//	drift-detect --resource aws_sqs_queue \
+//	             --schema-json .cache/schema.json \
+//	             --mappings tools/drift-detect/mappings/aws_resources.yaml
 //
 //	# JSON output:
-//	drift-detect ... --json
+//	drift-detect --resource aws_sqs_queue ... --json
 package main
 
 import (
@@ -38,6 +37,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/awsmapping"
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/awsschema"
@@ -46,8 +46,7 @@ import (
 )
 
 const (
-	// defaultAPIModelsBaseURL = "https://raw.githubusercontent.com/aws/api-models-aws/main"
-	defaultAPIModelsBaseURL = "/Users/brosas/Desktop/AWS-models/api-models-aws"
+	defaultAPIModelsBaseURL = "https://raw.githubusercontent.com/aws/api-models-aws/main"
 	defaultProviderSource   = "registry.terraform.io/hashicorp/aws"
 )
 
@@ -63,11 +62,15 @@ func run() error {
 		schemaJSON     = flag.String("schema-json", ".cache/schema.json", "path to terraform providers schema -json output file")
 		providerDir    = flag.String("provider-dir", "", "path to provider source directory (builds provider and generates schema)")
 		mappingsFile   = flag.String("mappings", "", "path to aws_resources.yaml mapping file")
-		resource       = flag.String("resource", "", "scope output to a single named resource")
+		resource       = flag.String("resource", "", "required: AWS resource name in the format aws_<service>_<resource> (e.g. aws_sqs_queue)")
 		outputJSON     = flag.Bool("json", false, "output results as JSON")
 		refreshSchema  = flag.Bool("refresh-schema", false, "regenerate cached schema even if schema-json file already exists")
 	)
 	flag.Parse()
+
+	if err := validateResource(*resource); err != nil {
+		return err
+	}
 
 	// --- TF schema ---
 	schemaPath, cleanup, err := resolveSchema(*schemaJSON, *providerDir, *refreshSchema)
@@ -295,12 +298,25 @@ func resolveSchema(schemaJSON, providerDir string, refresh bool) (string, func()
 		return "", nil, fmt.Errorf(
 			"one of --schema-json or --provider-dir is required\n\n" +
 				"Examples:\n" +
-				"  drift-detect --schema-json schema.json\n" +
-				"  drift-detect --schema-json schema.json --mappings mappings/aws_resources.yaml --resource aws_sqs_queue",
+				"  drift-detect --resource aws_sqs_queue --schema-json schema.json\n" +
+				"  drift-detect --resource aws_sqs_queue --schema-json schema.json --mappings mappings/aws_resources.yaml",
 		)
 	}
 }
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// validateResource checks that r is non-empty and matches the required format
+// aws_<service>_<resource>, where all three segments are non-empty strings.
+func validateResource(r string) error {
+	if r == "" {
+		return fmt.Errorf("--resource is required (format: aws_<service>_<resource>, e.g. aws_sqs_queue)")
+	}
+	parts := strings.SplitN(r, "_", 3)
+	if len(parts) < 3 || parts[0] != "aws" || parts[1] == "" || parts[2] == "" {
+		return fmt.Errorf("--resource %q is invalid: must be in the format aws_<service>_<resource> (e.g. aws_sqs_queue)", r)
+	}
+	return nil
 }
