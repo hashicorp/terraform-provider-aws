@@ -38,17 +38,18 @@ type rawModel struct {
 // Members, key, value, and traits all need careful handling.
 type rawShape struct {
 	Type        string                 `json:"type"`
-	Input       *rawTarget             `json:"input"`   // operation input
-	Output      *rawTarget             `json:"output"`  // operation output
-	Create      *rawTarget             `json:"create"`  // resource create operation
-	Put         *rawTarget             `json:"put"`     // resource put operation
-	Read        *rawTarget             `json:"read"`    // resource read operation
-	Update      *rawTarget             `json:"update"`  // resource update operation
-	Delete      *rawTarget             `json:"delete"`  // resource delete operation
-	List        *rawTarget             `json:"list"`    // resource list operation
-	Key         *rawTarget             `json:"key"`     // map key type
-	Value       *rawTarget             `json:"value"`   // map value type
-	Members     map[string]rawMember   `json:"members"` // structure/enum members
+	Input       *rawTarget             `json:"input"`      // operation input
+	Output      *rawTarget             `json:"output"`     // operation output
+	Create      *rawTarget             `json:"create"`     // resource create operation
+	Put         *rawTarget             `json:"put"`        // resource put operation
+	Read        *rawTarget             `json:"read"`       // resource read operation
+	Update      *rawTarget             `json:"update"`     // resource update operation
+	Delete      *rawTarget             `json:"delete"`     // resource delete operation
+	List        *rawTarget             `json:"list"`       // resource list operation
+	Operations  []rawTarget            `json:"operations"` // resource operations
+	Key         *rawTarget             `json:"key"`        // map key type
+	Value       *rawTarget             `json:"value"`      // map value type
+	Members     map[string]rawMember   `json:"members"`    // structure/enum members
 	Identifiers map[string]rawTarget   `json:"identifiers"`
 	Target      string                 `json:"target"` // used for simple typedef aliases
 	Traits      map[string]rawAnything `json:"traits"`
@@ -123,6 +124,7 @@ type Shape struct {
 	UpdateTarget string            // resource update operation target
 	DeleteTarget string            // resource delete operation target
 	ListTarget   string            // resource list operation target
+	Operations   []string          // other resource operations
 	Identifiers  map[string]string // identifier member name -> shape ID
 
 	// Structure / enum members. For structures: Member.Target is the shape ID
@@ -287,6 +289,15 @@ func parseShape(id string, rs rawShape) *Shape {
 	}
 	if rs.List != nil {
 		s.ListTarget = rs.List.Target
+	}
+	if len(rs.Operations) > 0 {
+		s.Operations = make([]string, 0, len(rs.Operations))
+		for _, op := range rs.Operations {
+			if op.Target == "" {
+				continue
+			}
+			s.Operations = append(s.Operations, op.Target)
+		}
 	}
 	if len(rs.Identifiers) > 0 {
 		s.Identifiers = make(map[string]string, len(rs.Identifiers))

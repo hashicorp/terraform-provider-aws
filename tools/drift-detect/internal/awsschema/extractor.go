@@ -84,7 +84,7 @@ func hasLifecycleExtraction(m *awsmapping.ResourceMapping) bool {
 	}
 
 	lc := m.Lifecycle
-	return lc.Create != "" || lc.Put != "" || lc.Read != "" || lc.Update != "" || lc.Delete != "" || lc.List != ""
+	return lc.Create != "" || lc.Put != "" || lc.Read != "" || lc.Update != "" || lc.Delete != "" || lc.List != "" || len(lc.Operations) > 0
 }
 
 func hasEnumExtraction(m *awsmapping.ResourceMapping) bool {
@@ -121,13 +121,22 @@ func resolveLifecycle(m *awsmapping.ResourceMapping, model *smithymodel.Model) (
 		if shape == nil || shape.Kind != smithymodel.KindResource {
 			return resolved, fmt.Errorf("resource shape %q not found", resourceID)
 		}
+
+		inferredOps := make([]string, 0, len(shape.Operations))
+		for _, target := range shape.Operations {
+			if name := opName(target); name != "" {
+				inferredOps = append(inferredOps, name)
+			}
+		}
+
 		resolved = awsmapping.Lifecycle{
-			Create: opName(shape.CreateTarget),
-			Put:    opName(shape.PutTarget),
-			Read:   opName(shape.ReadTarget),
-			Update: opName(shape.UpdateTarget),
-			Delete: opName(shape.DeleteTarget),
-			List:   opName(shape.ListTarget),
+			Create:     opName(shape.CreateTarget),
+			Put:        opName(shape.PutTarget),
+			Read:       opName(shape.ReadTarget),
+			Update:     opName(shape.UpdateTarget),
+			Delete:     opName(shape.DeleteTarget),
+			List:       opName(shape.ListTarget),
+			Operations: inferredOps,
 		}
 	}
 
@@ -149,6 +158,9 @@ func resolveLifecycle(m *awsmapping.ResourceMapping, model *smithymodel.Model) (
 	}
 	if m.Lifecycle.List != "" {
 		resolved.List = m.Lifecycle.List
+	}
+	if len(m.Lifecycle.Operations) > 0 {
+		resolved.Operations = append([]string(nil), m.Lifecycle.Operations...)
 	}
 
 	return resolved, nil
@@ -203,6 +215,7 @@ func extractLifecycle(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, mo
 		lifecycle.Delete,
 		lifecycle.List,
 	}
+	ops = append(ops, lifecycle.Operations...)
 
 	seenOps := map[string]bool{}
 	for _, opName := range ops {

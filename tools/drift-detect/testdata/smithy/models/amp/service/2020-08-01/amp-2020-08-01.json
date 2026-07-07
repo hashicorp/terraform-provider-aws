@@ -75,7 +75,12 @@
       },
       "delete": {
         "target": "com.amazonaws.amp#DeleteResourcePolicy"
-      }
+      },
+      "operations": [
+        {
+          "target": "com.amazonaws.amp#CreateWorkspace"
+        }
+      ]
     },
     "com.amazonaws.amp#CreateWorkspaceRequest": {
       "type": "structure",

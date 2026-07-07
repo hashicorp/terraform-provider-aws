@@ -6,6 +6,8 @@ package awsschema_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -28,6 +30,11 @@ func apiModelsBaseURL(t *testing.T) string {
 	t.Cleanup(server.Close)
 
 	return server.URL
+}
+
+func fixtureModelExists(modelPath string) bool {
+	_, err := os.Stat(filepath.Join(fixtureModelsRoot, modelPath))
+	return err == nil
 }
 
 // loadMapping is a test helper that loads the mapping file and returns the
@@ -305,6 +312,15 @@ func TestExtract_AMPResourcePolicy_InferLifecycleFromSmithyResource(t *testing.T
 		}
 	}
 
+	// These fields come from the resource-level `operations` target
+	// (CreateWorkspace) and are not present in put/read/delete.
+	if _, ok := ir.Fields["alias"]; !ok {
+		t.Error("field \"alias\" missing from inferred resource operations")
+	}
+	if _, ok := ir.Fields["kms_key_arn"]; !ok {
+		t.Error("field \"kms_key_arn\" missing from inferred resource operations")
+	}
+
 	if _, ok := ir.Fields["workspace_id"]; ok {
 		t.Error("workspace_id should be suppressed in fields")
 	}
@@ -347,6 +363,9 @@ func TestExtract_AllResources_SourceIsAWS(t *testing.T) {
 		tfName, m := tfName, m
 		t.Run(tfName, func(t *testing.T) {
 			t.Parallel()
+			if !fixtureModelExists(m.SmithyModel) {
+				t.Skipf("fixture model missing for %q: %s", tfName, m.SmithyModel)
+			}
 			ir, err := awsschema.ExtractResource(tfName, m, apiModelsBaseURL(t))
 			if err != nil {
 				t.Fatalf("ExtractResource(%q): %v", tfName, err)
@@ -375,6 +394,9 @@ func TestExtract_FieldNameConsistency(t *testing.T) {
 		tfName, m := tfName, m
 		t.Run(tfName, func(t *testing.T) {
 			t.Parallel()
+			if !fixtureModelExists(m.SmithyModel) {
+				t.Skipf("fixture model missing for %q: %s", tfName, m.SmithyModel)
+			}
 			ir, err := awsschema.ExtractResource(tfName, m, apiModelsBaseURL(t))
 			if err != nil {
 				t.Fatalf("ExtractResource: %v", err)

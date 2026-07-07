@@ -20,6 +20,7 @@
 //	# TF-only (no AWS mapping):
 //	drift-detect --schema-json .cache/schema.json \
 //	             --resource aws_sqs_queue
+//	drift-detect --resource aws_prometheus_workspace
 //
 //	# TF + AWS side-by-side for a single resource:
 //	drift-detect --schema-json .cache/schema.json \
@@ -45,7 +46,8 @@ import (
 )
 
 const (
-	defaultAPIModelsBaseURL = "https://raw.githubusercontent.com/aws/api-models-aws/main"
+	// defaultAPIModelsBaseURL = "https://raw.githubusercontent.com/aws/api-models-aws/main"
+	defaultAPIModelsBaseURL = "/Users/brosas/Desktop/AWS-models/api-models-aws"
 	defaultProviderSource   = "registry.terraform.io/hashicorp/aws"
 )
 
@@ -58,7 +60,7 @@ func main() {
 
 func run() error {
 	var (
-		schemaJSON     = flag.String("schema-json", "", "path to terraform providers schema -json output file")
+		schemaJSON     = flag.String("schema-json", ".cache/schema.json", "path to terraform providers schema -json output file")
 		providerDir    = flag.String("provider-dir", "", "path to provider source directory (builds provider and generates schema)")
 		mappingsFile   = flag.String("mappings", "", "path to aws_resources.yaml mapping file")
 		resource       = flag.String("resource", "", "scope output to a single named resource")

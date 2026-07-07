@@ -193,6 +193,12 @@ func TestAMP_WorkspaceResourceShapeTargets(t *testing.T) {
 	if got := r.Identifiers["workspaceId"]; got != "com.amazonaws.amp#WorkspaceId" {
 		t.Errorf("Identifiers[workspaceId] = %q", got)
 	}
+	if len(r.Operations) != 1 {
+		t.Fatalf("Operations len = %d, want 1", len(r.Operations))
+	}
+	if r.Operations[0] != "com.amazonaws.amp#CreateWorkspace" {
+		t.Errorf("Operations[0] = %q, want %q", r.Operations[0], "com.amazonaws.amp#CreateWorkspace")
+	}
 }
 
 // ---------------------------------------------------------------------------

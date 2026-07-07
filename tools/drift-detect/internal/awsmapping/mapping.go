@@ -29,7 +29,7 @@ type ResourceMapping struct {
 	// SmithyResource is the Smithy resource shape name (without namespace),
 	// e.g. "WorkspaceResourcePolicy". When set, extraction can infer lifecycle
 	// operations from the resource shape's put/create/read/update/delete/list
-	// targets.
+	// targets and other operations.
 	SmithyResource string `yaml:"smithy_resource"`
 
 	// Lifecycle names the Smithy operations (without namespace) for each
@@ -60,12 +60,13 @@ type ResourceMapping struct {
 
 // Lifecycle names the operation (without namespace) for each resource verb.
 type Lifecycle struct {
-	Create string `yaml:"create"`
-	Put    string `yaml:"put"`
-	Read   string `yaml:"read"`
-	Update string `yaml:"update"`
-	Delete string `yaml:"delete"`
-	List   string `yaml:"list"`
+	Create     string   `yaml:"create"`
+	Put        string   `yaml:"put"`
+	Read       string   `yaml:"read"`
+	Update     string   `yaml:"update"`
+	Delete     string   `yaml:"delete"`
+	List       string   `yaml:"list"`
+	Operations []string `yaml:"operations"`
 }
 
 // ExplicitField is a hand-authored field descriptor for services where
