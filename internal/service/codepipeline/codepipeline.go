@@ -685,10 +685,10 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading CodePipeline Pipeline (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourcePipelineFlatten(ctx, d, output)...)
+	return append(diags, resourcePipelineFlatten(d, output)...)
 }
 
-func resourcePipelineFlatten(ctx context.Context, d *schema.ResourceData, output *codepipeline.GetPipelineOutput) diag.Diagnostics {
+func resourcePipelineFlatten(d *schema.ResourceData, output *codepipeline.GetPipelineOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	metadata := output.Metadata
