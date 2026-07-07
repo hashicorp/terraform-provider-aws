@@ -77,7 +77,24 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `applied_function_scaling_config` - Scaling configuration currently applied to the function. AWS populates this asynchronously, so it may be empty immediately after creation and become populated on a subsequent refresh. See [`applied_function_scaling_config` Block](#applied_function_scaling_config-block) below.
+* `function_arn` - ARN of the Lambda function.
+* `function_state` - State of the function after the scaling configuration was applied. This reflects the state reported by the most recent create or update and is not refreshed on read.
+
+### `applied_function_scaling_config` Block
+
+* `max_execution_environments` - Maximum number of execution environments applied to the function.
+* `min_execution_environments` - Minimum number of execution environments applied to the function.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
