@@ -143,12 +143,15 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 				},
 			},
 			{
-				// Prove priority can be updated in place.
-				Config: testAccGatewayRuleConfig_conditions(rName, rNameRuntime, rImageUri, 300, "final rule description"),
+				// Remove the description argument while changing priority. Because
+				// the API never clears description and the attribute is
+				// Optional+Computed, the prior value is retained rather than
+				// producing "inconsistent result after apply".
+				Config: testAccGatewayRuleConfig_conditionsNoDescription(rName, rNameRuntime, rImageUri, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "300"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "final rule description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated rule description"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -367,6 +370,40 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
   }
 }
 `, priority, description))
+}
+
+// testAccGatewayRuleConfig_conditionsNoDescription omits the description argument
+// entirely to prove it is retained (not cleared, not an error) on update — the
+// UpdateGatewayRule API treats a nil description as "leave unchanged".
+func testAccGatewayRuleConfig_conditionsNoDescription(rName, rNameRuntime, rImageUri string, priority int) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_bedrockagentcore_gateway_rule" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  priority           = %[1]d
+
+  action {
+    route_to_target {
+      static_route {
+        target_name = aws_bedrockagentcore_gateway_target.test.name
+      }
+    }
+  }
+
+  condition {
+    match_principals {
+      any_of {
+        iam_principal {
+          arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/agentcore-caller-*"
+          operator = "StringLike"
+        }
+      }
+    }
+  }
+}
+`, priority))
 }
 
 func testAccGatewayRuleConfig_matchPrincipals(rName, rNameRuntime, rImageUri string) string {

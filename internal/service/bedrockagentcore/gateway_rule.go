@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -55,13 +56,44 @@ type gatewayRuleResource struct {
 	framework.WithTimeouts
 }
 
+// configurationBundleARNValidators returns the validators for a configuration
+// bundle ARN, mirroring the SDK GatewayConfigurationBundleArn pattern. Shared so
+// static_override.bundle_arn and traffic_split.configuration_bundle.bundle_arn
+// can't drift apart.
+func configurationBundleARNValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.RegexMatches(
+			regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
+			"",
+		),
+	}
+}
+
+// trafficSplitMetadataValidators mirrors the SDK TrafficSplitMetadataMap
+// constraints (max 25 entries; key length 1-128; value length 1-256).
+func trafficSplitMetadataValidators() []validator.Map {
+	return []validator.Map{
+		mapvalidator.SizeAtMost(25),
+		mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 128)),
+		mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
+	}
+}
+
 func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
+				// Optional+Computed: the UpdateGatewayRule API treats a nil
+				// description as "leave unchanged" (it never clears), so removing
+				// the argument keeps the prior value rather than erroring with
+				// "inconsistent result after apply".
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 256),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"gateway_arn": framework.ARNAttributeComputedOnly(),
@@ -121,12 +153,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 												"bundle_arn": schema.StringAttribute{
 													Required:   true,
 													CustomType: fwtypes.ARNType,
-													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
-															"",
-														),
-													},
+													Validators: configurationBundleARNValidators(),
 												},
 												"bundle_version": schema.StringAttribute{
 													Required: true,
@@ -155,6 +182,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																CustomType:  fwtypes.MapOfStringType,
 																ElementType: types.StringType,
 																Optional:    true,
+																Validators:  trafficSplitMetadataValidators(),
 															},
 															names.AttrName: schema.StringAttribute{
 																Required: true,
@@ -174,6 +202,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																		"bundle_arn": schema.StringAttribute{
 																			Required:   true,
 																			CustomType: fwtypes.ARNType,
+																			Validators: configurationBundleARNValidators(),
 																		},
 																		"bundle_version": schema.StringAttribute{
 																			Required: true,
@@ -237,6 +266,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																CustomType:  fwtypes.MapOfStringType,
 																ElementType: types.StringType,
 																Optional:    true,
+																Validators:  trafficSplitMetadataValidators(),
 															},
 															names.AttrName: schema.StringAttribute{
 																Required: true,
@@ -283,6 +313,13 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
 										Required:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+											listvalidator.ValueStringsAre(
+												stringvalidator.LengthAtMost(512),
+												stringvalidator.RegexMatches(regexache.MustCompile(`^/[\w\-.]+/\*$`), ""),
+											),
+										},
 									},
 								},
 							},
@@ -311,6 +348,13 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 															names.AttrARN: schema.StringAttribute{
 																Required:   true,
 																CustomType: fwtypes.ARNType,
+																Validators: []validator.String{
+																	stringvalidator.LengthAtMost(2048),
+																	stringvalidator.RegexMatches(
+																		regexache.MustCompile(`^(arn:aws[a-zA-Z-]*:iam::(\d{12}|\*):(user|role)/[\w+=,.@*?/-]+|arn:aws[a-zA-Z-]*:sts::(\d{12}|\*):assumed-role/[\w+=,.@*?/-]+)$`),
+																		"",
+																	),
+																},
 															},
 															"operator": schema.StringAttribute{
 																Optional:   true,
