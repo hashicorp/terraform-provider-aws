@@ -10,24 +10,28 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,25 +43,41 @@ import (
 // @ImportIDHandler("functionScalingConfigImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="function_name;qualifier", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importIgnore="function_state")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetFunctionScalingConfigOutput")
 // @Testing(preCheck="testAccCapacityProviderPreCheck")
 func newFunctionScalingConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &functionScalingConfigResource{}, nil
+	r := &functionScalingConfigResource{}
+
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
+	return r, nil
 }
 
 const (
-	ResNameFunctionScalingConfig      = "Function Scaling Config"
-	functionScalingConfigRetryTimeout = 10 * time.Minute
+	ResNameFunctionScalingConfig = "Function Scaling Config"
 )
 
 type functionScalingConfigResource struct {
 	framework.ResourceWithModel[functionScalingConfigResourceModel]
+	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
 func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"applied_function_scaling_config": framework.ResourceComputedListOfObjectsAttribute[functionScalingConfigModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"function_arn": schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Computed:    true,
+				Description: "ARN of the Lambda function.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"function_name": schema.StringAttribute{
 				Required:    true,
 				Description: "Name or ARN of the Lambda function.",
@@ -67,6 +87,11 @@ func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource
 				Validators: []validator.String{
 					functionNameValidator,
 				},
+			},
+			"function_state": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.State](),
+				Computed:    true,
+				Description: "State of the function after applying the scaling configuration.",
 			},
 			"qualifier": schema.StringAttribute{
 				Required:    true,
@@ -99,6 +124,11 @@ func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -107,107 +137,137 @@ func (r *functionScalingConfigResource) Create(ctx context.Context, req resource
 	conn := r.Meta().LambdaClient(ctx)
 
 	var plan functionScalingConfigResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input lambda.PutFunctionScalingConfigInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Capacity provider functions can take time to stabilize after publishing.
 	// Retry on ResourceConflictException until the version is ready.
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	out, err := tfresource.RetryWhenIsA[*lambda.PutFunctionScalingConfigOutput, *awstypes.ResourceConflictException](ctx, createTimeout, func(ctx context.Context) (*lambda.PutFunctionScalingConfigOutput, error) {
 		return conn.PutFunctionScalingConfig(ctx, &input)
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameFunctionScalingConfig, plan.FunctionName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// function_state is only returned by the Put operation.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan), smerr.ID, plan.FunctionName.ValueString())
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Read back to populate computed attributes (function_arn, applied config).
+	// AppliedFunctionScalingConfig is populated by AWS asynchronously and may not
+	// be present immediately; surface whatever is currently returned.
+	scOut, err := findFunctionScalingConfigByTwoPartKey(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scOut, &plan), smerr.ID, plan.FunctionName.ValueString())
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan), smerr.ID, plan.FunctionName.ValueString())
 }
 
 func (r *functionScalingConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
 	var state functionScalingConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findFunctionScalingConfigByTwoPartKey(ctx, conn, state.FunctionName.ValueString(), state.Qualifier.ValueString())
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionReading, ResNameFunctionScalingConfig, state.FunctionName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.FunctionName.ValueString())
 		return
 	}
 
-	// Map the API response to the model. AutoFlex can't handle the field name mismatch
-	// (RequestedFunctionScalingConfig/AppliedFunctionScalingConfig vs FunctionScalingConfig).
-	var scalingConfig *awstypes.FunctionScalingConfig
-	if out.RequestedFunctionScalingConfig != nil {
-		scalingConfig = out.RequestedFunctionScalingConfig
-	} else if out.AppliedFunctionScalingConfig != nil {
-		scalingConfig = out.AppliedFunctionScalingConfig
+	// AutoFlex maps function_arn and applied_function_scaling_config directly.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state), smerr.ID, state.FunctionName.ValueString())
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if scalingConfig != nil {
-		model := functionScalingConfigModel{
-			MinExecutionEnvironments: types.Int32PointerValue(scalingConfig.MinExecutionEnvironments),
-			MaxExecutionEnvironments: types.Int32PointerValue(scalingConfig.MaxExecutionEnvironments),
-		}
-		state.FunctionScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-	} else {
-		state.FunctionScalingConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*functionScalingConfigModel{})
+	// The API returns the configured (requested) scaling config under a different
+	// field name than the Put input, so map it explicitly into function_scaling_config.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.RequestedFunctionScalingConfig, &state.FunctionScalingConfig), smerr.ID, state.FunctionName.ValueString())
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state), smerr.ID, state.FunctionName.ValueString())
 }
 
 func (r *functionScalingConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
 	var plan, state functionScalingConfigResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if !plan.FunctionScalingConfig.Equal(state.FunctionScalingConfig) {
 		var input lambda.PutFunctionScalingConfigInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		out, err := tfresource.RetryWhenIsA[*lambda.PutFunctionScalingConfigOutput, *awstypes.ResourceConflictException](ctx, updateTimeout, func(ctx context.Context) (*lambda.PutFunctionScalingConfigOutput, error) {
 			return conn.PutFunctionScalingConfig(ctx, &input)
 		})
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Lambda, create.ErrActionUpdating, ResNameFunctionScalingConfig, plan.FunctionName.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
 			return
 		}
+
+		// function_state is only returned by the Put operation.
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan), smerr.ID, plan.FunctionName.ValueString())
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Read back to populate computed attributes (function_arn, applied config).
+		// AppliedFunctionScalingConfig is populated by AWS asynchronously and may not
+		// be present immediately; surface whatever is currently returned.
+		scOut, err := findFunctionScalingConfigByTwoPartKey(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
+			return
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scOut, &plan), smerr.ID, plan.FunctionName.ValueString())
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		plan.FunctionARN = state.FunctionARN
+		plan.FunctionState = state.FunctionState
+		plan.AppliedFunctionScalingConfig = state.AppliedFunctionScalingConfig
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan), smerr.ID, plan.FunctionName.ValueString())
 }
 
 // Delete resets the scaling configuration by calling PutFunctionScalingConfig with nil config.
@@ -216,7 +276,7 @@ func (r *functionScalingConfigResource) Delete(ctx context.Context, req resource
 	conn := r.Meta().LambdaClient(ctx)
 
 	var state functionScalingConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -226,17 +286,15 @@ func (r *functionScalingConfigResource) Delete(ctx context.Context, req resource
 		Qualifier:    state.Qualifier.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, functionScalingConfigRetryTimeout, func(ctx context.Context) (any, error) {
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, deleteTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutFunctionScalingConfig(ctx, &input)
 	})
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionDeleting, ResNameFunctionScalingConfig, state.FunctionName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.FunctionName.ValueString())
 		return
 	}
 }
@@ -250,16 +308,16 @@ func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Cli
 	out, err := conn.GetFunctionScalingConfig(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
-			}
+			})
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -267,9 +325,13 @@ func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Cli
 
 type functionScalingConfigResourceModel struct {
 	framework.WithRegionModel
-	FunctionName          types.String                                                `tfsdk:"function_name"`
-	FunctionScalingConfig fwtypes.ListNestedObjectValueOf[functionScalingConfigModel] `tfsdk:"function_scaling_config"`
-	Qualifier             types.String                                                `tfsdk:"qualifier"`
+	AppliedFunctionScalingConfig fwtypes.ListNestedObjectValueOf[functionScalingConfigModel] `tfsdk:"applied_function_scaling_config"`
+	FunctionARN                  fwtypes.ARN                                                 `tfsdk:"function_arn"`
+	FunctionName                 types.String                                                `tfsdk:"function_name"`
+	FunctionScalingConfig        fwtypes.ListNestedObjectValueOf[functionScalingConfigModel] `tfsdk:"function_scaling_config"`
+	FunctionState                fwtypes.StringEnum[awstypes.State]                          `tfsdk:"function_state"`
+	Qualifier                    types.String                                                `tfsdk:"qualifier"`
+	Timeouts                     timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 type functionScalingConfigModel struct {
