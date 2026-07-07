@@ -67,10 +67,10 @@ resource "aws_prometheus_workspace_configuration" "example" {
 resource "aws_prometheus_workspace" "example" {}
 
 resource "aws_prometheus_workspace_configuration" "example" {
-  workspace_id                          = aws_prometheus_workspace.example.id
-  retention_period_in_days              = 30
-  out_of_order_time_window_in_seconds   = 120
-  rule_query_offset_in_seconds          = 300
+  workspace_id                        = aws_prometheus_workspace.example.id
+  retention_period_in_days            = 30
+  out_of_order_time_window_in_seconds = 120
+  rule_query_offset_in_seconds        = 300
 }
 ```
 
