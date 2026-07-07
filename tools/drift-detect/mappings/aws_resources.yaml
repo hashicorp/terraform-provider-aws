@@ -1,0 +1,129 @@
+# AWS resource mapping file.
+#
+# Each entry maps one Terraform resource to the AWS Smithy model operations
+# that define its lifecycle. This file is the bridge between the
+# operation-centric AWS API models and the resource-centric Terraform schema.
+#
+# Fields:
+#   smithy_model        - path to the Smithy JSON file, relative to api-models-aws/
+#   smithy_namespace    - Smithy namespace prefix (e.g. com.amazonaws.sqs)
+#   smithy_resource     - optional Smithy resource shape name for
+#                         lifecycle inference (put/create/read/update/delete/list)
+#   lifecycle           - optional operation name overrides (without namespace)
+#   suppress_fields     - member names to drop from the extracted IR (URL path
+#                         identifiers, idempotency tokens, internal AWS fields)
+#   field_renames       - map of aws_member_name -> tf_attribute_name overrides
+#   attribute_map_enum  - optional enum shape name whose enumValue entries are
+#                         expanded into IR fields
+#   explicit_fields     - optional hand-authored fields for cases where model
+#                         metadata is insufficient to enumerate attributes
+#
+# Extraction is capability-based:
+#   - lifecycle extraction via smithy_resource and/or lifecycle
+#   - enum expansion via attribute_map_enum
+#   - explicit field insertion via explicit_fields
+
+resources:
+
+  # -------------------------------------------------------------------------
+  # AccessAnalyzer — typed Smithy structures
+  # -------------------------------------------------------------------------
+  aws_accessanalyzer_analyzer:
+    smithy_model: models/accessanalyzer/service/2019-11-01/accessanalyzer-2019-11-01.json
+    smithy_namespace: com.amazonaws.accessanalyzer
+    smithy_resource: Analyzer
+    suppress_fields:
+      - next_token
+
+  # -------------------------------------------------------------------------
+  # AMP workspace — typed Smithy structures
+  # -------------------------------------------------------------------------
+  aws_prometheus_workspace:
+    smithy_model: models/amp/service/2020-08-01/amp-2020-08-01.json
+    smithy_namespace: com.amazonaws.amp
+    smithy_resource: Workspace
+    field_renames:
+      workspaceId: id
+
+  aws_prometheus_resource_policy:
+    smithy_model: models/amp/service/2020-08-01/amp-2020-08-01.json
+    smithy_namespace: com.amazonaws.amp
+    smithy_resource: WorkspaceResourcePolicy
+
+  # -------------------------------------------------------------------------
+  # SQS — attribute-map with QueueAttributeName enum
+  # -------------------------------------------------------------------------
+  aws_sqs_queue:
+    smithy_model: models/sqs/service/2012-11-05/sqs-2012-11-05.json
+    smithy_namespace: com.amazonaws.sqs
+    lifecycle:
+      create: CreateQueue
+      read: GetQueueAttributes
+      update: SetQueueAttributes
+      delete: DeleteQueue
+      list: ListQueues
+    attribute_map_enum: QueueAttributeName
+    suppress_fields:
+      # Read-only/metrics — no TF config equivalent
+      - ApproximateNumberOfMessages
+      - ApproximateNumberOfMessagesNotVisible
+      - ApproximateNumberOfMessagesDelayed
+      - CreatedTimestamp
+      - LastModifiedTimestamp
+      # Not a per-resource field
+      - All
+
+      - next_token
+    field_renames:
+      VisibilityTimeout: visibility_timeout_seconds
+      MaximumMessageSize: max_message_size
+      MessageRetentionPeriod: message_retention_seconds
+      ReceiveMessageWaitTimeSeconds: receive_wait_time_seconds
+      QueueArn: arn
+      QueueUrl: url
+      QueueName: name
+      QueueNamePrefix: name_prefix
+
+  # -------------------------------------------------------------------------
+  # SNS — untyped attribute map; field names from explicit_fields
+  # -------------------------------------------------------------------------
+  aws_sns_topic:
+    smithy_model: models/sns/service/2010-03-31/sns-2010-03-31.json
+    smithy_namespace: com.amazonaws.sns
+    lifecycle:
+      create: CreateTopic
+      read: GetTopicAttributes
+    attribute_map_field: Attributes
+    attribute_map_enum: ""
+    suppress_fields: []
+    field_renames: {
+      topic_arn: arn,
+    }
+    explicit_fields:
+      - name: DisplayName
+        type: string
+        required: false
+      - name: KmsMasterKeyId
+        type: string
+        required: false
+      - name: FifoTopic
+        type: bool
+        required: false
+      - name: ContentBasedDeduplication
+        type: bool
+        required: false
+      - name: Policy
+        type: string
+        required: false
+      - name: DeliveryPolicy
+        type: string
+        required: false
+      - name: TracingConfig
+        type: string
+        required: false
+      - name: SignatureVersion
+        type: string
+        required: false
+      - name: ArchivePolicy
+        type: string
+        required: false
