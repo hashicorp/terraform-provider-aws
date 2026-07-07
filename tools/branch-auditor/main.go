@@ -242,11 +242,13 @@ func collect() []branch {
 }
 
 func prInfo(head string) (num, state, author string) {
-	// A genuine "no PR" result exits 0 with empty fields; an actual gh failure
-	// (missing/unauthenticated/rate-limited) exits non-zero and is caught by run.
+	// A genuine "no PR" result exits 0; the jq `if .==null` guard makes it return
+	// an empty string (rather than "null␟null␟null"), so s=="" reliably means no PR.
+	// An actual gh failure (missing/unauthenticated/rate-limited) exits non-zero
+	// and is caught by run.
 	s := run("gh", "pr", "list", "--repo", repo, "--head", head, "--state", "all",
 		"--json", "number,state,author",
-		"--jq", `sort_by(.number)|last|"\(.number)\u001f\(.state)\u001f\(.author.login)"`)
+		"--jq", `sort_by(.number)|last|if .==null then "" else "\(.number)\u001f\(.state)\u001f\(.author.login)" end`)
 	if s == "" {
 		return "", "none", ""
 	}
@@ -287,7 +289,8 @@ func prRef(num string) string {
 }
 
 func main() {
-	maintainers = loadMaintainers(filepath.Join(git("rev-parse", "--show-toplevel"), "docs", "faq.md"))
+	root := git("rev-parse", "--show-toplevel")
+	maintainers = loadMaintainers(filepath.Join(root, "docs", "faq.md"))
 	if len(maintainers) == 0 {
 		fmt.Fprintln(os.Stderr, "warning: no maintainers parsed from docs/faq.md; owners will show as non-maintainers")
 	}
@@ -306,7 +309,7 @@ func main() {
 		"`cd tools/branch-auditor && go run .`.\n", len(rows)))
 
 	// Deleted record (ledger survives regeneration; git cannot report deleted branches).
-	if del := loadDeleted("deleted-branches.tsv"); len(del) > 0 {
+	if del := loadDeleted(filepath.Join(root, "tools", "branch-auditor", "deleted-branches.tsv")); len(del) > 0 {
 		add(fmt.Sprintf("## Deleted (record) — %d branches\n", len(del)))
 		add("_`tip` is the pre-deletion SHA (best-effort restore point)._\n")
 		var comp []deleted
