@@ -85,7 +85,7 @@ resource "aws_cloudwatch_event_permission" "example" {
 
 #### Required
 
-* `statement_id` (String) External account ID.
+* `statement_id` (String) Statement ID of the EventBridge permission.
 
 #### Optional
 
