@@ -119,13 +119,13 @@ Exactly one of `static_override` or `weighted_override` must be set.
 
 * `static_override` - (Optional) Statically override the configuration bundle used for the matched request.
     * `bundle_arn` - (Required) ARN of the configuration bundle to apply.
-    * `bundle_version` - (Required) Version of the configuration bundle to apply.
+    * `bundle_version` - (Required) Version (UUID) of the configuration bundle to apply.
 * `weighted_override` - (Optional) Distribute the request across two configuration bundle versions by weight.
     * `traffic_split` - (Required) Exactly two `traffic_split` blocks describing the two variants.
-        * `configuration_bundle` - (Required) Reference to the configuration bundle for this variant, with `bundle_arn` and `bundle_version` arguments.
-        * `name` - (Required) Name of this variant.
-        * `weight` - (Required) Percentage of traffic sent to this variant. Weights across the two entries must sum to 100.
-        * `description` - (Optional) Description of the variant.
+        * `configuration_bundle` - (Required) Reference to the configuration bundle for this variant, with `bundle_arn` and `bundle_version` (UUID) arguments.
+        * `name` - (Required) Name of this variant. Between 1 and 64 characters; alphanumeric with internal hyphens.
+        * `weight` - (Required) Percentage of traffic sent to this variant, between 1 and 99. Weights across the two entries must sum to 100.
+        * `description` - (Optional) Description of the variant. Between 1 and 200 characters.
         * `metadata` - (Optional) Up to 25 key/value metadata pairs describing this variant.
 
 ### route_to_target
@@ -136,10 +136,10 @@ Exactly one of `static_route` or `weighted_route` must be set.
     * `target_name` - (Required) Name of the gateway target.
 * `weighted_route` - (Optional) Distribute requests across two named targets by weight.
     * `traffic_split` - (Required) Exactly two `traffic_split` blocks describing the two variants.
-        * `name` - (Required) Name of this variant.
+        * `name` - (Required) Name of this variant. Between 1 and 64 characters; alphanumeric with internal hyphens.
         * `target_name` - (Required) Name of the gateway target this variant points to.
-        * `weight` - (Required) Percentage of traffic routed to this variant.
-        * `description` - (Optional) Description of the variant.
+        * `weight` - (Required) Percentage of traffic routed to this variant, between 1 and 99.
+        * `description` - (Optional) Description of the variant. Between 1 and 200 characters.
         * `metadata` - (Optional) Up to 25 key/value metadata pairs describing this variant.
 
 ### condition
@@ -147,9 +147,9 @@ Exactly one of `static_route` or `weighted_route` must be set.
 Exactly one of `match_paths` or `match_principals` must be set.
 
 * `match_paths` - (Optional) Match when the request path matches any of the supplied glob patterns (e.g. `/api/*`).
-    * `any_of` - (Required) One or more path patterns. A pattern must be of the form `/<segment>/*`.
+    * `any_of` - (Required) Between 1 and 10 path patterns. A pattern must be of the form `/<segment>/*` and at most 512 characters.
 * `match_principals` - (Optional) Match when the caller's IAM identity matches any of the supplied principal entries.
-    * `any_of` - (Required) One or more principal entry blocks. See below.
+    * `any_of` - (Required) Between 1 and 100 principal entry blocks. See below.
         * `iam_principal` - (Optional) Match an IAM user, role, or assumed-role ARN.
             * `arn` - (Required) IAM principal ARN. Wildcards are allowed with the `StringLike` operator.
             * `operator` - (Optional) Match operator, one of `StringEquals` or `StringLike`. Defaults to `StringEquals`.

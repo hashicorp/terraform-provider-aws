@@ -152,6 +152,24 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated rule description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCondition+".#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Remove the condition block entirely. The Update path sends an
+				// explicit empty conditions list so the server actually clears it,
+				// rather than PATCH-retaining it and producing "inconsistent result
+				// after apply".
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCondition+".#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

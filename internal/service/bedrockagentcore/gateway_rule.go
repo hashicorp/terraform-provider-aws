@@ -79,6 +79,26 @@ func trafficSplitMetadataValidators() []validator.Map {
 	}
 }
 
+// configurationBundleVersionValidators mirrors the SDK bundleVersion pattern
+// (a UUID), shared by static_override and traffic_split.configuration_bundle.
+func configurationBundleVersionValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.RegexMatches(
+			regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`),
+			"",
+		),
+	}
+}
+
+// trafficSplitNameValidators mirrors the SDK TrafficSplitEntry/TargetTrafficSplitEntry
+// name constraints (length 1-64; alphanumeric with internal hyphens).
+func trafficSplitNameValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.LengthBetween(1, 64),
+		stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`), ""),
+	}
+}
+
 func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -156,7 +176,8 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 													Validators: configurationBundleARNValidators(),
 												},
 												"bundle_version": schema.StringAttribute{
-													Required: true,
+													Required:   true,
+													Validators: configurationBundleVersionValidators(),
 												},
 											},
 										},
@@ -177,6 +198,9 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 														Attributes: map[string]schema.Attribute{
 															names.AttrDescription: schema.StringAttribute{
 																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 200),
+																},
 															},
 															"metadata": schema.MapAttribute{
 																CustomType:  fwtypes.MapOfStringType,
@@ -185,10 +209,14 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																Validators:  trafficSplitMetadataValidators(),
 															},
 															names.AttrName: schema.StringAttribute{
-																Required: true,
+																Required:   true,
+																Validators: trafficSplitNameValidators(),
 															},
 															names.AttrWeight: schema.Int64Attribute{
 																Required: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(1, 99),
+																},
 															},
 														},
 														Blocks: map[string]schema.Block{
@@ -205,7 +233,8 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																			Validators: configurationBundleARNValidators(),
 																		},
 																		"bundle_version": schema.StringAttribute{
-																			Required: true,
+																			Required:   true,
+																			Validators: configurationBundleVersionValidators(),
 																		},
 																	},
 																},
@@ -261,6 +290,9 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 														Attributes: map[string]schema.Attribute{
 															names.AttrDescription: schema.StringAttribute{
 																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 200),
+																},
 															},
 															"metadata": schema.MapAttribute{
 																CustomType:  fwtypes.MapOfStringType,
@@ -269,7 +301,8 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																Validators:  trafficSplitMetadataValidators(),
 															},
 															names.AttrName: schema.StringAttribute{
-																Required: true,
+																Required:   true,
+																Validators: trafficSplitNameValidators(),
 															},
 															"target_name": schema.StringAttribute{
 																Required: true,
@@ -279,6 +312,9 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 															},
 															names.AttrWeight: schema.Int64Attribute{
 																Required: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(1, 99),
+																},
 															},
 														},
 													},
@@ -314,7 +350,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 										ElementType: types.StringType,
 										Required:    true,
 										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeBetween(1, 10),
 											listvalidator.ValueStringsAre(
 												stringvalidator.LengthAtMost(512),
 												stringvalidator.RegexMatches(regexache.MustCompile(`^/[\w\-.]+/\*$`), ""),
@@ -334,7 +370,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 									"any_of": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[matchPrincipalEntryModel](ctx),
 										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeBetween(1, 100),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
@@ -481,6 +517,14 @@ func (r *gatewayRuleResource) Update(ctx context.Context, request resource.Updat
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if response.Diagnostics.HasError() {
 			return
+		}
+		// UpdateGatewayRule PATCH-merges: an omitted (nil) conditions list is
+		// treated as "leave unchanged" and never clears. Send an explicit empty
+		// list so removing all condition blocks actually clears them server-side
+		// (otherwise Read reflects the retained condition -> "inconsistent result
+		// after apply").
+		if input.Conditions == nil {
+			input.Conditions = []awstypes.Condition{}
 		}
 
 		if _, err := conn.UpdateGatewayRule(ctx, &input); err != nil {
