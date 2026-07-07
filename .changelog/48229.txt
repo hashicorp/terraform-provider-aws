@@ -1,3 +1,7 @@
-``release-note:new-resource
+```release-note:new-resource
+aws_lambda_function_scaling_config
+```
+
+```release-note:new-list-resource
 aws_lambda_function_scaling_config
 ```
