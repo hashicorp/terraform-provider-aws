@@ -95,8 +95,8 @@ github.com/aws/aws-sdk-go-v2/service/backup v1.58.0 h1:RJ4OZwjQwWQWCRwwrX2UUBpQk
 github.com/aws/aws-sdk-go-v2/service/backup v1.58.0/go.mod h1:aEBLhdyvJQTLTtUJfwpb5ABLfQAfRVJXgg3H96Mv7Pg=
 github.com/aws/aws-sdk-go-v2/service/batch v1.67.0 h1:amCRVhE7xgdElZrfKzQ8PvWMzRsXT8j+0ereSPQB2jI=
 github.com/aws/aws-sdk-go-v2/service/batch v1.67.0/go.mod h1:xAqGFEks3zOMleaWMlPj8WiRL1hrZCgLKctJde6Sn3U=
-github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.16.9 h1:s35+83Wcw4edqY/nzVzL9onKssE+gdwvGcY8hKhdZf8=
-github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.16.9/go.mod h1:qAPd4oGBiNlaI5Kd2lAeoEJ4yCnUX/IX61qSMOB3uos=
+github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.0 h1:C0ImNt+IXI3Zxhs8PQm75XCceZFcmKkTQzBLAqEhoJE=
+github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.0/go.mod h1:qAPd4oGBiNlaI5Kd2lAeoEJ4yCnUX/IX61qSMOB3uos=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.2 h1:TYXv5HG0jLpgeLa8huezwTCTJS2VKnQknkVyRIEZZSY=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.64.2/go.mod h1:pYNYOEFQKBsKwkNQZjVwEuPFTkmSLvAsbSd0HZUwiDw=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.56.2 h1:Lb1Y5MiJd5kmP41hD+KNVbZ0NTJpVB9RyId6MCAOB3A=
