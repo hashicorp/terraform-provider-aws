@@ -141,13 +141,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudwatch_event_permission",
 			Name:     "Permission",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("event_bus_name", false),
-				inttypes.StringIdentityAttribute("statement_id", true),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("statement_id", true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      permissionImportID{},
 			},
 		},
 		{

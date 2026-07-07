@@ -72,8 +72,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_cloudwatch_event_permission.example
   identity = {
-    event_bus_name = "example-event-bus"
-    statement_id   = "DevAccountAccess"
+    statement_id = "DevAccountAccess"
   }
 }
 
@@ -91,7 +90,6 @@ resource "aws_cloudwatch_event_permission" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `event_bus_name` (String) Name of the event bus.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Permissions `event_bus_name` and `statement_id` separated by a forward slash (`/`) (if you omit `event_bus_name`, the `default` event bus will be used). For example:

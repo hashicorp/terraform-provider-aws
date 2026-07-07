@@ -298,10 +298,6 @@ func TestAccEventsPermission_disappears(t *testing.T) {
 	})
 }
 
-func testAccPermissionImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return acctest.AttrsImportStateIdFunc(resourceName, "/", "event_bus_name", "statement_id")
-}
-
 func testAccCheckPermissionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

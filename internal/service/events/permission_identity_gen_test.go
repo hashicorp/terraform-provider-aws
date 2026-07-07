@@ -50,10 +50,8 @@ func TestAccEventsPermission_Identity_basic(t *testing.T) {
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"event_bus_name":    knownvalue.NotNull(),
 						"statement_id":      knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("event_bus_name")),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("statement_id")),
 				},
 			},
@@ -65,7 +63,6 @@ func TestAccEventsPermission_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: testAccPermissionImportStateIDFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -77,10 +74,9 @@ func TestAccEventsPermission_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: testAccPermissionImportStateIDFunc(resourceName),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("statement_id"), knownvalue.NotNull()),
@@ -136,10 +132,8 @@ func TestAccEventsPermission_Identity_regionOverride(t *testing.T) {
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						"event_bus_name":    knownvalue.NotNull(),
 						"statement_id":      knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("event_bus_name")),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("statement_id")),
 				},
 			},
@@ -152,7 +146,7 @@ func TestAccEventsPermission_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccPermissionImportStateIDFunc),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -168,7 +162,7 @@ func TestAccEventsPermission_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccPermissionImportStateIDFunc),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("statement_id"), knownvalue.NotNull()),
@@ -246,10 +240,8 @@ func TestAccEventsPermission_Identity_ExistingResource_basic(t *testing.T) {
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"event_bus_name":    knownvalue.NotNull(),
 						"statement_id":      knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("event_bus_name")),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("statement_id")),
 				},
 			},

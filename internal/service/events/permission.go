@@ -25,16 +25,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
-// @IdentityAttribute("event_bus_name", optional="true", testNotNull=true)
 // @IdentityAttribute("statement_id")
-// @ImportIDHandler("permissionImportID")
 // @Testing(preIdentityVersion="v6.53.0")
-// @Testing(importStateIdFunc=testAccPermissionImportStateIDFunc)
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
@@ -271,31 +267,6 @@ func permissionParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sSTATEMENTID or STATEMENTID", id, permissionResourceIDSeparator)
-}
-
-var (
-	_ inttypes.SDKv2ImportID = permissionImportID{}
-)
-
-type permissionImportID struct{}
-
-func (permissionImportID) Parse(id string) (string, map[string]any, error) {
-	eventBusName, statementID, err := permissionParseResourceID(id)
-
-	if err != nil {
-		return "", nil, err
-	}
-
-	result := map[string]any{
-		"event_bus_name": eventBusName,
-		"statement_id":   statementID,
-	}
-
-	return id, result, nil
-}
-
-func (permissionImportID) Create(d *schema.ResourceData) string {
-	return permissionCreateResourceID(d.Get("event_bus_name").(string), d.Get("statement_id").(string))
 }
 
 // PermissionPolicyDoc represents the Policy attribute of DescribeEventBus
