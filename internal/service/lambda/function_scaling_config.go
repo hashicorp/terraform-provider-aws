@@ -344,10 +344,11 @@ func waitFunctionScalingConfigSettled(ctx context.Context, conn *lambda.Client, 
 				return nil, "", smarterr.NewError(err)
 			}
 
-			applied := out.AppliedFunctionScalingConfig
-			settled := out.RequestedFunctionScalingConfig == nil &&
-				applied != nil && applied.MinExecutionEnvironments != nil && applied.MaxExecutionEnvironments != nil
-			if !settled {
+			// Once AWS clears RequestedFunctionScalingConfig and reports
+			// AppliedFunctionScalingConfig, the change has taken effect. Do not
+			// require specific fields to be non-nil: either min or max may be
+			// legitimately omitted, and requiring both would hang in that case.
+			if out.RequestedFunctionScalingConfig != nil || out.AppliedFunctionScalingConfig == nil {
 				return out, statusPending, nil
 			}
 

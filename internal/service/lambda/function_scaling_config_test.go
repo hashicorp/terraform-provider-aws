@@ -176,10 +176,17 @@ func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T)
 			}
 
 			// There is no dedicated delete API; the config is "destroyed" by resetting
-			// it, which leaves a result with no execution environment values.
-			if out.RequestedFunctionScalingConfig == nil ||
+			// it, which leaves no execution environment values. AWS reports the values
+			// under RequestedFunctionScalingConfig while a change settles and moves them
+			// to AppliedFunctionScalingConfig once in effect, clearing the other, so
+			// inspect both.
+			requestedEmpty := out.RequestedFunctionScalingConfig == nil ||
 				(out.RequestedFunctionScalingConfig.MinExecutionEnvironments == nil &&
-					out.RequestedFunctionScalingConfig.MaxExecutionEnvironments == nil) {
+					out.RequestedFunctionScalingConfig.MaxExecutionEnvironments == nil)
+			appliedEmpty := out.AppliedFunctionScalingConfig == nil ||
+				(out.AppliedFunctionScalingConfig.MinExecutionEnvironments == nil &&
+					out.AppliedFunctionScalingConfig.MaxExecutionEnvironments == nil)
+			if requestedEmpty && appliedEmpty {
 				continue
 			}
 
