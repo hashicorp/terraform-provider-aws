@@ -38,7 +38,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 		{
 			Factory:  newEventBusesDataSource,
 			TypeName: "aws_cloudwatch_event_buses",
-			Name:     "Event Buses",
+			Name:     "Buses",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -53,7 +53,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 		{
 			Factory:  dataSourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
-			Name:     "Event Bus",
+			Name:     "Bus",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -96,7 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
-			Name:     "Event Bus",
+			Name:     "Bus",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
@@ -109,7 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceBusPolicy,
 			TypeName: "aws_cloudwatch_event_bus_policy",
-			Name:     "Event Bus Policy",
+			Name:     "Bus Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("event_bus_name", true)),
 			Import: inttypes.SDKv2Import{
