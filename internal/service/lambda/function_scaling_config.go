@@ -56,10 +56,6 @@ func newFunctionScalingConfigResource(_ context.Context) (resource.ResourceWithC
 	return r, nil
 }
 
-const (
-	ResNameFunctionScalingConfig = "Function Scaling Config"
-)
-
 type functionScalingConfigResource struct {
 	framework.ResourceWithModel[functionScalingConfigResourceModel]
 	framework.WithTimeouts
