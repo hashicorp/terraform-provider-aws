@@ -584,21 +584,18 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.RemoveTargetsInput{
+	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
+	input := eventbridge.RemoveTargetsInput{
 		Ids:  []string{d.Get("target_id").(string)},
 		Rule: aws.String(d.Get(names.AttrRule).(string)),
 	}
-
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		input.EventBusName = aws.String(v.(string))
 	}
-
 	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.Force = v.(bool)
 	}
-
-	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
-	output, err := conn.RemoveTargets(ctx, input)
+	output, err := conn.RemoveTargets(ctx, &input)
 
 	if err == nil && output != nil {
 		err = removeTargetsError(output.FailedEntries)
@@ -616,7 +613,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func findTargetByThreePartKey(ctx context.Context, conn *eventbridge.Client, busName, ruleName, targetID string) (*types.Target, error) {
-	input := &eventbridge.ListTargetsByRuleInput{
+	input := eventbridge.ListTargetsByRuleInput{
 		Rule:  aws.String(ruleName),
 		Limit: aws.Int32(100), // Set limit to allowed maximum to prevent API throttling
 	}
@@ -624,12 +621,12 @@ func findTargetByThreePartKey(ctx context.Context, conn *eventbridge.Client, bus
 		input.EventBusName = aws.String(busName)
 	}
 
-	return findTarget(ctx, conn, input, func(v *types.Target) bool {
+	return findTarget(ctx, conn, &input, func(v types.Target) bool {
 		return targetID == aws.ToString(v.Id)
 	})
 }
 
-func findTarget(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, filter tfslices.Predicate[*types.Target]) (*types.Target, error) {
+func findTarget(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, filter tfslices.Predicate[types.Target]) (*types.Target, error) {
 	output, err := findTargets(ctx, conn, input, filter)
 
 	if err != nil {
@@ -639,7 +636,7 @@ func findTarget(ctx context.Context, conn *eventbridge.Client, input *eventbridg
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, filter tfslices.Predicate[*types.Target]) ([]types.Target, error) {
+func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, filter tfslices.Predicate[types.Target]) ([]types.Target, error) {
 	var output []types.Target
 
 	err := listTargetsByRulePages(ctx, conn, input, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
@@ -648,7 +645,7 @@ func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 		}
 
 		for _, v := range page.Targets {
-			if filter(&v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
