@@ -69,6 +69,10 @@ func (r *paymentManagerResource) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 4096),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\s]+$`), "must contain only alphanumeric characters and whitespace"),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
