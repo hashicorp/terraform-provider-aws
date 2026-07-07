@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -42,6 +41,7 @@ import (
 // @IdentityAttribute("qualifier")
 // @ImportIDHandler("functionScalingConfigImportID")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(plannableImportAction="NoOp")
 // @Testing(importStateIdAttributes="function_name;qualifier", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(importIgnore="function_state")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetFunctionScalingConfigOutput")
@@ -69,7 +69,6 @@ type functionScalingConfigResource struct {
 func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"applied_function_scaling_config": framework.ResourceComputedListOfObjectsAttribute[functionScalingConfigModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"function_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Computed:    true,
@@ -165,10 +164,9 @@ func (r *functionScalingConfigResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	// Read back to populate computed attributes (function_arn, applied config).
-	// AppliedFunctionScalingConfig is populated by AWS asynchronously and may not
-	// be present immediately; surface whatever is currently returned.
-	scOut, err := findFunctionScalingConfigByTwoPartKey(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString())
+	// Wait for the scaling configuration to settle, then populate the computed
+	// function_arn.
+	scOut, err := waitFunctionScalingConfigSettled(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
 		return
@@ -201,15 +199,22 @@ func (r *functionScalingConfigResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	// AutoFlex maps function_arn and applied_function_scaling_config directly.
+	// AutoFlex maps function_arn directly.
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state), smerr.ID, state.FunctionName.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// The API returns the configured (requested) scaling config under a different
-	// field name than the Put input, so map it explicitly into function_scaling_config.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.RequestedFunctionScalingConfig, &state.FunctionScalingConfig), smerr.ID, state.FunctionName.ValueString())
+	// The API reports the scaling configuration under RequestedFunctionScalingConfig
+	// while a change is still settling and moves it to AppliedFunctionScalingConfig
+	// once it takes effect, clearing the other. Populate function_scaling_config from
+	// whichever is currently present, preferring the requested (most recently desired)
+	// values so state reflects the user's intent and detects drift.
+	scalingConfig := out.RequestedFunctionScalingConfig
+	if scalingConfig == nil {
+		scalingConfig = out.AppliedFunctionScalingConfig
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scalingConfig, &state.FunctionScalingConfig), smerr.ID, state.FunctionName.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -249,10 +254,9 @@ func (r *functionScalingConfigResource) Update(ctx context.Context, req resource
 			return
 		}
 
-		// Read back to populate computed attributes (function_arn, applied config).
-		// AppliedFunctionScalingConfig is populated by AWS asynchronously and may not
-		// be present immediately; surface whatever is currently returned.
-		scOut, err := findFunctionScalingConfigByTwoPartKey(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString())
+		// Wait for the scaling configuration to settle, then populate the computed
+		// function_arn.
+		scOut, err := waitFunctionScalingConfigSettled(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString(), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
 			return
@@ -264,7 +268,6 @@ func (r *functionScalingConfigResource) Update(ctx context.Context, req resource
 	} else {
 		plan.FunctionARN = state.FunctionARN
 		plan.FunctionState = state.FunctionState
-		plan.AppliedFunctionScalingConfig = state.AppliedFunctionScalingConfig
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan), smerr.ID, plan.FunctionName.ValueString())
@@ -323,15 +326,58 @@ func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Cli
 	return out, nil
 }
 
+// waitFunctionScalingConfigSettled blocks until the scaling configuration has
+// fully taken effect: AWS reports the desired values under
+// RequestedFunctionScalingConfig while settling, then clears it and populates
+// AppliedFunctionScalingConfig once in effect.
+func waitFunctionScalingConfigSettled(ctx context.Context, conn *lambda.Client, functionName, qualifier string, timeout time.Duration) (*lambda.GetFunctionScalingConfigOutput, error) {
+	const (
+		statusPending = "pending"
+		statusSettled = "settled"
+	)
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusPending},
+		Target:  []string{statusSettled},
+		Refresh: func(ctx context.Context) (any, string, error) {
+			out, err := findFunctionScalingConfigByTwoPartKey(ctx, conn, functionName, qualifier)
+			if retry.NotFound(err) {
+				return nil, statusPending, nil
+			}
+			if err != nil {
+				return nil, "", smarterr.NewError(err)
+			}
+
+			applied := out.AppliedFunctionScalingConfig
+			settled := out.RequestedFunctionScalingConfig == nil &&
+				applied != nil && applied.MinExecutionEnvironments != nil && applied.MaxExecutionEnvironments != nil
+			if !settled {
+				return out, statusPending, nil
+			}
+
+			return out, statusSettled, nil
+		},
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambda.GetFunctionScalingConfigOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
 type functionScalingConfigResourceModel struct {
 	framework.WithRegionModel
-	AppliedFunctionScalingConfig fwtypes.ListNestedObjectValueOf[functionScalingConfigModel] `tfsdk:"applied_function_scaling_config"`
-	FunctionARN                  fwtypes.ARN                                                 `tfsdk:"function_arn"`
-	FunctionName                 types.String                                                `tfsdk:"function_name"`
-	FunctionScalingConfig        fwtypes.ListNestedObjectValueOf[functionScalingConfigModel] `tfsdk:"function_scaling_config"`
-	FunctionState                fwtypes.StringEnum[awstypes.State]                          `tfsdk:"function_state"`
-	Qualifier                    types.String                                                `tfsdk:"qualifier"`
-	Timeouts                     timeouts.Value                                              `tfsdk:"timeouts"`
+	FunctionARN           fwtypes.ARN                                                 `tfsdk:"function_arn"`
+	FunctionName          types.String                                                `tfsdk:"function_name"`
+	FunctionScalingConfig fwtypes.ListNestedObjectValueOf[functionScalingConfigModel] `tfsdk:"function_scaling_config"`
+	FunctionState         fwtypes.StringEnum[awstypes.State]                          `tfsdk:"function_state"`
+	Qualifier             types.String                                                `tfsdk:"qualifier"`
+	Timeouts              timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 type functionScalingConfigModel struct {
