@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_capacity_provider: Add `RESERVED` as a valid value for `managed_instances_provider.instance_launch_template.capacity_option_type` and add the `managed_instances_provider.instance_launch_template.capacity_reservations` configuration block to support On-Demand Capacity Reservations (ODCR)
+```
