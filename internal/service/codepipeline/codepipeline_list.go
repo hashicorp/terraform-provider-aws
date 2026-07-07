@@ -82,7 +82,7 @@ func (l *pipelineListResource) List(ctx context.Context, request list.ListReques
 						continue
 					}
 
-					if diags := resourcePipelineFlatten(ctx, rd, output); diags.HasError() {
+					if diags := resourcePipelineFlatten(rd, output); diags.HasError() {
 						tflog.Error(ctx, "Error reading CodePipeline Pipeline", map[string]any{
 							"error": sdkdiag.DiagnosticsString(diags),
 						})
