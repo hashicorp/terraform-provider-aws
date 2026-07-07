@@ -44,6 +44,8 @@ func TestAccLambdaFunctionScalingConfig_basic(t *testing.T) {
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "100"),
@@ -56,6 +58,7 @@ func TestAccLambdaFunctionScalingConfig_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccFunctionScalingConfigImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
+				ImportStateVerifyIgnore:              []string{"function_state"},
 			},
 		},
 	})
@@ -84,6 +87,8 @@ func TestAccLambdaFunctionScalingConfig_update(t *testing.T) {
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "100"),
 				),
@@ -92,6 +97,8 @@ func TestAccLambdaFunctionScalingConfig_update(t *testing.T) {
 				Config: testAccFunctionScalingConfigConfig_basic(rName, 5, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "5"),
 					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "200"),
 				),
