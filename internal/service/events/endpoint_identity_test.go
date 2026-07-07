@@ -19,13 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEventsGlobalEndpoint_Identity_basic(t *testing.T) {
+func TestAccEventsEndpoint_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v eventbridge.DescribeEndpointOutput
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -39,17 +37,18 @@ func TestAccEventsGlobalEndpoint_Identity_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckGlobalEndpointDestroy(ctx, t),
+		CheckDestroy: testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/basic/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
@@ -65,7 +64,8 @@ func TestAccEventsGlobalEndpoint_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/basic/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
@@ -78,7 +78,8 @@ func TestAccEventsGlobalEndpoint_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/basic/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
@@ -97,7 +98,8 @@ func TestAccEventsGlobalEndpoint_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/basic/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
@@ -117,9 +119,8 @@ func TestAccEventsGlobalEndpoint_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventsGlobalEndpoint_Identity_regionOverride(t *testing.T) {
+func TestAccEventsEndpoint_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -131,16 +132,16 @@ func TestAccEventsGlobalEndpoint_Identity_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/region_override/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					"alt_region":    config.StringVariable(acctest.Region()),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -157,10 +158,11 @@ func TestAccEventsGlobalEndpoint_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/region_override/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					"alt_region":    config.StringVariable(acctest.Region()),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
@@ -172,10 +174,11 @@ func TestAccEventsGlobalEndpoint_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/region_override/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					"alt_region":    config.StringVariable(acctest.Region()),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
@@ -192,10 +195,11 @@ func TestAccEventsGlobalEndpoint_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/region_override/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				ConfigDirectory:          config.StaticDirectory("testdata/Endpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
+					"alt_region":    config.StringVariable(acctest.Region()),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
@@ -206,132 +210,6 @@ func TestAccEventsGlobalEndpoint_Identity_regionOverride(t *testing.T) {
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
-				},
-			},
-		},
-	})
-}
-
-// Resource Identity was added after v6.53.0
-func TestAccEventsGlobalEndpoint_Identity_ExistingResource_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v eventbridge.DescribeEndpointOutput
-	resourceName := "aws_cloudwatch_event_endpoint.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckGlobalEndpointDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			// Step 1: Create pre-Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/basic_v6.53.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-
-			// Step 2: Current version
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/GlobalEndpoint/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-				},
-			},
-		},
-	})
-}
-
-// Resource Identity was added after v6.53.0
-func TestAccEventsGlobalEndpoint_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v eventbridge.DescribeEndpointOutput
-	resourceName := "aws_cloudwatch_event_endpoint.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckGlobalEndpointDestroy(ctx, t),
-		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
-			Plan: resource.PlanOptions{
-				NoRefresh: true,
-			},
-		},
-		Steps: []resource.TestStep{
-			// Step 1: Create pre-Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/GlobalEndpoint/basic_v6.53.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-
-			// Step 2: Current version
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/GlobalEndpoint/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
 				},
 			},
 		},

@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_cloudwatch_event_endpoint" "test" {
+  region = var.region
+
   name = var.rName
 
   event_bus {
@@ -22,19 +24,17 @@ resource "aws_cloudwatch_event_endpoint" "test" {
       }
 
       secondary {
-        route = data.aws_region.secondary.region
+        route = var.alt_region
       }
     }
   }
 }
 
-data "aws_region" "secondary" {
-  provider = "awsalternate"
-}
-
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_event_bus" "primary" {
+  region = var.region
+
   name = var.rName
 }
 
@@ -107,8 +107,25 @@ resource "aws_route53_health_check" "test" {
   disabled         = true
   port             = 80
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}
+
+variable "alt_region" {
+  description = "Alternate region"
+  type        = string
+  nullable    = false
+}
+
+provider "awsalternate" {
+  region = var.alt_region
 }

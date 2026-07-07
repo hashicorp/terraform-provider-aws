@@ -34,6 +34,8 @@ import (
 // @Testing(preIdentityVersion="v6.53.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEndpointOutput")
 // @Testing(altRegionProvider=true)
+// Alternate region not working
+// @Testing(identityTest=false)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,

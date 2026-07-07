@@ -30,12 +30,12 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckGlobalEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -74,12 +74,12 @@ func TestAccEventsEndpoint_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckGlobalEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -107,12 +107,12 @@ func TestAccEventsEndpoint_roleARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckGlobalEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -151,12 +151,12 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckGlobalEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_description(rName, "description 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -183,7 +183,7 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_description(rName, "description 2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -217,12 +217,12 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckGlobalEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -244,7 +244,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_updateRoutingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -267,7 +267,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
@@ -293,7 +293,7 @@ func testAccCheckGlobalEndpointDestroy(ctx context.Context, t *testing.T) resour
 	}
 }
 
-func testAccCheckGlobalEndpointExists(ctx context.Context, t *testing.T, n string, v *eventbridge.DescribeEndpointOutput) resource.TestCheckFunc {
+func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string, v *eventbridge.DescribeEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
