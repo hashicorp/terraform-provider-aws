@@ -103,7 +103,7 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "outpost_mode"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_outpost_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_address"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_endpoint", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration_endpoint"),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccElastiCacheCluster_Engine_redis_v5(t *testing.T) {
 					// Even though it is ignored, the API returns `true` in this case
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_address"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_endpoint", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration_endpoint"),
 				),
 			},
 			{

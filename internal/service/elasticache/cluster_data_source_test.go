@@ -116,7 +116,7 @@ func TestAccElastiCacheClusterDataSource_Engine_redis(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_address", resourceName, "cluster_address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_address"),
-					resource.TestCheckResourceAttr(dataSourceName, "configuration_endpoint", ""),
+					resource.TestCheckNoResourceAttr(dataSourceName, "configuration_endpoint"),
 				),
 			},
 		},
