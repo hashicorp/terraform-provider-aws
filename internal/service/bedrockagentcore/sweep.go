@@ -294,7 +294,7 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping Bedrock AgentCore Policy Engine sweep for region: %s", region)
-		return nil, nil
+		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 	var input bedrockagentcorecontrol.ListPolicyEnginesInput
 	conn := client.BedrockAgentCoreClient(ctx)
@@ -320,7 +320,7 @@ func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping Bedrock AgentCore Memory sweep for region: %s", region)
-		return nil, nil
+		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 	var input bedrockagentcorecontrol.ListMemoriesInput
 	conn := client.BedrockAgentCoreClient(ctx)
@@ -418,7 +418,7 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping Bedrock AgentCore Policy sweep for region: %s", region)
-		return nil, nil
+		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 	var input bedrockagentcorecontrol.ListPolicyEnginesInput
 	conn := client.BedrockAgentCoreClient(ctx)
