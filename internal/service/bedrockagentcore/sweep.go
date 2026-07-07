@@ -5,11 +5,13 @@ package bedrockagentcore
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -290,6 +292,10 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 }
 
 func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
+		log.Printf("[WARN] Skipping Bedrock AgentCore Policy Engine sweep for region: %s", region)
+		return nil, nil
+	}
 	var input bedrockagentcorecontrol.ListPolicyEnginesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
@@ -312,6 +318,10 @@ func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 }
 
 func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
+		log.Printf("[WARN] Skipping Bedrock AgentCore Memory sweep for region: %s", region)
+		return nil, nil
+	}
 	var input bedrockagentcorecontrol.ListMemoriesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
@@ -406,6 +416,10 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 }
 
 func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
+		log.Printf("[WARN] Skipping Bedrock AgentCore Policy sweep for region: %s", region)
+		return nil, nil
+	}
 	var input bedrockagentcorecontrol.ListPolicyEnginesInput
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
