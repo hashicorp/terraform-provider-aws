@@ -178,7 +178,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.9.0
-	github.com/aws/aws-sdk-go-v2/service/mq v1.36.2
+	github.com/aws/aws-sdk-go-v2/service/mq v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.46.2
