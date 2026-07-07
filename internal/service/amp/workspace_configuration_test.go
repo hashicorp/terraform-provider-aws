@@ -264,9 +264,9 @@ func testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindow, qu
 resource "aws_prometheus_workspace" "test" {}
 
 resource "aws_prometheus_workspace_configuration" "test" {
-  workspace_id                          = aws_prometheus_workspace.test.id
-  out_of_order_time_window_in_seconds   = %[1]d
-  rule_query_offset_in_seconds          = %[2]d
+  workspace_id                        = aws_prometheus_workspace.test.id
+  out_of_order_time_window_in_seconds = %[1]d
+  rule_query_offset_in_seconds        = %[2]d
 }
 `, timeWindow, queryOffset)
 }
