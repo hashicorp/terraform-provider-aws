@@ -220,7 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.34.0
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.23.9
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.63.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.10.5
