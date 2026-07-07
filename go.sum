@@ -217,8 +217,8 @@ github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.22.0 h1:GpM4/voq5YOqaS8WoAP
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.22.0/go.mod h1:0+JYyDnWZaoOCJbScWyjyaHN7QIfyfGi7pK9zbWB6tU=
 github.com/aws/aws-sdk-go-v2/service/drs v1.40.0 h1:OPZMMSoaW2vKzqLDX5Y+ovRq4U3fZd58HASoVZ6U7N4=
 github.com/aws/aws-sdk-go-v2/service/drs v1.40.0/go.mod h1:UTuavouYn92XtNITZ+0tlPRvlZ6vS250D1lA09uj/g4=
-github.com/aws/aws-sdk-go-v2/service/dsql v1.14.8 h1:dIVb4PVJNb+q8R0WH1G3my6DyZALTxz4lZqu/Yo/onE=
-github.com/aws/aws-sdk-go-v2/service/dsql v1.14.8/go.mod h1:fc/BhRYnEcEnXzww3tEe9MAqRYHgiK5xc8+HlMx0Kn4=
+github.com/aws/aws-sdk-go-v2/service/dsql v1.15.0 h1:OnSd99KLOlFTdJMW04f7rfGQW1PT0xlcrE6lbOXxjzE=
+github.com/aws/aws-sdk-go-v2/service/dsql v1.15.0/go.mod h1:fc/BhRYnEcEnXzww3tEe9MAqRYHgiK5xc8+HlMx0Kn4=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.2 h1:Rk2vMAylCpfUapcjnDLApIyzBBqANEyTiN54VktI07Y=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.2/go.mod h1:HnWoC3m6VmjUSg+kBL6OgQsXdyRAGzBYWb7B3J2f+JM=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.311.0 h1:hdDMnMXw/6HpLiHEpdQ71AKycRFWOuBYi84Nzj8pl+8=
