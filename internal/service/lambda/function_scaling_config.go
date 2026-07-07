@@ -16,7 +16,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -107,13 +109,21 @@ func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						objectvalidator.AtLeastOneOf(
+							path.MatchRelative().AtName("min_execution_environments"),
+							path.MatchRelative().AtName("max_execution_environments"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						"max_execution_environments": schema.Int32Attribute{
 							Optional:    true,
+							Computed:    true,
 							Description: "Maximum number of execution environments that can be provisioned for the function.",
 						},
 						"min_execution_environments": schema.Int32Attribute{
 							Optional:    true,
+							Computed:    true,
 							Description: "Minimum number of execution environments to maintain for the function.",
 						},
 					},
@@ -160,14 +170,18 @@ func (r *functionScalingConfigResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	// Wait for the scaling configuration to settle, then populate the computed
-	// function_arn.
+	// Wait for the scaling configuration to settle, then populate computed
+	// attributes: function_arn, and any omitted min/max resolved by AWS.
 	scOut, err := waitFunctionScalingConfigSettled(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
 		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scOut, &plan), smerr.ID, plan.FunctionName.ValueString())
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scalingConfigFromOutput(scOut), &plan.FunctionScalingConfig), smerr.ID, plan.FunctionName.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -201,16 +215,10 @@ func (r *functionScalingConfigResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	// The API reports the scaling configuration under RequestedFunctionScalingConfig
-	// while a change is still settling and moves it to AppliedFunctionScalingConfig
-	// once it takes effect, clearing the other. Populate function_scaling_config from
-	// whichever is currently present, preferring the requested (most recently desired)
-	// values so state reflects the user's intent and detects drift.
-	scalingConfig := out.RequestedFunctionScalingConfig
-	if scalingConfig == nil {
-		scalingConfig = out.AppliedFunctionScalingConfig
-	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scalingConfig, &state.FunctionScalingConfig), smerr.ID, state.FunctionName.ValueString())
+	// Populate function_scaling_config from the effective configuration so state
+	// reflects what AWS has (including any omitted min/max it retains) and detects
+	// drift.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scalingConfigFromOutput(out), &state.FunctionScalingConfig), smerr.ID, state.FunctionName.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -250,14 +258,18 @@ func (r *functionScalingConfigResource) Update(ctx context.Context, req resource
 			return
 		}
 
-		// Wait for the scaling configuration to settle, then populate the computed
-		// function_arn.
+		// Wait for the scaling configuration to settle, then populate computed
+		// attributes: function_arn, and any omitted min/max resolved by AWS.
 		scOut, err := waitFunctionScalingConfigSettled(ctx, conn, plan.FunctionName.ValueString(), plan.Qualifier.ValueString(), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.FunctionName.ValueString())
 			return
 		}
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scOut, &plan), smerr.ID, plan.FunctionName.ValueString())
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, scalingConfigFromOutput(scOut), &plan.FunctionScalingConfig), smerr.ID, plan.FunctionName.ValueString())
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -320,6 +332,17 @@ func findFunctionScalingConfigByTwoPartKey(ctx context.Context, conn *lambda.Cli
 	}
 
 	return out, nil
+}
+
+// scalingConfigFromOutput returns the effective scaling configuration. AWS
+// reports it under RequestedFunctionScalingConfig while a change settles and
+// moves it to AppliedFunctionScalingConfig once in effect, clearing the other.
+func scalingConfigFromOutput(out *lambda.GetFunctionScalingConfigOutput) *awstypes.FunctionScalingConfig {
+	if out.RequestedFunctionScalingConfig != nil {
+		return out.RequestedFunctionScalingConfig
+	}
+
+	return out.AppliedFunctionScalingConfig
 }
 
 // waitFunctionScalingConfigSettled blocks until the scaling configuration has
