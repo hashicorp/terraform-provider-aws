@@ -1034,13 +1034,10 @@ func sweepInstances(region string) error {
 					continue
 				}
 
-				if err := disableInstanceAPIStop(ctx, conn, id, false); err != nil {
-					log.Printf("[INFO] EC2 Instance (%s): %s", id, err)
-				}
-
 				r := resourceInstance()
 				d := r.Data(nil)
 				d.SetId(id)
+				d.Set(names.AttrForceDestroy, true)
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
