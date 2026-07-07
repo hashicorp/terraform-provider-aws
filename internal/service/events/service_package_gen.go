@@ -143,7 +143,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("event_bus_name", false),
-				inttypes.StringIdentityAttribute("statment_id", true),
+				inttypes.StringIdentityAttribute("statement_id", true),
 			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,

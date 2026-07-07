@@ -30,8 +30,8 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
-// @IdentityAttribute("event_bus_name", optional="true")
-// @IdentityAttribute("statment_id")
+// @IdentityAttribute("event_bus_name", optional="true", testNotNull=true)
+// @IdentityAttribute("statement_id")
 // @ImportIDHandler("permissionImportID")
 // @Testing(preIdentityVersion="v6.53.0")
 // @Testing(importStateIdFunc=testAccPermissionImportStateIDFunc)
