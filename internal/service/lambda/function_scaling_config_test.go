@@ -69,50 +69,7 @@ func TestAccLambdaFunctionScalingConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunctionScalingConfig_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var out lambda.GetFunctionScalingConfigOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambda_function_scaling_config.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccCapacityProviderPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionScalingConfigDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
-					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
-					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
-					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "100"),
-				),
-			},
-			{
-				Config: testAccFunctionScalingConfigConfig_basic(rName, 5, 200),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
-					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
-					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "5"),
-					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "200"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaFunctionScalingConfig_disappears_Function(t *testing.T) {
+func TestAccLambdaFunctionScalingConfig_Disappears_function(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -151,6 +108,49 @@ func TestAccLambdaFunctionScalingConfig_disappears_Function(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionScalingConfig_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var out lambda.GetFunctionScalingConfigOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function_scaling_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionScalingConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionScalingConfigConfig_basic(rName, 3, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
+					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "100"),
+				),
+			},
+			{
+				Config: testAccFunctionScalingConfigConfig_basic(rName, 5, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
+					resource.TestCheckResourceAttrSet(resourceName, "function_state"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "5"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "200"),
+				),
 			},
 		},
 	})
