@@ -103,6 +103,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
+		{
+			Factory:  newFunctionScalingConfigResourceAsListResource,
+			TypeName: "aws_lambda_function_scaling_config",
+			Name:     "Function Scaling Config",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("qualifier", true),
+			}),
+		},
 	})
 }
 
