@@ -6011,7 +6011,7 @@ func TestExpandProjectEnvironmentHostKernel(t *testing.T) {
 			tfMap := map[string]any{
 				"compute_type":    "BUILD_GENERAL1_SMALL",
 				"image":           "2",
-				"type":            "LINUX_CONTAINER",
+				names.AttrType:    "LINUX_CONTAINER",
 				"privileged_mode": false,
 			}
 			if tc.hostKernel != nil {
