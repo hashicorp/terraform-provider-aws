@@ -29,16 +29,17 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_event_endpoint", name="Global Endpoint")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEndpointOutput")
+// @Testing(altRegionProvider=true)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
 		ReadWithoutTimeout:   resourceEndpointRead,
 		UpdateWithoutTimeout: resourceEndpointUpdate,
 		DeleteWithoutTimeout: resourceEndpointDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -153,7 +154,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateEndpointInput{
+	input := eventbridge.CreateEndpointInput{
 		EventBuses:    expandEndpointEventBuses(d.Get("event_bus").([]any)),
 		Name:          aws.String(name),
 		RoutingConfig: expandRoutingConfig(d.Get("routing_config").([]any)[0].(map[string]any)),
@@ -172,7 +173,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateEndpoint(ctx, input)
+		return conn.CreateEndpoint(ctx, &input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
 	if err != nil {
@@ -237,7 +238,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.UpdateEndpointInput{
+	input := eventbridge.UpdateEndpointInput{
 		Name: aws.String(d.Id()),
 	}
 
@@ -263,7 +264,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		input.RoutingConfig = expandRoutingConfig(d.Get("routing_config").([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.UpdateEndpoint(ctx, input)
+	_, err := conn.UpdateEndpoint(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Global Endpoint (%s): %s", d.Id(), err)
@@ -284,9 +285,10 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Global Endpoint: %s", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &eventbridge.DeleteEndpointInput{
+	input := eventbridge.DeleteEndpointInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEndpoint(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -307,10 +309,14 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeEndpointOutput, error) {
-	input := &eventbridge.DescribeEndpointInput{
+	input := eventbridge.DescribeEndpointInput{
 		Name: aws.String(name),
 	}
 
+	return findEndpoint(ctx, conn, &input)
+}
+
+func findEndpoint(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeEndpointInput) (*eventbridge.DescribeEndpointOutput, error) {
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
