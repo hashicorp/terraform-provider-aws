@@ -23,7 +23,7 @@ func TestAccEventsEventBusesDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventBusesDataSourceConfig_basic(busName),

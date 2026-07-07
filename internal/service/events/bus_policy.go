@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_event_bus_policy", name="Event Bus Policy")
+// @SDKResource("aws_cloudwatch_event_bus_policy", name="Bus Policy")
 // @IdentityAttribute("event_bus_name")
 // @Testing(idAttrDuplicates="event_bus_name")
 // @Testing(preIdentityVersion="v6.53.0")
