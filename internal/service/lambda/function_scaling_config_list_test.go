@@ -124,7 +124,7 @@ func TestAccLambdaFunctionScalingConfig_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambda_function_scaling_config.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_lambda_function_scaling_config.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("function_arn"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrFunctionARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("function_name"), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("function_scaling_config").AtSliceIndex(0).AtMapKey("min_execution_environments"), knownvalue.Int32Exact(3)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("function_scaling_config").AtSliceIndex(0).AtMapKey("max_execution_environments"), knownvalue.Int32Exact(100)),
