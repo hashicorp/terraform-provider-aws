@@ -21,3 +21,7 @@ resource/aws_cloudwatch_event_connection: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_cloudwatch_event_endpoint: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_permission: Add Resource Identity support
+```
