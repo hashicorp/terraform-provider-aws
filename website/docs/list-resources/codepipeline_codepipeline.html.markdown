@@ -1,19 +1,19 @@
 ---
 subcategory: "CodePipeline"
 layout: "aws"
-page_title: "AWS: aws_codepipeline_codepipeline"
+page_title: "AWS: aws_codepipeline"
 description: |-
   Lists CodePipeline Pipeline resources.
 ---
 
-# List Resource: aws_codepipeline_codepipeline
+# List Resource: aws_codepipeline
 
 Lists CodePipeline Pipeline resources.
 
 ## Example Usage
 
 ```terraform
-list "aws_codepipeline_codepipeline" "example" {
+list "aws_codepipeline" "example" {
   provider = aws
 }
 ```
