@@ -25,20 +25,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
+// @IdentityAttribute("event_bus_name", optional="true")
+// @IdentityAttribute("statment_id")
+// @ImportIDHandler("permissionImportID")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(importStateIdFunc=testAccPermissionImportStateIDFunc)
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
 		ReadWithoutTimeout:   resourcePermissionRead,
 		UpdateWithoutTimeout: resourcePermissionUpdate,
 		DeleteWithoutTimeout: resourcePermissionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -102,7 +104,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
 	id := permissionCreateResourceID(eventBusName, statementID)
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
@@ -110,7 +112,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err := conn.PutPermission(ctx, input)
+	_, err := conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Permission (%s): %s", id, err)
@@ -131,9 +133,9 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyStatement, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
+	policyStatement, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
 		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
-	})
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Permission (%s) not found, removing from state", d.Id())
@@ -181,7 +183,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
@@ -189,7 +191,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err = conn.PutPermission(ctx, input)
+	_, err = conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Permission (%s): %s", d.Id(), err)
@@ -208,10 +210,11 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Permission: %s", d.Id())
-	_, err = conn.RemovePermission(ctx, &eventbridge.RemovePermissionInput{
+	input := eventbridge.RemovePermissionInput{
 		EventBusName: aws.String(eventBusName),
 		StatementId:  aws.String(statementID),
-	})
+	}
+	_, err = conn.RemovePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -268,6 +271,31 @@ func permissionParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sSTATEMENTID or STATEMENTID", id, permissionResourceIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = permissionImportID{}
+)
+
+type permissionImportID struct{}
+
+func (permissionImportID) Parse(id string) (string, map[string]any, error) {
+	eventBusName, statementID, err := permissionParseResourceID(id)
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"event_bus_name": eventBusName,
+		"statement_id":   statementID,
+	}
+
+	return id, result, nil
+}
+
+func (permissionImportID) Create(d *schema.ResourceData) string {
+	return permissionCreateResourceID(d.Get("event_bus_name").(string), d.Get("statement_id").(string))
 }
 
 // PermissionPolicyDoc represents the Policy attribute of DescribeEventBus

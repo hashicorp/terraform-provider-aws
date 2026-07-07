@@ -66,17 +66,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_permission.DevAccountAccess
+  to = aws_cloudwatch_event_permission.example
+  identity = {
+    event_bus_name = "example-event-bus"
+    statement_id   = "DevAccountAccess"
+  }
+}
+
+resource "aws_cloudwatch_event_permission" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `statement_id` (String) External account ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `event_bus_name` (String) Name of the event bus.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Permissions `event_bus_name` and `statement_id` separated by a forward slash (`/`) (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_permission.example
   id = "example-event-bus/DevAccountAccess"
 }
 ```
 
-Using `terraform import`, import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+Using `terraform import`, import Permissions `event_bus_name` and `statement_id` separated by a forward slash (`/`) (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
 ```console
-% terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
+% terraform import aws_cloudwatch_event_permission.example example-event-bus/DevAccountAccess
 ```
