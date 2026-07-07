@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.46.2
+	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.31.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.71.7
