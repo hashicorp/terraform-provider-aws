@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -155,6 +156,71 @@ func TestAccLambdaFunctionScalingConfig_disappears_Function(t *testing.T) {
 	})
 }
 
+// TestAccLambdaFunctionScalingConfig_partial covers configs that set only one of
+// min/max. AWS retains omitted fields (a max-only update keeps the previously-set
+// min) and cannot clear an individual field, so min and max are Optional+Computed:
+// omitting a field accepts whatever AWS reports rather than forcing it null.
+func TestAccLambdaFunctionScalingConfig_partial(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var out lambda.GetFunctionScalingConfigOutput
+	resourceName := "aws_lambda_function_scaling_config.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionScalingConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionScalingConfigConfig_minOnly(rName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
+				),
+			},
+			{
+				// max-only update: AWS retains the previously-set min, so both are reported.
+				Config: testAccFunctionScalingConfigConfig_maxOnly(rName, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionScalingConfigExists(ctx, t, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.min_execution_environments", "3"),
+					resource.TestCheckResourceAttr(resourceName, "function_scaling_config.0.max_execution_environments", "200"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLambdaFunctionScalingConfig_emptyScalingConfig verifies that an empty
+// function_scaling_config block is rejected at plan time. An empty configuration
+// is a reset (no scaling config), which cannot persist as a resource, so at least
+// one of min/max must be set.
+func TestAccLambdaFunctionScalingConfig_emptyScalingConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFunctionScalingConfigConfig_emptyScalingConfig(rName),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`(?i)at least one`),
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionScalingConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
@@ -235,7 +301,7 @@ func testAccFunctionScalingConfigImportStateIDFunc(resourceName string) resource
 	}
 }
 
-func testAccFunctionScalingConfigConfig_basic(rName string, minExecEnv, maxExecEnv int) string {
+func testAccFunctionScalingConfigConfig_functionBase(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCapacityProviderConfig_basic(rName),
 		fmt.Sprintf(`
@@ -285,15 +351,62 @@ resource "aws_lambda_function" "test" {
 
   depends_on = [aws_iam_role_policy.lambda_operator]
 }
+`, rName))
+}
 
+func testAccFunctionScalingConfigConfig_basic(rName string, minExecEnv, maxExecEnv int) string {
+	return acctest.ConfigCompose(
+		testAccFunctionScalingConfigConfig_functionBase(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function_scaling_config" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = "$LATEST.PUBLISHED"
 
   function_scaling_config {
-    min_execution_environments = %[2]d
-    max_execution_environments = %[3]d
+    min_execution_environments = %[1]d
+    max_execution_environments = %[2]d
   }
 }
-`, rName, minExecEnv, maxExecEnv))
+`, minExecEnv, maxExecEnv))
+}
+
+func testAccFunctionScalingConfigConfig_minOnly(rName string, minExecEnv int) string {
+	return acctest.ConfigCompose(
+		testAccFunctionScalingConfigConfig_functionBase(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function_scaling_config" "test" {
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = "$LATEST.PUBLISHED"
+
+  function_scaling_config {
+    min_execution_environments = %[1]d
+  }
+}
+`, minExecEnv))
+}
+
+func testAccFunctionScalingConfigConfig_maxOnly(rName string, maxExecEnv int) string {
+	return acctest.ConfigCompose(
+		testAccFunctionScalingConfigConfig_functionBase(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function_scaling_config" "test" {
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = "$LATEST.PUBLISHED"
+
+  function_scaling_config {
+    max_execution_environments = %[1]d
+  }
+}
+`, maxExecEnv))
+}
+
+func testAccFunctionScalingConfigConfig_emptyScalingConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_function_scaling_config" "test" {
+  function_name = %[1]q
+  qualifier     = "$LATEST.PUBLISHED"
+
+  function_scaling_config {}
+}
+`, rName)
 }
