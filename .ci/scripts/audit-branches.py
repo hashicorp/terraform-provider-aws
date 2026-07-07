@@ -18,6 +18,7 @@ Usage:
 
 import subprocess
 import re
+import os
 import sys
 import time
 from collections import Counter
@@ -53,12 +54,29 @@ FORMER_EMPLOYEE_EMAILS = {
 BOT_EMAIL_MARKERS = ("github-actions", "noreply@github.com",
                      "changelogbot@hashicorp.com", "update-schemas@github.com")
 
-# Audit trail of completed cleanup (append as work is done).
-COMPLETED = [
-    "39× `compliance/update-headers-batch-1..39` — bot copyright-header batches, PRs closed (deleted 2026-07-06)",
-    "8× in-main + no-PR branches from the initial sweep, see #48797 (deleted 2026-07-06)",
-    "8× R2 (in-main, lossless, no open PR) branches (deleted 2026-07-06); `v6.0.0-upgrade-refresh=false-region` could not be deleted — protected by org rule (`v*`)",
-]
+# Append-only ledger of deleted branches (survives regeneration; git can no
+# longer report deleted branches). Maintained in the sibling TSV file.
+DELETED_LEDGER = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "deleted-branches.tsv")
+
+
+def load_deleted():
+    """Return list of dicts {date, branch, sha, pr, bucket} from the ledger."""
+    recs = []
+    try:
+        with open(DELETED_LEDGER) as f:
+            for line in f:
+                line = line.rstrip("\n")
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split("\t")
+                if len(parts) < 5:
+                    continue
+                recs.append(dict(date=parts[0], branch=parts[1], sha=parts[2],
+                                 pr=parts[3], bucket=parts[4]))
+    except FileNotFoundError:
+        pass
+    return recs
 
 
 def sh(args):
@@ -185,9 +203,23 @@ def report(rows, md=False):
                    "low effort to validate + high likelihood deletable at the top. "
                    "Actionable buckets use `- [ ]`; check items off as branches are deleted "
                    "(re-run the script to refresh the live list).\n")
-        if COMPLETED:
-            out.append("## Completed\n")
-            out += [f"- [x] {c}" for c in COMPLETED]
+        deleted = load_deleted()
+        if deleted:
+            def dline(d):
+                pr = f"#{d['pr']}" if d["pr"] and d["pr"] != "-" else "no PR"
+                return (f"- [x] `{d['branch']}` — deleted {d['date']}, was {d['bucket']}, "
+                        f"{pr}, tip `{d['sha']}`")
+            comp = [d for d in deleted if d["branch"].startswith("compliance/update-headers-batch-")]
+            rest = [d for d in deleted if not d["branch"].startswith("compliance/update-headers-batch-")]
+            out.append(f"## Deleted (record) — {len(deleted)} branches\n")
+            out.append("_Recorded here because git cannot report deleted branches. "
+                       "`tip` is the pre-deletion SHA (best-effort restore point)._\n")
+            out += [dline(d) for d in rest]
+            if comp:
+                out.append(f"\n<details><summary>{len(comp)}× `compliance/update-headers-batch-*` "
+                           "(bot copyright-header batches)</summary>\n")
+                out += [dline(d) for d in comp]
+                out.append("\n</details>")
             out.append("")
         out.append("## Ranking\n")
         out.append("| Rank | Bucket | Count | Effort to validate | Likelihood deletable |")
@@ -197,7 +229,7 @@ def report(rows, md=False):
         out.append("\n_Owner resolved from PR author + committer email vs roster; best-effort. "
                    "Current engineer maintainers: `@johnsonaj @YakDriver @gdavison @jar-b "
                    "@ewbankkit @subham-ibmhc @taruntej-a @brosas07`; also on team: "
-                   "`@breathingdust @justinretzolk`. `release*` cannot be deleted (org rule)._\n")
+                   "`@breathingdust @justinretzolk`. `release*` / `v*` cannot be deleted (org rule)._\n")
         for k, lbl, eff, lik in RANKS:
             group = sorted([r for r in rows if r["bucket"] == k], key=lambda x: -x["age"])
             if not group:
