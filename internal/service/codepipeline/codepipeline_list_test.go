@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodePipelinePipeline_List_basic(t *testing.T) {
+func TestAccCodePipeline_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_codepipeline.test[0]"
@@ -81,7 +81,7 @@ func TestAccCodePipelinePipeline_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelinePipeline_List_includeResource(t *testing.T) {
+func TestAccCodePipeline_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_codepipeline.test[0]"
@@ -148,7 +148,7 @@ func TestAccCodePipelinePipeline_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccCodePipelinePipeline_List_regionOverride(t *testing.T) {
+func TestAccCodePipeline_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_codepipeline.test[0]"
