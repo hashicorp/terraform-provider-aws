@@ -214,7 +214,6 @@ func TestAccLambdaFunctionScalingConfig_emptyScalingConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionScalingConfigConfig_emptyScalingConfig(rName),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`(?i)at least one`),
 			},
 		},

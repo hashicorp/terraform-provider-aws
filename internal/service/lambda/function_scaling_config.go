@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -109,12 +108,6 @@ func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						objectvalidator.AtLeastOneOf(
-							path.MatchRelative().AtName("min_execution_environments"),
-							path.MatchRelative().AtName("max_execution_environments"),
-						),
-					},
 					Attributes: map[string]schema.Attribute{
 						"max_execution_environments": schema.Int32Attribute{
 							Optional:    true,
@@ -135,6 +128,37 @@ func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *functionScalingConfigResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data functionScalingConfigResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.FunctionScalingConfig.IsNull() || data.FunctionScalingConfig.IsUnknown() {
+		return
+	}
+
+	scalingConfigs, diags := data.FunctionScalingConfig.ToSlice(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// min and max are optional and computed, so a config-level AtLeastOneOf
+	// validator cannot see an empty block. Reject it here: an empty configuration
+	// is a reset (no scaling config), which cannot persist as a resource.
+	for _, scalingConfig := range scalingConfigs {
+		if scalingConfig.MinExecutionEnvironments.IsNull() && scalingConfig.MaxExecutionEnvironments.IsNull() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("function_scaling_config"),
+				"Invalid Attribute Combination",
+				"At least one of `min_execution_environments` or `max_execution_environments` must be set.",
+			)
+		}
 	}
 }
 
