@@ -40,6 +40,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newInstanceTypeDataSource,
+			TypeName: "aws_rds_instance_type",
+			Name:     "Instance Type",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newSnapshotsDataSource,
 			TypeName: "aws_rds_snapshots",
 			Name:     "Snapshots",
