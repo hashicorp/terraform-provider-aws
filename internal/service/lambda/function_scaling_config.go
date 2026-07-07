@@ -69,7 +69,7 @@ type functionScalingConfigResource struct {
 func (r *functionScalingConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"function_arn": schema.StringAttribute{
+			names.AttrFunctionARN: schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Computed:    true,
 				Description: "ARN of the Lambda function.",
