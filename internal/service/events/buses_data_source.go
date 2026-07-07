@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_cloudwatch_event_buses", name="Buses")
+// @FrameworkDataSource("aws_cloudwatch_event_buses", name="Event Buses")
 func newEventBusesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &eventBusesDataSource{}, nil
 }

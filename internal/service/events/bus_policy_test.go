@@ -30,15 +30,15 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -48,7 +48,7 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -69,15 +69,15 @@ func TestAccEventsBusPolicy_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -87,12 +87,12 @@ func TestAccEventsBusPolicy_update(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/update/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/update/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -114,12 +114,12 @@ func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -151,12 +151,12 @@ func TestAccEventsBusPolicy_default(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/default/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/default/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -166,7 +166,7 @@ func TestAccEventsBusPolicy_default(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/BusPolicy/default/"),
+				ConfigDirectory:   config.StaticDirectory("testdata/EventBusPolicy/default/"),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -184,15 +184,15 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -219,15 +219,15 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -244,7 +244,7 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 	})
 }
 
-func testAccCheckBusPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckEventBusPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
@@ -270,7 +270,7 @@ func testAccCheckBusPolicyDestroy(ctx context.Context, t *testing.T) resource.Te
 	}
 }
 
-func testAccCheckBusPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckEventBusPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[n]
 		if !ok {

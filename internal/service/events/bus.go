@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_event_bus", name="Bus")
+// @SDKResource("aws_cloudwatch_event_bus", name="Event Bus")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @Testing(idAttrDuplicates="name")

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEventsBusPolicy_Identity_basic(t *testing.T) {
+func TestAccEventsEventBusPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
@@ -34,17 +34,17 @@ func TestAccEventsBusPolicy_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEventBusPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("event_bus_name"), compare.ValuesSame()),
@@ -60,7 +60,7 @@ func TestAccEventsBusPolicy_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -72,7 +72,7 @@ func TestAccEventsBusPolicy_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -90,7 +90,7 @@ func TestAccEventsBusPolicy_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -109,7 +109,7 @@ func TestAccEventsBusPolicy_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventsBusPolicy_Identity_regionOverride(t *testing.T) {
+func TestAccEventsEventBusPolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
@@ -126,7 +126,7 @@ func TestAccEventsBusPolicy_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -145,7 +145,7 @@ func TestAccEventsBusPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -159,7 +159,7 @@ func TestAccEventsBusPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -178,7 +178,7 @@ func TestAccEventsBusPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -198,7 +198,7 @@ func TestAccEventsBusPolicy_Identity_regionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.53.0
-func TestAccEventsBusPolicy_Identity_ExistingResource_basic(t *testing.T) {
+func TestAccEventsEventBusPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
@@ -210,16 +210,16 @@ func TestAccEventsBusPolicy_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy: testAccCheckEventBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic_v6.53.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic_v6.53.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -229,7 +229,7 @@ func TestAccEventsBusPolicy_Identity_ExistingResource_basic(t *testing.T) {
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -255,7 +255,7 @@ func TestAccEventsBusPolicy_Identity_ExistingResource_basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.53.0
-func TestAccEventsBusPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+func TestAccEventsEventBusPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
@@ -267,7 +267,7 @@ func TestAccEventsBusPolicy_Identity_ExistingResource_noRefreshNoChange(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckBusPolicyDestroy(ctx, t),
+		CheckDestroy: testAccCheckEventBusPolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -276,12 +276,12 @@ func TestAccEventsBusPolicy_Identity_ExistingResource_noRefreshNoChange(t *testi
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic_v6.53.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EventBusPolicy/basic_v6.53.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccCheckEventBusPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -291,7 +291,7 @@ func TestAccEventsBusPolicy_Identity_ExistingResource_noRefreshNoChange(t *testi
 			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/EventBusPolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
