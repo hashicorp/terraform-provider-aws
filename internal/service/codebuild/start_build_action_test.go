@@ -289,13 +289,13 @@ func TestStartBuildActionHostKernelOverride(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := map[string]struct {
-		override types.String
+		override fwtypes.StringEnum[awstypes.HostKernel]
 		expected awstypes.HostKernel
 	}{
-		"LINUX_KERNEL_4":      {override: types.StringValue(string(awstypes.HostKernelLinuxKernel4)), expected: awstypes.HostKernelLinuxKernel4},
-		"LINUX_KERNEL_6":      {override: types.StringValue(string(awstypes.HostKernelLinuxKernel6)), expected: awstypes.HostKernelLinuxKernel6},
-		"LINUX_KERNEL_LATEST": {override: types.StringValue(string(awstypes.HostKernelLinuxKernelLatest)), expected: awstypes.HostKernelLinuxKernelLatest},
-		"unset":               {override: types.StringNull(), expected: ""},
+		"LINUX_KERNEL_4":      {override: fwtypes.StringEnumValue(awstypes.HostKernelLinuxKernel4), expected: awstypes.HostKernelLinuxKernel4},
+		"LINUX_KERNEL_6":      {override: fwtypes.StringEnumValue(awstypes.HostKernelLinuxKernel6), expected: awstypes.HostKernelLinuxKernel6},
+		"LINUX_KERNEL_LATEST": {override: fwtypes.StringEnumValue(awstypes.HostKernelLinuxKernelLatest), expected: awstypes.HostKernelLinuxKernelLatest},
+		"unset":               {override: fwtypes.StringEnumNull[awstypes.HostKernel](), expected: ""},
 	}
 
 	for name, tc := range testCases {

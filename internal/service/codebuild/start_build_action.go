@@ -14,12 +14,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -38,24 +36,33 @@ type startBuildAction struct {
 
 type startBuildActionModel struct {
 	framework.WithRegionModel
+	BuildID                      types.String                                              `tfsdk:"build_id"`
+	EnvironmentVariablesOverride fwtypes.ListNestedObjectValueOf[environmentVariableModel] `tfsdk:"environment_variables_override"`
+	HostKernelOverride           fwtypes.StringEnum[awstypes.HostKernel]                   `tfsdk:"host_kernel_override"`
 	ProjectName                  types.String                                              `tfsdk:"project_name"`
 	SourceVersion                types.String                                              `tfsdk:"source_version"`
 	Timeout                      types.Int64                                               `tfsdk:"timeout"`
-	EnvironmentVariablesOverride fwtypes.ListNestedObjectValueOf[environmentVariableModel] `tfsdk:"environment_variables_override"`
-	HostKernelOverride           types.String                                              `tfsdk:"host_kernel_override"`
-	BuildID                      types.String                                              `tfsdk:"build_id"`
 }
 
 type environmentVariableModel struct {
 	Name  types.String `tfsdk:"name"`
-	Value types.String `tfsdk:"value"`
 	Type  types.String `tfsdk:"type"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Starts a CodeBuild project build. This action is synchronous and waits for the build to complete. When using with action_trigger lifecycle events, use before_create to ensure dependent resources wait for build artifacts.",
 		Attributes: map[string]schema.Attribute{
+			"build_id": schema.StringAttribute{
+				Description: "ID of the started build",
+				Optional:    true,
+			},
+			"host_kernel_override": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.HostKernel](),
+				Description: "Overrides the host operating system kernel for this build. Valid values: LINUX_KERNEL_4, LINUX_KERNEL_6, LINUX_KERNEL_LATEST.",
+				Optional:    true,
+			},
 			"project_name": schema.StringAttribute{
 				Description: "Name of the CodeBuild project",
 				Required:    true,
@@ -64,19 +71,8 @@ func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest,
 				Description: "Version of the build input to be built",
 				Optional:    true,
 			},
-			"host_kernel_override": schema.StringAttribute{
-				Description: "Overrides the host operating system kernel for this build. Valid values: LINUX_KERNEL_4, LINUX_KERNEL_6, LINUX_KERNEL_LATEST.",
-				Optional:    true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.HostKernel](),
-				},
-			},
 			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds for the build operation",
-				Optional:    true,
-			},
-			"build_id": schema.StringAttribute{
-				Description: "ID of the started build",
 				Optional:    true,
 			},
 		},
@@ -90,13 +86,13 @@ func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest,
 							Description: "Environment variable name",
 							Required:    true,
 						},
-						names.AttrValue: schema.StringAttribute{
-							Description: "Environment variable value",
-							Required:    true,
-						},
 						names.AttrType: schema.StringAttribute{
 							Description: "Environment variable type",
 							Optional:    true,
+						},
+						names.AttrValue: schema.StringAttribute{
+							Description: "Environment variable value",
+							Required:    true,
 						},
 					},
 				},

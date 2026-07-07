@@ -1486,16 +1486,16 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 		apiObject.Fleet = projectFleet
 	}
 
+	if v, ok := tfMap["host_kernel"].(string); ok && v != "" {
+		apiObject.HostKernel = types.HostKernel(v)
+	}
+
 	if v, ok := tfMap["image"].(string); ok && v != "" {
 		apiObject.Image = aws.String(v)
 	}
 
 	if v, ok := tfMap["image_pull_credentials_type"].(string); ok && v != "" {
 		apiObject.ImagePullCredentialsType = types.ImagePullCredentialsType(v)
-	}
-
-	if v, ok := tfMap["host_kernel"].(string); ok && v != "" {
-		apiObject.HostKernel = types.HostKernel(v)
 	}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
