@@ -97,6 +97,29 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCorePaymentCredentialProvider_nameValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Regression: the name schema validator must reject values with
+				// disallowed characters at plan time, before any API call.
+				Config:      testAccPaymentCredentialProviderConfig_stripePrivy("invalid name!"),
+				ExpectError: regexache.MustCompile(`must contain only letters, numbers, hyphens, and underscores`),
+			},
+		},
+	})
+}
+
 func testAccCheckPaymentCredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
