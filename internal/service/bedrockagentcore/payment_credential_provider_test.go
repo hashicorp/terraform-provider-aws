@@ -120,6 +120,30 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_nameValidation(t *testing.
 	})
 }
 
+func TestAccBedrockAgentCorePaymentCredentialProvider_requiredFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Regression: app_id is SDK-required within stripe_privy_configuration,
+				// so omitting it must fail at plan time rather than at apply.
+				Config:      testAccPaymentCredentialProviderConfig_stripePrivyMissingAppID(rName),
+				ExpectError: regexache.MustCompile(`The argument "app_id" is required`),
+			},
+		},
+	})
+}
+
 func testAccCheckPaymentCredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -182,6 +206,23 @@ resource "aws_bedrockagentcore_payment_credential_provider" "test" {
   provider_configuration {
     stripe_privy_configuration {
       app_id                    = "app_test_id"
+      app_secret                = "sk_test_secret"
+      authorization_id          = "auth_test_id"
+      authorization_private_key = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPaymentCredentialProviderConfig_stripePrivyMissingAppID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_payment_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "StripePrivy"
+
+  provider_configuration {
+    stripe_privy_configuration {
       app_secret                = "sk_test_secret"
       authorization_id          = "auth_test_id"
       authorization_private_key = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI"
