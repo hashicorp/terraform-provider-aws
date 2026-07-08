@@ -59,11 +59,6 @@ func testAccPaymentConnector_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccPaymentConnectorImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "payment_connector_id",
-				// The credential provider configuration holds write-only secrets that
-				// the API does not return, so the block cannot be reconstructed on import.
-				ImportStateVerifyIgnore: []string{
-					"credential_provider_configuration",
-				},
 			},
 		},
 	})
@@ -91,6 +86,66 @@ func testAccPaymentConnector_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourcePaymentConnector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccPaymentConnector_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomPaymentConnectorName(t)
+	resourceName := "aws_bedrockagentcore_payment_connector.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentConnectors(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentConnectorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPaymentConnectorConfig_description(rName, "initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentConnectorExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("initial description")),
+				},
+			},
+			{
+				Config: testAccPaymentConnectorConfig_description(rName, "updated description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentConnectorExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated description")),
+				},
+			},
+			{
+				// Regression: removing description from config must NOT produce a
+				// perpetual diff. UpdatePaymentConnector is a PATCH that preserves an
+				// omitted description, so description is Optional+Computed and the
+				// prior value is retained (a clean, empty post-refresh plan).
+				Config: testAccPaymentConnectorConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentConnectorExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated description")),
+				},
 			},
 		},
 	})
@@ -152,7 +207,7 @@ func testAccPreCheckPaymentConnectors(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccPaymentConnectorConfig_basic(rName string) string {
+func testAccPaymentConnectorConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -209,7 +264,11 @@ resource "aws_bedrockagentcore_payment_credential_provider" "test" {
     }
   }
 }
+`, rName, strings.ReplaceAll(strings.ReplaceAll(rName, "-", ""), "_", ""))
+}
 
+func testAccPaymentConnectorConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccPaymentConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_payment_connector" "test" {
   name               = %[1]q
   payment_manager_id = aws_bedrockagentcore_payment_manager.test.payment_manager_id
@@ -221,7 +280,24 @@ resource "aws_bedrockagentcore_payment_connector" "test" {
     }
   }
 }
-`, rName, strings.ReplaceAll(strings.ReplaceAll(rName, "-", ""), "_", ""))
+`, rName))
+}
+
+func testAccPaymentConnectorConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccPaymentConnectorConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_payment_connector" "test" {
+  name               = %[1]q
+  payment_manager_id = aws_bedrockagentcore_payment_manager.test.payment_manager_id
+  type               = "StripePrivy"
+  description        = %[2]q
+
+  credential_provider_configuration {
+    stripe_privy {
+      credential_provider_arn = aws_bedrockagentcore_payment_credential_provider.test.credential_provider_arn
+    }
+  }
+}
+`, rName, description))
 }
 
 func testAccPaymentConnectorImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
