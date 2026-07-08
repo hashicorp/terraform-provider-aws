@@ -223,6 +223,8 @@ func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_group_id", resourceParentName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeChild)),
 					resource.TestCheckResourceAttr(resourceParentName, names.AttrType, string(types.ResourceConfigurationTypeGroup)),
+					resource.TestCheckResourceAttr(resourceParentName, "group_domain", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "custom_domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
 					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.ip_resource.0.ip_address", "10.0.0.1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
@@ -481,7 +483,8 @@ func testAccResourceConfigurationConfig_parentChild(rName, ip string) string {
 resource "aws_vpclattice_resource_configuration" "parent" {
   name = "%[1]s-parent"
 
-  protocol = "TCP"
+  protocol     = "TCP"
+  group_domain = "example.com"
 
   resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
   type                        = "GROUP"
@@ -494,6 +497,8 @@ resource "aws_vpclattice_resource_configuration" "test" {
 
   resource_configuration_group_id = aws_vpclattice_resource_configuration.parent.id
   type                            = "CHILD"
+
+  custom_domain_name = "%[1]s.example.com"
 
   resource_configuration_definition {
     ip_resource {
