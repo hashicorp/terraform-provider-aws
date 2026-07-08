@@ -11,6 +11,7 @@ FEATURES:
 * **New List Resource:** `aws_bedrockagentcore_browser_profile` ([#46862](https://github.com/hashicorp/terraform-provider-aws/issues/46862))
 * **New List Resource:** `aws_codepipeline` ([#48808](https://github.com/hashicorp/terraform-provider-aws/issues/48808))
 * **New List Resource:** `aws_lambda_function_scaling_config` ([#48229](https://github.com/hashicorp/terraform-provider-aws/issues/48229))
+* **New List Resource:** `aws_scheduler_schedule` ([#48828](https://github.com/hashicorp/terraform-provider-aws/issues/48828))
 * **New List Resource:** `aws_ssoadmin_region` ([#48126](https://github.com/hashicorp/terraform-provider-aws/issues/48126))
 * **New List Resource:** `aws_workspaces_pool` ([#42678](https://github.com/hashicorp/terraform-provider-aws/issues/42678))
 * **New Resource:** `aws_bedrockagentcore_browser_profile` ([#46862](https://github.com/hashicorp/terraform-provider-aws/issues/46862))
@@ -35,8 +36,10 @@ ENHANCEMENTS:
 * resource/aws_iam_policy_attachment: Add resource identity support ([#48639](https://github.com/hashicorp/terraform-provider-aws/issues/48639))
 * resource/aws_mq_broker: Add `resource_share_arns` argument and `shared_resources` attribute ([#48729](https://github.com/hashicorp/terraform-provider-aws/issues/48729))
 * resource/aws_prometheus_workspace_configuration: Add `out_of_order_time_window_in_seconds` and `rule_query_offset_in_seconds` arguments ([#48659](https://github.com/hashicorp/terraform-provider-aws/issues/48659))
+* resource/aws_rds_cluster: Add support for `auto_minor_version_upgrade` argument ([#42472](https://github.com/hashicorp/terraform-provider-aws/issues/42472))
 * resource/aws_sagemaker_endpoint_configuration: Add Resource Identity support ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
 * resource/aws_sagemaker_endpoint_configuration: Add `production_variants.capacity_reservation_config` and `shadow_production_variants.capacity_reservation_config` configuration blocks ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
+* resource/aws_scheduler_schedule: Add resource identity support ([#48828](https://github.com/hashicorp/terraform-provider-aws/issues/48828))
 
 BUG FIXES:
 
@@ -44,6 +47,7 @@ BUG FIXES:
 * resource/aws_bedrock_guardrail: Prevents "inconsistent result" error when adding `topic_policy_config` block. ([#48772](https://github.com/hashicorp/terraform-provider-aws/issues/48772))
 * resource/aws_bedrock_guardrail: Prevents "inconsistent result" error with multiple `content_policy_config.filters_config.input_modalities` values. ([#48772](https://github.com/hashicorp/terraform-provider-aws/issues/48772))
 * resource/aws_bedrock_guardrail: Prevents "inconsistent result" error with multiple `content_policy_config.filters_config.output_modalities` values. ([#48772](https://github.com/hashicorp/terraform-provider-aws/issues/48772))
+* resource/aws_cloudfront_multitenant_distribution: Correctly handles default tags. ([#48783](https://github.com/hashicorp/terraform-provider-aws/issues/48783))
 * resource/aws_cloudfront_multitenant_distribution: Correctly taints resource if Create fails. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
 * resource/aws_cloudfront_multitenant_distribution: Sets `etag` on Import. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
 * resource/aws_cloudfront_multitenant_distribution: Updates `etag` when only `tags` updated. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
