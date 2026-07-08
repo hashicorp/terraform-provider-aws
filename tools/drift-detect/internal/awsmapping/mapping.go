@@ -14,6 +14,11 @@ import (
 
 // File is the top-level structure of aws_resources.yaml.
 type File struct {
+	// Services maps Terraform service names to AWS API model directory names
+	// when the two differ (e.g. "prometheus" → "amp"). Checked before
+	// auto-discovery; if an entry exists the renamed value is used directly.
+	Services map[string]string `yaml:"services"`
+
 	Resources map[string]*ResourceMapping `yaml:"resources"`
 }
 
@@ -87,6 +92,9 @@ func LoadFile(path string) (*File, error) {
 	var f File
 	if err := yaml.Unmarshal(data, &f); err != nil {
 		return nil, fmt.Errorf("parsing mapping file: %w", err)
+	}
+	if f.Services == nil {
+		f.Services = make(map[string]string)
 	}
 	if f.Resources == nil {
 		f.Resources = make(map[string]*ResourceMapping)

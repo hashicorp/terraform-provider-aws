@@ -186,6 +186,29 @@ func TestMapping_TFName(t *testing.T) {
 	}
 }
 
+// TestLoadFile_ServicesBlock verifies that the services: rename block is parsed
+// correctly and contains the expected prometheus→amp entry.
+func TestLoadFile_ServicesBlock(t *testing.T) {
+	t.Parallel()
+
+	f, err := awsmapping.LoadFile("../../mappings/aws_resources.yaml")
+	if err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
+
+	if f.Services == nil {
+		t.Fatal("Services map is nil")
+	}
+
+	got, ok := f.Services["prometheus"]
+	if !ok {
+		t.Fatal("services: entry for \"prometheus\" is missing")
+	}
+	if got != "amp" {
+		t.Errorf("services[\"prometheus\"] = %q, want %q", got, "amp")
+	}
+}
+
 // TestMapping_IsSuppressed checks the suppress list.
 func TestMapping_IsSuppressed(t *testing.T) {
 	t.Parallel()
