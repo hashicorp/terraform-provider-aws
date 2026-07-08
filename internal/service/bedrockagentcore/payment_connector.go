@@ -70,6 +70,14 @@ func (r *paymentConnectorResource) Schema(ctx context.Context, request resource.
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 4096),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\s]+$`), "must contain only alphanumeric characters and whitespace"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -109,6 +117,7 @@ func (r *paymentConnectorResource) Schema(ctx context.Context, request resource.
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
@@ -222,14 +231,10 @@ func (r *paymentConnectorResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	// Preserve the configured credential provider configuration; the resource ARNs
-	// round-trip, so flatten everything except the write-managed block.
-	credentialProviderConfigurations := data.CredentialProviderConfigurations
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.CredentialProviderConfigurations = credentialProviderConfigurations
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
