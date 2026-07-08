@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -119,6 +120,28 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							// UpdatePolicy rejects changing the definition type in place
+							// ("Changing policy type is not permitted"), so switching the
+							// union variant (cedar <-> policy) forces replacement. Editing
+							// the statement within a variant remains an in-place update.
+							var prev, plan policyDefinitionModel
+							smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, path.Root("definition").AtListIndex(0), &prev))
+							smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, path.Root("definition").AtListIndex(0), &plan))
+							if response.Diagnostics.HasError() {
+								return
+							}
+							if (!prev.Cedar.IsNull() && !plan.Policy.IsNull()) ||
+								(!prev.Policy.IsNull() && !plan.Cedar.IsNull()) {
+								response.RequiresReplace = true
+							}
+						},
+						"Changing the policy definition type (cedar <-> policy) requires replacement",
+						"",
+					),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{

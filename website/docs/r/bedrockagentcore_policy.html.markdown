@@ -52,6 +52,8 @@ The `definition` configuration block supports exactly one of the following argum
 * `cedar` - (Optional) Inline Cedar policy. See [`cedar` Block](#cedar-block) for details.
 * `policy` - (Optional) AgentCore policy statement, which supports plain Cedar policies as well as guardrail definitions. See [`policy` Block](#policy-block) for details.
 
+~> **Note:** Changing the definition type (from `cedar` to `policy` or vice versa) forces a new resource to be created, because the API does not permit changing a policy's type in place. Editing the `statement` within the same type is applied in place.
+
 ### `cedar` Block
 
 The `cedar` configuration block supports the following arguments:
