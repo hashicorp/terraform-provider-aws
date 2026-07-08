@@ -9,7 +9,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/s3/bucket_public_access_block_list.go"
         - "/internal/service/s3/object_list.go"
         - "/internal/service/secretsmanager/secret_list.go"
         - "/internal/service/secretsmanager/secret_version_list.go"
