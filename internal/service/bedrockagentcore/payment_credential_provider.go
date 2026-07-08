@@ -91,7 +91,7 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"api_key_id": schema.StringAttribute{
-										Optional: true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 512),
 											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
@@ -100,6 +100,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"api_key_secret": schema.StringAttribute{
 										Optional:  true,
 										Sensitive: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtMost(2048),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9+/=\-_\s]*$`), "must contain only base64 characters and whitespace"),
+										},
 									},
 									"api_key_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
@@ -108,6 +112,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"wallet_secret": schema.StringAttribute{
 										Optional:  true,
 										Sensitive: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtMost(2048),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9+/=\-_\s]*$`), "must contain only base64 characters and whitespace"),
+										},
 									},
 									"wallet_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
@@ -132,7 +140,7 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"app_id": schema.StringAttribute{
-										Optional: true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 512),
 											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
@@ -141,13 +149,17 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"app_secret": schema.StringAttribute{
 										Optional:  true,
 										Sensitive: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtMost(2048),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9+/=\-_\s]*$`), "must contain only base64 characters and whitespace"),
+										},
 									},
 									"app_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
 									},
 									"authorization_id": schema.StringAttribute{
-										Optional: true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 512),
 											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
@@ -156,6 +168,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"authorization_private_key": schema.StringAttribute{
 										Optional:  true,
 										Sensitive: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtMost(2048),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^(wallet-auth:)?[a-zA-Z0-9+/=\-_\s]*$`), "must contain only base64 characters and whitespace, optionally prefixed with wallet-auth:"),
+										},
 									},
 									"authorization_private_key_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
