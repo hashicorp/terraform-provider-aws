@@ -16,18 +16,21 @@
 //     "present in AWS but missing in TF" field list.
 //
 // # Usage
-//
+// 
+//  Need to enter the terraform-provider-aws/tools/drift-detect directory
+// 
 //	# --resource is required and must be in the format aws_<service>_<resource>:
-//	drift-detect --resource aws_sqs_queue \
-//	             --schema-json .cache/schema.json
+//	go run . --resource aws_sqs_queue 
 //
-//	# TF + AWS side-by-side with explicit mappings file:
-//	drift-detect --resource aws_sqs_queue \
+//	go run . --resource aws_sqs_queue \
 //	             --schema-json .cache/schema.json \
-//	             --mappings tools/drift-detect/mappings/aws_resources.yaml
+//	             --mappings mappings/aws_resources.yaml \
+//	             --provider-dir ../..
 //
 //	# JSON output:
-//	drift-detect --resource aws_sqs_queue ... --json
+//	go run . --resource aws_sqs_queue --json
+//
+//  # Note: ./drift-detect can be replaced with go run .
 package main
 
 import (
@@ -61,7 +64,7 @@ func run() error {
 	var (
 		schemaJSON     = flag.String("schema-json", ".cache/schema.json", "path to terraform providers schema -json output file")
 		providerDir    = flag.String("provider-dir", "", "path to provider source directory (builds provider and generates schema)")
-		mappingsFile   = flag.String("mappings", "", "path to aws_resources.yaml mapping file")
+		mappingsFile   = flag.String("mappings", "mappings/aws_resources.yaml", "path to aws_resources.yaml mapping file")
 		resource       = flag.String("resource", "", "required: AWS resource name in the format aws_<service>_<resource> (e.g. aws_sqs_queue)")
 		outputJSON     = flag.Bool("json", false, "output results as JSON")
 		refreshSchema  = flag.Bool("refresh-schema", false, "regenerate cached schema even if schema-json file already exists")
