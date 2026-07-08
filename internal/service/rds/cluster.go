@@ -1402,7 +1402,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOkExists(names.AttrAutoMinorVersionUpgrade); ok {
+		if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 			input.AutoMinorVersionUpgrade = aws.Bool(v.(bool))
 		}
 
