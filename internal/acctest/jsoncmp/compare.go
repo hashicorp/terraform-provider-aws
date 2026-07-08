@@ -13,7 +13,7 @@ import (
 func Diff(x, y string) string {
 	xform := cmp.Transformer("jsoncmp", func(s string) map[string]any {
 		var m map[string]any
-		tfjson.DecodeFromString(s, &m)
+		_ = tfjson.DecodeFromString(s, &m)
 		return m
 	})
 	opt := cmp.FilterPath(func(p cmp.Path) bool {
