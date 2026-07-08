@@ -248,6 +248,51 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRoute(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayRule_weightedRouteMetadataClear(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := randomWithPrefixAndUnderscore(t)
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	resourceName := "aws_bedrockagentcore_gateway_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.weighted_route.0.traffic_split.1.description", "canary variant"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.weighted_route.0.traffic_split.1.metadata.team", "search"),
+				),
+			},
+			{
+				// Remove description + metadata from the traffic_splits. If
+				// UpdateGatewayRule PATCH-merges nested traffic_split fields (treats a
+				// nil as "leave unchanged"), the read-back would contradict the planned
+				// null and error "inconsistent result after apply". This step proves the
+				// set->unset clear behavior for the nested optional fields.
+				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -492,6 +537,59 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
           name        = "canary"
           target_name = aws_bedrockagentcore_gateway_target.test2.name
           weight      = 30
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rImageUri string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test2" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  name               = "%[1]sb"
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+      }
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_rule" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  priority           = 100
+
+  action {
+    route_to_target {
+      weighted_route {
+        traffic_split {
+          name        = "primary"
+          target_name = aws_bedrockagentcore_gateway_target.test.name
+          weight      = 70
+          description = "primary variant"
+
+          metadata = {
+            team = "search"
+          }
+        }
+        traffic_split {
+          name        = "canary"
+          target_name = aws_bedrockagentcore_gateway_target.test2.name
+          weight      = 30
+          description = "canary variant"
+
+          metadata = {
+            team = "search"
+          }
         }
       }
     }
