@@ -555,68 +555,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"private_endpoint": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"managed_vpc_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("managed_vpc_resource"),
-									path.MatchRelative().AtParent().AtName("self_managed_lattice_resource"),
-								),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"endpoint_ip_address_type": schema.StringAttribute{
-										Required:   true,
-										CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
-									},
-									"routing_domain": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(3, 255),
-										},
-									},
-									names.AttrSecurityGroupIDs: schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-										Validators: []validator.Set{
-											setvalidator.SizeAtMost(5),
-										},
-									},
-									names.AttrSubnetIDs: schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Required:   true,
-									},
-									names.AttrTags: tftags.TagsAttribute(),
-									"vpc_identifier": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-						"self_managed_lattice_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"resource_configuration_identifier": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"private_endpoint": privateEndpointBlock(ctx),
 			"target_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[targetConfigurationModel](ctx),
 				Validators: []validator.List{

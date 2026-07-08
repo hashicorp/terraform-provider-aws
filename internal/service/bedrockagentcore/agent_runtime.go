@@ -327,6 +327,9 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 							},
 						},
 						Blocks: map[string]schema.Block{
+							"allowed_workload_configuration": allowedWorkloadConfigurationBlock(ctx),
+							"private_endpoint":               privateEndpointBlock(ctx),
+							"private_endpoint_overrides":     privateEndpointOverridesBlock(ctx),
 							"custom_claim": schema.SetNestedBlock{
 								CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
 								NestedObject: schema.NestedBlockObject{
@@ -1086,11 +1089,14 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
-	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+	AllowedAudience              fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients               fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes                fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	AllowedWorkloadConfiguration fwtypes.ListNestedObjectValueOf[allowedWorkloadConfigurationModel]  `tfsdk:"allowed_workload_configuration"`
+	CustomClaim                  fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	DiscoveryURL                 types.String                                                        `tfsdk:"discovery_url"`
+	PrivateEndpoint              fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides     fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]       `tfsdk:"private_endpoint_overrides"`
 }
 
 type customJWTAuthorizerCustomClaimModel struct {
