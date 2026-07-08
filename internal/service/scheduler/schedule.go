@@ -533,6 +533,14 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Scheduler Schedule (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceScheduleFlatten(ctx, out, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceScheduleFlatten(ctx context.Context, out *scheduler.GetScheduleOutput, d *schema.ResourceData) error {
 	d.Set("action_after_completion", out.ActionAfterCompletion)
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrDescription, out.Description)
@@ -542,7 +550,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("end_date", nil)
 	}
 	if err := d.Set("flexible_time_window", []any{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting flexible_time_window: %s", err)
+		return fmt.Errorf("setting flexible_time_window: %w", err)
 	}
 	d.Set(names.AttrGroupName, out.GroupName)
 	d.Set(names.AttrKMSKeyARN, out.KmsKeyArn)
@@ -557,10 +565,10 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set(names.AttrState, out.State)
 	if err := d.Set(names.AttrTarget, []any{flattenTarget(ctx, out.Target)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
+		return fmt.Errorf("setting target: %w", err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -7,6 +7,8 @@ package scheduler
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -58,6 +60,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newScheduleResourceAsListResource,
+			TypeName: "aws_scheduler_schedule",
+			Name:     "Schedule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
