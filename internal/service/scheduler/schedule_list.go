@@ -23,8 +23,7 @@ import (
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_scheduler_schedule", name="Schedule")
-func newScheduleResourceAsListResource() inttypes.ListResourceForSDK {
-	// nosemgrep:ci.scheduler-in-func-name
+func newScheduleResourceAsListResource() inttypes.ListResourceForSDK {	// nosemgrep:ci.scheduler-in-func-name
 	l := scheduleListResource{}
 	l.SetResourceSchema(resourceSchedule())
 	return &l
