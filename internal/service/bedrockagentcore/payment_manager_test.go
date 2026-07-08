@@ -140,6 +140,24 @@ func testAccPaymentManager_description(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated description")),
 				},
 			},
+			{
+				// Regression: removing description from config must NOT produce a
+				// perpetual diff. UpdatePaymentManager is a PATCH that preserves an
+				// omitted description, so description is Optional+Computed and the
+				// prior value is retained (a clean, empty post-refresh plan).
+				Config: testAccPaymentManagerConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentManagerExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated description")),
+				},
+			},
 		},
 	})
 }
