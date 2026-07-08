@@ -32,6 +32,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_permission: Add Resource Identity support ([#48819](https://github.com/hashicorp/terraform-provider-aws/issues/48819))
 * resource/aws_codebuild_project: Add `host_kernel` argument to the `environment` configuration block ([#48777](https://github.com/hashicorp/terraform-provider-aws/issues/48777))
 * resource/aws_codepipeline: Add resource identity support ([#48808](https://github.com/hashicorp/terraform-provider-aws/issues/48808))
+* resource/aws_iam_policy_attachment: Add resource identity support ([#48639](https://github.com/hashicorp/terraform-provider-aws/issues/48639))
 * resource/aws_mq_broker: Add `resource_share_arns` argument and `shared_resources` attribute ([#48729](https://github.com/hashicorp/terraform-provider-aws/issues/48729))
 * resource/aws_prometheus_workspace_configuration: Add `out_of_order_time_window_in_seconds` and `rule_query_offset_in_seconds` arguments ([#48659](https://github.com/hashicorp/terraform-provider-aws/issues/48659))
 * resource/aws_sagemaker_endpoint_configuration: Add Resource Identity support ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
@@ -43,6 +44,10 @@ BUG FIXES:
 * resource/aws_bedrock_guardrail: Prevents "inconsistent result" error when adding `topic_policy_config` block. ([#48772](https://github.com/hashicorp/terraform-provider-aws/issues/48772))
 * resource/aws_bedrock_guardrail: Prevents "inconsistent result" error with multiple `content_policy_config.filters_config.input_modalities` values. ([#48772](https://github.com/hashicorp/terraform-provider-aws/issues/48772))
 * resource/aws_bedrock_guardrail: Prevents "inconsistent result" error with multiple `content_policy_config.filters_config.output_modalities` values. ([#48772](https://github.com/hashicorp/terraform-provider-aws/issues/48772))
+* resource/aws_cloudfront_multitenant_distribution: Correctly taints resource if Create fails. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
+* resource/aws_cloudfront_multitenant_distribution: Sets `etag` on Import. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
+* resource/aws_cloudfront_multitenant_distribution: Updates `etag` when only `tags` updated. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
+* resource/aws_cloudfront_multitenant_distribution: Waits for deployment on Update. ([#48782](https://github.com/hashicorp/terraform-provider-aws/issues/48782))
 * resource/aws_directory_service_directory: Fix `UnsupportedOperationException` error when reading `enable_directory_data_access` in regions where Directory Service Data is not available (e.g. GovCloud) ([#47660](https://github.com/hashicorp/terraform-provider-aws/issues/47660))
 
 ## 6.53.0 (July 1, 2026)
