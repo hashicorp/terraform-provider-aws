@@ -18,8 +18,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* action/aws_codebuild_start_build: Add `host_kernel_override` argument ([#48777](https://github.com/hashicorp/terraform-provider-aws/issues/48777))
 * data-source/aws_mq_broker: Add `resource_share_arns` and `shared_resources` attributes ([#48729](https://github.com/hashicorp/terraform-provider-aws/issues/48729))
 * resource/aws_cloudfront_key_value_store: Add `tags` and `tags_all` attributes ([#48458](https://github.com/hashicorp/terraform-provider-aws/issues/48458))
+* resource/aws_codebuild_project: Add `host_kernel` argument to the `environment` configuration block ([#48777](https://github.com/hashicorp/terraform-provider-aws/issues/48777))
 * resource/aws_codepipeline: Add resource identity support ([#48808](https://github.com/hashicorp/terraform-provider-aws/issues/48808))
 * resource/aws_mq_broker: Add `resource_share_arns` argument and `shared_resources` attribute ([#48729](https://github.com/hashicorp/terraform-provider-aws/issues/48729))
 * resource/aws_sagemaker_endpoint_configuration: Add Resource Identity support ([#45926](https://github.com/hashicorp/terraform-provider-aws/issues/45926))
