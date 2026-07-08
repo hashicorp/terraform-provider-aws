@@ -127,6 +127,18 @@ func TestAccBedrockAgentCoreConfigurationBundle_update(t *testing.T) {
 					},
 				},
 			},
+			{
+				// Remove the description (components unchanged). UpdateConfigurationBundle
+				// treats a nil description as "leave unchanged", so the prior value is
+				// retained (Optional+Computed) rather than producing an inconsistent
+				// result after apply.
+				Config: testAccConfigurationBundleConfig_updatedNoDescription(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConfigurationBundleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated bundle"),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "2"),
+				),
+			},
 		},
 	})
 }
@@ -165,6 +177,17 @@ func TestAccBedrockAgentCoreConfigurationBundle_kmsKey(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+			{
+				// Remove kms_key_arn from config. A KMS key cannot be cleared (the API
+				// treats a nil key as "leave unchanged"), so the prior key is retained
+				// (Optional+Computed) rather than producing an inconsistent result after
+				// apply.
+				Config: testAccConfigurationBundleConfig_kmsKeyRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConfigurationBundleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.1", names.AttrARN),
+				),
 			},
 		},
 	})
@@ -254,6 +277,43 @@ resource "aws_bedrockagentcore_configuration_bundle" "test" {
   component {
     component_identifier = "arn:aws:bedrock-agentcore:::evaluator/Builtin.GoalSuccessRate"
     configuration        = jsonencode({ threshold = 0.5 })
+  }
+}
+`, rName)
+}
+
+func testAccConfigurationBundleConfig_updatedNoDescription(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_configuration_bundle" "test" {
+  bundle_name = %[1]q
+
+  component {
+    component_identifier = "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness"
+    configuration        = jsonencode({ threshold = 0.9 })
+  }
+
+  component {
+    component_identifier = "arn:aws:bedrock-agentcore:::evaluator/Builtin.GoalSuccessRate"
+    configuration        = jsonencode({ threshold = 0.5 })
+  }
+}
+`, rName)
+}
+
+func testAccConfigurationBundleConfig_kmsKeyRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count                   = 2
+  description             = "%[1]s-${count.index}"
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrockagentcore_configuration_bundle" "test" {
+  bundle_name = %[1]q
+
+  component {
+    component_identifier = "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness"
+    configuration        = jsonencode({ threshold = 0.7 })
   }
 }
 `, rName)

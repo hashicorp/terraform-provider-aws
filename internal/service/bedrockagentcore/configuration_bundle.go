@@ -93,17 +93,33 @@ func (r *configurationBundleResource) Schema(ctx context.Context, request resour
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			// Optional+Computed: UpdateConfigurationBundle treats a nil description as
+			// "leave unchanged" (never clears), so removing it from config retains the
+			// prior value rather than producing an inconsistent-result-after-apply.
+			// Empirically verified against the API.
 			names.AttrDescription: schema.StringAttribute{
 				Optional:  true,
+				Computed:  true,
 				Sensitive: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^.+$`), ""),
 				},
 			},
+			// Optional+Computed: the API treats a nil kms_key_arn on update as "leave
+			// unchanged" (a key cannot be cleared), so removing it retains the prior
+			// value instead of producing an inconsistent-result-after-apply. Rotation
+			// still works because an explicit new value is a known plan value.
 			names.AttrKMSKeyARN: schema.StringAttribute{
 				Optional:   true,
+				Computed:   true,
 				CustomType: fwtypes.ARNType,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws(|-cn|-us-gov):kms:[a-zA-Z0-9-]*:[0-9]{12}:key/[a-zA-Z0-9-]{36}$`), ""),
