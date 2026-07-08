@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2026, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // drift-detect detects schema drift between AWS API models and the Terraform

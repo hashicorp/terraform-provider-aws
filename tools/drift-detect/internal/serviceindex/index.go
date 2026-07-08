@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2026, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Package serviceindex fetches and caches the list of AWS service directory
