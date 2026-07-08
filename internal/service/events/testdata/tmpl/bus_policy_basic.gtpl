@@ -1,4 +1,3 @@
-
 resource "aws_cloudwatch_event_bus_policy" "test" {
 {{- template "region" }}
   policy         = data.aws_iam_policy_document.access.json

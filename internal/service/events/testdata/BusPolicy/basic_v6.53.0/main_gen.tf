@@ -1,7 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-
 resource "aws_cloudwatch_event_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.access.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
