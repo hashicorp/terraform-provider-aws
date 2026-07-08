@@ -71,7 +71,7 @@ The `provider_configuration` block must contain exactly one of the following:
 
 The `coinbase_cdp_configuration` block supports the following:
 
-* `api_key_id` - (Optional) Coinbase CDP API key ID.
+* `api_key_id` - (Required) Coinbase CDP API key ID.
 * `api_key_secret` - (Optional) Coinbase CDP API key secret. Write-only; not returned on read.
 * `api_key_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the API key secret. See [`secret_config`](#secret_config) below.
 * `api_key_secret_source` - (Optional) Source of the API key secret. Valid values: `MANAGED`, `EXTERNAL`.
@@ -83,11 +83,11 @@ The `coinbase_cdp_configuration` block supports the following:
 
 The `stripe_privy_configuration` block supports the following:
 
-* `app_id` - (Optional) Stripe Privy application ID.
+* `app_id` - (Required) Stripe Privy application ID.
+* `authorization_id` - (Required) Stripe Privy authorization ID.
 * `app_secret` - (Optional) Stripe Privy application secret. Write-only; not returned on read.
 * `app_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the app secret. See [`secret_config`](#secret_config) below.
 * `app_secret_source` - (Optional) Source of the app secret. Valid values: `MANAGED`, `EXTERNAL`.
-* `authorization_id` - (Optional) Stripe Privy authorization ID.
 * `authorization_private_key` - (Optional) Base64-encoded EC P-256 private key. Write-only; not returned on read.
 * `authorization_private_key_config` - (Optional) Reference to an AWS Secrets Manager secret holding the authorization private key. See [`secret_config`](#secret_config) below.
 * `authorization_private_key_source` - (Optional) Source of the authorization private key. Valid values: `MANAGED`, `EXTERNAL`.
