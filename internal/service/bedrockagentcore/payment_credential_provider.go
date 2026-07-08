@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -56,6 +58,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 128),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -86,6 +92,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 								Attributes: map[string]schema.Attribute{
 									"api_key_id": schema.StringAttribute{
 										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 512),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
+										},
 									},
 									"api_key_secret": schema.StringAttribute{
 										Optional:  true,
@@ -123,6 +133,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 								Attributes: map[string]schema.Attribute{
 									"app_id": schema.StringAttribute{
 										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 512),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
+										},
 									},
 									"app_secret": schema.StringAttribute{
 										Optional:  true,
@@ -134,6 +148,10 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									},
 									"authorization_id": schema.StringAttribute{
 										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 512),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), "must contain only letters, numbers, hyphens, and underscores"),
+										},
 									},
 									"authorization_private_key": schema.StringAttribute{
 										Optional:  true,
@@ -167,9 +185,15 @@ func paymentSecretReferenceBlock(ctx context.Context) schema.ListNestedBlock {
 			Attributes: map[string]schema.Attribute{
 				"json_key": schema.StringAttribute{
 					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+					},
 				},
 				"secret_id": schema.StringAttribute{
 					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+					},
 				},
 			},
 		},
