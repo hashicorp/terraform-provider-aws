@@ -121,6 +121,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
@@ -390,6 +391,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		firehose.ServicePackage(ctx),
 		fis.ServicePackage(ctx),
 		fms.ServicePackage(ctx),
+		fsx.ServicePackage(ctx),
 		gamelift.ServicePackage(ctx),
 		glacier.ServicePackage(ctx),
 		globalaccelerator.ServicePackage(ctx),
