@@ -94,7 +94,8 @@ func (r *configurationBundleResource) Schema(ctx context.Context, request resour
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Optional:  true,
+				Sensitive: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^.+$`), ""),
