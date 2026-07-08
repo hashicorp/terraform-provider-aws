@@ -59,7 +59,7 @@ The following arguments are optional:
 * `commit_message` - (Optional) Commit message recorded for the bundle version. Required by the service when updating components; a default is supplied on update if omitted.
 * `created_by` - (Optional) [`created_by`](#created_by) block identifying the source that created the version. See [created_by](#created_by) below.
 * `description` - (Optional) Description of the configuration bundle. Between 1 and 500 characters.
-* `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the bundle.
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the bundle. Can be changed in place.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### component

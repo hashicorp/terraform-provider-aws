@@ -107,9 +107,6 @@ func (r *configurationBundleResource) Schema(ctx context.Context, request resour
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws(|-cn|-us-gov):kms:[a-zA-Z0-9-]*:[0-9]{12}:key/[a-zA-Z0-9-]{36}$`), ""),
 				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),

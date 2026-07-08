@@ -131,6 +131,45 @@ func TestAccBedrockAgentCoreConfigurationBundle_update(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreConfigurationBundle_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_configuration_bundle.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationBundleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationBundleConfig_kmsKey(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConfigurationBundleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.0", names.AttrARN),
+				),
+			},
+			{
+				// Rotate to a different KMS key. UpdateConfigurationBundle accepts a
+				// changed kmsKeyArn, so this is an in-place update, not a replacement.
+				Config: testAccConfigurationBundleConfig_kmsKey(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConfigurationBundleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.1", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckConfigurationBundleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -179,6 +218,26 @@ resource "aws_bedrockagentcore_configuration_bundle" "test" {
   }
 }
 `, rName)
+}
+
+func testAccConfigurationBundleConfig_kmsKey(rName string, keyIndex int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count                   = 2
+  description             = "%[1]s-${count.index}"
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrockagentcore_configuration_bundle" "test" {
+  bundle_name = %[1]q
+  kms_key_arn = aws_kms_key.test[%[2]d].arn
+
+  component {
+    component_identifier = "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness"
+    configuration        = jsonencode({ threshold = 0.7 })
+  }
+}
+`, rName, keyIndex)
 }
 
 func testAccConfigurationBundleConfig_updated(rName string) string {
