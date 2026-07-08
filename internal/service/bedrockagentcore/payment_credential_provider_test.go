@@ -52,6 +52,8 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_stripePrivy(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_vendor"), knownvalue.StringExact("StripePrivy")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`.+`))),
+					// The service creates a managed secret and returns its ARN; assert it is surfaced.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("stripe_privy_configuration").AtSliceIndex(0).AtMapKey("app_secret_arn").AtSliceIndex(0).AtMapKey("secret_arn"), knownvalue.NotNull()),
 				},
 			},
 			{
