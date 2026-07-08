@@ -79,8 +79,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.66.0
-	github.com/aws/aws-sdk-go-v2/service/connect v1.180.0
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.67.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.181.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.36.0
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.60.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.312.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.313.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.87.0
@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/interconnect v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.12.0
@@ -159,7 +159,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.49.0
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.95.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.63.0
@@ -239,7 +239,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.72.0
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.41.0
@@ -253,7 +253,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signer v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.70.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.10.0
