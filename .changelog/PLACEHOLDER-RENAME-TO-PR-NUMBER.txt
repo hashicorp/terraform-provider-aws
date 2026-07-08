@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `connector` configuration block to `target_configuration.mcp` for AWS-managed connector targets (for example, the Web Search tool)
+```

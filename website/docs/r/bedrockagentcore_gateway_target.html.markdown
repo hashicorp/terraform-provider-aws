@@ -339,6 +339,35 @@ resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
 }
 ```
 
+### AWS-Managed Connector Target (Web Search)
+
+Attaches the AWS-managed Web Search tool to a gateway using a connector. Outbound authentication is handled by the gateway's IAM role, which must be granted `bedrock-agentcore:InvokeWebSearch`.
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "web_search" {
+  name               = "web-search-tool"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+
+  target_configuration {
+    mcp {
+      connector {
+        source {
+          connector_id = "web-search"
+        }
+
+        configuration {
+          name = "webSearch"
+        }
+      }
+    }
+  }
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+}
+```
+
 ### HTTP Target Routing to an AgentCore Runtime
 
 Routes gateway traffic directly to an AgentCore Runtime agent over HTTP, without MCP aggregation. The gateway must not have a `protocol_type` set.
@@ -569,6 +598,7 @@ The `target_configuration` block supports exactly one of the following:
 The `mcp` block supports exactly one of the following:
 
 * `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway`](#api_gateway) below.
+* `connector` - (Optional) AWS-managed connector target configuration (for example, the Web Search tool). See [`connector`](#connector) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda`](#lambda) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server`](#mcp_server) below.
 * `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
@@ -604,6 +634,37 @@ The `tool_override` block supports the following:
 * `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
 * `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
 * `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
+
+### `connector`
+
+The `connector` block provisions an AWS-managed connector integration (for example, the Web Search tool). Outbound authentication is handled by the gateway's IAM role, so `credential_provider_configuration` must be set to `gateway_iam_role`. The `connector` block supports the following:
+
+* `source` - (Required) Source configuration identifying which connector to use. See [`source`](#source) below.
+* `configuration` - (Optional) Repeatable block of per-tool configurations for the connector. See [`configuration`](#configuration) below.
+* `enabled` - (Optional) Set of tool names to enable from this connector. If not specified, all tools provided by the connector are enabled.
+
+### `source`
+
+The `source` block supports the following:
+
+* `connector_id` - (Required) Identifier for the connector integration (for example, `web-search`).
+
+### `configuration`
+
+The `configuration` block supports the following:
+
+* `name` - (Required) Tool or operation name (for example, `webSearch`).
+* `description` - (Optional) Agent-facing description override for this tool.
+* `parameter_override` - (Optional) Repeatable block of parameters to expose to the agent at runtime, with optional description overrides. See [`parameter_override`](#parameter_override) below.
+* `parameter_values` - (Optional) JSON string of parameters to set as fixed or default values when provisioning this tool.
+
+### `parameter_override`
+
+The `parameter_override` block supports the following:
+
+* `path` - (Required) JSON Pointer path identifying the parameter (for example, `/numberOfResults` or `/filter`).
+* `description` - (Optional) Agent-facing description override for this parameter.
+* `visible` - (Optional) Whether this parameter is visible to the agent. If not specified, uses the service default.
 
 ### `lambda`
 
