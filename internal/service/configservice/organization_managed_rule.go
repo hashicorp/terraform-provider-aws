@@ -401,7 +401,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 		const (
 			timeout = 15 * time.Second
 		)
-		outputRaw, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, timeout, func(ctx context.Context) (any, error) {
+		page, err := tfresource.RetryWhenIsA[*configservice.DescribeOrganizationConfigRuleStatusesOutput, *types.OrganizationAccessDeniedException](ctx, timeout, func(ctx context.Context) (*configservice.DescribeOrganizationConfigRuleStatusesOutput, error) {
 			return pages.NextPage(ctx)
 		})
 
@@ -415,7 +415,11 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 			return nil, err
 		}
 
-		output = append(output, outputRaw.(*configservice.DescribeOrganizationConfigRuleStatusesOutput).OrganizationConfigRuleStatuses...)
+		if page == nil {
+			continue
+		}
+
+		output = append(output, page.OrganizationConfigRuleStatuses...)
 	}
 
 	return output, nil
