@@ -415,6 +415,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 			return nil, err
 		}
 
+		// https://github.com/hashicorp/terraform-provider-aws/issues/48817.
 		if page == nil {
 			continue
 		}
