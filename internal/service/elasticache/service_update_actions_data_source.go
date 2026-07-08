@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkDataSource("aws_elasticache_service_update_actions", name="Service Update Actions")
@@ -42,6 +43,11 @@ func (d *serviceUpdateActionsDataSource) Schema(ctx context.Context, req datasou
 			},
 			"replication_group_id": schema.StringAttribute{
 				Optional: true,
+			},
+			"service_update_status": schema.SetAttribute{
+				Optional:    true,
+				CustomType:  fwtypes.SetOfStringEnumType[awstypes.ServiceUpdateStatus](),
+				ElementType: fwtypes.StringEnumType[awstypes.ServiceUpdateStatus](),
 			},
 			"update_actions": framework.DataSourceComputedListOfObjectAttribute[updateActionModel](ctx),
 		},
@@ -99,9 +105,10 @@ func (d *serviceUpdateActionsDataSource) ConfigValidators(context.Context) []dat
 
 type serviceUpdateActionsDataSourceModel struct {
 	framework.WithRegionModel
-	CacheClusterID     types.String                                       `tfsdk:"cache_cluster_id" autoflex:"-"`
-	ReplicationGroupID types.String                                       `tfsdk:"replication_group_id" autoflex:"-"`
-	UpdateActions      fwtypes.ListNestedObjectValueOf[updateActionModel] `tfsdk:"update_actions" autoflex:"-"`
+	CacheClusterID      types.String                                          `tfsdk:"cache_cluster_id" autoflex:"-"`
+	ReplicationGroupID  types.String                                          `tfsdk:"replication_group_id" autoflex:"-"`
+	ServiceUpdateStatus fwtypes.SetOfStringEnum[awstypes.ServiceUpdateStatus] `tfsdk:"service_update_status"`
+	UpdateActions       fwtypes.ListNestedObjectValueOf[updateActionModel]    `tfsdk:"update_actions" autoflex:"-"`
 }
 
 type updateActionModel struct {
@@ -128,4 +135,14 @@ func findServiceUpdateActions(ctx context.Context, conn *elasticache.Client, inp
 	}
 
 	return output, nil
+}
+
+func findServiceUpdateAction(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUpdateActionsInput) (*awstypes.UpdateAction, error) {
+	output, err := findServiceUpdateActions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
