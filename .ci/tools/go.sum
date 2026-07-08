@@ -99,8 +99,8 @@ github.com/ProtonMail/go-crypto v1.1.6 h1:ZcV+Ropw6Qn0AX9brlQLAUXfqLBc7Bl+f/DmNx
 github.com/ProtonMail/go-crypto v1.1.6/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
 github.com/YakDriver/copyplop v0.10.0 h1:vg9QZRDr2SSGWENkkx5BLNXUOB4BvHM+X+HorJFEwqw=
 github.com/YakDriver/copyplop v0.10.0/go.mod h1:+3ecv2Nc+4hd751qpr2PBtFUpKP1cTQhUOumkwK0sGg=
-github.com/YakDriver/swissshepherd v0.15.0 h1:z27g5nT+ydSnMIy8+mnBNImX57GybvcyXtB461IUve0=
-github.com/YakDriver/swissshepherd v0.15.0/go.mod h1:u7VpJvCEqzj8pnMZuejTUfUZ5TKuXtvPraqncpmGs1o=
+github.com/YakDriver/swissshepherd v0.16.0 h1:b6KgXUekwCjDJr0gsIjtQ/0zYv9mwYbqG7H2rXh3dnQ=
+github.com/YakDriver/swissshepherd v0.16.0/go.mod h1:u7VpJvCEqzj8pnMZuejTUfUZ5TKuXtvPraqncpmGs1o=
 github.com/acomagu/bufpipe v1.0.3/go.mod h1:mxdxdup/WdsKVreO5GpW4+M/1CE2sMG4jeGJ2sYmHc4=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
