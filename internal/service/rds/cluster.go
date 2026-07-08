@@ -94,6 +94,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrAvailabilityZones: {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -584,11 +589,6 @@ func resourceCluster() *schema.Resource {
 							},
 						},
 					},
-				},
-				names.AttrAutoMinorVersionUpgrade: {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Computed: true,
 				},
 				"serverlessv2_scaling_configuration": {
 					Type:             schema.TypeList,
