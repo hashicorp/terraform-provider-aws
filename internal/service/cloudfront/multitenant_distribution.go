@@ -49,7 +49,9 @@ const (
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(name="MultiTenantDistribution")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.Distribution")
+// @Testing(generator=false)
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
@@ -830,15 +832,6 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	hasUpdate := false
-
-	// Handle tag updates first
-	if !new.Tags.Equal(old.Tags) {
-		hasUpdate = true
-		if err := updateTags(ctx, conn, new.ARN.ValueString(), old.Tags, new.Tags); err != nil {
-			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution tags", err.Error())
-			return
-		}
-	}
 
 	// Check if distribution config needs updating (anything other than tags)
 	if mtDistributionHasChanges(old, new) {
