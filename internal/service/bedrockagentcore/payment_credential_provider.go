@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -121,6 +122,8 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
 									},
+									"api_key_secret_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
+									"wallet_secret_arn":  framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 								},
 								Blocks: map[string]schema.Block{
 									"api_key_secret_config": paymentSecretReferenceBlock(ctx),
@@ -177,6 +180,8 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
 									},
+									"app_secret_arn":                framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
+									"authorization_private_key_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 								},
 								Blocks: map[string]schema.Block{
 									"app_secret_config":                paymentSecretReferenceBlock(ctx),
@@ -240,6 +245,10 @@ func (r *paymentCredentialProviderResource) Create(ctx context.Context, request 
 	}
 
 	data.CredentialProviderARN = fwflex.StringToFramework(ctx, out.CredentialProviderArn)
+	smerr.AddEnrich(ctx, &response.Diagnostics, flattenPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -272,6 +281,10 @@ func (r *paymentCredentialProviderResource) Read(ctx context.Context, request re
 	data.CredentialProviderVendor = fwtypes.StringEnumValue(out.CredentialProviderVendor)
 	data.Name = fwflex.StringToFramework(ctx, out.Name)
 	data.ProviderConfiguration = providerConfiguration
+	smerr.AddEnrich(ctx, &response.Diagnostics, flattenPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	setTagsOut(ctx, out.Tags)
 
@@ -302,14 +315,67 @@ func (r *paymentCredentialProviderResource) Update(ctx context.Context, request 
 			return
 		}
 
-		_, err := conn.UpdatePaymentCredentialProvider(ctx, &input)
+		out, err := conn.UpdatePaymentCredentialProvider(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, flattenPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &new))
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+}
+
+// flattenPaymentProviderConfigurationSecretARNs overlays the server-returned
+// secret ARNs onto the (write-only) provider configuration block, which is
+// otherwise preserved from prior state. The ARN attributes are Computed, so they
+// are populated from the Create/Read/Update response rather than from config.
+func flattenPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObject awstypes.PaymentProviderConfigurationOutput, data *paymentCredentialProviderResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if apiObject == nil {
+		return diags
+	}
+
+	config, d := data.ProviderConfiguration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || config == nil {
+		return diags
+	}
+
+	switch v := apiObject.(type) {
+	case *awstypes.PaymentProviderConfigurationOutputMemberCoinbaseCdpConfiguration:
+		coinbase, d := config.CoinbaseCDPConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() || coinbase == nil {
+			return diags
+		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.ApiKeySecretArn, &coinbase.APIKeySecretARN))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.WalletSecretArn, &coinbase.WalletSecretARN))
+		if diags.HasError() {
+			return diags
+		}
+		config.CoinbaseCDPConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, coinbase)
+
+	case *awstypes.PaymentProviderConfigurationOutputMemberStripePrivyConfiguration:
+		stripe, d := config.StripePrivyConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() || stripe == nil {
+			return diags
+		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.AppSecretArn, &stripe.AppSecretARN))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.AuthorizationPrivateKeyArn, &stripe.AuthorizationPrivateKeyARN))
+		if diags.HasError() {
+			return diags
+		}
+		config.StripePrivyConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, stripe)
+	}
+
+	data.ProviderConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, config)
+	return diags
 }
 
 func (r *paymentCredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -382,9 +448,11 @@ type paymentProviderConfigurationModel struct {
 type coinbaseCdpConfigurationModel struct {
 	APIKeyID           types.String                                                 `tfsdk:"api_key_id"`
 	APIKeySecret       types.String                                                 `tfsdk:"api_key_secret"`
+	APIKeySecretARN    fwtypes.ListNestedObjectValueOf[secretModel]                 `tfsdk:"api_key_secret_arn"`
 	APIKeySecretConfig fwtypes.ListNestedObjectValueOf[paymentSecretReferenceModel] `tfsdk:"api_key_secret_config"`
 	APIKeySecretSource fwtypes.StringEnum[awstypes.SecretSourceType]                `tfsdk:"api_key_secret_source"`
 	WalletSecret       types.String                                                 `tfsdk:"wallet_secret"`
+	WalletSecretARN    fwtypes.ListNestedObjectValueOf[secretModel]                 `tfsdk:"wallet_secret_arn"`
 	WalletSecretConfig fwtypes.ListNestedObjectValueOf[paymentSecretReferenceModel] `tfsdk:"wallet_secret_config"`
 	WalletSecretSource fwtypes.StringEnum[awstypes.SecretSourceType]                `tfsdk:"wallet_secret_source"`
 }
@@ -392,10 +460,12 @@ type coinbaseCdpConfigurationModel struct {
 type stripePrivyConfigurationModel struct {
 	AppID                         types.String                                                 `tfsdk:"app_id"`
 	AppSecret                     types.String                                                 `tfsdk:"app_secret"`
+	AppSecretARN                  fwtypes.ListNestedObjectValueOf[secretModel]                 `tfsdk:"app_secret_arn"`
 	AppSecretConfig               fwtypes.ListNestedObjectValueOf[paymentSecretReferenceModel] `tfsdk:"app_secret_config"`
 	AppSecretSource               fwtypes.StringEnum[awstypes.SecretSourceType]                `tfsdk:"app_secret_source"`
 	AuthorizationID               types.String                                                 `tfsdk:"authorization_id"`
 	AuthorizationPrivateKey       types.String                                                 `tfsdk:"authorization_private_key"`
+	AuthorizationPrivateKeyARN    fwtypes.ListNestedObjectValueOf[secretModel]                 `tfsdk:"authorization_private_key_arn"`
 	AuthorizationPrivateKeyConfig fwtypes.ListNestedObjectValueOf[paymentSecretReferenceModel] `tfsdk:"authorization_private_key_config"`
 	AuthorizationPrivateKeySource fwtypes.StringEnum[awstypes.SecretSourceType]                `tfsdk:"authorization_private_key_source"`
 }

@@ -104,6 +104,11 @@ The `*_secret_config` blocks support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `credential_provider_arn` - ARN of the Payment Credential Provider.
+* `provider_configuration` - In addition to the configured arguments, exports the ARNs of the AWS Secrets Manager secrets holding the credentials (the service creates managed secrets when a raw secret is supplied):
+    * `coinbase_cdp_configuration.api_key_secret_arn.secret_arn` - ARN of the secret containing the API key secret.
+    * `coinbase_cdp_configuration.wallet_secret_arn.secret_arn` - ARN of the secret containing the wallet secret.
+    * `stripe_privy_configuration.app_secret_arn.secret_arn` - ARN of the secret containing the app secret.
+    * `stripe_privy_configuration.authorization_private_key_arn.secret_arn` - ARN of the secret containing the authorization private key.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
