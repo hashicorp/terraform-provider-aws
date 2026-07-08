@@ -166,10 +166,12 @@ Exactly one of `match_paths` or `match_principals` must be set.
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `created_at` - Creation timestamp (RFC3339).
 * `gateway_arn` - ARN of the gateway that owns the rule.
 * `rule_id` - Identifier of the rule.
 * `status` - Current status of the rule. One of `CREATING`, `ACTIVE`, `UPDATING`, or `DELETING`.
 * `system` - Present when the rule is system-managed. A single-element list with a `managed_by` string.
+* `updated_at` - Last-updated timestamp (RFC3339).
 
 ## Import
 
