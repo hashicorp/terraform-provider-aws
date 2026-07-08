@@ -5,6 +5,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -81,6 +82,9 @@ func (r *configurationBundleResource) Schema(ctx context.Context, request resour
 			},
 			"commit_message": schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 500),
+				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -93,6 +97,7 @@ func (r *configurationBundleResource) Schema(ctx context.Context, request resour
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^.+$`), ""),
 				},
 			},
 			names.AttrKMSKeyARN: schema.StringAttribute{
@@ -123,6 +128,7 @@ func (r *configurationBundleResource) Schema(ctx context.Context, request resour
 			"component": schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[componentConfigurationModel](ctx),
 				Validators: []validator.Set{
+					setvalidator.IsRequired(),
 					setvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -198,7 +204,7 @@ func (r *configurationBundleResource) Create(ctx context.Context, request resour
 
 	data.BundleID = fwflex.StringToFramework(ctx, out.BundleId)
 
-	bundle, err := findConfigurationBundleByID(ctx, conn, data.BundleID.ValueString())
+	bundle, err := findConfigurationBundleByID(ctx, conn, data.BundleID.ValueString(), fwflex.StringFromFramework(ctx, data.BranchName))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BundleID.ValueString())
 		return
@@ -224,7 +230,7 @@ func (r *configurationBundleResource) Read(ctx context.Context, request resource
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	out, err := findConfigurationBundleByID(ctx, conn, data.BundleID.ValueString())
+	out, err := findConfigurationBundleByID(ctx, conn, data.BundleID.ValueString(), fwflex.StringFromFramework(ctx, data.BranchName))
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -289,7 +295,7 @@ func (r *configurationBundleResource) Update(ctx context.Context, request resour
 	// Always re-read so the computed values that advance on update (version_id,
 	// updated_at, lineage_metadata) are known after apply — including tags-only
 	// updates where diff.HasChanges() is false but the plan still marks them unknown.
-	bundle, err := findConfigurationBundleByID(ctx, conn, plan.BundleID.ValueString())
+	bundle, err := findConfigurationBundleByID(ctx, conn, plan.BundleID.ValueString(), fwflex.StringFromFramework(ctx, plan.BranchName))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.BundleID.ValueString())
 		return
@@ -337,6 +343,13 @@ func (m configurationBundleResourceModel) expandComponents(ctx context.Context, 
 	out := make(map[string]awstypes.ComponentConfiguration, len(elems))
 	for _, e := range elems {
 		id := e.ComponentIdentifier.ValueString()
+		// The SDK keys components by identifier; two set elements with the same
+		// component_identifier would silently collapse into one entry. Reject the
+		// collision instead of dropping a component.
+		if _, dup := out[id]; dup {
+			diags.AddError("Duplicate component_identifier", fmt.Sprintf("component_identifier %q appears more than once; each component must have a unique identifier", id))
+			return nil
+		}
 		var cc awstypes.ComponentConfiguration
 		if !e.Configuration.IsNull() && !e.Configuration.IsUnknown() {
 			doc, err := tfsmithy.DocumentFromJSONString(e.Configuration.ValueString(), document.NewLazyDocument)
@@ -403,9 +416,10 @@ func (m *configurationBundleResourceModel) flattenReadBack(ctx context.Context, 
 	return diags
 }
 
-func findConfigurationBundleByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, bundleID string) (*bedrockagentcorecontrol.GetConfigurationBundleOutput, error) {
+func findConfigurationBundleByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, bundleID string, branchName *string) (*bedrockagentcorecontrol.GetConfigurationBundleOutput, error) {
 	input := bedrockagentcorecontrol.GetConfigurationBundleInput{
-		BundleId: aws.String(bundleID),
+		BundleId:   aws.String(bundleID),
+		BranchName: branchName,
 	}
 
 	out, err := conn.GetConfigurationBundle(ctx, &input)

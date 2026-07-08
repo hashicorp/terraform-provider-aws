@@ -140,7 +140,7 @@ func testAccCheckConfigurationBundleDestroy(ctx context.Context, t *testing.T) r
 				continue
 			}
 
-			_, err := tfbedrockagentcore.FindConfigurationBundleByID(ctx, conn, rs.Primary.Attributes["bundle_id"])
+			_, err := tfbedrockagentcore.FindConfigurationBundleByID(ctx, conn, rs.Primary.Attributes["bundle_id"], nil)
 			if retry.NotFound(err) {
 				continue
 			}
@@ -163,7 +163,7 @@ func testAccCheckConfigurationBundleExists(ctx context.Context, t *testing.T, n 
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		_, err := tfbedrockagentcore.FindConfigurationBundleByID(ctx, conn, rs.Primary.Attributes["bundle_id"])
+		_, err := tfbedrockagentcore.FindConfigurationBundleByID(ctx, conn, rs.Primary.Attributes["bundle_id"], nil)
 		return err
 	}
 }
