@@ -237,6 +237,8 @@ func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	plan.Commitment = types.StringValue(normalizeCommitmentValue(plan.Commitment.ValueString()))
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -265,6 +267,8 @@ func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	state.Commitment = types.StringValue(normalizeCommitmentValue(state.Commitment.ValueString()))
 	state.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
 
 	setTagsOut(ctx, out.Tags)

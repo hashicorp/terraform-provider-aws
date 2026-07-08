@@ -137,6 +137,8 @@ func (d *savingsPlanDataSource) Read(ctx context.Context, req datasource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	data.Commitment = types.StringValue(normalizeCommitmentValue(data.Commitment.ValueString()))
 	data.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
 
 	setTagsOut(ctx, out.Tags)
