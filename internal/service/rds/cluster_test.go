@@ -3151,9 +3151,9 @@ func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_autoMinorVersionUpgrade_disabled(t *testing.T) {
+func TestAccRDSCluster_autoMinorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster types.DBCluster
+	var dbCluster1, dbCluster2 types.DBCluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -3164,11 +3164,20 @@ func TestAccRDSCluster_autoMinorVersionUpgrade_disabled(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName),
+				Config: testAccClusterConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgrade(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 		},
@@ -7087,19 +7096,19 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_autoMinorVersionUpgrade_disabled(rName string) string {
+func testAccClusterConfig_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier         = %[1]q
   database_name              = "test"
   engine                     = "aurora-mysql"
   engine_version             = "8.0.mysql_aurora.3.04.0"
-  auto_minor_version_upgrade = false
+  auto_minor_version_upgrade = %[2]t
   master_username            = "tfacctest"
   master_password            = "avoid-plaintext-passwords"
   skip_final_snapshot        = true
 }
-`, rName)
+`, rName, autoMinorVersionUpgrade)
 }
 
 func testAccClusterConfig_engineLifecycleSupport_disabled(rName string) string {
