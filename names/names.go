@@ -110,6 +110,7 @@ const (
 	M2EndpointID                           = "m2"
 	MQEndpointID                           = "mq"
 	Macie2EndpointID                       = "macie2"
+	MediaConnectEndpointID                 = "mediaconnect"
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
 	NotificationsEndpointID                = "notifications"
