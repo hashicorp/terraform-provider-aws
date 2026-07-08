@@ -6,23 +6,9 @@
 package fsx
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/fsx/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,21 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All data sources should follow this basic outline. Improve this data source's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main data source struct with schema method
-// 4. Read method
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_fsx_lustre_file_system", name="Lustre File System")
+// @Tags(identifierAttribute="arn")
 func newLustreFileSystemDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lustreFileSystemDataSource{}, nil
 }
@@ -60,190 +37,89 @@ type lustreFileSystemDataSource struct {
 func (d *lustreFileSystemDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_import_policy": {
-				Type:             schema.TypeString,
-				Computed: true,
-			},
-			"automatic_backup_retention_days": {
-				Type:         schema.TypeInt,
-				Computed: true,
-			},
-			"backup_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"copy_tags_to_backups": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_compression_type": {
-				Type:             schema.TypeString,
-				Computed: true,
-			},
-			"data_read_cache_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"sizing_mode": {
-							Type:             schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"deployment_type": {
-				Type:             schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"drive_cache_type": {
-				Type:             schema.TypeString,
-				Computed: true,
-			},
-			"efa_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"export_path": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"file_system_type_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"final_backup_tags": tftags.TagsSchemaComputed(),
-			"imported_file_chunk_size": {
-				Type:         schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Computed: true,
-			},
-			"log_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestination: {
-							Type:         schema.TypeString,
-							Computed:     true,
-						"level": {
-							Type:             schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"metadata_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Computed:         true,
-						},
-						names.AttrIOPS: {
-							Type:             schema.TypeInt,
-							Computed:         true,
-						},
-					},
-				},
-			},
-			"mount_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_ids": {
-				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
-				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"per_unit_storage_throughput": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"root_squash_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"no_squash_nids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-							},
-						},
-						"root_squash": {
-							Type:         schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"skip_final_backup": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"storage_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"throughput_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_start_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
+			names.AttrID: schema.StringAttribute{
 				Required: true,
+			},
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
+			"auto_import_policy": schema.StringAttribute{
+				Computed: true,
+			},
+			"automatic_backup_retention_days": schema.Int64Attribute{
+				Computed: true,
+			},
+			"copy_tags_to_backups": schema.BoolAttribute{
+				Computed: true,
+			},
+			"daily_automatic_backup_start_time": schema.StringAttribute{
+				Computed: true,
+			},
+			"data_compression_type": schema.StringAttribute{
+				Computed: true,
+			},
+			"data_read_cache_configuration": framework.DataSourceComputedListOfObjectAttribute[dsDataReadCacheConfigurationModel](ctx),
+			"deployment_type": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDNSName: schema.StringAttribute{
+				Computed: true,
+			},
+			"drive_cache_type": schema.StringAttribute{
+				Computed: true,
+			},
+			"efa_enabled": schema.BoolAttribute{
+				Computed: true,
+			},
+			"export_path": schema.StringAttribute{
+				Computed: true,
+			},
+			"file_system_type_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"imported_file_chunk_size": schema.Int64Attribute{
+				Computed: true,
+			},
+			names.AttrKMSKeyID: schema.StringAttribute{
+				Computed: true,
+			},
+			"log_configuration":      framework.DataSourceComputedListOfObjectAttribute[dsLogConfigurationModel](ctx),
+			"metadata_configuration": framework.DataSourceComputedListOfObjectAttribute[dsMetadataConfigurationModel](ctx),
+			"mount_name": schema.StringAttribute{
+				Computed: true,
+			},
+			"network_interface_ids": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			names.AttrOwnerID: schema.StringAttribute{
+				Computed: true,
+			},
+			"per_unit_storage_throughput": schema.Int64Attribute{
+				Computed: true,
+			},
+			"root_squash_configuration": framework.DataSourceComputedListOfObjectAttribute[dsRootSquashConfigurationModel](ctx),
+			"storage_capacity": schema.Int64Attribute{
+				Computed: true,
+			},
+			names.AttrStorageType: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrSubnetIDs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"throughput_capacity": schema.Int64Attribute{
+				Computed: true,
+			},
+			names.AttrVPCID: schema.StringAttribute{
+				Computed: true,
+			},
+			"weekly_maintenance_start_time": schema.StringAttribute{
+				Computed: true,
 			},
 		},
 	}
@@ -252,49 +128,147 @@ func (d *lustreFileSystemDataSource) Schema(ctx context.Context, req datasource.
 func (d *lustreFileSystemDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().FSxClient(ctx)
 
-	// TIP: -- 2. Fetch the config
 	var data lustreFileSystemDataSourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get information about a resource from AWS
-	out, err := findLustreFileSystemByName(ctx, conn, data.Name.ValueString())
+	filesystem, err := findLustreFileSystemByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
-	// TIP: -- 4. Set the ID, arguments, and attributes
-	// Using a field name prefix allows mapping fields such as `LustreFileSystemId` to `ID`
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("LustreFileSystem")), smerr.ID, data.Name.String())
+	data.ARN = flex.StringToFramework(ctx, filesystem.ResourceARN)
+	data.DNSName = flex.StringToFramework(ctx, filesystem.DNSName)
+	data.FileSystemTypeVersion = flex.StringToFramework(ctx, filesystem.FileSystemTypeVersion)
+	data.KMSKeyID = types.StringValue(aws.ToString(filesystem.KmsKeyId))
+	data.OwnerID = flex.StringToFramework(ctx, filesystem.OwnerId)
+	data.StorageCapacity = flex.Int32ToFrameworkInt64(ctx, filesystem.StorageCapacity)
+	data.StorageType = flex.StringValueToFramework(ctx, filesystem.StorageType)
+	data.VpcID = flex.StringToFramework(ctx, filesystem.VpcId)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, filesystem.NetworkInterfaceIds, &data.NetworkInterfaceIDs)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 5. Set the tags
+	resp.Diagnostics.Append(flex.Flatten(ctx, filesystem.SubnetIds, &data.SubnetIDs)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// TIP: -- 6. Set the state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
+	if lustreConfig := filesystem.LustreConfiguration; lustreConfig != nil {
+		data.AutomaticBackupRetentionDays = types.Int64Value(int64(aws.ToInt32(lustreConfig.AutomaticBackupRetentionDays)))
+		data.CopyTagsToBackups = types.BoolValue(aws.ToBool(lustreConfig.CopyTagsToBackups))
+		data.DailyAutomaticBackupStartTime = flex.StringToFramework(ctx, lustreConfig.DailyAutomaticBackupStartTime)
+		data.DataCompressionType = flex.StringValueToFramework(ctx, lustreConfig.DataCompressionType)
+		data.DeploymentType = flex.StringValueToFramework(ctx, lustreConfig.DeploymentType)
+		data.DriveCacheType = flex.StringValueToFramework(ctx, lustreConfig.DriveCacheType)
+		data.EfaEnabled = types.BoolValue(aws.ToBool(lustreConfig.EfaEnabled))
+		data.MountName = flex.StringToFramework(ctx, lustreConfig.MountName)
+		data.PerUnitStorageThroughput = types.Int64Value(int64(aws.ToInt32(lustreConfig.PerUnitStorageThroughput)))
+		data.ThroughputCapacity = types.Int64Value(int64(aws.ToInt32(lustreConfig.ThroughputCapacity)))
+		data.WeeklyMaintenanceStartTime = flex.StringToFramework(ctx, lustreConfig.WeeklyMaintenanceStartTime)
+
+		if lustreConfig.DataRepositoryConfiguration != nil {
+			data.AutoImportPolicy = flex.StringValueToFramework(ctx, lustreConfig.DataRepositoryConfiguration.AutoImportPolicy)
+			data.ExportPath = flex.StringToFramework(ctx, lustreConfig.DataRepositoryConfiguration.ExportPath)
+			data.ImportedFileChunkSize = flex.Int32ToFrameworkInt64(ctx, lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
+		}
+
+		if lustreConfig.DataReadCacheConfiguration != nil {
+			drc := &dsDataReadCacheConfigurationModel{
+				Size:       flex.Int32ToFrameworkInt64(ctx, lustreConfig.DataReadCacheConfiguration.SizeGiB),
+				SizingMode: flex.StringValueToFramework(ctx, lustreConfig.DataReadCacheConfiguration.SizingMode),
+			}
+			data.DataReadCacheConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, drc)
+		}
+
+		if lustreConfig.LogConfiguration != nil {
+			lc := &dsLogConfigurationModel{
+				Destination: flex.StringToFramework(ctx, lustreConfig.LogConfiguration.Destination),
+				Level:       flex.StringValueToFramework(ctx, lustreConfig.LogConfiguration.Level),
+			}
+			data.LogConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, lc)
+		}
+
+		if lustreConfig.MetadataConfiguration != nil {
+			mc := &dsMetadataConfigurationModel{
+				Mode: flex.StringValueToFramework(ctx, lustreConfig.MetadataConfiguration.Mode),
+				Iops: flex.Int32ToFrameworkInt64(ctx, lustreConfig.MetadataConfiguration.Iops),
+			}
+			data.MetadataConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, mc)
+		}
+
+		if lustreConfig.RootSquashConfiguration != nil {
+			rsc := &dsRootSquashConfigurationModel{
+				RootSquash: flex.StringToFramework(ctx, lustreConfig.RootSquashConfiguration.RootSquash),
+			}
+			resp.Diagnostics.Append(flex.Flatten(ctx, lustreConfig.RootSquashConfiguration.NoSquashNids, &rsc.NoSquashNids)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			data.RootSquashConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, rsc)
+		}
+	}
+
+	setTagsOut(ctx, filesystem.Tags)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ID.String())
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type lustreFileSystemDataSourceModel struct {
 	framework.WithRegionModel
-	ARN     types.String `tfsdk:"arn"`
-	ID      types.String `tfsdk:"id"`
-	DNSName types.String `tfsdk:"name"`
-	Type    types.String `tfsdk:"type"`
+	ARN                           types.String                                                       `tfsdk:"arn"`
+	AutoImportPolicy              types.String                                                       `tfsdk:"auto_import_policy"`
+	AutomaticBackupRetentionDays  types.Int64                                                        `tfsdk:"automatic_backup_retention_days"`
+	CopyTagsToBackups             types.Bool                                                         `tfsdk:"copy_tags_to_backups"`
+	DailyAutomaticBackupStartTime types.String                                                       `tfsdk:"daily_automatic_backup_start_time"`
+	DataCompressionType           types.String                                                       `tfsdk:"data_compression_type"`
+	DataReadCacheConfiguration    fwtypes.ListNestedObjectValueOf[dsDataReadCacheConfigurationModel] `tfsdk:"data_read_cache_configuration"`
+	DeploymentType                types.String                                                       `tfsdk:"deployment_type"`
+	DNSName                       types.String                                                       `tfsdk:"dns_name"`
+	DriveCacheType                types.String                                                       `tfsdk:"drive_cache_type"`
+	EfaEnabled                    types.Bool                                                         `tfsdk:"efa_enabled"`
+	ExportPath                    types.String                                                       `tfsdk:"export_path"`
+	FileSystemTypeVersion         types.String                                                       `tfsdk:"file_system_type_version"`
+	ID                            types.String                                                       `tfsdk:"id"`
+	ImportedFileChunkSize         types.Int64                                                        `tfsdk:"imported_file_chunk_size"`
+	KMSKeyID                      types.String                                                       `tfsdk:"kms_key_id"`
+	LogConfiguration              fwtypes.ListNestedObjectValueOf[dsLogConfigurationModel]           `tfsdk:"log_configuration"`
+	MetadataConfiguration         fwtypes.ListNestedObjectValueOf[dsMetadataConfigurationModel]      `tfsdk:"metadata_configuration"`
+	MountName                     types.String                                                       `tfsdk:"mount_name"`
+	NetworkInterfaceIDs           fwtypes.ListOfString                                               `tfsdk:"network_interface_ids"`
+	OwnerID                       types.String                                                       `tfsdk:"owner_id"`
+	PerUnitStorageThroughput      types.Int64                                                        `tfsdk:"per_unit_storage_throughput"`
+	RootSquashConfiguration       fwtypes.ListNestedObjectValueOf[dsRootSquashConfigurationModel]    `tfsdk:"root_squash_configuration"`
+	StorageCapacity               types.Int64                                                        `tfsdk:"storage_capacity"`
+	StorageType                   types.String                                                       `tfsdk:"storage_type"`
+	SubnetIDs                     fwtypes.ListOfString                                               `tfsdk:"subnet_ids"`
+	Tags                          tftags.Map                                                         `tfsdk:"tags"`
+	ThroughputCapacity            types.Int64                                                        `tfsdk:"throughput_capacity"`
+	VpcID                         types.String                                                       `tfsdk:"vpc_id"`
+	WeeklyMaintenanceStartTime    types.String                                                       `tfsdk:"weekly_maintenance_start_time"`
+}
+
+type dsDataReadCacheConfigurationModel struct {
+	Size       types.Int64  `tfsdk:"size"`
+	SizingMode types.String `tfsdk:"sizing_mode"`
+}
+
+type dsLogConfigurationModel struct {
+	Destination types.String `tfsdk:"destination"`
+	Level       types.String `tfsdk:"level"`
+}
+
+type dsMetadataConfigurationModel struct {
+	Mode types.String `tfsdk:"mode"`
+	Iops types.Int64  `tfsdk:"iops"`
+}
+
+type dsRootSquashConfigurationModel struct {
+	NoSquashNids fwtypes.SetOfString `tfsdk:"no_squash_nids"`
+	RootSquash   types.String        `tfsdk:"root_squash"`
 }
