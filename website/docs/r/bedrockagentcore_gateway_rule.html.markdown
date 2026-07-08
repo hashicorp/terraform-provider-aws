@@ -150,7 +150,7 @@ Exactly one of `match_paths` or `match_principals` must be set.
     * `any_of` - (Required) Between 1 and 10 path patterns. A pattern must be of the form `/<segment>/*` and at most 512 characters.
 * `match_principals` - (Optional) Match when the caller's IAM identity matches any of the supplied principal entries.
     * `any_of` - (Required) Between 1 and 100 principal entry blocks. See below.
-        * `iam_principal` - (Optional) Match an IAM user, role, or assumed-role ARN.
+        * `iam_principal` - (Required) Match an IAM user, role, or assumed-role ARN. Exactly one `iam_principal` block is required per entry.
             * `arn` - (Required) IAM principal ARN. Wildcards are allowed with the `StringLike` operator.
             * `operator` - (Optional) Match operator, one of `StringEquals` or `StringLike`. Defaults to `StringEquals`.
 

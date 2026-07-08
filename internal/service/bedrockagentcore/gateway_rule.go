@@ -390,6 +390,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 												"iam_principal": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[iamPrincipalModel](ctx),
 													Validators: []validator.List{
+														listvalidator.IsRequired(),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
