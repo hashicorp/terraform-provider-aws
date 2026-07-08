@@ -46,7 +46,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc="testAccPaymentConnectorImportStateIDFunc")
 // @Testing(importStateIdAttribute="payment_connector_id")
-// @Testing(importIgnore="credential_provider_configuration")
 // @Testing(generator="testAccRandomPaymentConnectorName(t)")
 // @Testing(serialize=true)
 func newPaymentConnectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
