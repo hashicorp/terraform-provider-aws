@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -18,6 +19,8 @@ import (
 )
 
 func testAccDataSource_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -46,6 +49,8 @@ func testAccDataSource_basic(t *testing.T) {
 }
 
 func testAccDataSource_full(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -92,6 +97,8 @@ func testAccDataSource_full(t *testing.T) {
 }
 
 func testAccDataSource_fullSemantic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -139,6 +146,8 @@ func testAccDataSource_fullSemantic(t *testing.T) {
 }
 
 func testAccDataSource_fullHierarchical(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -187,6 +196,8 @@ func testAccDataSource_fullHierarchical(t *testing.T) {
 }
 
 func testAccDataSource_fullCustomTranformation(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -233,6 +244,8 @@ func testAccDataSource_fullCustomTranformation(t *testing.T) {
 }
 
 func testAccDataSource_parsing(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -282,6 +295,8 @@ func testAccDataSource_parsing(t *testing.T) {
 }
 
 func testAccDataSource_parsingModality(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -334,6 +349,8 @@ func testAccDataSource_parsingModality(t *testing.T) {
 }
 
 func testAccDataSource_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -353,12 +370,22 @@ func testAccDataSource_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceDataSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func testAccDataSource_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -418,6 +445,8 @@ func testAccDataSource_update(t *testing.T) {
 }
 
 func testAccDataSource_webConfiguration(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -459,6 +488,8 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
 
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource

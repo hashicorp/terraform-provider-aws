@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ec2_local_gateway_virtual_interface: Add `outpost_lag_id` and `local_gateway_virtual_interface_group_id` attributes
+```

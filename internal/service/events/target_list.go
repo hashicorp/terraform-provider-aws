@@ -115,22 +115,21 @@ type listTargetModel struct {
 
 func listTargets(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput) iter.Seq2[awstypes.Target, error] {
 	return func(yield func(awstypes.Target, error) bool) {
+		var stopped bool
 		err := listTargetsByRulePages(ctx, conn, input, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
-
 			for _, item := range page.Targets {
 				if !yield(item, nil) {
-					return !lastPage
+					stopped = true
+					return false
 				}
 			}
-
 			return !lastPage
 		})
-
-		if err != nil {
-			yield(awstypes.Target{}, fmt.Errorf("listing EventBridge Target resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Target](), fmt.Errorf("listing EventBridge Targets: %w", err))
 			return
 		}
 	}

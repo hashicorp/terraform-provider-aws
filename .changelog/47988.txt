@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Remove conflict between `outpost_config` and `remote_network_config`
+```
+
+```release-note:enhancement
+resource/aws_eks_cluster: Make `remote_node_networks` field in `remote_network_config` optional
+```
+
+```release-note:enhancement
+resource/aws_eks_cluster: Add CGNAT IP address ranges as valid private range
+```
+
+```release-note:bug
+resource/aws_eks_cluster: Change `securityGroupIds` logic in `flattenVPCConfigResponse()` for Outpost clusters
+```

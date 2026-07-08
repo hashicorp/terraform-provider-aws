@@ -24,10 +24,10 @@ resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
 
 This resource supports the following arguments:
 
+* `default_message_type` - (Optional) Default message type. Must either be "TRANSACTIONAL" or "PROMOTIONAL".
+* `default_sender_id` - (Optional) Default sender ID to use for this configuration set.
+* `name` - (Required) Name of the configuration set.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the configuration set.
-* `default_sender_id` - (Optional) The default sender ID to use for this configuration set.
-* `default_message_type` - (Optional) The default message type. Must either be "TRANSACTIONAL" or "PROMOTIONAL"
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -35,7 +35,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the configuration set.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

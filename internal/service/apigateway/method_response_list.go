@@ -36,7 +36,7 @@ type methodResponseListResource struct {
 func (l *methodResponseListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"rest_api_id": listschema.StringAttribute{
+			attrRestAPIID: listschema.StringAttribute{
 				Required:    true,
 				Description: "ID of the associated REST API.",
 			},
@@ -68,7 +68,7 @@ func (l *methodResponseListResource) List(ctx context.Context, request list.List
 	httpMethod := query.HTTPMethod.ValueString()
 
 	tflog.Info(ctx, "Listing API Gateway Method Responses", map[string]any{
-		logging.ResourceAttributeKey("rest_api_id"):        restAPIID,
+		logging.ResourceAttributeKey(attrRestAPIID):        restAPIID,
 		logging.ResourceAttributeKey(names.AttrResourceID): resourceID,
 		logging.ResourceAttributeKey("http_method"):        httpMethod,
 	})
@@ -87,7 +87,7 @@ func (l *methodResponseListResource) List(ctx context.Context, request list.List
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(resourceMethodResponseIDAttr(restAPIID, resourceID, httpMethod, statusCode))
-			rd.Set("rest_api_id", restAPIID)
+			rd.Set(attrRestAPIID, restAPIID)
 			rd.Set(names.AttrResourceID, resourceID)
 			rd.Set("http_method", httpMethod)
 			rd.Set(names.AttrStatusCode, statusCode)

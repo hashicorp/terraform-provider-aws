@@ -28,7 +28,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 ```
 
-## Example Usage with upstream repository
+### Example Usage with upstream repository
 
 ```terraform
 resource "aws_codeartifact_repository" "upstream" {
@@ -46,7 +46,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 ```
 
-## Example Usage with external connection
+### Example Usage with external connection
 
 ```terraform
 resource "aws_codeartifact_repository" "upstream" {

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,15 +30,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_glossary_term", name="Glossary Term")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("glossaryTermImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetGlossaryTermOutput")
+// @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
 func newGlossaryTermResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &glossaryTermResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
@@ -54,6 +61,7 @@ const (
 type glossaryTermResource struct {
 	framework.ResourceWithModel[glossaryTermResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *glossaryTermResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -222,6 +230,8 @@ func (r *glossaryTermResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
+	state.GlossaryIdentifier = flex.StringToFramework(ctx, out.GlossaryId)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -325,18 +335,6 @@ func (r *glossaryTermResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *glossaryTermResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 3 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier,Id,OwningProjectIdentifier"`, req.ID))
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("glossary_identifier"), parts[2])...)
-}
-
 func findGlossaryTermByID(ctx context.Context, conn *datazone.Client, id string, domainID string) (*datazone.GetGlossaryTermOutput, error) {
 	in := &datazone.GetGlossaryTermInput{
 		Identifier:       aws.String(id),
@@ -360,6 +358,26 @@ func findGlossaryTermByID(ctx context.Context, conn *datazone.Client, id string,
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = glossaryTermImportID{}
+)
+
+type glossaryTermImportID struct{}
+
+func (glossaryTermImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, termID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-identifier>%s<id>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"domain_identifier": domainID,
+		names.AttrID:        termID,
+	}
+
+	return id, result, nil
 }
 
 type glossaryTermResourceModel struct {

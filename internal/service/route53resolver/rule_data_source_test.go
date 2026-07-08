@@ -18,7 +18,7 @@ func init() {
 
 func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
@@ -73,7 +73,7 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
@@ -107,7 +107,7 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 
 func TestAccRoute53ResolverRuleDataSource_targetIPs(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	dsResourceName := "data.aws_route53_resolver_rule.test"
@@ -140,7 +140,7 @@ func TestAccRoute53ResolverRuleDataSource_targetIPs(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
@@ -178,7 +178,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 
 func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.test"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"

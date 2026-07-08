@@ -116,18 +116,19 @@ The following arguments are required:
 
 * `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`, `AWS_IAM`. When set to `CUSTOM_JWT`, `authorizer_configuration` block is required.
 * `name` - (Required) Name of the gateway.
-* `protocol_type` - (Required) Protocol type for the gateway. Valid values: `MCP`.
 * `role_arn` - (Required) ARN of the IAM role that the gateway assumes to access AWS services.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
-* `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
+* `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
 * `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
+* `policy_engine_configuration` - (Optional) Configuration for a policy engine associated with the gateway. A policy engine is a collection of policies that evaluates and authorizes agent tool calls. When associated with a gateway, the policy engine intercepts all agent requests and determines whether to allow or deny each action based on the defined policies. See [`policy_engine_configuration`](#policy_engine_configuration) below.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
+* `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Omit this argument to create a gateway that routes traffic directly to HTTP targets such as AgentCore Runtime agents (see [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) `target_configuration.http`).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `authorizer_configuration`
@@ -194,6 +195,13 @@ The `input_configuration` block supports the following:
 
 * `pass_request_headers` - (Required) Whether to pass request headers to the interceptor.
 
+### `policy_engine_configuration`
+
+The `policy_engine_configuration` block supports the following:
+
+* `arn` - (Required) ARN of the policy engine. The policy engine contains Cedar policies that define fine-grained authorization rules specifying who can perform what actions on which resources as agents interact through the gateway.
+* `mode` - (Required) Enforcement mode for the policy engine. Valid values: `LOG_ONLY`, `ENFORCE`. In `LOG_ONLY` mode, the policy engine evaluates actions and records traces but does not enforce decisions. In `ENFORCE` mode, the policy engine evaluates actions and enforces allow/deny decisions.
+
 ### `protocol_configuration`
 
 The `protocol_configuration` block supports the following:
@@ -206,7 +214,21 @@ The `mcp` block supports the following:
 
 * `instructions` - (Optional) Instructions for the MCP protocol configuration.
 * `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`.
+* `session_configuration` - (Optional) Configuration block for session settings of the MCP gateway. See [`session_configuration`](#session_configuration) below.
+* `streaming_configuration` - (Optional) Configuration block for streaming settings of the MCP gateway. See [`streaming_configuration`](#streaming_configuration) below.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
+
+### `session_configuration`
+
+The `session_configuration` block supports the following:
+
+* `session_timeout_in_seconds` - (Optional) Integer value for session timeout in seconds. Must be between 900 and 28800.
+
+### `streaming_configuration`
+
+The `streaming_configuration` block supports the following:
+
+* `enable_response_streaming` - (Optional) Boolean indicating whether response streaming is enabled for the gateway.
 
 ## Attribute Reference
 

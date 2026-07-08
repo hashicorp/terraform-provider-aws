@@ -33,19 +33,21 @@ func resourceProxyProtocolPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceProxyProtocolPolicyUpdate,
 		DeleteWithoutTimeout: resourceProxyProtocolPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"instance_ports": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.StringIsInt32,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_ports": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.StringIsInt32,
+					},
 				},
-			},
-			"load_balancer": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"load_balancer": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

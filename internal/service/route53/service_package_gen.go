@@ -157,6 +157,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53_vpc_association_authorization",
 			Name:     "VPC Association Authorization",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      vpcAssociationAuthorizationImportID{},
+			},
 		},
 		{
 			Factory:  resourceZone,
@@ -167,7 +175,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "hostedzone",
 			}),
 			Region:   inttypes.ResourceRegionDisabled(),
-			Identity: inttypes.GlobalSingleParameterIdentity("zone_id"),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("zone_id", true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -177,6 +185,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53_zone_association",
 			Name:     "Zone Association",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+				inttypes.StringIdentityAttribute("vpc_region", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      zoneAssociationImportID{},
+			},
 		},
 	}
 }
@@ -198,6 +215,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newVPCAssociationAuthorizationResourceAsListResource,
+			TypeName: "aws_route53_vpc_association_authorization",
+			Name:     "VPC Association Authorization",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+			}),
+		},
+		{
 			Factory:  newZoneResourceAsListResource,
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
@@ -206,7 +233,18 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
 			}),
-			Identity: inttypes.GlobalSingleParameterIdentity("zone_id"),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute("zone_id", true)),
+		},
+		{
+			Factory:  newZoneAssociationResourceAsListResource,
+			TypeName: "aws_route53_zone_association",
+			Name:     "Zone Association",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+				inttypes.StringIdentityAttribute("vpc_region", false),
+			}),
 		},
 	})
 }
