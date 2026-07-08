@@ -46,6 +46,8 @@ func TestAccBedrockAgentCoreGatewayRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction+".#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.#", "1"),

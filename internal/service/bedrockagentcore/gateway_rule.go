@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -102,6 +103,13 @@ func trafficSplitNameValidators() []validator.String {
 func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				// Optional+Computed: the UpdateGatewayRule API treats a nil
 				// description as "leave unchanged" (it never clears), so removing
@@ -141,6 +149,11 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"system": framework.ResourceComputedListOfObjectsAttribute[systemManagedBlockModel](ctx),
+			// updated_at advances on every update; NO UseStateForUnknown.
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrAction: schema.ListNestedBlock{
@@ -678,6 +691,7 @@ type gatewayRuleResourceModel struct {
 	framework.WithRegionModel
 	Actions           fwtypes.ListNestedObjectValueOf[actionModel]             `tfsdk:"action"`
 	Conditions        fwtypes.ListNestedObjectValueOf[conditionModel]          `tfsdk:"condition"`
+	CreatedAt         timetypes.RFC3339                                        `tfsdk:"created_at"`
 	Description       types.String                                             `tfsdk:"description"`
 	GatewayArn        types.String                                             `tfsdk:"gateway_arn"`
 	GatewayIdentifier types.String                                             `tfsdk:"gateway_identifier"`
@@ -686,6 +700,7 @@ type gatewayRuleResourceModel struct {
 	Status            fwtypes.StringEnum[awstypes.GatewayRuleStatus]           `tfsdk:"status"`
 	System            fwtypes.ListNestedObjectValueOf[systemManagedBlockModel] `tfsdk:"system"`
 	Timeouts          timeouts.Value                                           `tfsdk:"timeouts"`
+	UpdatedAt         timetypes.RFC3339                                        `tfsdk:"updated_at"`
 }
 
 // Action union.
