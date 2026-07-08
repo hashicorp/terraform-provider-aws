@@ -141,6 +141,9 @@ The `authorizer_configuration` block supports the following:
 
 The `custom_jwt_authorizer` block supports the following:
 
+* `private_endpoint` - (Optional) Private endpoint used to reach the OIDC discovery URL over a VPC. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint_overrides` - (Optional) Up to 5 per-domain private endpoint overrides. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+* `allowed_workload_configuration` - (Optional) Restricts which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
@@ -229,6 +232,50 @@ The `session_configuration` block supports the following:
 The `streaming_configuration` block supports the following:
 
 * `enable_response_streaming` - (Optional) Boolean indicating whether response streaming is enabled for the gateway.
+
+### `private_endpoint`
+
+The `private_endpoint` block supports exactly one of:
+
+* `managed_vpc_resource` - (Optional) Service-managed VPC endpoint. See [`managed_vpc_resource`](#managed_vpc_resource) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+
+### `managed_vpc_resource`
+
+The `managed_vpc_resource` block supports the following:
+
+* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values: `IPV4`, `IPV6`.
+* `subnet_ids` - (Required) Set of subnet IDs for the endpoint.
+* `vpc_identifier` - (Required) VPC identifier.
+* `routing_domain` - (Optional) Routing domain for the endpoint.
+* `security_group_ids` - (Optional) Set of up to 5 security group IDs.
+* `tags` - (Optional) Map of tags for the endpoint.
+
+### `self_managed_lattice_resource`
+
+The `self_managed_lattice_resource` block supports the following:
+
+* `resource_configuration_identifier` - (Required) VPC Lattice resource configuration ID or ARN.
+
+### `private_endpoint_overrides`
+
+The `private_endpoint_overrides` block supports the following:
+
+* `domain` - (Required) Domain the override applies to.
+* `private_endpoint` - (Required) Private endpoint for this domain. See [`private_endpoint`](#private_endpoint) above.
+
+### `allowed_workload_configuration`
+
+The `allowed_workload_configuration` block supports the following:
+
+* `hosting_environments` - (Optional) One to ten hosting environments. See [`hosting_environments`](#hosting_environments) below.
+* `workload_identities` - (Optional) One to ten workload identity names.
+
+### `hosting_environments`
+
+The `hosting_environments` block supports the following:
+
+* `arn` - (Required) ARN of the hosting environment.
 
 ## Attribute Reference
 
