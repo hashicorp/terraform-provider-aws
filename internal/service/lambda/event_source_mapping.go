@@ -66,6 +66,12 @@ func resourceEventSourceMapping() *schema.Resource {
 		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
 		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				"amazon_managed_kafka_event_source_config": {
@@ -657,7 +663,8 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(output.UUID))
 
-	if _, err := waitEventSourceMappingCreated(ctx, conn, d.Id()); err != nil {
+	createTimeout := d.Timeout(schema.TimeoutCreate)
+	if _, err := waitEventSourceMappingCreated(ctx, conn, d.Id(), createTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) create: %s", d.Id(), err)
 	}
 
@@ -910,7 +917,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id()); err != nil {
+		updateTimeout := d.Timeout(schema.TimeoutUpdate)
+		if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id(), updateTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -941,7 +949,8 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEventSourceMappingDeleted(ctx, conn, d.Id()); err != nil {
+	deleteTimeout := d.Timeout(schema.TimeoutDelete)
+	if _, err := waitEventSourceMappingDeleted(ctx, conn, d.Id(), deleteTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) delete: %s", d.Id(), err)
 	}
 
@@ -1025,10 +1034,7 @@ func statusEventSourceMapping(conn *lambda.Client, id string) retry.StateRefresh
 	}
 }
 
-func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
-	const (
-		timeout = 10 * time.Minute
-	)
+func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetEventSourceMappingOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
@@ -1047,10 +1053,7 @@ func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id 
 	return nil, err
 }
 
-func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
-	const (
-		timeout = 10 * time.Minute
-	)
+func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetEventSourceMappingOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
@@ -1069,10 +1072,7 @@ func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id 
 	return nil, err
 }
 
-func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetEventSourceMappingOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},

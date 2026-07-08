@@ -310,6 +310,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - UUID of the created event source mapping.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Lambda event source mappings. For example:
