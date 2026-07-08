@@ -33,21 +33,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_scheduler_schedule", name="Schedule")
+// @IdentityAttribute("group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("scheduleImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/scheduler;scheduler.GetScheduleOutput")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleCreate,
 		ReadWithoutTimeout:   resourceScheduleRead,
 		UpdateWithoutTimeout: resourceScheduleUpdate,
 		DeleteWithoutTimeout: resourceScheduleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -1390,4 +1392,29 @@ func flattenTarget(ctx context.Context, apiObject *awstypes.Target) map[string]a
 	}
 
 	return tfMap
+}
+
+var _ inttypes.SDKv2ImportID = scheduleImportID{}
+
+type scheduleImportID struct{}
+
+func (scheduleImportID) Create(d *schema.ResourceData) string {
+	return scheduleCreateResourceID(
+		d.Get(names.AttrGroupName).(string),
+		d.Get(names.AttrName).(string),
+	)
+}
+
+func (scheduleImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, scheduleResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		result := map[string]any{
+			names.AttrGroupName: parts[0],
+			names.AttrName:      parts[1],
+		}
+		return id, result, nil
+	}
+
+	return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected GROUP_NAME%[2]sSCHEDULE_NAME", id, scheduleResourceIDSeparator)
 }
