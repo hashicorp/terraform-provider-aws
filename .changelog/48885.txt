@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_storagegateway_smb_file_share: Fix `cache_attributes.cache_stale_timeout_in_seconds` to allow `0`
+```
+
+```release-note:bug
+resource/aws_storagegateway_nfs_file_share: Fix `cache_attributes.cache_stale_timeout_in_seconds` to allow `0`
+```
