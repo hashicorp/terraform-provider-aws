@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -311,19 +310,6 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							// advertised_scope_mapping maps each allowed scope to the scope
-							// value advertised in OAuth protected-resource metadata.
-							// AdvertisedScopeMappingType has @length 1-50; the per-entry
-							// AllowedScopeType constraints are enforced by the service
-							// (consistent with the unvalidated allowed_scopes sibling).
-							"advertised_scope_mapping": schema.MapAttribute{
-								CustomType:  fwtypes.MapOfStringType,
-								ElementType: types.StringType,
-								Optional:    true,
-								Validators: []validator.Map{
-									mapvalidator.SizeBetween(1, 50),
-								},
-							},
 							"allowed_audience": schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
 								Optional:   true,
@@ -1102,7 +1088,6 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AdvertisedScopeMapping   fwtypes.MapOfString                                                 `tfsdk:"advertised_scope_mapping"`
 	AllowedAudience          fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
 	AllowedClients           fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
 	AllowedScopes            fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`

@@ -1,15 +1,15 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_agent_runtime: Add `private_endpoint`, `private_endpoint_overrides`, and `allowed_workload_configuration` to the `authorizer_configuration.custom_jwt_authorizer` block
+resource/aws_bedrockagentcore_agent_runtime: Add `private_endpoint` and `private_endpoint_overrides` to the `authorizer_configuration.custom_jwt_authorizer` block
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_gateway: Add `private_endpoint`, `private_endpoint_overrides`, and `allowed_workload_configuration` to the `authorizer_configuration.custom_jwt_authorizer` block
+resource/aws_bedrockagentcore_gateway: Add `private_endpoint` and `private_endpoint_overrides` to the `authorizer_configuration.custom_jwt_authorizer` block
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_harness: Add `private_endpoint`, `private_endpoint_overrides`, and `allowed_workload_configuration` to the `authorizer_configuration.custom_jwt_authorizer` block
+resource/aws_bedrockagentcore_harness: Add `private_endpoint` and `private_endpoint_overrides` to the `authorizer_configuration.custom_jwt_authorizer` block
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_registry: Add `private_endpoint`, `private_endpoint_overrides`, and `allowed_workload_configuration` to the `authorizer_configuration.custom_jwt_authorizer` block
+resource/aws_bedrockagentcore_registry: Add `private_endpoint` and `private_endpoint_overrides` to the `authorizer_configuration.custom_jwt_authorizer` block
 ```

@@ -15,9 +15,9 @@ import (
 )
 
 // TestCustomJWTAuthorizerPrivateEndpointRoundTrip proves that autoflex builds the
-// correct SDK payload for the new private_endpoint / private_endpoint_overrides /
-// allowed_workload_configuration fields (including the union nested inside an
-// override list element) by round-tripping SDK -> model -> SDK.
+// correct SDK payload for the new private_endpoint / private_endpoint_overrides
+// fields (including the union nested inside an override list element) by
+// round-tripping SDK -> model -> SDK.
 func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

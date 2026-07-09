@@ -84,7 +84,6 @@ The `custom_jwt_authorizer` configuration block supports the following arguments
 * `allowed_audience` - (Optional) Set of audience values validated during incoming JWT token validation.
 * `allowed_clients` - (Optional) Set of client IDs validated during incoming JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes allowed to access the token.
-* `advertised_scope_mapping` - (Optional) Map of up to 50 entries associating each scope in `allowed_scopes` with the scope value advertised in OAuth protected-resource metadata. Use when the scope clients request from the identity provider differs from the scope in the validated token.
 * `custom_claim` - (Optional) Set of custom claim validations. [See below](#custom_claim-block).
 * `discovery_url` - (Required) OpenID Connect discovery URL used to validate incoming tokens.
 
