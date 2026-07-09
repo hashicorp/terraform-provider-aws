@@ -41,7 +41,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
@@ -91,7 +91,7 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_multiple(rName, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-1"),
@@ -121,7 +121,7 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
@@ -136,7 +136,7 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
@@ -167,7 +167,7 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_description(name, names.AttrDescription, "String", "test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -183,7 +183,7 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_description(name, "updated description", "String", "test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -218,14 +218,14 @@ func TestAccSSMParameter_writeOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_writeOnly(rName, "test", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "test"),
 				),
 			},
 			{
 				Config: testAccParameterConfig_writeOnly(rName, "testUpdated", 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
 				),
@@ -251,13 +251,13 @@ func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_changeValueToWriteOnly1(rName, "SecureString", "test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 				),
 			},
 			{
 				Config: testAccParameterConfig_changeValueToWriteOnly2(rName, "SecureString", "testUpdated"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
 				),
@@ -298,7 +298,7 @@ func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_changeValueToWriteOnly1(rName, "SecureString", "test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
@@ -356,7 +356,7 @@ func TestAccSSMParameter_tier(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierAdvanced)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter1),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
 				),
@@ -368,14 +368,14 @@ func TestAccSSMParameter_tier(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierStandard)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter2),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 				),
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierAdvanced)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter3),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
 				),
@@ -398,7 +398,7 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 				),
@@ -410,14 +410,14 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierStandard)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 				),
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 				),
@@ -445,7 +445,7 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter1),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 				),
@@ -457,7 +457,7 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierAdvanced)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter1),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
 				),
@@ -465,7 +465,7 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 			{
 				// Intelligent-Tiering will not downgrade an existing parameter to Standard
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter2),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
 				),
@@ -495,7 +495,7 @@ func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tierWithValue(rName, string(awstypes.ParameterTierIntelligentTiering), value),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
 				),
@@ -526,14 +526,14 @@ func TestAccSSMParameter_Tier_intelligentTieringOnUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tierWithValue(rName, string(awstypes.ParameterTierIntelligentTiering), standardSizedValue),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 				),
 			},
 			{
 				Config: testAccParameterConfig_tierWithValue(rName, string(awstypes.ParameterTierIntelligentTiering), advancedSizedValue),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &parameter),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
 				),
@@ -556,7 +556,7 @@ func TestAccSSMParameter_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceParameter(), resourceName),
 				),
@@ -603,14 +603,14 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 					}
 				},
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "This value is set using Terraform"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtTrue),
 				),
@@ -623,7 +623,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test3"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -693,7 +693,7 @@ func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, true, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -727,7 +727,7 @@ func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, false, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -761,7 +761,7 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basicTags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -777,7 +777,7 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, true, acctest.CtKey1, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -808,7 +808,7 @@ func TestAccSSMParameter_Overwrite_removeAttribute(t *testing.T) {
 					},
 				},
 				Config: testAccParameterConfig_overwriteRemove_Setup(rName, "String", acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtTrue),
 				),
@@ -816,7 +816,7 @@ func TestAccSSMParameter_Overwrite_removeAttribute(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccParameterConfig_overwriteRemove_Remove(rName, "String", acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtFalse),
 				),
@@ -848,7 +848,7 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_basicOverwriteNoDescription(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
@@ -903,7 +903,7 @@ func TestAccSSMParameter_Name_changeForcesNew(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(before, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &beforeParam),
 				),
 			},
@@ -914,7 +914,7 @@ func TestAccSSMParameter_Name_changeForcesNew(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_basic(after, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &afterParam),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -941,7 +941,7 @@ func TestAccSSMParameter_Name_fullPath(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
@@ -972,7 +972,7 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "SecureString", "secret"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
@@ -1002,7 +1002,7 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "notsecret"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "notsecret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -1015,7 +1015,7 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "newvalue"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "newvalue"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -1059,7 +1059,7 @@ func TestAccSSMParameter_Secure_insecureChangeSecure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "notsecret"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "notsecret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -1067,7 +1067,7 @@ func TestAccSSMParameter_Secure_insecureChangeSecure(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_secure(rName, "newvalue"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "newvalue"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
@@ -1075,7 +1075,7 @@ func TestAccSSMParameter_Secure_insecureChangeSecure(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "atlantis"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "atlantis"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
@@ -1099,7 +1099,7 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_dataTypeEC2Image(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
 				),
@@ -1128,7 +1128,7 @@ func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_dataTypeSSMIntegration(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ssm:integration"),
 				),
@@ -1156,7 +1156,7 @@ func TestAccSSMParameter_DataType_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_dataTypeUpdate(rName, "text"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 				),
@@ -1168,7 +1168,7 @@ func TestAccSSMParameter_DataType_update(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_dataTypeUpdate(rName, "aws:ec2:image"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
 				),
@@ -1192,7 +1192,7 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
@@ -1223,7 +1223,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_secure(name, "secret"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
@@ -1237,7 +1237,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 			},
 			{
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
@@ -1263,7 +1263,7 @@ func TestAccSSMParameter_ImportByARN_name(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 				),
 			},
