@@ -11,7 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+)
+
+var (
+	_ validator.String = AlsoRequiresWhenEqualsValidator{}
 )
 
 type AlsoRequiresWhenEqualsValidatorRequest struct {
@@ -28,6 +33,28 @@ type AlsoRequiresWhenEqualsValidatorResponse struct {
 type AlsoRequiresWhenEqualsValidator struct {
 	Value           attr.Value
 	PathExpressions path.Expressions
+}
+
+func (v AlsoRequiresWhenEqualsValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v AlsoRequiresWhenEqualsValidator) MarkdownDescription(ctx context.Context) string {
+	return fmt.Sprintf("Ensure that when this attribute equals %[1]q, the following are also configured: %[2]q", v.Value, v.PathExpressions)
+}
+
+func (v AlsoRequiresWhenEqualsValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	validateRequest := AlsoRequiresWhenEqualsValidatorRequest{
+		Config:         request.Config,
+		ConfigValue:    request.ConfigValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var validateResponse AlsoRequiresWhenEqualsValidatorResponse
+
+	v.Validate(ctx, validateRequest, &validateResponse)
+
+	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
 func (v AlsoRequiresWhenEqualsValidator) Validate(ctx context.Context, request AlsoRequiresWhenEqualsValidatorRequest, response *AlsoRequiresWhenEqualsValidatorResponse) {

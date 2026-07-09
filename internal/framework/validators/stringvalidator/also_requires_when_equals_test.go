@@ -115,19 +115,19 @@ func TestAlsoRequiresWhenEquals(t *testing.T) {
 		},
 		"self-equals-target-multiple-targets-all-set": {
 			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", "valueA", "value") },
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", "valueA", "valueB") },
 			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
 			expErrors:   0,
 		},
 		"self-equals-target-multiple-targets-one-unknown-other-null": {
 			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, tftypes.UnknownValue) },
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", tftypes.UnknownValue, nil) },
 			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
 			expErrors:   0,
 		},
 		"self-equals-target-multiple-targets-one-null-other-unknown": {
 			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", tftypes.UnknownValue, nil) },
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, tftypes.UnknownValue) },
 			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
 			expErrors:   0,
 		},
