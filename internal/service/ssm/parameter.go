@@ -311,13 +311,6 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		return diags
 	}
 
-	// Handle write-only and insecure_value logic specific to resource Read.
-	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
-		d.Set("insecure_value", param.Value)
-	} else {
-		d.Set(names.AttrValue, param.Value)
-	}
-
 	hasWriteOnly := d.Get("has_value_wo").(bool)
 	rawConfig := d.GetRawConfig()
 	if !rawConfig.IsNull() {
@@ -331,13 +324,20 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 			hasWriteOnly = true
 		} else {
 			hasWriteOnly = false
-			d.Set("has_value_wo", nil)
 		}
 	}
 
 	if hasWriteOnly {
 		d.Set("has_value_wo", true)
 		d.Set(names.AttrValue, nil)
+	} else {
+		d.Set("has_value_wo", nil)
+		if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
+			d.Set("insecure_value", param.Value)
+		} else {
+			d.Set(names.AttrValue, param.Value)
+		}
+
 	}
 
 	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
