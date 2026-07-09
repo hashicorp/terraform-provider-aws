@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -104,13 +105,13 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"indexed_key": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[indexedKeyModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 10),
+			"indexed_key": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[indexedKeyModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 10),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplaceIf(
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplaceIf(
 						requiresReplaceIfIndexedKeyRemoved,
 						"Removing or changing an existing indexed key requires replacement; new keys are added in place.",
 						"Removing or changing an existing indexed key requires replacement; new keys are added in place.",
@@ -466,7 +467,7 @@ type memoryResourceModel struct {
 	EncryptionKeyARN        fwtypes.ARN                                                   `tfsdk:"encryption_key_arn"`
 	EventExpiryDuration     types.Int32                                                   `tfsdk:"event_expiry_duration"`
 	ID                      types.String                                                  `tfsdk:"id"`
-	IndexedKeys             fwtypes.ListNestedObjectValueOf[indexedKeyModel]              `tfsdk:"indexed_key"`
+	IndexedKeys             fwtypes.SetNestedObjectValueOf[indexedKeyModel]               `tfsdk:"indexed_key"`
 	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
 	Name                    types.String                                                  `tfsdk:"name"`
 	StreamDeliveryResources fwtypes.ListNestedObjectValueOf[streamDeliveryResourcesModel] `tfsdk:"stream_delivery_resources"`
@@ -487,12 +488,12 @@ func indexedKeyIdentity(m *indexedKeyModel) string {
 // requiresReplaceIfIndexedKeyRemoved forces replacement only when an existing indexed key is removed
 // or changed. Indexed keys can only be added via UpdateMemory (previously indexed keys cannot be
 // removed), so a plan that is a superset of the prior keys is applied in place.
-func requiresReplaceIfIndexedKeyRemoved(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+func requiresReplaceIfIndexedKeyRemoved(ctx context.Context, request planmodifier.SetRequest, response *setplanmodifier.RequiresReplaceIfFuncResponse) {
 	if request.StateValue.IsNull() || request.StateValue.IsUnknown() || request.PlanValue.IsUnknown() {
 		return
 	}
 
-	var stateVal, planVal fwtypes.ListNestedObjectValueOf[indexedKeyModel]
+	var stateVal, planVal fwtypes.SetNestedObjectValueOf[indexedKeyModel]
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, request.Path, &stateVal))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, request.Path, &planVal))
 	if response.Diagnostics.HasError() {
