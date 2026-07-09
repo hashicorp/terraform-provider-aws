@@ -160,6 +160,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"api_key_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"wallet_secret": schema.StringAttribute{
 										Optional:  true,
@@ -172,6 +175,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"wallet_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"api_key_secret_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 									"wallet_secret_arn":  framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
@@ -211,6 +217,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"app_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"authorization_id": schema.StringAttribute{
 										Required: true,
@@ -230,6 +239,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"authorization_private_key_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"app_secret_arn":                framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 									"authorization_private_key_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
@@ -396,16 +408,38 @@ func flattenPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObjec
 
 	config, d := data.ProviderConfiguration.ToPtr(ctx)
 	smerr.AddEnrich(ctx, &diags, d)
-	if diags.HasError() || config == nil {
+	if diags.HasError() {
 		return diags
+	}
+	// On import the write-only provider_configuration block is absent from state.
+	// Reconstruct a minimal block so the computed managed secret ARNs the API
+	// returns become known in state; otherwise they plan as null on the reconcile
+	// apply and it fails with "inconsistent result after apply". The write-only
+	// secret values and other inputs are re-supplied from configuration on the
+	// next apply.
+	if config == nil {
+		config = &paymentProviderConfigurationModel{
+			CoinbaseCDPConfiguration: fwtypes.NewListNestedObjectValueOfNull[coinbaseCdpConfigurationModel](ctx),
+			StripePrivyConfiguration: fwtypes.NewListNestedObjectValueOfNull[stripePrivyConfigurationModel](ctx),
+		}
 	}
 
 	switch v := apiObject.(type) {
 	case *awstypes.PaymentProviderConfigurationOutputMemberCoinbaseCdpConfiguration:
 		coinbase, d := config.CoinbaseCDPConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() || coinbase == nil {
+		if diags.HasError() {
 			return diags
+		}
+		if coinbase == nil {
+			coinbase = &coinbaseCdpConfigurationModel{
+				APIKeySecretARN:    fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
+				APIKeySecretConfig: fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
+				APIKeySecretSource: fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+				WalletSecretARN:    fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
+				WalletSecretConfig: fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
+				WalletSecretSource: fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+			}
 		}
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.ApiKeySecretArn, &coinbase.APIKeySecretARN))
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.WalletSecretArn, &coinbase.WalletSecretARN))
@@ -417,8 +451,18 @@ func flattenPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObjec
 	case *awstypes.PaymentProviderConfigurationOutputMemberStripePrivyConfiguration:
 		stripe, d := config.StripePrivyConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() || stripe == nil {
+		if diags.HasError() {
 			return diags
+		}
+		if stripe == nil {
+			stripe = &stripePrivyConfigurationModel{
+				AppSecretARN:                  fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
+				AppSecretConfig:               fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
+				AppSecretSource:               fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+				AuthorizationPrivateKeyARN:    fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
+				AuthorizationPrivateKeyConfig: fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
+				AuthorizationPrivateKeySource: fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+			}
 		}
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.AppSecretArn, &stripe.AppSecretARN))
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.AuthorizationPrivateKeyArn, &stripe.AuthorizationPrivateKeyARN))
