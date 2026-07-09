@@ -26,8 +26,8 @@ type AlsoRequiresWhenEqualsValidatorResponse struct {
 }
 
 type AlsoRequiresWhenEqualsValidator struct {
-	value           attr.Value
-	pathExpressions path.Expressions
+	Value           attr.Value
+	PathExpressions path.Expressions
 }
 
 func (v AlsoRequiresWhenEqualsValidator) Validate(ctx context.Context, request AlsoRequiresWhenEqualsValidatorRequest, response *AlsoRequiresWhenEqualsValidatorResponse) {
@@ -35,12 +35,13 @@ func (v AlsoRequiresWhenEqualsValidator) Validate(ctx context.Context, request A
 		return
 	}
 
-	if !request.ConfigValue.Equal(v.value) {
+	if !request.ConfigValue.Equal(v.Value) {
+		return
 	}
 
 	var responseDiags diag.Diagnostics
 
-	for _, expression := range request.PathExpression.MergeExpressions(v.pathExpressions...) {
+	for _, expression := range request.PathExpression.MergeExpressions(v.PathExpressions...) {
 		matchedPaths, diags := request.Config.PathMatches(ctx, expression)
 		response.Diagnostics.Append(diags...)
 		if diags.HasError() {
@@ -68,7 +69,7 @@ func (v AlsoRequiresWhenEqualsValidator) Validate(ctx context.Context, request A
 				// Collect all errors.
 				responseDiags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 					request.Path,
-					fmt.Sprintf("Attribute %[1]q must be specified when %[2]q is %[3]q", mp, request.Path, v.value),
+					fmt.Sprintf("Attribute %[1]q must be specified when %[2]q is %[3]q", mp, request.Path, v.Value),
 				))
 			}
 		}
