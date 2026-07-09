@@ -46,6 +46,57 @@ type paymentCredentialProviderResource struct {
 	framework.ResourceWithModel[paymentCredentialProviderResourceModel]
 }
 
+var _ resource.ResourceWithValidateConfig = &paymentCredentialProviderResource{}
+
+func (r *paymentCredentialProviderResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data paymentCredentialProviderResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if data.ProviderConfiguration.IsNull() || data.ProviderConfiguration.IsUnknown() {
+		return
+	}
+	config, d := data.ProviderConfiguration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() || config == nil {
+		return
+	}
+
+	providerPath := path.Root("provider_configuration").AtListIndex(0)
+	if !config.CoinbaseCDPConfiguration.IsNull() && !config.CoinbaseCDPConfiguration.IsUnknown() {
+		if cb, d := config.CoinbaseCDPConfiguration.ToPtr(ctx); !d.HasError() && cb != nil {
+			p := providerPath.AtName("coinbase_cdp_configuration").AtListIndex(0)
+			validateExternalSecretRequiresConfig(&response.Diagnostics, cb.APIKeySecretSource, cb.APIKeySecretConfig, "api_key_secret_source", p.AtName("api_key_secret_config"))
+			validateExternalSecretRequiresConfig(&response.Diagnostics, cb.WalletSecretSource, cb.WalletSecretConfig, "wallet_secret_source", p.AtName("wallet_secret_config"))
+		}
+	}
+	if !config.StripePrivyConfiguration.IsNull() && !config.StripePrivyConfiguration.IsUnknown() {
+		if sp, d := config.StripePrivyConfiguration.ToPtr(ctx); !d.HasError() && sp != nil {
+			p := providerPath.AtName("stripe_privy_configuration").AtListIndex(0)
+			validateExternalSecretRequiresConfig(&response.Diagnostics, sp.AppSecretSource, sp.AppSecretConfig, "app_secret_source", p.AtName("app_secret_config"))
+			validateExternalSecretRequiresConfig(&response.Diagnostics, sp.AuthorizationPrivateKeySource, sp.AuthorizationPrivateKeyConfig, "authorization_private_key_source", p.AtName("authorization_private_key_config"))
+		}
+	}
+}
+
+func validateExternalSecretRequiresConfig(diags *diag.Diagnostics, source fwtypes.StringEnum[awstypes.SecretSourceType], secretConfig fwtypes.ListNestedObjectValueOf[paymentSecretReferenceModel], sourceName string, configPath path.Path) {
+	if source.IsNull() || source.IsUnknown() {
+		return
+	}
+	if source.ValueEnum() != awstypes.SecretSourceTypeExternal {
+		return
+	}
+	if !secretConfig.IsNull() && !secretConfig.IsUnknown() {
+		return
+	}
+	diags.AddAttributeError(
+		configPath,
+		"Missing Required Configuration",
+		fmt.Sprintf("%q is set to %q, so %s must be configured.", sourceName, awstypes.SecretSourceTypeExternal, configPath.String()),
+	)
+}
+
 func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -286,7 +337,10 @@ func (r *paymentCredentialProviderResource) Read(ctx context.Context, request re
 		return
 	}
 
-	setTagsOut(ctx, out.Tags)
+	// GetPaymentCredentialProvider does not populate Tags in its response, so
+	// tags are read back by the transparent-tagging interceptor via ListTags.
+	// Calling setTagsOut with the (empty) response tags would clobber that,
+	// producing a perpetual tags diff.
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
