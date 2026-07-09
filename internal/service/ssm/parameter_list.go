@@ -60,7 +60,7 @@ func (l *parameterListResource) List(ctx context.Context, request list.ListReque
 			}
 
 			name := aws.ToString(paramMetadata.Name)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), name)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
 
 			result := request.NewListResult(ctx)
 
