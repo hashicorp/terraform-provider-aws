@@ -831,6 +831,17 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
 				),
 			},
+			{
+				// 0 is a valid API value meaning "cache refresh disabled" -- regression test
+				// for a bug where 0 was rejected by ValidateFunc and, separately, silently
+				// dropped by expandCacheAttributes so it never reached the API.
+				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, t, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "0"),
+				),
+			},
 		},
 	})
 }
