@@ -54,6 +54,9 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_stripePrivy(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`.+`))),
 					// The service creates a managed secret and returns its ARN; assert it is surfaced.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("stripe_privy_configuration").AtSliceIndex(0).AtMapKey("app_secret_arn").AtSliceIndex(0).AtMapKey("secret_arn"), knownvalue.NotNull()),
+					// Regression: tags must round-trip (Get does not return them; the tagging
+					// interceptor reads them via ListTags). A perpetual diff here means Read clobbered them.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll).AtMapKey("Name"), knownvalue.StringExact(rName)),
 				},
 			},
 			{
@@ -146,6 +149,30 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_requiredFields(t *testing.
 	})
 }
 
+func TestAccBedrockAgentCorePaymentCredentialProvider_externalSecretRequiresConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Regression: *_secret_source=EXTERNAL requires the matching
+				// *_secret_config, enforced at plan time by ValidateConfig.
+				Config:      testAccPaymentCredentialProviderConfig_stripePrivyExternalNoConfig(rName),
+				ExpectError: regexache.MustCompile(`must be configured`),
+			},
+		},
+	})
+}
+
 func testAccCheckPaymentCredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -205,12 +232,33 @@ resource "aws_bedrockagentcore_payment_credential_provider" "test" {
   name                       = %[1]q
   credential_provider_vendor = "StripePrivy"
 
+  tags = {
+    Name = %[1]q
+  }
+
   provider_configuration {
     stripe_privy_configuration {
       app_id                    = "app_test_id"
       app_secret                = "sk_test_secret"
       authorization_id          = "auth_test_id"
       authorization_private_key = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPaymentCredentialProviderConfig_stripePrivyExternalNoConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_payment_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "StripePrivy"
+
+  provider_configuration {
+    stripe_privy_configuration {
+      app_id            = "app_test_id"
+      authorization_id  = "auth_test_id"
+      app_secret_source = "EXTERNAL"
     }
   }
 }
