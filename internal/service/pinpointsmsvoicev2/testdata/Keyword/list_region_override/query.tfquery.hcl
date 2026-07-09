@@ -5,6 +5,7 @@ list "aws_pinpointsmsvoicev2_keyword" "test" {
   provider = aws
 
   config {
-    region = var.region
+    origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
+    region               = var.region
   }
 }

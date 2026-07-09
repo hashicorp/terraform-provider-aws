@@ -3,4 +3,8 @@
 
 list "aws_pinpointsmsvoicev2_keyword" "test" {
   provider = aws
+
+  config {
+    origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
+  }
 }

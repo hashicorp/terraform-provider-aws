@@ -1,12 +1,20 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
+}
+
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
   count = var.resource_count
 
-  name = "${var.rName}-${count.index}"
-
-  tags = var.resource_tags
+  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
+  keyword              = upper("${var.rName}-${count.index}")
+  keyword_action       = "AUTOMATIC_RESPONSE"
+  keyword_message      = "test keyword message"
 }
 
 variable "rName" {
@@ -18,11 +26,5 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
-  nullable    = false
-}
-
-variable "resource_tags" {
-  description = "Tags to set on resource"
-  type        = map(string)
   nullable    = false
 }
