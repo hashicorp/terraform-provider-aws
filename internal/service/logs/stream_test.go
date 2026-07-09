@@ -28,6 +28,10 @@ func checkStreamARN(name string) knownvalue.Check {
 	return tfknownvalue.RegionalARNRegexp("logs", regexache.MustCompile(`log-group:[0-9A-Za-z_./#-]+:log-stream:`+name))
 }
 
+func checkStreamARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("logs", regexache.MustCompile(`log-group:[0-9A-Za-z_./#-]+:log-stream:`+name))
+}
+
 func TestAccLogsStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ls types.LogStream
