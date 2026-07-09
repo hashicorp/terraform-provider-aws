@@ -744,3 +744,411 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 }
 `, rName))
 }
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_filterValueExactlyOneOf confirms
+// the filter value union rejects multiple members (which silently dropped all but
+// the first -> inconsistent result after apply) and an empty value {} (which
+// surfaced an internal "always an error in the provider" message) at plan time.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_filterValueExactlyOneOf(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccOnlineEvaluationConfigConfig_filterValueMultiMember(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccOnlineEvaluationConfigConfig_filterValueEmpty(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_frequenciesUnique confirms duplicate
+// clustering frequencies are rejected at plan time instead of only by the API.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_frequenciesUnique(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccOnlineEvaluationConfigConfig_frequenciesDuplicate(rName),
+				ExpectError: regexache.MustCompile("Duplicate List Value"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_clusteringRequiresInsight confirms
+// clustering_config is rejected without insight at plan time (the service only
+// accepts clusteringConfig when insights are provided).
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_clusteringRequiresInsight(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccOnlineEvaluationConfigConfig_evaluatorClustering(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_evaluatorInsightSwitch confirms that
+// switching between evaluators and insights forces replacement. The service cannot
+// switch via update ("Cannot switch between evaluators and insights via update.
+// Delete and recreate the config."), which previously failed at apply.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_evaluatorInsightSwitch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluator(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				Config: testAccOnlineEvaluationConfigConfig_insightsAndClustering(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_descriptionClear confirms the
+// set->unset transition for description. The Update API retains description when
+// omitted and rejects an empty string, so description is Optional+Computed;
+// removing it from configuration must not produce a perpetual diff.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_descriptionClear(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluatorDescription(rName, "initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
+				),
+			},
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluator(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_enableOnCreateForcesNew confirms that
+// changing enable_on_create forces replacement. It is a create-only field (absent
+// from the Update input and Get output), so an in-place change never reached the API.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_enableOnCreateForcesNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_enableOnCreate(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				Config: testAccOnlineEvaluationConfigConfig_enableOnCreate(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccOnlineEvaluationConfigConfig_evaluator(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_evaluatorDescription(rName, description string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  description                   = %[2]q
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+`, rName, description))
+}
+
+func testAccOnlineEvaluationConfigConfig_enableOnCreate(rName string, enable bool) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = %[2]t
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+`, rName, enable))
+}
+
+func testAccOnlineEvaluationConfigConfig_filterValueMultiMember(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+
+    filter {
+      key      = "environment"
+      operator = "Equals"
+
+      value {
+        string_value  = "production"
+        boolean_value = true
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_filterValueEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+
+    filter {
+      key      = "environment"
+      operator = "Equals"
+
+      value {}
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_frequenciesDuplicate(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  insight {
+    insight_id = "Builtin.Insight.FailureAnalysis"
+  }
+
+  clustering_config {
+    frequencies = ["MONTHLY", "MONTHLY"]
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_evaluatorClustering(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  clustering_config {
+    frequencies = ["DAILY"]
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+`, rName))
+}

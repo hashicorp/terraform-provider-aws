@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -80,14 +81,26 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				// The Update API retains description when omitted and rejects an empty
+				// string (pattern .+, min length 1), so it cannot be cleared once set.
+				// Computed lets state absorb the retained server value instead of
+				// showing a perpetual "-> null" diff.
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"enable_on_create": schema.BoolAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
+					// enable_on_create only takes effect at creation (absent from the
+					// Update input and the Get output), so a change must force replacement
+					// rather than plan an in-place update that never reaches the API.
+					boolplanmodifier.RequiresReplace(),
 				},
 			},
 			"evaluation_execution_role_arn": schema.StringAttribute{
@@ -122,6 +135,11 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				CustomType: fwtypes.NewListNestedObjectTypeOf[clusteringConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+					// The service rejects clustering_config unless insight is also set
+					// ("clusteringConfig can only be set when insights are provided").
+					// insight already AlsoRequires clustering_config, so the two are
+					// mutually required.
+					listvalidator.AlsoRequires(path.MatchRoot("insight")),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -130,6 +148,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 							Required:    true,
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 3),
+								listvalidator.UniqueValues(),
 							},
 						},
 					},
@@ -168,6 +187,22 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[evaluatorReferenceModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 10),
+				},
+				PlanModifiers: []planmodifier.Set{
+					// The service cannot switch between evaluators and insights via
+					// update ("Cannot switch between evaluators and insights via update.
+					// Delete and recreate the config."). evaluator is ExactlyOneOf with
+					// insight, so toggling this block on or off IS the mode switch and
+					// must force replacement.
+					setplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, request planmodifier.SetRequest, response *setplanmodifier.RequiresReplaceIfFuncResponse) {
+							stateHas := !request.StateValue.IsNull() && len(request.StateValue.Elements()) > 0
+							planHas := !request.PlanValue.IsNull() && len(request.PlanValue.Elements()) > 0
+							response.RequiresReplace = stateHas != planHas
+						},
+						"Switching between evaluator and insight requires replacement.",
+						"Switching between evaluator and insight requires replacement.",
+					),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -259,6 +294,16 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 													Optional: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 1024),
+														// Exactly one filter value member must be set. Attaching to
+														// a single attribute is sufficient: the validator runs even
+														// when it is null and tallies every sibling, catching both
+														// multiple members (silent-drop -> inconsistent result after
+														// apply) and an empty value {} (nil Expand -> internal error).
+														stringvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("boolean_value"),
+															path.MatchRelative().AtParent().AtName("double_value"),
+															path.MatchRelative().AtParent().AtName("string_value"),
+														),
 													},
 												},
 											},
