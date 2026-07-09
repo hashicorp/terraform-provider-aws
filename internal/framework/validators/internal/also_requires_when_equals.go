@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	_ validator.Bool   = AlsoRequiresWhenEqualsValidator{}
 	_ validator.String = AlsoRequiresWhenEqualsValidator{}
 )
 
@@ -41,6 +42,20 @@ func (v AlsoRequiresWhenEqualsValidator) Description(ctx context.Context) string
 
 func (v AlsoRequiresWhenEqualsValidator) MarkdownDescription(ctx context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute equals %[1]q, the following are also configured: %[2]q", v.Value, v.PathExpressions)
+}
+
+func (v AlsoRequiresWhenEqualsValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
+	validateRequest := AlsoRequiresWhenEqualsValidatorRequest{
+		Config:         request.Config,
+		ConfigValue:    request.ConfigValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var validateResponse AlsoRequiresWhenEqualsValidatorResponse
+
+	v.Validate(ctx, validateRequest, &validateResponse)
+
+	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
 func (v AlsoRequiresWhenEqualsValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {

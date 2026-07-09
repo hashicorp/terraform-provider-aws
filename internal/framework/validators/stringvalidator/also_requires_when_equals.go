@@ -10,6 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
 
+// AlsoRequiresWhenEquals checks that each path.Expression has a non-null
+// configuration value when the stringy attribute being validated has the known
+// specified value.
+//
+// Relative path.Expressions are resolved using the attribute being
+// validated.
 func AlsoRequiresWhenEquals[T ~string](value T, expressions ...path.Expression) validator.String {
 	return internal.AlsoRequiresWhenEqualsValidator{
 		Value:           types.StringValue(string(value)),
