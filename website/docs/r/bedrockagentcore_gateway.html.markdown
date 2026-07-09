@@ -148,6 +148,7 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `advertised_scope_mapping` - (Optional) Map of up to 50 entries associating each scope in `allowed_scopes` with the scope value advertised in OAuth protected-resource metadata. Use when the scope clients request from the identity provider differs from the scope in the validated token.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
 
 ### `custom_claim`

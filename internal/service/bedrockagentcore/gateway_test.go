@@ -630,8 +630,12 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"advertised_scope_mapping":       knownvalue.Null(),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"custom_claim":                   knownvalue.SetSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -678,12 +682,75 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"advertised_scope_mapping":       knownvalue.Null(),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"custom_claim":                   knownvalue.SetSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
 					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizerAdvertisedScopeMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+	mappingPath := tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0).AtMapKey("advertised_scope_mapping")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMapping(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mappingPath, knownvalue.MapExact(map[string]knownvalue.Check{
+						names.AttrEmail: knownvalue.StringExact("email-advertised"),
+						"openid":        knownvalue.StringExact("openid-advertised"),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				// Clear-probe: remove advertised_scope_mapping. The authorizer is sent
+				// in full on update; if the API PATCH-merged it (nil => leave unchanged)
+				// the read-back would contradict the planned null and error with
+				// "inconsistent result after apply". This proves the set->unset behavior
+				// for the shared authorizer map field.
+				Config: testAccGatewayConfig_customJWTAuthorizerNoAdvertisedScopeMapping(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mappingPath, knownvalue.Null()),
 				},
 			},
 		},
@@ -758,7 +825,11 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"advertised_scope_mapping":       knownvalue.Null(),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
 								}),
 							}),
 						}),
@@ -825,7 +896,11 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"advertised_scope_mapping":       knownvalue.Null(),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -886,7 +961,11 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"advertised_scope_mapping":       knownvalue.Null(),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1350,6 +1429,49 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMapping(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url  = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_scopes = ["openid", "email"]
+
+      advertised_scope_mapping = {
+        openid = "openid-advertised"
+        email  = "email-advertised"
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerNoAdvertisedScopeMapping(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url  = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_scopes = ["openid", "email"]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName))
 }
 
 func testAccGatewayConfig_customJWTAuthorizerCustomClaimString(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
