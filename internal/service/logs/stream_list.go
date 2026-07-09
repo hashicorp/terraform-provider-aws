@@ -118,6 +118,6 @@ type listStreamModel struct {
 	OrderBy      fwtypes.StringEnum[awstypes.OrderBy] `tfsdk:"order_by"`
 }
 
-func listLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogStream, error] {
+func listLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogStream, error] { // nosemgrep:ci.logs-in-func-name
 	return tfiter.ConcatValuesWithError(listLogStreamPages(ctx, conn, input, optFns...))
 }
