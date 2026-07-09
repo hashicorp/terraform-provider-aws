@@ -44,12 +44,6 @@ func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
 				},
 			},
 		},
-		AllowedWorkloadConfiguration: &awstypes.AllowedWorkloadConfiguration{
-			WorkloadIdentities: []string{"my_workload"},
-			HostingEnvironments: []awstypes.HostingEnvironment{
-				{Arn: aws.String("arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/abc")},
-			},
-		},
 	}
 
 	var model customJWTAuthorizerConfigurationModel
@@ -70,8 +64,6 @@ func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
 			awstypes.PrivateEndpointMemberSelfManagedLatticeResource{},
 			awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{},
 			awstypes.PrivateEndpointOverride{},
-			awstypes.AllowedWorkloadConfiguration{},
-			awstypes.HostingEnvironment{},
 		),
 		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
 	}

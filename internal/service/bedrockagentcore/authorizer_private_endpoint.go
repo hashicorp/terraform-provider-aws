@@ -6,7 +6,6 @@ package bedrockagentcore
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -93,6 +92,13 @@ func privateEndpointBlock(ctx context.Context) schema.ListNestedBlock {
 // privateEndpointOverridesBlock is a list (max 5) of per-domain private endpoint
 // overrides used by the custom JWT authorizer configuration.
 func privateEndpointOverridesBlock(ctx context.Context) schema.ListNestedBlock {
+	// Unlike the optional top-level custom_jwt_authorizer.private_endpoint, an
+	// override's private_endpoint is required by the SDK (PrivateEndpointOverride.
+	// PrivateEndpoint). Take a fresh copy of the shared block and mark it required
+	// for this instance only (so gateway_target's/top-level's stay optional).
+	requiredPrivateEndpoint := privateEndpointBlock(ctx)
+	requiredPrivateEndpoint.Validators = append(requiredPrivateEndpoint.Validators, listvalidator.IsRequired())
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
 		Validators: []validator.List{
@@ -108,49 +114,7 @@ func privateEndpointOverridesBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"private_endpoint": privateEndpointBlock(ctx),
-			},
-		},
-	}
-}
-
-// allowedWorkloadConfigurationBlock restricts which workloads may use the JWT
-// authorizer, by hosting environment ARN and/or workload identity name.
-func allowedWorkloadConfigurationBlock(ctx context.Context) schema.ListNestedBlock {
-	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[allowedWorkloadConfigurationModel](ctx),
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
-		},
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"workload_identities": schema.SetAttribute{
-					CustomType: fwtypes.SetOfStringType,
-					Optional:   true,
-					Validators: []validator.Set{
-						setvalidator.SizeBetween(1, 10),
-						setvalidator.ValueStringsAre(
-							stringvalidator.LengthBetween(3, 255),
-							stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
-						),
-					},
-				},
-			},
-			Blocks: map[string]schema.Block{
-				"hosting_environments": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[hostingEnvironmentModel](ctx),
-					Validators: []validator.List{
-						listvalidator.SizeBetween(1, 10),
-					},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							names.AttrARN: schema.StringAttribute{
-								CustomType: fwtypes.ARNType,
-								Required:   true,
-							},
-						},
-					},
-				},
+				"private_endpoint": requiredPrivateEndpoint,
 			},
 		},
 	}
@@ -159,13 +123,4 @@ func allowedWorkloadConfigurationBlock(ctx context.Context) schema.ListNestedBlo
 type privateEndpointOverrideModel struct {
 	Domain          types.String                                          `tfsdk:"domain"`
 	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
-}
-
-type allowedWorkloadConfigurationModel struct {
-	HostingEnvironments fwtypes.ListNestedObjectValueOf[hostingEnvironmentModel] `tfsdk:"hosting_environments"`
-	WorkloadIdentities  fwtypes.SetOfString                                      `tfsdk:"workload_identities"`
-}
-
-type hostingEnvironmentModel struct {
-	ARN fwtypes.ARN `tfsdk:"arn"`
 }
