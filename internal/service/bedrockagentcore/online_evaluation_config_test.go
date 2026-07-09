@@ -386,6 +386,28 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightsAndClustering(t *test
 	})
 }
 
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightRequiresClusteringConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccOnlineEvaluationConfigConfig_insightsWithoutClustering(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
 // Test helper functions.
 
 func testAccCheckOnlineEvaluationConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -685,6 +707,33 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 
   clustering_config {
     frequencies = ["DAILY", "WEEKLY"]
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_insightsWithoutClustering(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  insight {
+    insight_id = "Builtin.Insight.FailureAnalysis"
   }
 
   rule {

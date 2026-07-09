@@ -122,11 +122,11 @@ The following arguments are required:
 Exactly one of the following arguments is required:
 
 * `evaluator` - (Optional) List of evaluators to apply during online evaluation. Minimum 1, maximum 10. Exactly one of `evaluator` or `insight` must be specified. See [`evaluator` Block](#evaluator-block) below.
-* `insight` - (Optional) List of insight analyses to run against sessions during evaluation. Maximum 10. Exactly one of `evaluator` or `insight` must be specified. See [`insight` Block](#insight-block) below.
+* `insight` - (Optional) List of insight analyses to run against sessions during evaluation. Maximum 10. Exactly one of `evaluator` or `insight` must be specified. When `insight` is specified, `clustering_config` is required. See [`insight` Block](#insight-block) below.
 
 The following arguments are optional:
 
-* `clustering_config` - (Optional) Configuration for periodic batch evaluation clustering, specifying how often clustering batch evaluations are triggered. See [`clustering_config` Block](#clustering_config-block) below.
+* `clustering_config` - (Optional) Configuration for periodic batch evaluation clustering, specifying how often clustering batch evaluations are triggered. Required when `insight` is specified. See [`clustering_config` Block](#clustering_config-block) below.
 * `description` - (Optional) Description of the online evaluation configuration.
 * `execution_status` - (Optional) Execution status to enable or disable the online evaluation. Valid values: `ENABLED`, `DISABLED`. Computed on create based on `enable_on_create`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

@@ -184,6 +184,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				CustomType: fwtypes.NewListNestedObjectTypeOf[insightModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
+					listvalidator.AlsoRequires(path.MatchRoot("clustering_config")),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
