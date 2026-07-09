@@ -198,13 +198,13 @@ resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
 The following arguments are required:
 
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
-* `name` - (Required) Name of the memory strategy.
+* `name` - (Required) Name of the memory strategy. Changing this forces a new resource because the service API does not support renaming a strategy.
 * `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
 
 The following arguments are optional:
 
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration` Block](#configuration-block) below.
-* `description` - (Optional) Description of the memory strategy.
+* `description` - (Optional) Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
 * `memory_execution_role_arn` - (Optional, **Deprecated**) ARN of the IAM role that the memory service assumes to perform operations.
 * `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured unless the custom configuration type is `SELF_MANAGED`, in which case both must be omitted.
 * `namespaces` - (Optional, **Deprecated**) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured unless the custom configuration type is `SELF_MANAGED`, in which case both must be omitted. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
