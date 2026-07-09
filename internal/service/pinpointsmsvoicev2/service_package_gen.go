@@ -112,6 +112,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 		},
 		{
+			Factory:  newKeywordResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity", true),
+				inttypes.StringIdentityAttribute("keyword", true),
+			}),
+		},
+		{
 			Factory:  newPoolResourceAsListResource,
 			TypeName: "aws_pinpointsmsvoicev2_pool",
 			Name:     "Pool",
