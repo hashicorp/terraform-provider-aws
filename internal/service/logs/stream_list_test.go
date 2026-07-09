@@ -222,7 +222,7 @@ func TestAccLogsStream_List_orderBy(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Stream/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Stream/list_order_by/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
