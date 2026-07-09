@@ -10,7 +10,7 @@ if [[ "%PKG%" == "" ]]; then
 	exit 1
 fi
 
-PKG="%PKG%"
+PKG="./internal/service/%PKG%/..."
 
 # shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
@@ -92,8 +92,8 @@ EOF
 	fi
 fi
 
-build_test_binary "${PKG}"
-binary="$(basename "${PKG}").test"
+build_test_binary "${PKG%/...}"
+binary="$(basename "${PKG%/...}").test"
 
 TEST_LIST=$("./${binary}" -test.list="%TEST_PATTERN%" 2>/dev/null)
 
