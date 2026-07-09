@@ -107,6 +107,10 @@ func (r *datasetResource) Schema(ctx context.Context, request resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 2048),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws(|-cn|-us-gov):kms:[a-zA-Z0-9-]*:[0-9]{12}:key/[a-zA-Z0-9-]{36}$`), ""),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
