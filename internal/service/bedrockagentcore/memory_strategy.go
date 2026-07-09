@@ -66,7 +66,16 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
+				// Optional+Computed: ModifyMemoryStrategyInput carries Description, but the
+				// PATCH-style API ignores a nil (cleared) value and retains the prior
+				// description. Absorbing the server value keeps state consistent instead of
+				// producing "inconsistent result after apply" and a perpetual diff. A
+				// description cannot be removed once set (documented in the resource docs).
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -87,6 +96,13 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				// ModifyMemoryStrategyInput has no Name field, so the service cannot rename a
+				// strategy. A name change must force replacement; otherwise Update leaves the
+				// server name unchanged and Flatten writes it back, yielding "inconsistent
+				// result after apply".
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespaces": schema.SetAttribute{
 				// Required for all strategy types except SELF_MANAGED, which rejects

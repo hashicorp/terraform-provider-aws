@@ -197,7 +197,7 @@ resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the memory strategy.
+* `name` - (Required) Name of the memory strategy. Changing this forces a new resource, because the service API does not support renaming a strategy.
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
 * `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
 * `namespaces` - (Required) Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
@@ -205,7 +205,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) Description of the memory strategy.
+* `description` - (Optional) Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration`](#configuration) below.
 
 ### `configuration`

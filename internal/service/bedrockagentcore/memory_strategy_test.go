@@ -368,6 +368,104 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManagedInvalidType(t *testing.T) 
 	})
 }
 
+// TestAccBedrockAgentCoreMemoryStrategy_rename verifies that changing `name` forces
+// replacement. The service's ModifyMemoryStrategyInput has no Name field, so a rename
+// cannot be sent — an in-place update would leave the server name unchanged and
+// produce "inconsistent result after apply".
+func TestAccBedrockAgentCoreMemoryStrategy_rename(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	rNameNew := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_basic(rName, "SEMANTIC", "Rename test", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccMemoryStrategyConfig_basic(rNameNew, "SEMANTIC", "Rename test", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameNew),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_descriptionClearConverges verifies that
+// removing `description` from configuration after it was set does not produce
+// "inconsistent result after apply" or a perpetual diff. The PATCH API ignores
+// a nil Description and retains the prior value; Optional+Computed absorbs it so
+// the resource still converges (documented limitation: a description cannot be
+// cleared once set via this API).
+func TestAccBedrockAgentCoreMemoryStrategy_descriptionClearConverges(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_basic(rName, "SEMANTIC", "Initial description", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Remove description from config. The API retains the prior value; Optional+Computed
+				// absorbs it, so this must apply cleanly. The step's implicit post-apply refresh
+				// asserts no "inconsistent result" and no perpetual diff.
+				Config: testAccMemoryStrategyConfig_noDescription(rName, "SEMANTIC", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					// Server retains the original description; state absorbs it.
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -463,6 +561,17 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   namespaces  = [%[4]q]
 }
 `, rName, strategyType, description, namespace))
+}
+
+func testAccMemoryStrategyConfig_noDescription(rName, strategyType, namespace string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name       = %[1]q
+  memory_id  = aws_bedrockagentcore_memory.test.id
+  type       = %[2]q
+  namespaces = [%[3]q]
+}
+`, rName, strategyType, namespace))
 }
 
 func testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, description, namespace string) string {
