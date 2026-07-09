@@ -1326,7 +1326,8 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 
   authorizer_configuration {
     custom_jwt_authorizer {
-      discovery_url = "https://example.com/.well-known/openid-configuration"
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["example-audience"]
 
       private_endpoint_overrides {
         domain = "example.com"
