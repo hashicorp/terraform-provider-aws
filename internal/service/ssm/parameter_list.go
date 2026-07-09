@@ -52,31 +52,38 @@ func (l *parameterListResource) List(ctx context.Context, request list.ListReque
 	tflog.Info(ctx, "Listing SSM parameters")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for parameter, err := range listParameters(ctx, conn, &input) {
+		for paramMetadata, err := range listParameters(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			name := aws.ToString(parameter.Name)
+			name := aws.ToString(paramMetadata.Name)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), name)
 
 			result := request.NewListResult(ctx)
 
 			rd := l.ResourceData()
 			rd.SetId(name)
+			rd.Set(names.AttrName, name)
 
-			tflog.Info(ctx, "Reading SSM parameter")
-			diags := resourceParameterRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading SSM parameter %s", name))
-				yield(result)
-				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				param, err := findParameterByName(ctx, conn, name, true)
+				if err != nil {
+					tflog.Error(ctx, "Reading SSM parameter", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+
+				diags := resourceParameterFlatten(rd, &paramMetadata)
+				if diags.HasError() {
+					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading SSM parameter %s", name))
+					yield(result)
+					return
+				}
+				rd.Set(names.AttrValue, param.Value)
 			}
 
 			result.DisplayName = name

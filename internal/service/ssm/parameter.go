@@ -293,10 +293,30 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	param := outputRaw.(*awstypes.Parameter)
-	d.Set(names.AttrARN, param.ARN)
-	d.Set(names.AttrName, param.Name)
-	d.Set(names.AttrType, param.Type)
-	d.Set(names.AttrVersion, param.Version)
+
+	paramMetadata, err := findParameterMetadataByName(ctx, conn, aws.ToString(param.Name))
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
+	}
+
+	diags = append(diags, resourceParameterFlatten(d, paramMetadata)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Handle write-only and insecure_value logic specific to resource Read.
+	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
+		d.Set("insecure_value", param.Value)
+	} else {
+		d.Set(names.AttrValue, param.Value)
+	}
 
 	hasWriteOnly := d.Get("has_value_wo").(bool)
 	rawConfig := d.GetRawConfig()
@@ -315,12 +335,6 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
-		d.Set("insecure_value", param.Value)
-	} else {
-		d.Set(names.AttrValue, param.Value)
-	}
-
 	if hasWriteOnly {
 		d.Set("has_value_wo", true)
 		d.Set(names.AttrValue, nil)
@@ -330,23 +344,21 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
 	}
 
-	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
+	return diags
+}
 
-	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
+func resourceParameterFlatten(d *schema.ResourceData, paramMetadata *awstypes.ParameterMetadata) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
-	}
-
-	d.Set("allowed_pattern", detail.AllowedPattern)
-	d.Set("data_type", detail.DataType)
-	d.Set(names.AttrDescription, detail.Description)
-	d.Set(names.AttrKeyID, detail.KeyId)
-	d.Set("tier", detail.Tier)
+	d.Set("allowed_pattern", paramMetadata.AllowedPattern)
+	d.Set(names.AttrARN, paramMetadata.ARN)
+	d.Set("data_type", paramMetadata.DataType)
+	d.Set(names.AttrDescription, paramMetadata.Description)
+	d.Set(names.AttrKeyID, paramMetadata.KeyId)
+	d.Set(names.AttrName, paramMetadata.Name)
+	d.Set("tier", paramMetadata.Tier)
+	d.Set(names.AttrType, paramMetadata.Type)
+	d.Set(names.AttrVersion, paramMetadata.Version)
 
 	return diags
 }
