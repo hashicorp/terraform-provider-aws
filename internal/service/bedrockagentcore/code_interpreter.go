@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -115,7 +114,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 					},
 					Blocks: map[string]schema.Block{
 						names.AttrVPCConfig: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigNoS3EndpointModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -124,12 +123,6 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"require_service_s3_endpoint": schema.BoolAttribute{
-										Optional: true,
-										PlanModifiers: []planmodifier.Bool{
-											boolplanmodifier.RequiresReplace(),
-										},
-									},
 									names.AttrSecurityGroups: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
@@ -370,6 +363,6 @@ type codeInterpreterResourceModel struct {
 }
 
 type codeInterpreterNetworkConfigurationModel struct {
-	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode] `tfsdk:"network_mode"`
-	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel]         `tfsdk:"vpc_config"`
+	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode]     `tfsdk:"network_mode"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigNoS3EndpointModel] `tfsdk:"vpc_config"`
 }

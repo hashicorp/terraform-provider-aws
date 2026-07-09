@@ -1130,6 +1130,222 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_networkModeConfig_requireServiceS3EndpointReadOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// require_service_s3_endpoint is read-only; setting it must be rejected offline.
+				Config:      testAccAgentRuntimeConfig_networkModeConfigRequireS3Endpoint(rName),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`(?i)read-only`),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverridesRequirePrivateEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// SDK marks PrivateEndpointOverride.PrivateEndpoint as required; a missing
+				// private_endpoint must fail offline, not at apply.
+				Config:      testAccAgentRuntimeConfig_authorizerPrivateEndpointOverridesMissingPrivateEndpoint(rName),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`private_endpoint`),
+			},
+		},
+	})
+}
+
+func testAccAgentRuntimeConfig_networkModeConfigRequireS3Endpoint(rName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "123456789012.dkr.ecr.us-west-2.amazonaws.com/test:latest"
+    }
+  }
+
+  network_configuration {
+    network_mode = "VPC"
+    network_mode_config {
+      security_groups             = ["sg-12345678"]
+      subnets                     = ["subnet-12345678"]
+      require_service_s3_endpoint = true
+    }
+  }
+}
+`, rName))
+}
+
+func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverridesMissingPrivateEndpoint(rName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "123456789012.dkr.ecr.us-west-2.amazonaws.com/test:latest"
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url = "https://example.com/.well-known/openid-configuration"
+
+      private_endpoint_overrides {
+        domain = "example.com"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// The API omits private_endpoint_overrides on read. Without the preserve fix, the
+				// implicit post-apply empty-plan check fails with "block count changed from 1 to 0".
+				Config: testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.0.domain", "example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The service omits private_endpoint_overrides from Get, so it cannot be recovered on import.
+				ImportStateVerifyIgnore:              []string{"authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rImageUri string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url = "https://example.com/.well-known/openid-configuration"
+
+      private_endpoint_overrides {
+        domain = "example.com"
+
+        private_endpoint {
+          managed_vpc_resource {
+            endpoint_ip_address_type = "IPV4"
+            subnet_ids               = [aws_subnet.test.id]
+            vpc_identifier           = aws_vpc.test.id
+            security_group_ids       = [aws_security_group.test.id]
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, rImageUri))
+}
+
 func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test_assume" {

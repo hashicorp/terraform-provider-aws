@@ -330,6 +330,48 @@ func testAccPreCheckBrowser(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpcNoRequireServiceS3Endpoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// require_service_s3_endpoint is not applicable to browsers; the argument must not exist.
+				Config:      testAccBrowserConfig_vpcRequireServiceS3Endpoint(rName),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`Unsupported argument|not expected here`),
+			},
+		},
+	})
+}
+
+func testAccBrowserConfig_vpcRequireServiceS3Endpoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_browser" "test" {
+  name = %[1]q
+
+  network_configuration {
+    network_mode = "VPC"
+
+    vpc_config {
+      security_groups             = ["sg-12345678"]
+      subnets                     = ["subnet-12345678"]
+      require_service_s3_endpoint = true
+    }
+  }
+}
+`, rName)
+}
+
 func testAccBrowserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_browser" "test" {

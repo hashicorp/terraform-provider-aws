@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -244,8 +245,16 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									// require_service_s3_endpoint is read-only: post-rollout (May 5, 2026)
+									// the API rejects it on both create and update with a ValidationException,
+									// while GetAgentRuntime returns a value for it. Modeling it as Computed
+									// surfaces the server value without allowing an unsettable input, and the
+									// Create/Update expand paths strip it so it is never transmitted.
 									"require_service_s3_endpoint": schema.BoolAttribute{
-										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
 									},
 									names.AttrSecurityGroups: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
@@ -378,7 +387,10 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 										},
 									},
 									Blocks: map[string]schema.Block{
-										"private_endpoint": privateEndpointSchema(ctx),
+										// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
+										// enforce it offline so a missing private_endpoint fails at plan
+										// instead of a client-side SDK error at apply.
+										"private_endpoint": privateEndpointSchema(ctx, listvalidator.IsRequired()),
 									},
 								},
 							},
@@ -462,12 +474,12 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func privateEndpointSchema(ctx context.Context) schema.ListNestedBlock {
+func privateEndpointSchema(ctx context.Context, extraValidators ...validator.List) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
-		Validators: []validator.List{
+		Validators: append([]validator.List{
 			listvalidator.SizeAtMost(1),
-		},
+		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"managed_vpc_resource": schema.ListNestedBlock{
@@ -619,6 +631,12 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	// require_service_s3_endpoint is read-only and rejected by the API on create;
+	// never transmit it (it is Computed and absorbed from the read response).
+	if input.NetworkConfiguration != nil && input.NetworkConfiguration.NetworkModeConfig != nil {
+		input.NetworkConfiguration.NetworkModeConfig.RequireServiceS3Endpoint = nil
+	}
+
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
@@ -664,11 +682,20 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	// Set values for unknowns.
+	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
+	// private_endpoint_overrides can be restored after Flatten.
+	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpointOverrides(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -694,10 +721,18 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
+	priorAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpointOverrides(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -726,6 +761,12 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
+		// require_service_s3_endpoint is read-only for the agent runtimes Terraform can
+		// manage (post-rollout); passing it to UpdateAgentRuntime returns a ValidationException.
+		if input.NetworkConfiguration != nil && input.NetworkConfiguration.NetworkModeConfig != nil {
+			input.NetworkConfiguration.NetworkModeConfig.RequireServiceS3Endpoint = nil
+		}
+
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
@@ -735,10 +776,18 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
+		plannedAuthorizerConfiguration := new.AuthorizerConfiguration
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		authorizerConfiguration, authDiags := preserveAuthorizerPrivateEndpointOverrides(ctx, new.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+		smerr.AddEnrich(ctx, &response.Diagnostics, authDiags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		new.AuthorizerConfiguration = authorizerConfiguration
 
 		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
@@ -1206,6 +1255,45 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 	return &awstypes.UpdatedAuthorizerConfiguration{}, diags
 }
 
+// preserveAuthorizerPrivateEndpointOverrides copies the configured private_endpoint_overrides
+// from src (the prior plan or state) into dst (the value just flattened from the API response).
+// The service omits privateEndpointOverrides from Get responses, so without this the configured
+// block would be cleared on refresh, producing "Provider produced inconsistent result after
+// apply: block count changed from 1 to 0" and a perpetual replace. It is shared by every resource
+// that embeds authorizerConfigurationModel (agent_runtime, gateway, harness, registry).
+func preserveAuthorizerPrivateEndpointOverrides(ctx context.Context, dst, src fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if dst.IsNull() || src.IsNull() {
+		return dst, diags
+	}
+
+	dstAuth, d := dst.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	srcAuth, d := src.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || dstAuth == nil || srcAuth == nil {
+		return dst, diags
+	}
+
+	if dstAuth.CustomJWTAuthorizer.IsNull() || srcAuth.CustomJWTAuthorizer.IsNull() {
+		return dst, diags
+	}
+
+	dstJWT, d := dstAuth.CustomJWTAuthorizer.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	srcJWT, d := srcAuth.CustomJWTAuthorizer.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || dstJWT == nil || srcJWT == nil {
+		return dst, diags
+	}
+
+	dstJWT.PrivateEndpointOverrides = srcJWT.PrivateEndpointOverrides
+	dstAuth.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstJWT)
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstAuth), diags
+}
+
 type customJWTAuthorizerConfigurationModel struct {
 	AllowedAudience              fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
 	AllowedClients               fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
@@ -1301,6 +1389,16 @@ type vpcConfigModel struct {
 	RequireServiceS3Endpoint types.Bool          `tfsdk:"require_service_s3_endpoint"`
 	SecurityGroups           fwtypes.SetOfString `tfsdk:"security_groups"`
 	Subnets                  fwtypes.SetOfString `tfsdk:"subnets"`
+}
+
+// vpcConfigNoS3EndpointModel is used by Browser and Code Interpreter, whose VPC
+// configuration does not support require_service_s3_endpoint. Per the SDK, that field
+// "applies only to Agent Runtimes. It is not applicable to Browsers or Code Interpreters" —
+// the API ignores it on create and never returns it, so exposing it here would force a
+// perpetual destroy/recreate on every plan.
+type vpcConfigNoS3EndpointModel struct {
+	SecurityGroups fwtypes.SetOfString `tfsdk:"security_groups"`
+	Subnets        fwtypes.SetOfString `tfsdk:"subnets"`
 }
 
 type protocolConfigurationModel struct {
