@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix `Unsupported Type` error when reading a harness that uses the service-default managed memory configuration (for example, one created without a `memory` block)
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `memory.disabled` to disable harness memory
+```
