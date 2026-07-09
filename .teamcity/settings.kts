@@ -3,6 +3,7 @@
  */
 
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
+import jetbrains.buildServer.configs.kotlin.buildFeatures.buildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -142,6 +143,13 @@ object PullRequest : BuildType({
     }
 
     features {
+        buildCache {
+            name = "go-mod-cache"
+            use = true
+            store = true
+            rules = "%env.GOPATH%/pkg/mod"
+        }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
