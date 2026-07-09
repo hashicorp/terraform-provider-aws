@@ -31,7 +31,7 @@ func init() {
 	acctest.RegisterServiceErrorCheckFunc(names.Route53ServiceID, testAccErrorCheckSkip)
 }
 
-func TestAccRoute53Record_basic(t *testing.T) {
+func TestAccRoute53Record_basic_FullName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
@@ -62,6 +62,57 @@ func TestAccRoute53Record_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "records.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.27"),
+					resource.TestCheckResourceAttr(resourceName, "set_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}"),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_basic_ShortName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+	shortRecordName, _, _ := strings.Cut(recordName.String(), ".")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic_ShortName(zoneName.String(), shortRecordName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "alias.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_overwrite"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "failover_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fqdn", recordName.String()),
+					resource.TestCheckResourceAttr(resourceName, "geolocation_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "geoproximity_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multivalue_answer_routing_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, shortRecordName),
+					resource.TestCheckResourceAttr(resourceName, "records.#", ""),
+					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
@@ -2193,6 +2244,22 @@ resource "aws_route53_record" "test" {
   type    = "A"
   ttl     = "30"
   records = ["127.0.0.1", "127.0.0.27"]
+}
+`, zoneName, recordName)
+}
+
+func testAccRecordConfig_basic_ShortName(zoneName, recordName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1"]
+}
+
+resource "aws_route53_zone" "test" {
+  name = %[1]q
 }
 `, zoneName, recordName)
 }
