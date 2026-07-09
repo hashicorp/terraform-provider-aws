@@ -15,7 +15,7 @@ When it’s attached to a cache behavior, CloudFront adds the headers in the pol
 
 ## Example Usage
 
-The example below creates a CloudFront response headers policy.
+### CORS Config Usage
 
 ```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
@@ -42,7 +42,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 ```
 
-The example below creates a CloudFront response headers policy with a custom headers config.
+### Custom Headers Config Usage
 
 ```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
@@ -63,6 +63,8 @@ resource "aws_cloudfront_response_headers_policy" "example" {
   }
 }
 ```
+
+### Mixed Config Usage
 
 The example below creates a CloudFront response headers policy with a custom headers config, remove headers config and server timing headers config.
 
@@ -87,6 +89,50 @@ resource "aws_cloudfront_response_headers_policy" "example" {
   server_timing_headers_config {
     enabled       = true
     sampling_rate = 50
+  }
+}
+```
+
+### Removing from a Distribution
+
+Response Header Policies must be disassociated from all distributions before it can be safely deleted.
+When managing both a policy and distribution in the same Terraform configuration, use the [`create_before_destroy` lifecycle argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) on the policy resource to ensure that the distribution will be updated or deleted before the policy.
+
+```hcl
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name = "example-policy"
+
+  custom_headers_config {
+    items {
+      header   = "X-Permitted-Cross-Domain-Policies"
+      override = true
+      value    = "none"
+    }
+  }
+
+  # Required to invert the order of operations during destroy
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_cloudfront_distribution" "example" {
+  ### Additional configuration omitted for brevity ###
+
+  default_cache_behavior {
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "test"
+    viewer_protocol_policy     = "allow-all"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
   }
 }
 ```
