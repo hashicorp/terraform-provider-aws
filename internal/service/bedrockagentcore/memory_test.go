@@ -237,6 +237,75 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemory_indexedKeysAdd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_indexedKeysOne(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Adding an indexed key is applied in place via UpdateMemory (AddIndexedKeys), not a replacement.
+				Config: testAccMemoryConfig_indexedKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.ListSizeExact(2)),
+				},
+			},
+			{
+				// Removing an indexed key forces replacement: the API cannot remove previously indexed keys.
+				Config: testAccMemoryConfig_indexedKeysOne(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.ListSizeExact(1)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
@@ -413,6 +482,20 @@ resource "aws_bedrockagentcore_memory" "test" {
   indexed_key {
     key  = "score"
     type = "NUMBER"
+  }
+}
+`, rName)
+}
+
+func testAccMemoryConfig_indexedKeysOne(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory" "test" {
+  name                  = %[1]q
+  event_expiry_duration = 7
+
+  indexed_key {
+    key  = "customer_id"
+    type = "STRING"
   }
 }
 `, rName)

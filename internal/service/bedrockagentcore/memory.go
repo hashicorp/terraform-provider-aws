@@ -110,7 +110,11 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 					listvalidator.SizeBetween(1, 10),
 				},
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.RequiresReplaceIf(
+						requiresReplaceIfIndexedKeyRemoved,
+						"Removing or changing an existing indexed key requires replacement; new keys are added in place.",
+						"Removing or changing an existing indexed key requires replacement; new keys are added in place.",
+					),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -316,6 +320,29 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
+		// AddIndexedKeys is additive and does not map from the indexed_key model field, so send only
+		// the keys that are not already present. Removals force replacement (see the schema plan modifier).
+		newKeys, d := new.IndexedKeys.ToSlice(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		oldKeys, d := old.IndexedKeys.ToSlice(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		existing := make(map[string]struct{}, len(oldKeys))
+		for _, k := range oldKeys {
+			existing[indexedKeyIdentity(k)] = struct{}{}
+		}
+		for _, k := range newKeys {
+			if _, ok := existing[indexedKeyIdentity(k)]; !ok {
+				input.AddIndexedKeys = append(input.AddIndexedKeys, awstypes.IndexedKey{
+					Key:  aws.String(k.Key.ValueString()),
+					Type: k.Type.ValueEnum(),
+				})
+			}
+		}
+
 		_, err := conn.UpdateMemory(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
@@ -451,6 +478,45 @@ type memoryResourceModel struct {
 type indexedKeyModel struct {
 	Key  types.String                                   `tfsdk:"key"`
 	Type fwtypes.StringEnum[awstypes.MetadataValueType] `tfsdk:"type"`
+}
+
+func indexedKeyIdentity(m *indexedKeyModel) string {
+	return m.Key.ValueString() + "|" + m.Type.ValueString()
+}
+
+// requiresReplaceIfIndexedKeyRemoved forces replacement only when an existing indexed key is removed
+// or changed. Indexed keys can only be added via UpdateMemory (previously indexed keys cannot be
+// removed), so a plan that is a superset of the prior keys is applied in place.
+func requiresReplaceIfIndexedKeyRemoved(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+	if request.StateValue.IsNull() || request.StateValue.IsUnknown() || request.PlanValue.IsUnknown() {
+		return
+	}
+
+	var stateVal, planVal fwtypes.ListNestedObjectValueOf[indexedKeyModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, request.Path, &stateVal))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, request.Path, &planVal))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	stateKeys, d := stateVal.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	planKeys, d := planVal.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	planned := make(map[string]struct{}, len(planKeys))
+	for _, k := range planKeys {
+		planned[indexedKeyIdentity(k)] = struct{}{}
+	}
+	for _, k := range stateKeys {
+		if _, ok := planned[indexedKeyIdentity(k)]; !ok {
+			response.RequiresReplace = true
+			return
+		}
+	}
 }
 
 type streamDeliveryResourcesModel struct {
