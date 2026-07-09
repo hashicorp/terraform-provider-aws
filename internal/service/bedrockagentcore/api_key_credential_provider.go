@@ -278,6 +278,79 @@ func (r *apiKeyCredentialProviderResource) ImportState(ctx context.Context, requ
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
+func (r *apiKeyCredentialProviderResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if request.State.Raw.IsNull() || request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var config, state apiKeyCredentialProviderResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if config.APIKeySecretSource.IsUnknown() || state.APIKeySecretSource.IsNull() || state.APIKeySecretSource.IsUnknown() {
+		return
+	}
+
+	// Derive the effective secret source from configuration: api_key/api_key_wo
+	// imply MANAGED, api_key_secret_config implies EXTERNAL. This cannot rely on
+	// the planned value alone: api_key_secret_source is Optional+Computed, so when
+	// it's absent from configuration, UseStateForUnknown fills it from state.
+	var effective awstypes.SecretSourceType
+	switch {
+	case !config.APIKeySecretSource.IsNull():
+		effective = config.APIKeySecretSource.ValueEnum()
+	case !config.APIKeySecretConfig.IsNull():
+		effective = awstypes.SecretSourceTypeExternal
+	case !config.APIKey.IsNull() || !config.APIKeyWO.IsNull():
+		effective = awstypes.SecretSourceTypeManaged
+	default:
+		return
+	}
+
+	// The API rejects switching the secret source between MANAGED and EXTERNAL in place.
+	if effective != state.APIKeySecretSource.ValueEnum() {
+		// Overwrite the UseStateForUnknown-filled plan value; without a value diff,
+		// Terraform Core ignores RequiresReplace.
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.Plan.SetAttribute(ctx, path.Root("api_key_secret_source"), fwtypes.StringEnumValue(effective)))
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.RequiresReplace = append(response.RequiresReplace, path.Root("api_key_secret_source"))
+	}
+}
+
+func (r *apiKeyCredentialProviderResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data apiKeyCredentialProviderResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.APIKeySecretSource.IsUnknown() || data.APIKeySecretSource.IsNull() {
+		return
+	}
+
+	switch data.APIKeySecretSource.ValueEnum() {
+	case awstypes.SecretSourceTypeExternal:
+		if !data.APIKey.IsNull() {
+			response.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(path.Root("api_key"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeExternal)))
+		}
+		if !data.APIKeyWO.IsNull() {
+			response.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(path.Root("api_key_wo"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeExternal)))
+		}
+		if data.APIKeySecretConfig.IsNull() {
+			response.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(path.Root("api_key_secret_config"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeExternal)))
+		}
+	case awstypes.SecretSourceTypeManaged:
+		if !data.APIKeySecretConfig.IsNull() {
+			response.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(path.Root("api_key_secret_config"), path.Root("api_key_secret_source"), string(awstypes.SecretSourceTypeManaged)))
+		}
+	}
+}
+
 func findAPIKeyCredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput, error) {
 	input := bedrockagentcorecontrol.GetApiKeyCredentialProviderInput{
 		Name: aws.String(name),

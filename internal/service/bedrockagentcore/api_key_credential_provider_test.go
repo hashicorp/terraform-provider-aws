@@ -141,6 +141,90 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_externalSecret(t *testing.T
 	})
 }
 
+func TestAccBedrockAgentCoreAPIKeyCredentialProvider_switchSecretSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAPIKeyCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("MANAGED")),
+				},
+			},
+			{
+				// The API cannot change the secret source between MANAGED and EXTERNAL in place.
+				Config: testAccAPIKeyCredentialProviderConfig_externalSecret(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("EXTERNAL")),
+				},
+			},
+			{
+				// Switching back removes api_key_secret_source from configuration; the
+				// effective source must be derived from api_key and still force replacement.
+				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_source"), knownvalue.StringExact("MANAGED")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAPIKeyCredentialProvider_secretSourceValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAPIKeyCredentialProviderConfig_apiKeyWithExternalSource(rName),
+				ExpectError: regexache.MustCompile(`Attribute\s+"api_key"\s+cannot\s+be\s+specified\s+when\s+"api_key_secret_source"\s+is\s+"EXTERNAL"`),
+			},
+			{
+				Config:      testAccAPIKeyCredentialProviderConfig_secretConfigWithManagedSource(rName),
+				ExpectError: regexache.MustCompile(`Attribute\s+"api_key_secret_config"\s+cannot\s+be\s+specified\s+when\s+"api_key_secret_source"\s+is\s+"MANAGED"`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
@@ -408,6 +492,30 @@ resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
 
   api_key_secret_config {
     secret_id = aws_secretsmanager_secret_version.test.secret_id
+    json_key  = "apiKey"
+  }
+}
+`, rName)
+}
+
+func testAccAPIKeyCredentialProviderConfig_apiKeyWithExternalSource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
+  name                  = %[1]q
+  api_key               = "some-api-key"
+  api_key_secret_source = "EXTERNAL"
+}
+`, rName)
+}
+
+func testAccAPIKeyCredentialProviderConfig_secretConfigWithManagedSource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_api_key_credential_provider" "test" {
+  name                  = %[1]q
+  api_key_secret_source = "MANAGED"
+
+  api_key_secret_config {
+    secret_id = "dummy-secret-id"
     json_key  = "apiKey"
   }
 }

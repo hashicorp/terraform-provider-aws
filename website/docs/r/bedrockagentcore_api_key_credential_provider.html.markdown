@@ -71,8 +71,8 @@ The following arguments are optional:
 
 **Customer-Managed Secret:**
 
-* `api_key_secret_source` - (Optional) Source of the secret backing the credential provider. Valid values are `MANAGED` (AgentCore creates and manages the secret from the supplied `api_key`) and `EXTERNAL` (the provider references a customer-managed AWS Secrets Manager secret via `api_key_secret_config`).
-* `api_key_secret_config` - (Optional) Reference to a customer-managed AWS Secrets Manager secret that stores the API key. Used with `api_key_secret_source = "EXTERNAL"`. [See below](#api_key_secret_config).
+* `api_key_secret_source` - (Optional) Source of the secret backing the credential provider. Valid values are `MANAGED` (AgentCore creates and manages the secret from the supplied `api_key`) and `EXTERNAL` (the provider references a customer-managed AWS Secrets Manager secret via `api_key_secret_config`). Changing between `MANAGED` and `EXTERNAL` forces replacement of the resource.
+* `api_key_secret_config` - (Optional) Reference to a customer-managed AWS Secrets Manager secret that stores the API key. Requires `api_key_secret_source = "EXTERNAL"`. [See below](#api_key_secret_config).
 
 ### api_key_secret_config
 
