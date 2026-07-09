@@ -1,5 +1,9 @@
 ## 6.55.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_config_organization_managed_rule: Fix `interface conversion: interface {} is nil, not *configservice.DescribeOrganizationConfigRuleStatusesOutput` panics on delete ([#48845](https://github.com/hashicorp/terraform-provider-aws/issues/48845))
+
 ## 6.54.0 (July 8, 2026)
 
 NOTES:
