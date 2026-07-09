@@ -9,6 +9,7 @@ var (
 	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
 	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource
 	ResourceBrowser                  = newBrowserResource
+	ResourceBrowserProfile           = newBrowserProfileResource
 	ResourceCodeInterpreter          = newCodeInterpreterResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
@@ -30,6 +31,7 @@ var (
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
 	FindBrowserByID                      = findBrowserByID
+	FindBrowserProfileByID               = findBrowserProfileByID
 	FindCodeInterpreterByID              = findCodeInterpreterByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID

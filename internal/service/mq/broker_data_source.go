@@ -7,6 +7,7 @@ package mq
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
@@ -215,10 +216,40 @@ func dataSourceBroker() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
+				"resource_share_arns": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrSecurityGroups: {
 					Type:     schema.TypeSet,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Computed: true,
+				},
+				"shared_resources": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_names": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
 				},
 				names.AttrStorageType: {
 					Type:     schema.TypeString,
@@ -305,6 +336,20 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+
+	if strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) {
+		sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, brokerID)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) shared resources: %s", brokerID, err)
+		}
+
+		d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
+
+		if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+		}
+	}
 
 	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
