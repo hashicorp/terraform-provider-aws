@@ -760,3 +760,188 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 }
 `, rName)
 }
+
+func testAccOAuth2CredentialProviderConfig_customExternalSecret(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ clientSecret = "external-secret-value" })
+}
+
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "CustomOauth2"
+
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_authentication_method = "AWS_IAM_ID_TOKEN_JWT"
+      client_secret_source         = "EXTERNAL"
+
+      oauth_discovery {
+        discovery_url = "https://example.com/.well-known/openid-configuration"
+      }
+
+      client_secret_config {
+        json_key  = "clientSecret"
+        secret_id = aws_secretsmanager_secret_version.test.secret_id
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_customExternalInlineSecret(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "CustomOauth2"
+
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_authentication_method = "CLIENT_SECRET_BASIC"
+      client_id                    = "id"
+      client_secret                = "should-not-be-here"
+      client_secret_source         = "EXTERNAL"
+
+      oauth_discovery {
+        discovery_url = "https://example.com/.well-known/openid-configuration"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_customOverridesOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "CustomOauth2"
+
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id     = "id"
+      client_secret = "secret"
+
+      oauth_discovery {
+        discovery_url = "https://example.com/.well-known/openid-configuration"
+      }
+
+      private_endpoint_overrides {
+        domain = "example.com"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_multipleProviders(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "GithubOauth2"
+
+  oauth2_provider_config {
+    github_oauth2_provider_config {
+      client_id     = "id"
+      client_secret = "secret"
+    }
+    google_oauth2_provider_config {
+      client_id     = "id"
+      client_secret = "secret"
+    }
+  }
+}
+`, rName)
+}
+
+// TestAccBedrockAgentCoreOAuth2CredentialProvider_customExternalSecret exercises
+// the EXTERNAL client-secret path end-to-end (previously unusable). client_secret_source
+// and client_secret_config are input-only fields (absent from GetOauth2CredentialProviderOutput);
+// they cannot be recovered on the initial import, so they appear on ImportStateVerifyIgnore
+// (a single subsequent `terraform apply` reconciles state and further plans are clean).
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_customExternalSecret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_customExternalSecret(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					// Input-only fields (absent from GetOauth2CredentialProviderOutput).
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOAuth2CredentialProvider_validationRules exercises the
+// plan-time validators added for the EXTERNAL secret contract, the
+// private_endpoint_overrides sibling requirement, and the union ExactlyOneOf.
+// These invalid configs previously validated offline and only failed at the API
+// (some after creating orphaned resources).
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_validationRules(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// EXTERNAL secret source rejects an inline client_secret.
+				Config:      testAccOAuth2CredentialProviderConfig_customExternalInlineSecret(rName),
+				ExpectError: regexache.MustCompile(`client_secret must not be set when client_secret_source is EXTERNAL`),
+			},
+			{
+				// private_endpoint_overrides requires the sibling private_endpoint block.
+				Config:      testAccOAuth2CredentialProviderConfig_customOverridesOnly(rName),
+				ExpectError: regexache.MustCompile(`private_endpoint`),
+			},
+			{
+				// Setting more than one provider block is rejected by ExactlyOneOf.
+				Config:      testAccOAuth2CredentialProviderConfig_multipleProviders(rName),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+		},
+	})
+}
