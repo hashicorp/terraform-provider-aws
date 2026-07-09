@@ -377,8 +377,10 @@ func TestAccRoute53Record_trailingPeriodAndZoneID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_nameTrailingPeriod,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecordExists(ctx, t, resourceName, &record1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "www.domain.test"),
+					resource.TestCheckResourceAttr(resourceName, "fqdn", "www.domain.test"),
 				),
 			},
 			{
