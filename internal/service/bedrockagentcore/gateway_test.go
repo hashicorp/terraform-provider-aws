@@ -904,6 +904,38 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizerClaimMatchValueExactlyOneOf(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Regression: claim_match_value requires exactly one of
+				// match_value_string / match_value_string_list. The block is nested
+				// inside a set of custom_claim blocks, where a path-expression
+				// validator silently no-ops, so both-set must still be rejected at
+				// plan time.
+				Config:      testAccGatewayConfig_customJWTAuthorizerClaimMatchValueBoth(rName),
+				ExpectError: regexache.MustCompile(`Exactly one of`),
+			},
+			{
+				// Neither set must also be rejected at plan time.
+				Config:      testAccGatewayConfig_customJWTAuthorizerClaimMatchValueNeither(rName),
+				ExpectError: regexache.MustCompile(`Exactly one of`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGateway_policyEngineConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -1381,6 +1413,62 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerClaimMatchValueBoth(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url = "https://accounts.google.com/.well-known/openid-configuration"
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = "STRING"
+        authorizing_claim_match_value {
+          claim_match_operator = "EQUALS"
+          claim_match_value {
+            match_value_string      = "admin"
+            match_value_string_list = ["admin"]
+          }
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerClaimMatchValueNeither(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url = "https://accounts.google.com/.well-known/openid-configuration"
+      custom_claim {
+        inbound_token_claim_name       = "cognito:groups"
+        inbound_token_claim_value_type = "STRING"
+        authorizing_claim_match_value {
+          claim_match_operator = "EQUALS"
+          claim_match_value {
+          }
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName))
 }
 
 func testAccGatewayConfig_customJWTAuthorizerCustomClaimStringList(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
