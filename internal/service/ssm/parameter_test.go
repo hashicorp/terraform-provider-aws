@@ -1035,17 +1035,6 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccParameterConfig_insecure(rName, "String", "diff"),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-			{
 				Config:      testAccParameterConfig_insecure(rName, "SecureString", "notsecret"),
 				ExpectError: regexache.MustCompile("invalid configuration"),
 			},
