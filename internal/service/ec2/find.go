@@ -1038,6 +1038,63 @@ func findLocalGatewayRouteTableVPCAssociationByID(ctx context.Context, conn *ec2
 	return output, nil
 }
 
+func findLocalGatewayRouteTableVIFGroupAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	input := ec2.DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsInput{
+		LocalGatewayRouteTableVirtualInterfaceGroupAssociationIds: []string{id},
+	}
+
+	output, err := findLocalGatewayRouteTableVIFGroupAssociation(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.ToString(output.State); state == string(awstypes.RouteTableAssociationStateCodeDisassociated) {
+		return nil, &retry.NotFoundError{
+			Message: state,
+		}
+	}
+
+	if aws.ToString(output.LocalGatewayRouteTableVirtualInterfaceGroupAssociationId) != id {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVIFGroupAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsInput) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	output, err := findLocalGatewayRouteTableVIFGroupAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTableVIFGroupAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsInput) ([]awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	var output []awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation
+
+	pages := ec2.NewDescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableVIFGroupAssociationIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTableVirtualInterfaceGroupAssociations...)
+	}
+
+	return output, nil
+}
+
 func findLocalGatewayVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) (*awstypes.LocalGatewayVirtualInterface, error) {
 	output, err := findLocalGatewayVirtualInterfaces(ctx, conn, input)
 
@@ -5365,6 +5422,7 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 
 func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
 	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
+		var stopped bool
 		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
@@ -5372,6 +5430,7 @@ func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 
 			for _, v := range page.TransitGatewayMeteringPolicies {
 				if !yield(v, nil) {
+					stopped = true
 					return false
 				}
 			}
@@ -5379,7 +5438,7 @@ func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 			return !lastPage
 		})
 
-		if err != nil {
+		if !stopped && err != nil {
 			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
 			return
 		}

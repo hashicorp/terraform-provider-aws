@@ -44,6 +44,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_datazone_asset_type",
 			Name:     "Asset Type",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assetTypeImportID{},
+			},
 		},
 		{
 			Factory:  newDomainResource,
@@ -52,55 +60,124 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newEnvironmentResource,
 			TypeName: "aws_datazone_environment",
 			Name:     "Environment",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      environmentImportID{},
+			},
 		},
 		{
 			Factory:  newEnvironmentBlueprintConfigurationResource,
 			TypeName: "aws_datazone_environment_blueprint_configuration",
 			Name:     "Environment Blueprint Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_id", true),
+				inttypes.StringIdentityAttribute("environment_blueprint_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      environmentBlueprintConfigurationImportID{},
+			},
 		},
 		{
 			Factory:  newEnvironmentProfileResource,
 			TypeName: "aws_datazone_environment_profile",
 			Name:     "Environment Profile",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      environmentProfileImportID{},
+			},
 		},
 		{
 			Factory:  newFormTypeResource,
 			TypeName: "aws_datazone_form_type",
 			Name:     "Form Type",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute("revision", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      formTypeImportID{},
+			},
 		},
 		{
 			Factory:  newGlossaryResource,
 			TypeName: "aws_datazone_glossary",
 			Name:     "Glossary",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      glossaryImportID{},
+			},
 		},
 		{
 			Factory:  newGlossaryTermResource,
 			TypeName: "aws_datazone_glossary_term",
 			Name:     "Glossary Term",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      glossaryTermImportID{},
+			},
 		},
 		{
 			Factory:  newProjectResource,
 			TypeName: "aws_datazone_project",
 			Name:     "Project",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      projectImportID{},
+			},
 		},
 		{
 			Factory:  newUserProfileResource,
 			TypeName: "aws_datazone_user_profile",
 			Name:     "User Profile",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute("user_identifier", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      userProfileImportID{},
+			},
 		},
 	}
 }

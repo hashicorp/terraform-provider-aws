@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/arcregionswitch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/arczonalshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -212,6 +213,7 @@ func registerSweepers() {
 	appstream.RegisterSweepers()
 	appsync.RegisterSweepers()
 	arcregionswitch.RegisterSweepers()
+	arczonalshift.RegisterSweepers()
 	athena.RegisterSweepers()
 	auditmanager.RegisterSweepers()
 	autoscaling.RegisterSweepers()

@@ -38,47 +38,49 @@ func resourceResourceServer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrScope: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"scope_description": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-						"scope_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validResourceServerScopeName,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrScope: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"scope_description": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"scope_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validResourceServerScopeName,
+							},
 						},
 					},
 				},
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scope_identifiers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
+				"scope_identifiers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }

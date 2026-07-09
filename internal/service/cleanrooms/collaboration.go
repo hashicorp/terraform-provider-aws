@@ -46,113 +46,115 @@ func resourceCollaboration() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"analytics_engine": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator_display_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"creator_member_abilities": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"data_encryption_metadata": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_clear_text": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"allow_duplicates": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"allow_joins_on_columns_with_different_names": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"preserve_nulls": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"analytics_engine": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creator_display_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"creator_member_abilities": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"data_encryption_metadata": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_clear_text": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"allow_duplicates": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"allow_joins_on_columns_with_different_names": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"preserve_nulls": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"member": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAccountID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrDisplayName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"member_abilities": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"member": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAccountID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrDisplayName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"member_abilities": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"query_log_status": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"query_log_status": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_grafana_workspace: Fix `network_access_control` regression causing `ValidationException` when only one of `vpce_ids` or `prefix_list_ids` is set
+```

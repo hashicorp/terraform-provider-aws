@@ -25,48 +25,50 @@ func dataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"fair_share_policy": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_reservation": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"share_decay_seconds": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"share_distribution": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"share_identifier": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"weight_factor": {
-										Type:     schema.TypeFloat,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"fair_share_policy": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_reservation": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"share_decay_seconds": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"share_distribution": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"share_identifier": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"weight_factor": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -22,12 +22,14 @@ func dataSourceSites() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSitesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

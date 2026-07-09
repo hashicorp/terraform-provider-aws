@@ -32,818 +32,820 @@ func dataSourceLaunchTemplate() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"block_device_mappings": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ebs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDeleteOnTermination: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrEncrypted: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIOPS: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrKMSKeyID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrSnapshotID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrThroughput: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"volume_initialization_rate": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrVolumeSize: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrVolumeType: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"block_device_mappings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ebs": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDeleteOnTermination: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrEncrypted: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIOPS: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrKMSKeyID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrSnapshotID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrThroughput: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"volume_initialization_rate": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrVolumeSize: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrVolumeType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"capacity_reservation_specification": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_reservation_preference": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"capacity_reservation_target": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_reservation_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"capacity_reservation_resource_group_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							"no_device": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			"cpu_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amd_sev_snp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"core_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"nested_virtualization": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"threads_per_core": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"credit_specification": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cpu_credits": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"default_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disable_api_stop": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"disable_api_termination": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enclave_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"hibernation_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configured": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"iam_instance_profile": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_initiated_shutdown_behavior": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_market_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"market_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spot_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"block_duration_minutes": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"instance_interruption_behavior": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"max_price": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"spot_instance_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"valid_until": {
-										Type:     schema.TypeString,
-										Computed: true,
+				"capacity_reservation_specification": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_reservation_preference": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"capacity_reservation_target": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_reservation_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"capacity_reservation_resource_group_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"instance_requirements": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accelerator_count": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
+				"cpu_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amd_sev_snp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"core_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"nested_virtualization": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"threads_per_core": {
+								Type:     schema.TypeInt,
+								Computed: true,
 							},
 						},
-						"accelerator_manufacturers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"accelerator_names": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"accelerator_total_memory_mib": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
+					},
+				},
+				"credit_specification": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cpu_credits": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						"accelerator_types": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_instance_types": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"bare_metal": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"baseline_ebs_bandwidth_mbps": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
+					},
+				},
+				"default_version": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disable_api_stop": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"disable_api_termination": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ebs_optimized": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enclave_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
 							},
 						},
-						"burstable_performance": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cpu_manufacturers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"excluded_instance_types": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"instance_generations": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"local_storage": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"local_storage_types": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"max_spot_price_as_percentage_of_optimal_on_demand_price": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"memory_gib_per_vcpu": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-								},
+					},
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"hibernation_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configured": {
+								Type:     schema.TypeBool,
+								Computed: true,
 							},
 						},
-						"memory_mib": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
+					},
+				},
+				"iam_instance_profile": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						"network_bandwidth_gbps": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-								},
+					},
+				},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_initiated_shutdown_behavior": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instance_market_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"market_type": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"network_interface_count": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"on_demand_max_price_percentage_over_lowest_price": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"require_hibernate_support": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"spot_max_price_percentage_over_lowest_price": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"total_local_storage_gb": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeFloat,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"vcpu_count": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									names.AttrMin: {
-										Type:     schema.TypeInt,
-										Computed: true,
+							"spot_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"block_duration_minutes": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"instance_interruption_behavior": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"max_price": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"spot_instance_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"valid_until": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kernel_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"latest_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"license_specification": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"license_configuration_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"maintenance_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_recovery": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"metadata_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_protocol_ipv6": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_put_response_hop_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_metadata_tags": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"monitoring": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"network_interfaces": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"associate_carrier_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"associate_public_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"connection_tracking_specification": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"tcp_established_timeout": {
-										Type:     schema.TypeInt,
-										Computed: true,
+				"instance_requirements": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accelerator_count": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
-									"udp_stream_timeout": {
-										Type:     schema.TypeInt,
-										Computed: true,
+								},
+							},
+							"accelerator_manufacturers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"accelerator_names": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"accelerator_total_memory_mib": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
-									"udp_timeout": {
-										Type:     schema.TypeInt,
-										Computed: true,
+								},
+							},
+							"accelerator_types": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_instance_types": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"bare_metal": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"baseline_ebs_bandwidth_mbps": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"burstable_performance": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cpu_manufacturers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"excluded_instance_types": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"instance_generations": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"local_storage": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"local_storage_types": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"memory_gib_per_vcpu": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"memory_mib": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"network_bandwidth_gbps": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"network_interface_count": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"on_demand_max_price_percentage_over_lowest_price": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"require_hibernate_support": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"spot_max_price_percentage_over_lowest_price": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"total_local_storage_gb": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"vcpu_count": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMax: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrMin: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"interface_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipv4_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ipv4_addresses": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ipv4_prefix_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ipv4_prefixes": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ipv6_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ipv6_addresses": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ipv6_prefix_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ipv6_prefixes": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"primary_ipv6": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSecurityGroups: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 					},
 				},
-			},
-			"network_performance_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bandwidth_weighting": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"placement": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"affinity": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrGroupName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"host_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"host_resource_group_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"partition_number": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"spread_domain": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tenancy": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"kernel_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"private_dns_name_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_resource_name_dns_aaaa_record": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"enable_resource_name_dns_a_record": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"hostname_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"key_name": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"ram_disk_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"secondary_interfaces": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"interface_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"private_ip_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"private_ip_addresses": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"latest_version": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"license_specification": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"license_configuration_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						"secondary_subnet_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+				},
+				"maintenance_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_recovery": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"tag_specifications": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrResourceType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"metadata_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_endpoint": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"http_protocol_ipv6": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"http_put_response_hop_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"http_tokens": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"instance_metadata_tags": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"user_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"monitoring": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"network_interfaces": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"associate_carrier_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"associate_public_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"connection_tracking_specification": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tcp_established_timeout": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"udp_stream_timeout": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"udp_timeout": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"interface_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipv4_address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"ipv4_addresses": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ipv4_prefix_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"ipv4_prefixes": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ipv6_address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"ipv6_addresses": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ipv6_prefix_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"ipv6_prefixes": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"primary_ipv6": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSecurityGroups: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"network_performance_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bandwidth_weighting": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"placement": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"affinity": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrGroupName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"host_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"host_resource_group_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"partition_number": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"spread_domain": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"tenancy": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"private_dns_name_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_resource_name_dns_aaaa_record": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"enable_resource_name_dns_a_record": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"hostname_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"ram_disk_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secondary_interfaces": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"interface_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"private_ip_address_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"private_ip_addresses": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"secondary_subnet_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"security_group_names": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"tag_specifications": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTags: tftags.TagsSchemaComputed(),
+						},
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"user_data": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

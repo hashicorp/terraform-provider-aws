@@ -163,6 +163,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `listener_id` - Standalone ID of the listener, e.g. `listener-0a1b2c3d4e5f6g`.
 * `updated_at` - Date and time that the listener was last updated, specified in ISO-8601 format.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Listener using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character. For example:
