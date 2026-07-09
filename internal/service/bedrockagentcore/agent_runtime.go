@@ -551,11 +551,15 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		updateInput.ClientToken = aws.String(create.UniqueId(ctx))
 
 		if _, err := conn.UpdateAgentRuntime(ctx, &updateInput); err != nil {
+			// The runtime was created but the metadata update failed; taint so it is tracked and can be cleaned up.
+			response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
 		}
 
 		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			// The runtime was created but the metadata update failed; taint so it is tracked and can be cleaned up.
+			response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
 		}
