@@ -361,7 +361,10 @@ The `claim_match_value` block supports the following:
 
 ### `memory` Block
 
-* `agentcore_memory_configuration` - (Required) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+When the `memory` block is omitted, the service assigns a managed memory configuration by default. To use an existing AgentCore Memory resource or to disable memory, specify one of the following:
+
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+* `disabled` - (Optional) Set to `true` to disable memory for the harness.
 
 ### `agentcore_memory_configuration` Block
 

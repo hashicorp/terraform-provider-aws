@@ -155,6 +155,11 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"disabled": schema.BoolAttribute{
+							Optional: true,
+						},
+					},
 					Blocks: map[string]schema.Block{
 						"agentcore_memory_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreMemoryConfigurationModel](ctx),
@@ -576,6 +581,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+	collapseDefaultManagedMemory(ctx, harness, &data)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -683,7 +689,22 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
+	if diags.HasError() {
+		return diags
+	}
+	collapseDefaultManagedMemory(ctx, harness, data)
 	return diags
+}
+
+// collapseDefaultManagedMemory resets the memory configuration to null when the
+// service returned its default managed memory configuration. That variant is only
+// ever returned as the server-side default for a harness created without an
+// explicit memory block; there is no configurable managed block, so leaving it in
+// state would produce a perpetual diff against an omitted memory block.
+func collapseDefaultManagedMemory(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) {
+	if _, ok := harness.Memory.(*awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration); ok {
+		data.Memory = fwtypes.NewListNestedObjectValueOfNull[harnessMemoryConfigurationModel](ctx)
+	}
 }
 
 // Waiters.
@@ -1388,6 +1409,7 @@ func (m harnessEnvironmentArtifactModel) expandToUpdatedHarnessEnvironmentArtifa
 
 type harnessMemoryConfigurationModel struct {
 	AgentCoreMemoryConfiguration fwtypes.ListNestedObjectValueOf[harnessAgentCoreMemoryConfigurationModel] `tfsdk:"agentcore_memory_configuration"`
+	Disabled                     types.Bool                                                                `tfsdk:"disabled"`
 }
 
 var (
@@ -1405,6 +1427,14 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 			return diags
 		}
 		m.AgentCoreMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.HarnessMemoryConfigurationMemberDisabled:
+		m.Disabled = types.BoolValue(true)
+	case awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
+		// The service assigns a managed memory configuration by default when a
+		// harness is created without an explicit memory block. There is no
+		// configurable managed block, so this is collapsed to a null memory
+		// configuration at the resource level (see (*harnessResource).flatten)
+		// to keep an omitted memory block from producing a perpetual diff.
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("memory configuration flatten: %T", v))
 	}
@@ -1425,7 +1455,8 @@ func (m harnessMemoryConfigurationModel) ExpandTo(ctx context.Context, targetTyp
 
 func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx context.Context) (awstypes.HarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if !m.AgentCoreMemoryConfiguration.IsNull() {
+	switch {
+	case !m.AgentCoreMemoryConfiguration.IsNull():
 		data, d := m.AgentCoreMemoryConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1434,18 +1465,20 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 		var r awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
+	case !m.Disabled.IsNull() && m.Disabled.ValueBool():
+		return &awstypes.HarnessMemoryConfigurationMemberDisabled{}, diags
 	}
 	return nil, diags
 }
 
 func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfiguration(ctx context.Context) (*awstypes.UpdatedHarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if !m.AgentCoreMemoryConfiguration.IsNull() {
-		r, d := m.expandToHarnessMemoryConfiguration(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
+	r, d := m.expandToHarnessMemoryConfiguration(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return nil, diags
+	}
+	if r != nil {
 		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
 	}
 	return &awstypes.UpdatedHarnessMemoryConfiguration{}, diags
