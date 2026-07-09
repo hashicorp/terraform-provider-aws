@@ -376,7 +376,7 @@ The `memory` block is optional and computed. If omitted, AgentCore provisions a 
 
 ### `managed_memory_configuration` Block
 
-* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key. Defaults to an AWS-owned key. Not updatable after creation.
+* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key. Defaults to an AWS-owned key. Not updatable after creation; changing this forces a new resource to be created.
 * `event_expiry_duration` - (Optional) Event retention in days. Defaults to 30.
 * `strategies` - (Optional) Strategy types to enable. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
 

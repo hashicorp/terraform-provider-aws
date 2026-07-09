@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -84,7 +86,12 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			names.AttrARN:         framework.ARNAttributeComputedOnly(),
 			names.AttrEnvironment: framework.ResourceOptionalComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"memory":              framework.ResourceOptionalComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"memory": framework.ResourceOptionalComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, 1, nil,
+				// encryption_key_arn cannot be updated after memory creation, so a change to it forces
+				// replacement. A nested attribute of an object-typed Optional+Computed list cannot carry
+				// its own RequiresReplace plan modifier, so this is enforced at the list level.
+				listplanmodifier.RequiresReplaceIf(memoryEncryptionKeyRequiresReplace, "Changing memory.managed_memory_configuration.encryption_key_arn forces replacement", ""),
+				listplanmodifier.UseStateForUnknown()),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -454,6 +461,145 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			}),
 		},
 	}
+}
+
+// ValidateConfig enforces constraints on the memory union that the object-typed
+// Optional+Computed `memory` ListAttribute cannot express through per-attribute
+// validators. It runs offline during `terraform validate`/plan.
+func (r *harnessResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data harnessResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Memory.IsNull() || data.Memory.IsUnknown() {
+		return
+	}
+
+	memoryConfigs, d := data.Memory.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for _, mc := range memoryConfigs {
+		// Exactly one memory union member must be active. `disabled` counts only when true,
+		// so this rejects an empty `memory {}` block and the `disabled = false` degenerate
+		// case (which a plain ExactlyOneOf validator would let through) as well as the
+		// two-members-set case.
+		if !mc.AgentCoreMemoryConfiguration.IsUnknown() && !mc.ManagedMemoryConfiguration.IsUnknown() && !mc.Disabled.IsUnknown() {
+			active := 0
+			if !mc.AgentCoreMemoryConfiguration.IsNull() {
+				active++
+			}
+			if !mc.ManagedMemoryConfiguration.IsNull() {
+				active++
+			}
+			if !mc.Disabled.IsNull() && mc.Disabled.ValueBool() {
+				active++
+			}
+			if active != 1 {
+				smerr.AddError(ctx, &response.Diagnostics, errors.New("memory must specify exactly one of agentcore_memory_configuration, managed_memory_configuration, or disabled = true"))
+			}
+		}
+
+		// Validate managed_memory_configuration.strategies enum values. The object-typed
+		// ListAttribute does not run the enum custom type's ValidateAttribute.
+		if !mc.ManagedMemoryConfiguration.IsNull() && !mc.ManagedMemoryConfiguration.IsUnknown() {
+			managed, d := mc.ManagedMemoryConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &response.Diagnostics, d)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if !managed.Strategies.IsNull() && !managed.Strategies.IsUnknown() {
+				valid := enum.Values[awstypes.HarnessManagedMemoryStrategyType]()
+				for _, e := range managed.Strategies.Elements() {
+					se, ok := e.(fwtypes.StringEnum[awstypes.HarnessManagedMemoryStrategyType])
+					if !ok || se.IsNull() || se.IsUnknown() {
+						continue
+					}
+					if !slices.Contains(valid, se.ValueString()) {
+						smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("invalid memory strategy %q; valid values are: %s", se.ValueString(), strings.Join(valid, ", ")))
+					}
+				}
+			}
+		}
+
+		// Validate agentcore_memory_configuration.retrieval_config.relevance_score range
+		// [0, 1]. The float32validator.Between(0, 1) was dropped when the memory block became
+		// an object-typed ListAttribute.
+		if !mc.AgentCoreMemoryConfiguration.IsNull() && !mc.AgentCoreMemoryConfiguration.IsUnknown() {
+			agentcore, d := mc.AgentCoreMemoryConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &response.Diagnostics, d)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if !agentcore.RetrievalConfig.IsNull() && !agentcore.RetrievalConfig.IsUnknown() {
+				retrievalConfigs, d := agentcore.RetrievalConfig.ToSlice(ctx)
+				smerr.AddEnrich(ctx, &response.Diagnostics, d)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				for _, rc := range retrievalConfigs {
+					if rc.RelevanceScore.IsNull() || rc.RelevanceScore.IsUnknown() {
+						continue
+					}
+					if v := rc.RelevanceScore.ValueFloat32(); v < 0 || v > 1 {
+						smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("relevance_score must be between 0.0 and 1.0, got: %f", v))
+					}
+				}
+			}
+		}
+	}
+}
+
+// memoryEncryptionKeyRequiresReplace forces resource replacement when
+// memory.managed_memory_configuration.encryption_key_arn changes to a new, known value,
+// because the API rejects updating it after memory creation.
+func memoryEncryptionKeyRequiresReplace(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+	if request.StateValue.IsNull() || request.PlanValue.IsNull() || request.PlanValue.IsUnknown() {
+		return
+	}
+
+	var prev, plan harnessMemoryConfigurationModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, path.Root("memory").AtListIndex(0), &prev))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, path.Root("memory").AtListIndex(0), &plan))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	prevKey, d := managedEncryptionKeyARN(ctx, prev)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	planKey, d := managedEncryptionKeyARN(ctx, plan)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// encryption_key_arn cannot be updated after memory creation. Setting it (unset->set) or
+	// changing it (set->different) forces replacement. A planned value that is unknown (e.g. a KMS
+	// key created in the same apply) is treated as a change, since it cannot be compared and an
+	// in-place update would be rejected by the API.
+	if planKey.IsNull() {
+		return
+	}
+	if prevKey.IsNull() || planKey.IsUnknown() || !planKey.Equal(prevKey) {
+		response.RequiresReplace = true
+	}
+}
+
+func managedEncryptionKeyARN(ctx context.Context, m harnessMemoryConfigurationModel) (fwtypes.ARN, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if m.ManagedMemoryConfiguration.IsNull() || m.ManagedMemoryConfiguration.IsUnknown() {
+		return fwtypes.ARN{}, diags
+	}
+	managed, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || managed == nil {
+		return fwtypes.ARN{}, diags
+	}
+	return managed.EncryptionKeyARN, diags
 }
 
 func (r *harnessResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -1402,6 +1548,10 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 	case !m.Disabled.IsNull() && m.Disabled.ValueBool():
 		return &awstypes.HarnessMemoryConfigurationMemberDisabled{}, diags
 	}
+	// A memory block that resolves to no active member (all null, or disabled = false) has no
+	// valid API representation. ValidateConfig rejects this at plan time; guard here so it can
+	// never silently produce an empty union.
+	smerr.AddError(ctx, &diags, errors.New("memory must specify exactly one of agentcore_memory_configuration, managed_memory_configuration, or disabled = true"))
 	return nil, diags
 }
 
@@ -1415,7 +1565,11 @@ func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfigurati
 		}
 		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
 	}
-	return &awstypes.UpdatedHarnessMemoryConfiguration{}, diags
+	// An empty/degenerate memory block would send an empty UpdatedHarnessMemoryConfiguration{},
+	// which the API treats as a no-op, producing a perpetual diff. ValidateConfig rejects this at
+	// plan time; guard here as defense-in-depth.
+	smerr.AddError(ctx, &diags, errors.New("memory must specify exactly one of agentcore_memory_configuration, managed_memory_configuration, or disabled = true"))
+	return nil, diags
 }
 
 type harnessAgentCoreMemoryConfigurationModel struct {
