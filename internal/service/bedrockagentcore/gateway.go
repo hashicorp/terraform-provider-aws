@@ -378,12 +378,16 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 		updateInput.GatewayIdentifier = aws.String(gatewayID)
 
 		if _, err := conn.UpdateGateway(ctx, &updateInput); err != nil {
+			// The gateway was created but the follow-up update failed; taint so it is tracked and can be cleaned up.
+			response.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 			return
 		}
 
 		gateway, err = waitGatewayUpdated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts))
 		if err != nil {
+			// The gateway was created but the follow-up update failed; taint so it is tracked and can be cleaned up.
+			response.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 			return
 		}
