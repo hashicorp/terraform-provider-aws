@@ -223,6 +223,48 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 	})
 }
 
+func TestAccEKSPodIdentityAssociation_policy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var podidentityassociation types.PodIdentityAssociation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_pod_identity_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPodIdentityAssociationConfig_policy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttr(resourceName, "disable_session_tags", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPodIdentityAssociationConfig_policyUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttr(resourceName, "disable_session_tags", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
@@ -603,6 +645,54 @@ resource "aws_eks_pod_identity_association" "test" {
   disable_session_tags = true
   role_arn             = aws_iam_role.test.arn
   target_role_arn      = aws_iam_role.target_role.arn
+}
+`, rName))
+}
+
+func testAccPodIdentityAssociationConfig_policy(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test.arn
+
+  disable_session_tags = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject"]
+      Resource = "arn:${data.aws_partition.current.partition}:s3:::my-bucket/*"
+    }]
+  })
+}
+`, rName))
+}
+
+func testAccPodIdentityAssociationConfig_policyUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test.arn
+
+  disable_session_tags = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:ListBucket"]
+      Resource = "arn:${data.aws_partition.current.partition}:s3:::my-bucket/*"
+    }]
+  })
 }
 `, rName))
 }
