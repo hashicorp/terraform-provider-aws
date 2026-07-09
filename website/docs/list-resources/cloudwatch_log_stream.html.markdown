@@ -26,7 +26,7 @@ list "aws_cloudwatch_log_stream" "example" {
 
 This list resource supports the following arguments:
 
-* `log_group_name` - (Required) Name of the log group.
 * `descending` - (Optional) If the value is `true`, results are returned in descending order. If the value is to `false`, results are returned in ascending order. The default value is `false`.
+* `log_group_name` - (Required) Name of the log group.
 * `order_by` - (Optional) If the value is `LogStreamName`, the results are ordered by log stream name. If the value is `LastEventTime`, the results are ordered by the event time. The default value is `LogStreamName`.
 * `region` - (Optional) Region to query. Defaults to provider region.
