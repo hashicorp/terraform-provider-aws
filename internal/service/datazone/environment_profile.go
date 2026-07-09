@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
@@ -146,7 +145,7 @@ func (r *environmentProfileResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	in := &datazone.CreateEnvironmentProfileInput{}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &plan, in))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, &plan, in))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -162,8 +161,8 @@ func (r *environmentProfileResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, option))
+	option := fwflex.WithIgnoredFieldNamesAppend("UserParameters")
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, option))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -190,13 +189,13 @@ func (r *environmentProfileResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, option))
+	option := fwflex.WithIgnoredFieldNamesAppend("UserParameters")
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, option))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
-	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+	state.EnvironmentBlueprintId = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -219,7 +218,7 @@ func (r *environmentProfileResource) Update(ctx context.Context, req resource.Up
 
 	if diff.HasChanges() {
 		in := &datazone.UpdateEnvironmentProfileInput{}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, in))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, in))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -231,8 +230,8 @@ func (r *environmentProfileResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		option := flex.WithIgnoredFieldNamesAppend("UserParameters")
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, option))
+		option := fwflex.WithIgnoredFieldNamesAppend("UserParameters")
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, option))
 		if resp.Diagnostics.HasError() {
 			return
 		}
