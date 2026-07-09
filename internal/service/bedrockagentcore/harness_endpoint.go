@@ -61,8 +61,12 @@ func (r *harnessEndpointResource) Schema(ctx context.Context, request resource.S
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 256),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"harness_endpoint_arn": framework.ARNAttributeComputedOnly(),

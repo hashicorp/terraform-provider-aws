@@ -158,6 +158,24 @@ func TestAccBedrockAgentCoreHarnessEndpoint_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated endpoint")),
 				},
 			},
+			{
+				// Regression: removing description must NOT produce a perpetual diff or
+				// an inconsistent-result-after-apply error. UpdateHarnessEndpoint is a
+				// PATCH that retains an omitted description, so description is
+				// Optional+Computed and the prior server value is kept.
+				Config: testAccHarnessEndpointConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessEndpointExists(ctx, t, resourceName, &harnessendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated endpoint")),
+				},
+			},
 		},
 	})
 }
