@@ -92,6 +92,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				Optional:   true,
 			},
 			"lifecycle_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[lifecycleConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"metadata_configuration":  framework.ResourceOptionalComputedListOfObjectsAttribute[runtimeMetadataConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -537,6 +538,29 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	// metadata_configuration is only accepted by UpdateAgentRuntime, not
+	// CreateAgentRuntime, so apply it with a follow-up update when set at create time.
+	if !data.MetadataConfiguration.IsNull() && !data.MetadataConfiguration.IsUnknown() {
+		var updateInput bedrockagentcorecontrol.UpdateAgentRuntimeInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &updateInput, fwflex.WithFieldNamePrefix("AgentRuntime")))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		updateInput.AgentRuntimeId = aws.String(agentRuntimeID)
+		updateInput.ClientToken = aws.String(create.UniqueId(ctx))
+
+		if _, err := conn.UpdateAgentRuntime(ctx, &updateInput); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+			return
+		}
+
+		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+			return
+		}
+	}
+
 	runtime, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
@@ -758,24 +782,25 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 
 type agentRuntimeResourceModel struct {
 	framework.WithRegionModel
-	AgentRuntimeARN            types.String                                                     `tfsdk:"agent_runtime_arn"`
-	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]       `tfsdk:"agent_runtime_artifact"`
-	AgentRuntimeID             types.String                                                     `tfsdk:"agent_runtime_id"`
-	AgentRuntimeName           types.String                                                     `tfsdk:"agent_runtime_name"`
-	AgentRuntimeVersion        types.String                                                     `tfsdk:"agent_runtime_version"`
-	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
-	Description                types.String                                                     `tfsdk:"description"`
-	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
-	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]    `tfsdk:"filesystem_configuration"`
-	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
-	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
-	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
-	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
-	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
-	Tags                       tftags.Map                                                       `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
-	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]    `tfsdk:"workload_identity_details"`
+	AgentRuntimeARN            types.String                                                       `tfsdk:"agent_runtime_arn"`
+	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]         `tfsdk:"agent_runtime_artifact"`
+	AgentRuntimeID             types.String                                                       `tfsdk:"agent_runtime_id"`
+	AgentRuntimeName           types.String                                                       `tfsdk:"agent_runtime_name"`
+	AgentRuntimeVersion        types.String                                                       `tfsdk:"agent_runtime_version"`
+	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]      `tfsdk:"authorizer_configuration"`
+	Description                types.String                                                       `tfsdk:"description"`
+	EnvironmentVariables       fwtypes.MapOfString                                                `tfsdk:"environment_variables"`
+	FilesystemConfigurations   fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]      `tfsdk:"filesystem_configuration"`
+	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]       `tfsdk:"lifecycle_configuration"`
+	MetadataConfiguration      fwtypes.ListNestedObjectValueOf[runtimeMetadataConfigurationModel] `tfsdk:"metadata_configuration"`
+	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]         `tfsdk:"network_configuration"`
+	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]        `tfsdk:"protocol_configuration"`
+	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel]   `tfsdk:"request_header_configuration"`
+	RoleARN                    fwtypes.ARN                                                        `tfsdk:"role_arn"`
+	Tags                       tftags.Map                                                         `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                         `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                                                     `tfsdk:"timeouts"`
+	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]      `tfsdk:"workload_identity_details"`
 }
 
 type agentRuntimeArtifactModel struct {
@@ -1149,6 +1174,10 @@ func (m customJWTAuthorizerClaimMatchValueModel) Expand(ctx context.Context) (an
 type lifecycleConfigurationModel struct {
 	IdleRuntimeSessionTimeout types.Int32 `tfsdk:"idle_runtime_session_timeout"`
 	MaxLifetime               types.Int32 `tfsdk:"max_lifetime"`
+}
+
+type runtimeMetadataConfigurationModel struct {
+	RequireMMDSV2 types.Bool `tfsdk:"require_mmds_v2"`
 }
 
 type networkConfigurationModel struct {
