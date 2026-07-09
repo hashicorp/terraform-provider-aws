@@ -133,6 +133,10 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			names.AttrVersion: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -821,6 +825,7 @@ type guardrailResourceModel struct {
 	TagsAll                    tftags.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                     `tfsdk:"timeouts"`
 	TopicPolicy                fwtypes.ListNestedObjectValueOf[guardrailTopicPolicyConfigModel]   `tfsdk:"topic_policy_config"`
+	UpdatedAt                  timetypes.RFC3339                                                  `tfsdk:"updated_at"`
 	Version                    types.String                                                       `tfsdk:"version"`
 	WordPolicy                 fwtypes.ListNestedObjectValueOf[wordPolicyConfig]                  `tfsdk:"word_policy_config"`
 }
