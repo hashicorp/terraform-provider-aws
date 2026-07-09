@@ -1014,6 +1014,64 @@ func testAccPreCheckGateways(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccBedrockAgentCoreGateway_customTransformConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// custom_transform_configuration is only accepted by UpdateGateway, so a create with it set
+				// exercises the create-then-update path.
+				Config: testAccGatewayConfig_customTransformConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_transform_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_transform_configuration").AtSliceIndex(0).AtMapKey("lambda").AtSliceIndex(0).AtMapKey(names.AttrARN), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+				// custom_transform_configuration is not returned by GetGateway, so it cannot be recovered on import.
+				ImportStateVerifyIgnore: []string{"custom_transform_configuration"},
+			},
+			{
+				// Removing custom_transform_configuration clears it: the gateway Update is a full replacement,
+				// so an omitted block sends nil and the value is cleared with no perpetual diff.
+				Config: testAccGatewayConfig_customTransformConfigurationCleared(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_transform_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func testAccGatewayConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1440,4 +1498,61 @@ resource "aws_bedrockagentcore_policy_engine" "test" {
   name = %[2]q
 }
 `, rName, rNamePolicyEngine, mode))
+}
+
+func testAccGatewayConfig_customTransformBase(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_iam_role" "lambda" {
+  name = "%[1]s-lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+`, rName))
+}
+
+func testAccGatewayConfig_customTransformConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_customTransformBase(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  custom_transform_configuration {
+    lambda {
+      arn = aws_lambda_function.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayConfig_customTransformConfigurationCleared(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_customTransformBase(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+}
+`, rName))
 }

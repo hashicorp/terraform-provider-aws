@@ -121,6 +121,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
+* `custom_transform_configuration` - (Optional) Custom transformation configuration that defines how the gateway transforms requests and responses. This configuration is applied via a follow-up update immediately after the gateway is created, because the create operation does not accept it. The AgentCore API does not return this value, so it cannot be detected as drift on refresh and is not populated on import. See [`custom_transform_configuration`](#custom_transform_configuration) below.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
 * `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
@@ -130,6 +131,13 @@ The following arguments are optional:
 * `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Omit this argument to create a gateway that routes traffic directly to HTTP targets such as AgentCore Runtime agents (see [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) `target_configuration.http`).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `custom_transform_configuration`
+
+The `custom_transform_configuration` block supports the following:
+
+* `lambda` - (Required) Lambda transformation configuration. The `lambda` block supports:
+    * `arn` - (Required) ARN of the Lambda function that the gateway invokes to transform requests and responses.
 
 ### `authorizer_configuration`
 
