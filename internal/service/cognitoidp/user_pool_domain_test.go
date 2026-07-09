@@ -224,6 +224,40 @@ func TestAccCognitoIDPUserPoolDomain_customCustomDomainManagedLoginVersionUpdate
 	})
 }
 
+func TestAccCognitoIDPUserPoolDomain_customCustomDomainSecurityPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	poolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acmCertResourceName := "aws_acm_certificate.test"
+	cognitoPoolResourceName := "aws_cognito_user_pool_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDomainConfig_customCustomDomainSecurityPolicy(rootDomain, domain, poolName, "TLS_V1_2_2021"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(ctx, t, cognitoPoolResourceName),
+					resource.TestCheckResourceAttr(cognitoPoolResourceName, "security_policy", "TLS_V1_2_2021"),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmCertResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccUserPoolDomainConfig_customCustomDomainSecurityPolicy(rootDomain, domain, poolName, "TLS_V1_3_2025"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainCertMatches(ctx, t, cognitoPoolResourceName, acmCertResourceName),
+					resource.TestCheckResourceAttr(cognitoPoolResourceName, "security_policy", "TLS_V1_3_2025"),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmCertResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserPoolDomainExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -457,4 +491,44 @@ resource "aws_cognito_user_pool_domain" "test" {
   managed_login_version = %[4]d
 }
 `, rootDomain, domain, poolName, version)
+}
+
+func testAccUserPoolDomainConfig_customCustomDomainSecurityPolicy(rootDomain, domain, poolName, securityPolicy string) string {
+	return fmt.Sprintf(`
+data "aws_route53_zone" "test" {
+  name         = %[1]q
+  private_zone = false
+}
+
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[2]q
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "test" {
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "test" {
+  certificate_arn         = aws_acm_certificate.test.arn
+  validation_record_fqdns = [aws_route53_record.test.fqdn]
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[3]q
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  certificate_arn = aws_acm_certificate_validation.test.certificate_arn
+  domain          = aws_acm_certificate.test.domain_name
+  user_pool_id    = aws_cognito_user_pool.test.id
+
+  security_policy = %[4]q
+}
+`, rootDomain, domain, poolName, securityPolicy)
 }

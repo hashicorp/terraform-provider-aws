@@ -64,6 +64,7 @@ This resource supports the following arguments:
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
 * `managed_login_version` - (Optional) A version number that indicates the state of managed login for your domain. Valid values: `1` for hosted UI (classic), `2` for the newer managed login with the branding designer.
+* `security_policy` - (Optional) Minimum TLS version served by the custom domain's CloudFront distribution. Only applies to custom domains (`certificate_arn` set). Valid values: `TLS_V1` (TLS 1.0+, broadest compatibility), `TLS_V1_2_2021` (TLS 1.2+, recommended), `TLS_V1_3_2025` (TLS 1.3+, strongest posture). Defaults to `TLS_V1` server-side when not set.
 
 ## Attribute Reference
 

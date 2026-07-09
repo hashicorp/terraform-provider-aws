@@ -78,6 +78,12 @@ func resourceUserPoolDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"security_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SecurityPolicyType](),
+				},
 				names.AttrUserPoolID: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -111,6 +117,9 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
 			CertificateArn: aws.String(v.(string)),
+		}
+		if v, ok := d.GetOk("security_policy"); ok {
+			input.CustomDomainConfig.SecurityPolicy = awstypes.SecurityPolicyType(v.(string))
 		}
 		timeout = 60 * time.Minute // Custom domains take more time to become active.
 	}
@@ -152,8 +161,10 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrAWSAccountID, desc.AWSAccountId)
 	d.Set(names.AttrCertificateARN, "")
+	d.Set("security_policy", "")
 	if desc.CustomDomainConfig != nil {
 		d.Set(names.AttrCertificateARN, desc.CustomDomainConfig.CertificateArn)
+		d.Set("security_policy", string(desc.CustomDomainConfig.SecurityPolicy))
 	}
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
@@ -177,21 +188,28 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
 
-	if d.HasChange(names.AttrCertificateARN) {
-		timeout = 60 * time.Minute // Certificate ARN updates on custom domains take more time to become active.
+	if d.HasChanges(names.AttrCertificateARN, "security_policy") {
+		timeout = 60 * time.Minute // Updates on custom domains take more time to become active.
 		input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
 			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
+		}
+		if v, ok := d.GetOk("security_policy"); ok {
+			input.CustomDomainConfig.SecurityPolicy = awstypes.SecurityPolicyType(v.(string))
 		}
 	}
 
 	if d.HasChange("managed_login_version") {
 		input.ManagedLoginVersion = aws.Int32(int32(d.Get("managed_login_version").(int)))
 
-		if v, ok := d.GetOk(names.AttrCertificateARN); ok {
+		if v, ok := d.GetOk(names.AttrCertificateARN); ok && input.CustomDomainConfig == nil {
 			// If there is a certificate use it as part of the request, this is how AWS distinguishes between custom and prefix domains.
 			timeout = 60 * time.Minute // Custom domains take more time to become active.
 			input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
 				CertificateArn: aws.String(v.(string)),
+			}
+			if sv, ok := d.GetOk("security_policy"); ok {
+				// Include the current security_policy so a managed_login_version-only update doesn't clear it.
+				input.CustomDomainConfig.SecurityPolicy = awstypes.SecurityPolicyType(sv.(string))
 			}
 		}
 	}
