@@ -78,9 +78,9 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 				stringvalidator.ConflictsWith(path.Expressions{
 					path.MatchRelative().AtParent().AtName("client_id_wo"),
 				}...),
-				stringvalidator.AlsoRequires(path.Expressions{
-					path.MatchRelative().AtParent().AtName(names.AttrClientSecret),
-				}...),
+				// client_id is not unconditionally paired with client_secret: with an
+				// EXTERNAL secret source the secret is supplied via client_secret_config.
+				// The source-conditional pairing is enforced in ValidateConfig.
 				//stringvalidator.PreferWriteOnlyAttribute(path.MatchRelative().AtParent().AtName("client_id_wo")),
 			},
 		},
@@ -95,7 +95,6 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 				}...),
 				stringvalidator.AlsoRequires(path.Expressions{
 					path.MatchRelative().AtParent().AtName("client_credentials_wo_version"),
-					path.MatchRelative().AtParent().AtName("client_secret_wo"),
 				}...),
 			},
 		},
@@ -235,6 +234,13 @@ func oauth2PrivateEndpointBlock(ctx context.Context) schema.ListNestedBlock {
 func oauth2PrivateEndpointOverridesBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2PrivateEndpointOverrideModel](ctx),
+		Validators: []validator.List{
+			// The service rejects PrivateEndpointOverrides unless the sibling
+			// private_endpoint is also configured.
+			listvalidator.AlsoRequires(
+				path.MatchRelative().AtParent().AtName("private_endpoint"),
+			),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrDomain: schema.StringAttribute{
@@ -304,6 +310,20 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customOAuth2ProviderConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								// Exactly one provider config must be set. Attaching to a single
+								// block is sufficient: the validator runs even when this block is
+								// null and tallies every sibling, catching none-set and multi-set.
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("atlassian_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("custom_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("github_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("google_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("included_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("linkedin_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("microsoft_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("salesforce_oauth2_provider_config"),
+									path.MatchRelative().AtParent().AtName("slack_oauth2_provider_config"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: customOAuth2ProviderConfigAttributes(ctx),
@@ -355,6 +375,12 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 											Attributes: map[string]schema.Attribute{
 												"discovery_url": schema.StringAttribute{
 													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("discovery_url"),
+															path.MatchRelative().AtParent().AtName("authorization_server_metadata"),
+														),
+													},
 												},
 											},
 											Blocks: map[string]schema.Block{
@@ -400,6 +426,71 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 				},
 			},
 		},
+	}
+}
+
+func (r *oauth2CredentialProviderResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data oauth2CredentialProviderResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() || data.OAuth2ProviderConfig.IsNull() || data.OAuth2ProviderConfig.IsUnknown() {
+		return
+	}
+
+	cfg, d := data.OAuth2ProviderConfig.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() || cfg == nil {
+		return
+	}
+
+	creds, d := cfg.clientCredentials(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	clientIDSet := (!creds.ClientID.IsNull() && !creds.ClientID.IsUnknown()) ||
+		(!creds.ClientIDWO.IsNull() && !creds.ClientIDWO.IsUnknown())
+	clientSecretSet := (!creds.ClientSecret.IsNull() && !creds.ClientSecret.IsUnknown()) ||
+		(!creds.ClientSecretWO.IsNull() && !creds.ClientSecretWO.IsUnknown())
+	basePath := path.Root("oauth2_provider_config")
+
+	// Secret-source-conditional client-secret rules. The service rejects an inline
+	// client secret when the secret source is EXTERNAL (the secret is referenced via
+	// client_secret_config); outside EXTERNAL a client_id must be paired with an
+	// inline client secret (the pairing the static AlsoRequires used to enforce).
+	if !creds.ClientSecretSource.IsUnknown() {
+		if creds.ClientSecretSource.ValueEnum() == awstypes.SecretSourceTypeExternal {
+			if !creds.ClientSecret.IsNull() && !creds.ClientSecret.IsUnknown() {
+				response.Diagnostics.AddAttributeError(basePath, "Invalid Attribute Combination",
+					"client_secret must not be set when client_secret_source is EXTERNAL; reference the secret with client_secret_config instead.")
+			}
+			if !creds.ClientSecretWO.IsNull() && !creds.ClientSecretWO.IsUnknown() {
+				response.Diagnostics.AddAttributeError(basePath, "Invalid Attribute Combination",
+					"client_secret_wo must not be set when client_secret_source is EXTERNAL; reference the secret with client_secret_config instead.")
+			}
+		} else if clientIDSet && !clientSecretSet &&
+			!creds.ClientSecret.IsUnknown() && !creds.ClientSecretWO.IsUnknown() {
+			response.Diagnostics.AddAttributeError(basePath, "Missing Required Attribute",
+				"client_secret (or client_secret_wo) is required when client_id is set and client_secret_source is not EXTERNAL.")
+		}
+	}
+
+	// The custom provider using CLIENT_SECRET_BASIC/POST requires a client_id.
+	if !cfg.CustomOAuth2ProviderConfig.IsNull() && !cfg.CustomOAuth2ProviderConfig.IsUnknown() {
+		custom, d := cfg.CustomOAuth2ProviderConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if custom != nil && !custom.ClientAuthenticationMethod.IsUnknown() {
+			switch custom.ClientAuthenticationMethod.ValueEnum() {
+			case awstypes.ClientAuthenticationMethodTypeClientSecretBasic, awstypes.ClientAuthenticationMethodTypeClientSecretPost:
+				if !clientIDSet {
+					response.Diagnostics.AddAttributeError(basePath, "Missing Required Attribute",
+						"client_id (or client_id_wo) is required when client_authentication_method is CLIENT_SECRET_BASIC or CLIENT_SECRET_POST.")
+				}
+			}
+		}
 	}
 }
 
@@ -603,6 +694,15 @@ func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request r
 	}
 }
 
+// ImportState imports by name. The following attributes are input-only (absent
+// from GetOauth2CredentialProviderOutput) and cannot be recovered on the initial
+// import; a single subsequent `terraform apply` reconciles state from the
+// configuration and further plans are clean:
+//   - oauth2_provider_config.*.client_id, client_secret (and their _wo siblings)
+//   - oauth2_provider_config.*.client_secret_source, client_secret_config
+//
+// Accept these on the ImportStateVerifyIgnore list of test steps that exercise
+// ImportStateVerify.
 func (r *oauth2CredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
