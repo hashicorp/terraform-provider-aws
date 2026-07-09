@@ -533,6 +533,86 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthroughSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, testAccGatewayTargetSchema_inlinePayload()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.schema.0.inline_payload.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.http.0.passthrough.0.schema.0.inline_payload.0.payload"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.schema.0.s3.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration_invalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Invalid: passthrough schema with neither inline_payload nor s3.
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, ""),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+			// Invalid: passthrough schema with both inline_payload and s3.
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+			// Invalid: open_api_schema with both inline_payload and s3.
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationOpenAPISchemaRaw(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+			// Invalid: mcp_server endpoint that merely contains "https://".
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, "ftp://evil-https://foo"),
+				ExpectError: regexache.MustCompile(`Must start\s+with https://`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
@@ -2160,6 +2240,110 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, credentialProviderContent)
+}
+
+func testAccGatewayTargetSchema_inlinePayload() string {
+	return `
+          inline_payload {
+            payload = jsonencode({
+              openapi = "3.0.0"
+              info = {
+                title   = "Test API"
+                version = "1.0.0"
+              }
+              paths = {}
+            })
+          }`
+}
+
+func testAccGatewayTargetSchema_bothInlinePayloadAndS3() string {
+	return `
+          inline_payload {
+            payload = "{}"
+          }
+          s3 {
+            uri = "s3://test-bucket/schema.json"
+          }`
+}
+
+func testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, schemaContent string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "gateway_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "gateway" {
+  name               = "%[1]s-gateway"
+  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.gateway.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test"]
+    }
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "lambda"
+    }
+  }
+
+  target_configuration {
+    http {
+      passthrough {
+        endpoint      = "https://example.com/api"
+        protocol_type = "MCP"
+
+        schema {
+%[2]s
+        }
+      }
+    }
+  }
+}
+`, rName, schemaContent)
+}
+
+func testAccGatewayTargetConfig_targetConfigurationOpenAPISchemaRaw(rName, schemaContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "lambda"
+    }
+  }
+
+  target_configuration {
+    mcp {
+      open_api_schema {
+%[2]s
+      }
+    }
+  }
+}
+`, rName, schemaContent))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {

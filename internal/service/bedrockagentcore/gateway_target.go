@@ -690,6 +690,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															"inline_payload": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
 																Validators: []validator.List{
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("inline_payload"),
+																		path.MatchRelative().AtParent().AtName("s3"),
+																	),
 																	listvalidator.SizeAtMost(1),
 																},
 																NestedObject: schema.NestedBlockObject{
@@ -703,6 +707,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															"s3": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 																Validators: []validator.List{
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("inline_payload"),
+																		path.MatchRelative().AtParent().AtName("s3"),
+																	),
 																	listvalidator.SizeAtMost(1),
 																},
 																NestedObject: schema.NestedBlockObject{
@@ -835,6 +843,12 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 														Blocks: map[string]schema.Block{
 															"inline_payload": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[toolDefinitionModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("inline_payload"),
+																		path.MatchRelative().AtParent().AtName("s3"),
+																	),
+																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		names.AttrDescription: schema.StringAttribute{
@@ -866,6 +880,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															"s3": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 																Validators: []validator.List{
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("inline_payload"),
+																		path.MatchRelative().AtParent().AtName("s3"),
+																	),
 																	listvalidator.SizeAtMost(1),
 																},
 																NestedObject: schema.NestedBlockObject{
@@ -896,7 +914,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(
-															regexache.MustCompile(`https://.*`),
+															regexache.MustCompile(`^https://.+`),
 															"Must start with https://",
 														),
 													},
@@ -922,6 +940,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												"inline_payload": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
 													Validators: []validator.List{
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("inline_payload"),
+															path.MatchRelative().AtParent().AtName("s3"),
+														),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -935,6 +957,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												"s3": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 													Validators: []validator.List{
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("inline_payload"),
+															path.MatchRelative().AtParent().AtName("s3"),
+														),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -961,6 +987,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												"inline_payload": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
 													Validators: []validator.List{
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("inline_payload"),
+															path.MatchRelative().AtParent().AtName("s3"),
+														),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -974,6 +1004,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												"s3": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 													Validators: []validator.List{
+														listvalidator.ExactlyOneOf(
+															path.MatchRelative().AtParent().AtName("inline_payload"),
+															path.MatchRelative().AtParent().AtName("s3"),
+														),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -2034,8 +2068,16 @@ func (m passthroughTargetConfigurationModel) Expand(ctx context.Context) (any, d
 		if diags.HasError() {
 			return nil, diags
 		}
+		apiSchemaConfiguration, ok := source.(awstypes.ApiSchemaConfiguration)
+		if !ok {
+			diags.AddError(
+				"Invalid Schema Configuration",
+				"Exactly one of \"inline_payload\" or \"s3\" must be configured within \"schema\".",
+			)
+			return nil, diags
+		}
 		r.Schema = &awstypes.HttpApiSchemaConfiguration{
-			Source: source.(awstypes.ApiSchemaConfiguration),
+			Source: apiSchemaConfiguration,
 		}
 	}
 
@@ -2631,14 +2673,16 @@ var (
 
 func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	m.InlinePayload = fwtypes.NewListNestedObjectValueOfNull[inlinePayloadModel](ctx)
+	m.S3 = fwtypes.NewListNestedObjectValueOfNull[s3ConfigurationModel](ctx)
 	switch t := v.(type) {
-	case awstypes.ApiSchemaConfigurationMemberInlinePayload:
+	case *awstypes.ApiSchemaConfigurationMemberInlinePayload:
 		var model inlinePayloadModel
 		model.Payload = types.StringValue(t.Value)
 		m.InlinePayload = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 		return diags
 
-	case awstypes.ApiSchemaConfigurationMemberS3:
+	case *awstypes.ApiSchemaConfigurationMemberS3:
 		var model s3ConfigurationModel
 		d := fwflex.Flatten(ctx, t.Value, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -2684,6 +2728,11 @@ func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 		}
 		return &r, diags
 	}
+
+	diags.AddError(
+		"Invalid Schema Configuration",
+		"Exactly one of \"inline_payload\" or \"s3\" must be configured.",
+	)
 	return nil, diags
 }
 
