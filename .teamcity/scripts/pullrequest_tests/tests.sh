@@ -36,6 +36,14 @@ fi
 # echo "${TEST_LIST}"
 echo
 
+function build_test_binary {
+	local pkg="${1:?build_test_binary: PKG argument is required}"
+	local out
+	out="$(basename "${pkg}").test"
+	echo "Building test binary for ${pkg} -> ${out}"
+	go test -c -o "${out}" "${pkg}"
+}
+
 # shellcheck disable=2157 # These aren't constant strings, they're TeamCity variable substitution
 if [[ -n "%ACCTEST_ROLE_ARN%" || -n "%ACCTEST_ALTERNATE_ROLE_ARN%" ]]; then
 	conf=$(pwd)/aws.conf
@@ -84,4 +92,23 @@ EOF
 	fi
 fi
 
-TF_ACC=1 go test "${PKG}" -run="%TEST_PREFIX%" -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0
+build_test_binary "${PKG}"
+binary="$(basename "${PKG}").test"
+
+TEST_LIST=$("./${binary}" -test.list="%TEST_PATTERN%" 2>/dev/null)
+
+read -r -a split <<<"${TEST_LIST}"
+TEST_COUNT=${#split[@]}
+
+if [[ "${TEST_COUNT}" == 0 ]]; then
+	echo "Zero tests"
+	exit 0
+elif [[ "${TEST_COUNT}" == 1 ]]; then
+	echo "Running 1 test:"
+else
+	echo "Running ${TEST_COUNT} tests:"
+fi
+echo "${TEST_LIST}"
+echo
+
+echo "${TEST_LIST}" | TF_ACC=1 teamcity-go-test -test "./${binary}" -parallelism "%ACCTEST_PARALLELISM%"
