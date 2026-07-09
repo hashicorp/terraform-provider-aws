@@ -213,6 +213,47 @@ resource "aws_bedrockagent_knowledge_base" "example" {
 }
 ```
 
+### Managed Knowledge Base
+
+```terraform
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "example-managed-kb"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "MANAGED"
+
+    managed_knowledge_base_configuration {
+      embedding_model_type = "MANAGED"
+    }
+  }
+}
+```
+
+### Managed Knowledge Base with Custom Embedding Model
+
+```terraform
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "example-managed-multilingual-kb"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "MANAGED"
+
+    managed_knowledge_base_configuration {
+      embedding_model_type = "CUSTOM"
+      embedding_model_arn  = "arn:aws:bedrock:us-east-1::foundation-model/cohere.embed-multilingual-v3"
+
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions = 1024
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -232,8 +273,9 @@ The following arguments are optional:
 
 The `knowledge_base_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`, `SQL`.
+* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`, `SQL`, `MANAGED`.
 * `kendra_knowledge_base_configuration` - (Optional) Settings for an Amazon Kendra knowledge base. See [`kendra_knowledge_base_configuration` block](#kendra_knowledge_base_configuration-block) for details.
+* `managed_knowledge_base_configuration` - (Optional) Settings for a managed knowledge base where Amazon Bedrock manages the vector store. See [`managed_knowledge_base_configuration` block](#managed_knowledge_base_configuration-block) for details.
 * `sql_knowledge_base_configuration` - (Optional) Configurations for a knowledge base connected to an SQL database. See [`sql_knowledge_base_configuration` block](#sql_knowledge_base_configuration-block) for details.
 * `vector_knowledge_base_configuration` - (Optional) Details about the model that's used to convert the data source into vector embeddings. See [`vector_knowledge_base_configuration` block](#vector_knowledge_base_configuration-block) for details.
 
@@ -242,6 +284,23 @@ The `knowledge_base_configuration` configuration block supports the following ar
 The `kendra_knowledge_base_configuration` configuration block supports the following arguments:
 
 * `kendra_index_arn` - (Required) ARN of the Amazon Kendra index.
+
+### `managed_knowledge_base_configuration` block
+
+The `managed_knowledge_base_configuration` configuration block supports the following arguments:
+
+* `embedding_model_type` - (Optional) Type of embedding model. Valid values: `MANAGED`, `CUSTOM`. When `MANAGED`, no model selection or configuration is required. When `CUSTOM`, `embedding_model_arn` and `embedding_model_configuration` are required. Defaults to `MANAGED`.
+* `embedding_model_arn` - (Optional) ARN of the embedding model. Required when `embedding_model_type` is `CUSTOM`.
+* `embedding_model_configuration` - (Optional) Configuration for the embedding model. Required when `embedding_model_type` is `CUSTOM`. See [`embedding_model_configuration` block](#embedding_model_configuration-block) for details.
+* `server_side_encryption_configuration` - (Optional) Server-side encryption configuration for the managed knowledge base. See [`server_side_encryption_configuration` block](#managed-kb-server_side_encryption_configuration-block) for details.
+
+### Managed KB `server_side_encryption_configuration` block
+
+The `server_side_encryption_configuration` configuration block supports the following arguments:
+
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the managed knowledge base.
+
+~> **NOTE:** `storage_configuration` is not required when `knowledge_base_configuration.type` is `MANAGED`. Amazon Bedrock manages the vector store automatically for managed knowledge bases.
 
 ### `sql_knowledge_base_configuration` block
 

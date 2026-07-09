@@ -126,6 +126,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								listvalidator.SizeAtMost(1),
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("kendra_knowledge_base_configuration"),
+									path.MatchRelative().AtParent().AtName("managed_knowledge_base_configuration"),
 									path.MatchRelative().AtParent().AtName("sql_knowledge_base_configuration"),
 									path.MatchRelative().AtParent().AtName("vector_knowledge_base_configuration"),
 								),
@@ -140,6 +141,96 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"managed_knowledge_base_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[managedKnowledgeBaseConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"embedding_model_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"embedding_model_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.EmbeddingModelType](),
+										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"embedding_model_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[embeddingModelConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEmbeddingModelConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"dimensions": schema.Int64Attribute{
+																Optional: true,
+																PlanModifiers: []planmodifier.Int64{
+																	int64planmodifier.RequiresReplace(),
+																},
+															},
+															"embedding_data_type": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
+																Optional:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"server_side_encryption_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[managedKBServerSideEncryptionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"kms_key_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
 										},
 									},
 								},
@@ -1530,10 +1621,11 @@ type knowledgeBaseResourceModel struct {
 }
 
 type knowledgeBaseConfigurationModel struct {
-	KendraKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[kendraKnowledgeBaseConfigurationModel] `tfsdk:"kendra_knowledge_base_configuration"`
-	SQLKnowledgeBaseConfiguration    fwtypes.ListNestedObjectValueOf[sqlKnowledgeBaseConfigurationModel]    `tfsdk:"sql_knowledge_base_configuration"`
-	Type                             fwtypes.StringEnum[awstypes.KnowledgeBaseType]                         `tfsdk:"type"`
-	VectorKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[vectorKnowledgeBaseConfigurationModel] `tfsdk:"vector_knowledge_base_configuration"`
+	KendraKnowledgeBaseConfiguration  fwtypes.ListNestedObjectValueOf[kendraKnowledgeBaseConfigurationModel]  `tfsdk:"kendra_knowledge_base_configuration"`
+	ManagedKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[managedKnowledgeBaseConfigurationModel] `tfsdk:"managed_knowledge_base_configuration"`
+	SQLKnowledgeBaseConfiguration     fwtypes.ListNestedObjectValueOf[sqlKnowledgeBaseConfigurationModel]     `tfsdk:"sql_knowledge_base_configuration"`
+	Type                              fwtypes.StringEnum[awstypes.KnowledgeBaseType]                          `tfsdk:"type"`
+	VectorKnowledgeBaseConfiguration  fwtypes.ListNestedObjectValueOf[vectorKnowledgeBaseConfigurationModel]  `tfsdk:"vector_knowledge_base_configuration"`
 }
 
 type kendraKnowledgeBaseConfigurationModel struct {
@@ -1624,6 +1716,17 @@ type vectorKnowledgeBaseConfigurationModel struct {
 	EmbeddingModelARN                    fwtypes.ARN                                                                `tfsdk:"embedding_model_arn"`
 	EmbeddingModelConfiguration          fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]          `tfsdk:"embedding_model_configuration"`
 	SupplementalDataStorageConfiguration fwtypes.ListNestedObjectValueOf[supplementalDataStorageConfigurationModel] `tfsdk:"supplemental_data_storage_configuration"`
+}
+
+type managedKnowledgeBaseConfigurationModel struct {
+	EmbeddingModelARN                 fwtypes.ARN                                                                                `tfsdk:"embedding_model_arn"`
+	EmbeddingModelConfiguration       fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]                          `tfsdk:"embedding_model_configuration"`
+	EmbeddingModelType                fwtypes.StringEnum[awstypes.EmbeddingModelType]                                            `tfsdk:"embedding_model_type"`
+	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[managedKBServerSideEncryptionConfigurationModel]           `tfsdk:"server_side_encryption_configuration"`
+}
+
+type managedKBServerSideEncryptionConfigurationModel struct {
+	KMSKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
 }
 
 type embeddingModelConfigurationModel struct {

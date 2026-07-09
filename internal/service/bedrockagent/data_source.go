@@ -225,6 +225,83 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								},
 							},
 						},
+						"managed_knowledge_base_connector_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[managedKnowledgeBaseConnectorConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"connector_parameters": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"deletion_protection_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[deletionProtectionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"enable_deletion_protection": schema.BoolAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+									"media_extraction_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mediaExtractionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"audio_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[audioExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"audio_extraction_status": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+												"image_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[imageExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"image_extraction_status": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+												"video_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[videoExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"video_extraction_status": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"s3_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3DataSourceConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -1101,12 +1178,41 @@ func (m *dataSourceResourceModel) setID() (string, error) {
 }
 
 type dataSourceConfigurationModel struct {
-	ConfluenceConfiguration fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel] `tfsdk:"confluence_configuration"`
-	S3Configuration         fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]         `tfsdk:"s3_configuration"`
-	SalesforceConfiguration fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel] `tfsdk:"salesforce_configuration"`
-	SharePointConfiguration fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel] `tfsdk:"share_point_configuration"`
-	Type                    fwtypes.StringEnum[awstypes.DataSourceType]                             `tfsdk:"type"`
-	WebConfiguration        fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]        `tfsdk:"web_configuration"`
+	ConfluenceConfiguration                      fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel]                      `tfsdk:"confluence_configuration"`
+	ManagedKnowledgeBaseConnectorConfiguration   fwtypes.ListNestedObjectValueOf[managedKnowledgeBaseConnectorConfigurationModel]             `tfsdk:"managed_knowledge_base_connector_configuration"`
+	S3Configuration                              fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]                              `tfsdk:"s3_configuration"`
+	SalesforceConfiguration                      fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel]                      `tfsdk:"salesforce_configuration"`
+	SharePointConfiguration                      fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel]                      `tfsdk:"share_point_configuration"`
+	Type                                         fwtypes.StringEnum[awstypes.DataSourceType]                                                  `tfsdk:"type"`
+	WebConfiguration                             fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]                              `tfsdk:"web_configuration"`
+}
+
+type managedKnowledgeBaseConnectorConfigurationModel struct {
+	ConnectorParameters              types.String                                                                    `tfsdk:"connector_parameters"`
+	DeletionProtectionConfiguration  fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel]           `tfsdk:"deletion_protection_configuration"`
+	MediaExtractionConfiguration     fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]              `tfsdk:"media_extraction_configuration"`
+}
+
+type deletionProtectionConfigurationModel struct {
+	EnableDeletionProtection types.Bool `tfsdk:"enable_deletion_protection"`
+}
+
+type mediaExtractionConfigurationModel struct {
+	AudioExtractionConfiguration fwtypes.ListNestedObjectValueOf[audioExtractionConfigurationModel] `tfsdk:"audio_extraction_configuration"`
+	ImageExtractionConfiguration fwtypes.ListNestedObjectValueOf[imageExtractionConfigurationModel] `tfsdk:"image_extraction_configuration"`
+	VideoExtractionConfiguration fwtypes.ListNestedObjectValueOf[videoExtractionConfigurationModel] `tfsdk:"video_extraction_configuration"`
+}
+
+type audioExtractionConfigurationModel struct {
+	AudioExtractionStatus types.String `tfsdk:"audio_extraction_status"`
+}
+
+type imageExtractionConfigurationModel struct {
+	ImageExtractionStatus types.String `tfsdk:"image_extraction_status"`
+}
+
+type videoExtractionConfigurationModel struct {
+	VideoExtractionStatus types.String `tfsdk:"video_extraction_status"`
 }
 
 type confluenceDataSourceConfigurationModel struct {

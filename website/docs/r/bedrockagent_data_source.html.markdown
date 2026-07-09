@@ -27,6 +27,77 @@ resource "aws_bedrockagent_data_source" "example" {
 }
 ```
 
+### Managed Knowledge Base Connector - S3
+
+```terraform
+resource "aws_bedrockagent_data_source" "example" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "example-s3-managed"
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = "my-documents-bucket"
+          bucketOwnerAccountId = "123456789012"
+        }
+      })
+
+      media_extraction_configuration {
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
+        }
+      }
+    }
+  }
+
+  vector_ingestion_configuration {
+    parsing_configuration {
+      parsing_strategy = "SMART_PARSING"
+    }
+  }
+}
+```
+
+### Managed Knowledge Base Connector - SharePoint
+
+```terraform
+resource "aws_bedrockagent_data_source" "sharepoint" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "example-sharepoint"
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "SHAREPOINT"
+        version = "1"
+        connectionConfiguration = {
+          tenantId  = "your-entra-tenant-id"
+          authType  = "ENTRA_ID_APP_ONLY"
+          secretArn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-sharepoint-secret"
+          certificateS3Path = {
+            s3BucketName = "my-certs-bucket"
+            s3KeyName    = "certs/sharepoint-cert.crt"
+          }
+        }
+        dataEntityConfiguration = {
+          type       = "DOCUMENT"
+          crawlFiles = "true"
+          crawlPages = "true"
+          siteUrls   = ["https://company.sharepoint.com/sites/MySite"]
+        }
+      })
+    }
+  }
+}
+```
+
 ### Multimodal Parsing
 
 ```terraform
