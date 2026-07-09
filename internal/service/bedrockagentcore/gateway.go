@@ -132,6 +132,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 						"lambda": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaTransformConfigurationModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
