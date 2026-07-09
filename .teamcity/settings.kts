@@ -136,6 +136,10 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
+            name = "Install Terraform"
+            scriptContent = File("./scripts/pullrequest_tests/install_terraform.sh").readText()
+        }
+        script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
         }
