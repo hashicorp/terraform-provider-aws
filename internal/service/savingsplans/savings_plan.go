@@ -54,6 +54,7 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"commitment": schema.StringAttribute{
+				CustomType:  CommitmentStringType,
 				Required:    true,
 				Description: "The hourly commitment, in USD.",
 				PlanModifiers: []planmodifier.String{
@@ -237,8 +238,6 @@ func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.Commitment = types.StringValue(normalizeCommitmentValue(plan.Commitment.ValueString()))
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -268,7 +267,6 @@ func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	state.Commitment = types.StringValue(normalizeCommitmentValue(state.Commitment.ValueString()))
 	state.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
 
 	setTagsOut(ctx, out.Tags)
@@ -406,7 +404,7 @@ func findSavingsPlans(ctx context.Context, conn *savingsplans.Client, input *sav
 }
 
 type savingsPlanResourceModel struct {
-	Commitment             types.String                                  `tfsdk:"commitment"`
+	Commitment             CommitmentString                              `tfsdk:"commitment"`
 	Currency               types.String                                  `tfsdk:"currency"`
 	Description            types.String                                  `tfsdk:"description"`
 	EC2InstanceFamily      types.String                                  `tfsdk:"ec2_instance_family"`

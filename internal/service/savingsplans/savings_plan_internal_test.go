@@ -3,45 +3,43 @@
 
 package savingsplans
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
-func TestNormalizeCommitmentValue(t *testing.T) {
+func TestCommitmentStringSemanticEquals(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name     string
-		input    string
-		expected string
+		oldValue string
+		newValue string
+		want     bool
 	}{
 		{
-			name:     "preserves concise decimal",
-			input:    "1.158",
-			expected: "1.158",
+			name:     "treats equivalent decimals as equal",
+			oldValue: "1.158",
+			newValue: "1.15800000",
+			want:     true,
 		},
 		{
-			name:     "trims trailing zeros",
-			input:    "1.15800000",
-			expected: "1.158",
+			name:     "treats different decimals as unequal",
+			oldValue: "1.158",
+			newValue: "1.159",
+			want:     false,
 		},
 		{
-			name:     "removes redundant decimal part",
-			input:    "1.00000000",
-			expected: "1",
+			name:     "treats values with different representation as equal",
+			oldValue: "0001.2300",
+			newValue: "1.23",
+			want:     true,
 		},
 		{
-			name:     "handles leading zeros",
-			input:    "0001.2300",
-			expected: "1.23",
-		},
-		{
-			name:     "handles zero values",
-			input:    "0.00000000",
-			expected: "0",
-		},
-		{
-			name:     "leaves non-decimal input unchanged",
-			input:    "abc",
-			expected: "abc",
+			name:     "falls back to exact string equality for non-decimal values",
+			oldValue: "abc",
+			newValue: "abc",
+			want:     true,
 		},
 	}
 
@@ -49,8 +47,13 @@ func TestNormalizeCommitmentValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := normalizeCommitmentValue(tt.input); got != tt.expected {
-				t.Errorf("normalizeCommitmentValue(%q) = %q, want %q", tt.input, got, tt.expected)
+			oldValue := CommitmentStringValue(tt.oldValue)
+			got, diags := oldValue.StringSemanticEquals(context.Background(), CommitmentStringValue(tt.newValue))
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if got != tt.want {
+				t.Errorf("StringSemanticEquals(%q, %q) = %t, want %t", tt.oldValue, tt.newValue, got, tt.want)
 			}
 		})
 	}
