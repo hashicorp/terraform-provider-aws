@@ -44,8 +44,11 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(resourceName, "insecure_value"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckNoResourceAttr(resourceName, "value_wo"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
@@ -222,6 +225,10 @@ func TestAccSSMParameter_writeOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "test"),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "insecure_value"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "value_wo"),
 				),
 			},
 			{
@@ -229,6 +236,10 @@ func TestAccSSMParameter_writeOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "insecure_value"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "value_wo"),
 				),
 			},
 		},
@@ -981,7 +992,10 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "SecureString", "secret"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(resourceName, "insecure_value"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
+					resource.TestCheckNoResourceAttr(resourceName, "value_wo"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKeyID, "alias/aws/ssm"), // Default SSM key id
 				),
