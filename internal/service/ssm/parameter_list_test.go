@@ -245,3 +245,64 @@ func TestAccSSMParameter_List_includeResource_insecure(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSSMParameter_List_includeResource_writeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resourceName1 := "aws_ssm_parameter.test[0]"
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Parameter/list_include_resource_write_only"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+				},
+			},
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Parameter/list_include_resource_write_only"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_ssm_parameter.test", identity1.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_ssm_parameter.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("allowed_pattern"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ssm", regexache.MustCompile(`parameter/.+`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("data_type"), knownvalue.StringExact("text")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("has_value_wo"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("insecure_value"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrKeyID), knownvalue.StringRegexp(regexache.MustCompile(`.+`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"Name": knownvalue.StringExact(rName + "-0"),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("tier"), knownvalue.StringExact("Standard")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.StringExact("SecureString")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrValue), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrVersion), knownvalue.Int64Exact(1)),
+					}),
+				},
+			},
+		},
+	})
+}
