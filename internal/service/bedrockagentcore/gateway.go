@@ -72,7 +72,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				CustomType: fwtypes.StringEnumType[awstypes.AuthorizerType](),
 				Validators: []validator.String{
 					tfstringvalidator.AlsoRequiresWhenEquals(
-						awstypes.RegistryAuthorizerTypeCustomJwt,
+						awstypes.AuthorizerTypeCustomJwt,
 						path.MatchRelative().AtParent().AtName("authorizer_configuration"),
 					),
 				},
