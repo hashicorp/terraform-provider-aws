@@ -621,3 +621,227 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 }
 `, rName, key, extractionType, valueType, definition))
 }
+
+// TestAccBedrockAgentCoreMemoryStrategy_validationAtLeastOneOf confirms an empty
+// number_validation {} / string_list_validation {} is rejected at plan time. Such an
+// empty union member previously passed validation but was discarded by the API,
+// producing "inconsistent result after apply: validation block count 1 -> 0".
+func TestAccBedrockAgentCoreMemoryStrategy_validationAtLeastOneOf(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomMemoryName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMemoryStrategyConfig_emptyNumberValidation(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_nameForceNew confirms that changing name
+// forces replacement. ModifyMemoryStrategyInput has no Name field, so an in-place
+// rename was silently ignored by the API and produced "inconsistent result after
+// apply: .name".
+func TestAccBedrockAgentCoreMemoryStrategy_nameForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_semanticNamed(rName, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+			},
+			{
+				Config: testAccMemoryStrategyConfig_semanticNamed(rName, rName+"_renamed"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_recordSchemaRemovalForceNew confirms that
+// removing memory_record_schema forces replacement. The API ignores a nil
+// MemoryRecordSchema on update and retains the prior value, so an in-place removal
+// produced "inconsistent result after apply: memory_record_schema block count 0 -> 1".
+func TestAccBedrockAgentCoreMemoryStrategy_recordSchemaRemovalForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_recordSchemaToggle(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.#", "1"),
+				),
+			},
+			{
+				Config: testAccMemoryStrategyConfig_recordSchemaToggle(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_typeSwitchNonCustomToCustom confirms that
+// switching a strategy from a non-CUSTOM type to CUSTOM (which forces replacement)
+// plans without crashing. The errorIfSingleBlockRemoved plan modifier previously
+// read configuration[0].type into a non-nullable enum and panicked on the null a
+// non-CUSTOM prior state produces, aborting plan generation.
+func TestAccBedrockAgentCoreMemoryStrategy_typeSwitchNonCustomToCustom(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", "Semantic strategy", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
+				),
+			},
+			{
+				// Plan-only: the bug was a crash during plan generation (the
+				// errorIfSingleBlockRemoved modifier read a null configuration type from
+				// the non-CUSTOM prior state). A successful non-empty plan proves the
+				// modifier no longer panics; applying is unnecessary (and avoids relying
+				// on a specific Bedrock model being enabled in the test region).
+				Config:             testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "consolidate", "anthropic.claude-3-sonnet-20240229-v1:0", "extract", "anthropic.claude-3-haiku-20240307-v1:0"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccMemoryStrategyConfig_semanticNamed(rName, strategyName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[2]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Rename test"
+  namespaces                = ["default"]
+}
+`, rName, strategyName))
+}
+
+func testAccMemoryStrategyConfig_recordSchemaToggle(rName string, withSchema bool) string {
+	schemaBlock := ""
+	if withSchema {
+		schemaBlock = `
+  memory_record_schema {
+    metadata_schema {
+      key             = "priority"
+      extraction_type = "LLM_INFERRED"
+      type            = "STRING"
+
+      extraction_config {
+        llm_extraction_config {
+          definition = "The priority of the record"
+
+          validation {
+            string_validation {
+              allowed_values = ["high", "medium", "low"]
+            }
+          }
+        }
+      }
+    }
+  }`
+	}
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Record schema removal test"
+  namespaces                = ["default"]
+%[2]s
+}
+`, rName, schemaBlock))
+}
+
+func testAccMemoryStrategyConfig_emptyNumberValidation(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Empty number_validation test"
+  namespaces                = ["default"]
+
+  memory_record_schema {
+    metadata_schema {
+      key = "priority"
+
+      extraction_config {
+        llm_extraction_config {
+          definition = "The priority of the record"
+
+          validation {
+            number_validation {}
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
