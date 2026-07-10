@@ -2431,3 +2431,120 @@ resource "aws_route_table_association" "test" {
 }
 `, rName, subnetCount))
 }
+
+// TestAccBedrockAgentCoreGatewayTarget_mcpToolSchemaValidation confirms the new
+// mcp_tool_schema/resource_priority validators reject out-of-range priorities, an
+// empty inline payload, and an s3 source without a uri at plan time. These
+// previously passed validation and failed mid-apply with raw API ValidationExceptions.
+func TestAccBedrockAgentCoreGatewayTarget_mcpToolSchemaValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaPriority(rName, 2000),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaPriority(rName, -5),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaEmptyPayload(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value Length"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaS3NoURI(rName),
+				ExpectError: regexache.MustCompile("Missing required argument"),
+			},
+		},
+	})
+}
+
+func testAccGatewayTargetConfig_mcpToolSchemaPriority(rName string, priority int) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint          = "https://example.com/mcp"
+        resource_priority = %[2]d
+
+        mcp_tool_schema {
+          inline_payload {
+            payload = "{\"tools\":[]}"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, priority))
+}
+
+func testAccGatewayTargetConfig_mcpToolSchemaEmptyPayload(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+
+        mcp_tool_schema {
+          inline_payload {
+            payload = ""
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_mcpToolSchemaS3NoURI(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+
+        mcp_tool_schema {
+          s3 {}
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
