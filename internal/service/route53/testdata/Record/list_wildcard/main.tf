@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_route53_record" "test" {
- zone_id = aws_route53_zone.test.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "*.${var.zoneName}"
   type    = "A"
   ttl     = 300
