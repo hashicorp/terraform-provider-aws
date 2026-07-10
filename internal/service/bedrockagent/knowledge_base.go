@@ -223,7 +223,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"kms_key_arn": schema.StringAttribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Optional:   true,
 													PlanModifiers: []planmodifier.String{
@@ -1719,10 +1719,10 @@ type vectorKnowledgeBaseConfigurationModel struct {
 }
 
 type managedKnowledgeBaseConfigurationModel struct {
-	EmbeddingModelARN                 fwtypes.ARN                                                                                `tfsdk:"embedding_model_arn"`
-	EmbeddingModelConfiguration       fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]                          `tfsdk:"embedding_model_configuration"`
-	EmbeddingModelType                fwtypes.StringEnum[awstypes.EmbeddingModelType]                                            `tfsdk:"embedding_model_type"`
-	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[managedKBServerSideEncryptionConfigurationModel]           `tfsdk:"server_side_encryption_configuration"`
+	EmbeddingModelARN                 fwtypes.ARN                                                                      `tfsdk:"embedding_model_arn"`
+	EmbeddingModelConfiguration       fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]                `tfsdk:"embedding_model_configuration"`
+	EmbeddingModelType                fwtypes.StringEnum[awstypes.EmbeddingModelType]                                  `tfsdk:"embedding_model_type"`
+	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[managedKBServerSideEncryptionConfigurationModel] `tfsdk:"server_side_encryption_configuration"`
 }
 
 type managedKBServerSideEncryptionConfigurationModel struct {

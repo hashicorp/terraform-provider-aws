@@ -1178,19 +1178,19 @@ func (m *dataSourceResourceModel) setID() (string, error) {
 }
 
 type dataSourceConfigurationModel struct {
-	ConfluenceConfiguration                      fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel]                      `tfsdk:"confluence_configuration"`
-	ManagedKnowledgeBaseConnectorConfiguration   fwtypes.ListNestedObjectValueOf[managedKnowledgeBaseConnectorConfigurationModel]             `tfsdk:"managed_knowledge_base_connector_configuration"`
-	S3Configuration                              fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]                              `tfsdk:"s3_configuration"`
-	SalesforceConfiguration                      fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel]                      `tfsdk:"salesforce_configuration"`
-	SharePointConfiguration                      fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel]                      `tfsdk:"share_point_configuration"`
-	Type                                         fwtypes.StringEnum[awstypes.DataSourceType]                                                  `tfsdk:"type"`
-	WebConfiguration                             fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]                              `tfsdk:"web_configuration"`
+	ConfluenceConfiguration                    fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel]          `tfsdk:"confluence_configuration"`
+	ManagedKnowledgeBaseConnectorConfiguration fwtypes.ListNestedObjectValueOf[managedKnowledgeBaseConnectorConfigurationModel] `tfsdk:"managed_knowledge_base_connector_configuration"`
+	S3Configuration                            fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]                  `tfsdk:"s3_configuration"`
+	SalesforceConfiguration                    fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel]          `tfsdk:"salesforce_configuration"`
+	SharePointConfiguration                    fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel]          `tfsdk:"share_point_configuration"`
+	Type                                       fwtypes.StringEnum[awstypes.DataSourceType]                                      `tfsdk:"type"`
+	WebConfiguration                           fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]                 `tfsdk:"web_configuration"`
 }
 
 type managedKnowledgeBaseConnectorConfigurationModel struct {
-	ConnectorParameters              types.String                                                                    `tfsdk:"connector_parameters"`
-	DeletionProtectionConfiguration  fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel]           `tfsdk:"deletion_protection_configuration"`
-	MediaExtractionConfiguration     fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]              `tfsdk:"media_extraction_configuration"`
+	ConnectorParameters             types.String                                                          `tfsdk:"connector_parameters"`
+	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
+	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
 }
 
 type deletionProtectionConfigurationModel struct {
