@@ -156,6 +156,7 @@ func TestAccRoute53Record_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("health_check_id"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("latency_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("multivalue_answer_routing_policy"), knownvalue.Bool(false)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.StringExact("10.0.0.0"),
 						})),

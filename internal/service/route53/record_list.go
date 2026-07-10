@@ -101,6 +101,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 					})
 					continue
 				}
+				rd.Set(names.AttrName, name)
 			}
 
 			result.DisplayName = fmt.Sprintf("%s %s", name, typ)
