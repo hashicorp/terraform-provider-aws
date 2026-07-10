@@ -411,10 +411,10 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_route53_record.test[0]", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_route53_record.test[0]", plancheck.ResourceActionCreate),
 					},
 				},
 			},
