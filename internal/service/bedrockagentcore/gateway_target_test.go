@@ -2579,3 +2579,99 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 `, rName, kbID))
 }
+
+// TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation confirms the mcp
+// target union requires exactly one member and credential_provider_configuration
+// requires at least one provider, both at plan time. Previously setting multiple mcp
+// members silently dropped all but the first (perpetual diff) and an empty
+// credential_provider_configuration {} only failed at apply.
+func TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_mcpMultipleMembers(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpNoMember(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_credentialEmpty(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+func testAccGatewayTargetConfig_mcpMultipleMembers(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+      }
+      open_api_schema {
+        inline_payload {
+          payload = "{}"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_mcpNoMember(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {}
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_credentialEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {}
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+      }
+    }
+  }
+}
+`, rName))
+}

@@ -393,6 +393,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
 									path.MatchRelative().AtParent().AtName("oauth"),
 								),
+								// At least one credential provider must be configured; an empty
+								// credential_provider_configuration {} otherwise passed validation
+								// and only failed at apply. Combined with ConflictsWith this yields
+								// exactly-one semantics.
+								listvalidator.AtLeastOneOf(
+									path.MatchRelative().AtParent().AtName("api_key"),
+									path.MatchRelative().AtParent().AtName("caller_iam_credentials"),
+									path.MatchRelative().AtParent().AtName("gateway_iam_role"),
+									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
+									path.MatchRelative().AtParent().AtName("oauth"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -670,6 +681,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.NewListNestedObjectTypeOf[apiGatewayTargetConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+											// Exactly one mcp target type must be set. Without this, setting
+											// two members passed validation and apply "succeeded" while Expand
+											// silently kept only the first, leaving a perpetual diff.
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("api_gateway"),
+												path.MatchRelative().AtParent().AtName("connector"),
+												path.MatchRelative().AtParent().AtName("lambda"),
+												path.MatchRelative().AtParent().AtName("mcp_server"),
+												path.MatchRelative().AtParent().AtName("open_api_schema"),
+												path.MatchRelative().AtParent().AtName("smithy_model"),
+											),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
