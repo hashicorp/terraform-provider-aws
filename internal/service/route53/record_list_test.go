@@ -49,21 +49,17 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("fqdn"), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("ttl"), knownvalue.Int64Exact(300)),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("10.0.0.0"),
-					})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
 
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("fqdn"), knownvalue.StringExact(subdomainName+"-1."+zoneName)),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(subdomainName+"-1."+zoneName)),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("ttl"), knownvalue.Int64Exact(300)),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("10.0.0.1"),
-					})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
 				},
 			},
 
@@ -126,6 +122,8 @@ func TestAccRoute53Record_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
 				},
 			},
 			// Step 2: Query

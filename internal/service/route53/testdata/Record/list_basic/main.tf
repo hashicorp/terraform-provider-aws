@@ -5,7 +5,7 @@ resource "aws_route53_record" "test" {
   count = var.resource_count
 
   zone_id = aws_route53_zone.test.zone_id
-  name    = "${var.subdomainName}-${count.index}.${aws_route53_zone.test.name}"
+  name    = "${var.subdomainName}-${count.index}.${var.zoneName}"
   type    = "A"
   ttl     = 300
   records = ["10.0.0.${count.index}"]
