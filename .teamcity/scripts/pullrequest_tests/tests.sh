@@ -13,18 +13,35 @@ fi
 PKG="./internal/service/%PKG%/..."
 
 # shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
-if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
-	echo "Invalid test filter pattern: \"%TEST_PATTERN%\""
+if [[ "%TEST_PREFIX%" == "" || "%TEST_PREFIX%" == "TestAcc" ]]; then
+	echo "Invalid test filter pattern: \"%TEST_PREFIX%\""
 	exit 1
 fi
 
-#function build_test_binary {
-#	local pkg="${1:?build_test_binary: PKG argument is required}"
-#	local out
-#	out="$(basename "${pkg}").test"
-#	echo "Building test binary for ${pkg} -> ${out}"
-#	go test -c -o "${out}" "${pkg}"
-#}
+TEST_LIST=$(./test-binary -test.list="%TEST_PREFIX%" 2>/dev/null)
+
+# shellcheck disable=2157 # This isn't a constant string, it's a TeamCity variable substitution
+if [[ -n "%TEST_EXCLUDE_PATTERN%" ]]; then
+  TEST_LIST=$(echo "${TEST_LIST}" | grep -vE "%TEST_EXCLUDE_PATTERN%")
+fi
+
+read -r -a split <<<"${TEST_LIST}"
+TEST_COUNT=${#split[@]}
+
+# shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
+if [[ "%TEST_PREFIX%" != "TestAcc" ]]; then
+	echo "Filtering acceptance tests: %TEST_PREFIX%"
+fi
+if [[ "${TEST_COUNT}" == 0 ]]; then
+	echo "Zero acceptance tests"
+	exit 0
+elif [[ "${TEST_COUNT}" == 1 ]]; then
+	echo "Running 1 acceptance test:"
+else
+	echo "Running ${TEST_COUNT} acceptance tests:"
+fi
+echo "${TEST_LIST}"
+echo
 
 # shellcheck disable=2157 # These aren't constant strings, they're TeamCity variable substitution
 if [[ -n "%ACCTEST_ROLE_ARN%" || -n "%ACCTEST_ALTERNATE_ROLE_ARN%" ]]; then
@@ -77,6 +94,7 @@ fi
 #build_test_binary "${PKG%/...}"
 #binary="$(basename "${PKG%/...}").test"
 
-echo "Running acceptance tests for ${PKG} with pattern %TEST_PATTERN%"
+echo "Running acceptance tests for ${PKG} with pattern %TEST_PREFIX%"
 
-TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false
+#TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false
+echo "${TEST_LIST}" | TF_ACC=1 teamcity-go-test -test ./test-binary -parallelism "%ACCTEST_PARALLELISM%"

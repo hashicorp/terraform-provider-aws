@@ -137,6 +137,10 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
+            name = "Compile Test Binary"
+            scriptContent = File("./scripts/pullrequest_tests/compile_test_binary.sh").readText()
+        }
+        script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
         }
