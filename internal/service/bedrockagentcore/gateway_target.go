@@ -809,7 +809,10 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(
-															regexache.MustCompile(`https://.*`),
+															// Anchor the pattern so the endpoint must *start* with https://
+															// (an unanchored https://.* accepts any string merely
+															// containing https://). Mirrors the inference provider endpoint.
+															regexache.MustCompile(`^https://.+`),
 															"Must start with https://",
 														),
 													},
@@ -977,7 +980,14 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 																			Optional: true,
 																		},
 																		"strip": schema.BoolAttribute{
+																			// SDK ProviderPrefix.Strip is a non-pointer bool that the
+																			// service defaults to false and always returns from Get, so
+																			// a plain Optional yields "inconsistent result after apply"
+																			// (planned null, but now cty.False). Optional+Computed with a
+																			// false default absorbs the server value.
 																			Optional: true,
+																			Computed: true,
+																			Default:  booldefault.StaticBool(false),
 																		},
 																	},
 																},

@@ -2440,3 +2440,103 @@ resource "aws_route_table_association" "test" {
 }
 `, rName, subnetCount))
 }
+
+// TestAccBedrockAgentCoreGatewayTarget_inferenceProviderPrefixStrip covers the
+// provider_prefix.strip field. The SDK models Strip as a non-pointer bool that the
+// service defaults to false and always returns, so with a plain Optional schema an
+// apply that omits strip produced "Provider produced inconsistent result after
+// apply" (planned null, but now cty.False). Optional+Computed with a false default
+// must apply cleanly and re-plan empty.
+func TestAccBedrockAgentCoreGatewayTarget_inferenceProviderPrefixStrip(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationInferenceProviderPrefix(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.model_mapping.0.provider_prefix.0.strip", "false"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_mcpServerEndpointAnchored confirms the
+// mcp_server endpoint validator is anchored: a string that merely contains, but does
+// not start with, https:// is rejected at plan time (previously the unanchored
+// https://.* pattern accepted it).
+func TestAccBedrockAgentCoreGatewayTarget_mcpServerEndpointAnchored(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationMCPServerListingMode(rName, "ftp://not-really-https://evil.example.com", awstypes.ListingModeDefault),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value Match"),
+			},
+		},
+	})
+}
+
+func testAccGatewayTargetConfig_targetConfigurationInferenceProviderPrefix(rName, credentialProviderContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[2]s
+  }
+
+  target_configuration {
+    inference {
+      provider {
+        endpoint = "https://api.anthropic.com"
+
+        operations {
+          path = "/v1/messages"
+
+          models {
+            model = "anthropic.claude-*"
+          }
+        }
+
+        model_mapping {
+          provider_prefix {
+            separator = "."
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, credentialProviderContent))
+}
