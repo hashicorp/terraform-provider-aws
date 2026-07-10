@@ -16,18 +16,18 @@ import (
 )
 
 var (
-	_ validator.Bool   = AlsoRequiresWhenEqualsValidator{}
-	_ validator.String = AlsoRequiresWhenEqualsValidator{}
+	_ validator.Bool   = (*AlsoRequiresWhenEqualsValidator)(nil)
+	_ validator.String = (*AlsoRequiresWhenEqualsValidator)(nil)
 )
 
-type AlsoRequiresWhenEqualsValidatorRequest struct {
+type alsoRequiresWhenEqualsValidatorRequest struct {
 	Config         tfsdk.Config
 	ConfigValue    attr.Value
 	Path           path.Path
 	PathExpression path.Expression
 }
 
-type AlsoRequiresWhenEqualsValidatorResponse struct {
+type alsoRequiresWhenEqualsValidatorResponse struct {
 	Diagnostics diag.Diagnostics
 }
 
@@ -45,34 +45,34 @@ func (v AlsoRequiresWhenEqualsValidator) MarkdownDescription(ctx context.Context
 }
 
 func (v AlsoRequiresWhenEqualsValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
-	validateRequest := AlsoRequiresWhenEqualsValidatorRequest{
+	validateRequest := alsoRequiresWhenEqualsValidatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse AlsoRequiresWhenEqualsValidatorResponse
+	var validateResponse alsoRequiresWhenEqualsValidatorResponse
 
-	v.Validate(ctx, validateRequest, &validateResponse)
+	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
 func (v AlsoRequiresWhenEqualsValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := AlsoRequiresWhenEqualsValidatorRequest{
+	validateRequest := alsoRequiresWhenEqualsValidatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse AlsoRequiresWhenEqualsValidatorResponse
+	var validateResponse alsoRequiresWhenEqualsValidatorResponse
 
-	v.Validate(ctx, validateRequest, &validateResponse)
+	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v AlsoRequiresWhenEqualsValidator) Validate(ctx context.Context, request AlsoRequiresWhenEqualsValidatorRequest, response *AlsoRequiresWhenEqualsValidatorResponse) {
+func (v AlsoRequiresWhenEqualsValidator) validate(ctx context.Context, request alsoRequiresWhenEqualsValidatorRequest, response *alsoRequiresWhenEqualsValidatorResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
