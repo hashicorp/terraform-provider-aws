@@ -157,6 +157,14 @@ object PullRequest : BuildType({
             testFormat = "json"
         }
 
+        buildCache {
+            name = "go-mod-cache"
+            publish = true
+            use = true
+            publishOnlyChanged = false
+            rules = "%env.HOME%/go/pkg/mod"
+        }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
