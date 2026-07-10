@@ -74,7 +74,6 @@ EOF
 	fi
 fi
 
-export TF_ACC_TERRAFORM_VERSION="%TERRAFORM_VERSION%"
 #build_test_binary "${PKG%/...}"
 #binary="$(basename "${PKG%/...}").test"
 
