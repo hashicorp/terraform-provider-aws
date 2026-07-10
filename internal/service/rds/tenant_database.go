@@ -7,6 +7,7 @@ package rds
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,8 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_tenant_database", name="DB Tenant Database")
+// @SDKResource("aws_db_tenant_database", name="Tenant Database")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceTenantDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTenantDatabaseCreate,
@@ -94,24 +96,11 @@ func resourceTenantDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrUsername: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"nchar_character_set_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-			"tenant_db_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"tenant_database_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -119,6 +108,19 @@ func resourceTenantDatabase() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenant_database_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tenant_db_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrUsername: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -127,11 +129,12 @@ func resourceTenantDatabaseCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	input := &rds.CreateTenantDatabaseInput{
+	name := d.Get("tenant_db_name").(string)
+	input := rds.CreateTenantDatabaseInput{
 		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
 		MasterUsername:       aws.String(d.Get(names.AttrUsername).(string)),
 		Tags:                 getTagsIn(ctx),
-		TenantDBName:         aws.String(d.Get("tenant_db_name").(string)),
+		TenantDBName:         aws.String(name),
 	}
 
 	if v, ok := d.GetOk("character_set_name"); ok {
@@ -154,19 +157,17 @@ func resourceTenantDatabaseCreate(ctx context.Context, d *schema.ResourceData, m
 		input.NcharCharacterSetName = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*rds.CreateTenantDatabaseOutput, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (*rds.CreateTenantDatabaseOutput, error) {
-		return conn.CreateTenantDatabase(ctx, input)
+	output, err := tfresource.RetryWhenIsA[*rds.CreateTenantDatabaseOutput, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (*rds.CreateTenantDatabaseOutput, error) {
+		return conn.CreateTenantDatabase(ctx, &input)
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS DB Tenant Database: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Tenant Database (%s): %s", name, err)
 	}
-
-	output := outputRaw
 
 	d.SetId(aws.ToString(output.TenantDatabase.TenantDatabaseResourceId))
 
 	if _, err := waitTenantDatabaseAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Tenant Database (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Tenant Database (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTenantDatabaseRead(ctx, d, meta)...)
@@ -182,12 +183,11 @@ func resourceTenantDatabaseRead(ctx context.Context, d *schema.ResourceData, met
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Tenant Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Tenant Database (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, tenantDB.TenantDatabaseARN)
 	d.Set("character_set_name", tenantDB.CharacterSetName)
-	setTagsOut(ctx, tenantDB.TagList)
 	d.Set("db_instance_identifier", tenantDB.DBInstanceIdentifier)
 	// manage_master_user_password is a virtual attribute not returned by the API.
 	// Infer it from the presence of MasterUserSecret so import works correctly.
@@ -205,6 +205,8 @@ func resourceTenantDatabaseRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("tenant_database_resource_id", tenantDB.TenantDatabaseResourceId)
 	d.Set(names.AttrUsername, tenantDB.MasterUsername)
 
+	setTagsOut(ctx, tenantDB.TagList)
+
 	return diags
 }
 
@@ -215,10 +217,10 @@ func resourceTenantDatabaseUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChanges("tenant_db_name", "master_password", "manage_master_user_password", "master_user_secret_kms_key_id") {
 		tenantDB, err := findTenantDatabaseByID(ctx, conn, d.Id())
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading RDS DB Tenant Database (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading RDS Tenant Database (%s): %s", d.Id(), err)
 		}
 
-		input := &rds.ModifyTenantDatabaseInput{
+		input := rds.ModifyTenantDatabaseInput{
 			DBInstanceIdentifier: tenantDB.DBInstanceIdentifier,
 			TenantDBName:         tenantDB.TenantDBName,
 		}
@@ -239,13 +241,13 @@ func resourceTenantDatabaseUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.MasterUserSecretKmsKeyId = aws.String(d.Get("master_user_secret_kms_key_id").(string))
 		}
 
-		_, err = conn.ModifyTenantDatabase(ctx, input)
+		_, err = conn.ModifyTenantDatabase(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Tenant Database (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying RDS Tenant Database (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitTenantDatabaseAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Tenant Database (%s) to become available: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Tenant Database (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -261,27 +263,28 @@ func resourceTenantDatabaseDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Tenant Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Tenant Database (%s): %s", d.Id(), err)
 	}
 
-	input := &rds.DeleteTenantDatabaseInput{
+	log.Printf("[DEBUG] Deleting RDS Tenant Database: %s", d.Id())
+	input := rds.DeleteTenantDatabaseInput{
 		DBInstanceIdentifier: tenantDB.DBInstanceIdentifier,
 		TenantDBName:         tenantDB.TenantDBName,
 		SkipFinalSnapshot:    aws.Bool(true),
 	}
 
 	_, err = tfresource.RetryWhenIsA[*rds.DeleteTenantDatabaseOutput, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (*rds.DeleteTenantDatabaseOutput, error) {
-		return conn.DeleteTenantDatabase(ctx, input)
+		return conn.DeleteTenantDatabase(ctx, &input)
 	})
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) || errs.IsA[*types.TenantDatabaseNotFoundFault](err) {
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Tenant Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Tenant Database (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTenantDatabaseDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Tenant Database (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Tenant Database (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

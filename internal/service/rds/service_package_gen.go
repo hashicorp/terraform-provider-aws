@@ -225,15 +225,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
-			Factory:  resourceTenantDatabase,
-			TypeName: "aws_db_tenant_database",
-			Name:     "DB Tenant Database",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
-		},
-		{
 			Factory:  resourceOptionGroup,
 			TypeName: "aws_db_option_group",
 			Name:     "DB Option Group",
@@ -311,6 +302,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
+		},
+		{
+			Factory:  resourceTenantDatabase,
+			TypeName: "aws_db_tenant_database",
+			Name:     "Tenant Database",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceCertificate,
