@@ -687,7 +687,7 @@ resource "aws_bedrockagentcore_memory_strategy" "%[1]s" {
     type = "SEMANTIC_OVERRIDE"
     extraction {
       append_to_prompt = "test"
-      model_id         = "test_model"
+      model_id         = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
     }
   }
   # Preventing the main strategy from being lost due to "too many resources" error
