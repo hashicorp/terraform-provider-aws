@@ -138,33 +138,46 @@ func (r *gatewayWAFConfigurationResource) Read(ctx context.Context, request reso
 }
 
 func (r *gatewayWAFConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var data gatewayWAFConfigurationResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	var plan, state gatewayWAFConfigurationResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier)
-	wafConfiguration := &awstypes.WafConfiguration{
-		FailureMode: data.FailureMode.ValueEnum(),
+	gatewayID := fwflex.StringValueFromFramework(ctx, plan.GatewayIdentifier)
+
+	// failure_mode is the only server-relevant mutable attribute (gateway_identifier is
+	// RequiresReplace, web_acl_arn is Computed, and timeouts is client-side only). Skip the
+	// read-modify-write UpdateGateway round trip when it is unchanged so a plan that only
+	// edits the timeouts block does not needlessly drive the gateway through UPDATING.
+	if !plan.FailureMode.Equal(state.FailureMode) {
+		wafConfiguration := &awstypes.WafConfiguration{
+			FailureMode: plan.FailureMode.ValueEnum(),
+		}
+
+		if err := r.putWAFConfiguration(ctx, conn, gatewayID, wafConfiguration, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+			return
+		}
+
+		gateway, err := findGatewayByID(ctx, conn, gatewayID)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+			return
+		}
+
+		plan.WebACLARN = fwflex.StringToFramework(ctx, gateway.WebAclArn)
+	} else {
+		plan.WebACLARN = state.WebACLARN
 	}
 
-	if err := r.putWAFConfiguration(ctx, conn, gatewayID, wafConfiguration, r.UpdateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
-		return
-	}
-
-	gateway, err := findGatewayByID(ctx, conn, gatewayID)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
-		return
-	}
-
-	data.WebACLARN = fwflex.StringToFramework(ctx, gateway.WebAclArn)
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *gatewayWAFConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
