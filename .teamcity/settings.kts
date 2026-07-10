@@ -3,7 +3,6 @@
  */
 
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
-import jetbrains.buildServer.configs.kotlin.buildFeatures.BuildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.buildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
@@ -17,7 +16,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2024.03"
+version = "2025.11"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -144,10 +143,15 @@ object PullRequest : BuildType({
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
         buildCache {
             name = "go-mod-cache"
-            publish = BuildCache.Publishing.Always
-            use = BuildCache.Using.Always
+            publish = true
+            use = true
+            publishOnlyChanged = true
             rules = "%env.HOME%/go/pkg/mod"
         }
 
