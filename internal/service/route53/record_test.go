@@ -2281,7 +2281,7 @@ func testAccCheckRecordDestroy(ctx context.Context, t *testing.T) resource.TestC
 				continue
 			}
 
-			_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
+			_, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
 				tfroute53.CleanZoneID(rs.Primary.Attributes["zone_id"]),
 				rs.Primary.Attributes[names.AttrName],
 				rs.Primary.Attributes[names.AttrType],
@@ -2312,7 +2312,7 @@ func testAccCheckRecordExists(ctx context.Context, t *testing.T, n string, v *aw
 
 		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
-		output, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
+		output, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
 			tfroute53.CleanZoneID(rs.Primary.Attributes["zone_id"]),
 			rs.Primary.Attributes[names.AttrName],
 			rs.Primary.Attributes[names.AttrType],
@@ -2341,7 +2341,7 @@ func testAccCheckRecordDoesNotExist(ctx context.Context, t *testing.T, zoneResou
 		zone := rs.Primary.ID
 		recordName := tfroute53.ExpandRecordName(recordName, zone)
 
-		_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, zone, recordName, recordType, "")
+		_, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, zone, recordName, recordType, "")
 
 		if retry.NotFound(err) {
 			return nil

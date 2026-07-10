@@ -415,7 +415,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	record, _, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	record, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
@@ -739,7 +739,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		name = d.Get(names.AttrName).(string)
 	}
-	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	rec, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
 	if retry.NotFound(err) {
 		return diags
@@ -809,11 +809,11 @@ func recordParseResourceID(id string) [4]string {
 	return [4]string{recZone, recName, recType, recSet}
 }
 
-func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Client, zoneID, recordName, recordType, recordSetID string) (*awstypes.ResourceRecordSet, *string, error) {
+func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Client, zoneID, recordName, recordType, recordSetID string) (*awstypes.ResourceRecordSet, error) {
 	zone, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
@@ -844,10 +844,10 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return output, &name, nil
+	return output, nil
 }
 
 func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, morePages tfslices.Predicate[*route53.ListResourceRecordSetsOutput], filter tfslices.Predicate[*awstypes.ResourceRecordSet]) (*awstypes.ResourceRecordSet, error) {
