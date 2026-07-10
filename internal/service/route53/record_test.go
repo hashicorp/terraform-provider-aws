@@ -111,7 +111,7 @@ func TestAccRoute53Record_basic_ShortName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multivalue_answer_routing_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, shortRecordName),
-					resource.TestCheckResourceAttr(resourceName, "records.#", ""),
+					resource.TestCheckResourceAttr(resourceName, "records.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
