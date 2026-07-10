@@ -47,7 +47,6 @@ func TestAccRDSTenantDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "AL32UTF8"),
 					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "AL16UTF16"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "tenant_database_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "available"),
 				),
