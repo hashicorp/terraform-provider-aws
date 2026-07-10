@@ -823,10 +823,6 @@ resource "aws_elasticache_user" "test" {
   engine              = "redis"
   password_wo_1       = %[2]q
   password_wo_version = %[3]d
-
-  authentication_mode {
-    type = "password"
-  }
 }
 `, rName, password, version)
 }
@@ -841,10 +837,6 @@ resource "aws_elasticache_user" "test" {
   password_wo_1       = %[2]q
   password_wo_2       = %[3]q
   password_wo_version = %[4]d
-
-  authentication_mode {
-    type = "password"
-  }
 }
 `, rName, password1, password2, version)
 }
@@ -859,10 +851,6 @@ resource "aws_elasticache_user" "test" {
   passwords           = ["aaaaaaaaaaaaaaaa"]
   password_wo_1       = "bbbbbbbbbbbbbbbb"
   password_wo_version = 1
-
-  authentication_mode {
-    type = "password"
-  }
 }
 `, rName)
 }
