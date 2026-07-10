@@ -68,6 +68,10 @@ func resourceUser() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"password_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 							"passwords": {
 								Type:      schema.TypeSet,
 								Optional:  true,
@@ -76,10 +80,6 @@ func resourceUser() *schema.Resource {
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
-							},
-							"password_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
 							},
 							names.AttrType: {
 								Type:             schema.TypeString,
@@ -111,7 +111,31 @@ func resourceUser() *schema.Resource {
 						Type:         schema.TypeString,
 						ValidateFunc: validation.StringLenBetween(16, 128),
 					},
-					Sensitive: true,
+					Sensitive:     true,
+					ConflictsWith: []string{"password_wo_1", "password_wo_2"},
+				},
+				"password_wo_1": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ValidateFunc:  validation.StringLenBetween(16, 128),
+					ConflictsWith: []string{"passwords", "passwords_wo", "authentication_mode.0.passwords"},
+					RequiredWith:  []string{"password_wo_version"},
+				},
+				"password_wo_2": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ValidateFunc:  validation.StringLenBetween(16, 128),
+					ConflictsWith: []string{"passwords", "passwords_wo", "authentication_mode.0.passwords"},
+					RequiredWith:  []string{"password_wo_version"},
+				},
+				"password_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					AtLeastOneOf: []string{"password_wo_1", "password_wo_2"},
 				},
 				"passwords_wo": {
 					Type:          schema.TypeString,
@@ -119,13 +143,16 @@ func resourceUser() *schema.Resource {
 					WriteOnly:     true,
 					Sensitive:     true,
 					ValidateFunc:  validation.StringLenBetween(16, 128),
-					ConflictsWith: []string{"passwords", "authentication_mode"},
+					ConflictsWith: []string{"passwords", "authentication_mode", "password_wo_1", "password_wo_2"},
 					RequiredWith:  []string{"passwords_wo_version"},
+					Deprecated:    "Use password_wo_1 and password_wo_2 instead",
 				},
 				"passwords_wo_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					RequiredWith: []string{"passwords_wo"},
+					Type:          schema.TypeInt,
+					Optional:      true,
+					RequiredWith:  []string{"passwords_wo"},
+					ConflictsWith: []string{"password_wo_version"},
+					Deprecated:    "Use password_wo_version instead",
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -177,6 +204,16 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if passwordsWO != "" {
 		input.Passwords = []string{passwordsWO}
+	}
+
+	// New: top-level password_wo_1 / password_wo_2
+	authModePasswords, di := getAuthModePasswordsWO(d)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+	if len(authModePasswords) > 0 {
+		input.Passwords = authModePasswords
 	}
 
 	output, err := conn.CreateUser(ctx, input)
@@ -294,6 +331,17 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 			}
 			if passwordsWO != "" {
 				input.Passwords = []string{passwordsWO}
+			}
+		}
+
+		if d.HasChange("password_wo_version") {
+			authModePasswords, di := getAuthModePasswordsWO(d)
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+			if len(authModePasswords) > 0 {
+				input.Passwords = authModePasswords
 			}
 		}
 
@@ -453,6 +501,31 @@ func waitUserDeleted(ctx context.Context, conn *elasticache.Client, id string, t
 	}
 
 	return nil, err
+}
+
+func getAuthModePasswordsWO(d *schema.ResourceData) ([]string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var passwords []string
+
+	pw1, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo_1"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return nil, diags
+	}
+	if pw1 != "" {
+		passwords = append(passwords, pw1)
+	}
+
+	pw2, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo_2"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return nil, diags
+	}
+	if pw2 != "" {
+		passwords = append(passwords, pw2)
+	}
+
+	return passwords, diags
 }
 
 func expandAuthenticationMode(tfMap map[string]any) *awstypes.AuthenticationMode {

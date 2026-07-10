@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -659,4 +660,209 @@ resource "aws_elasticache_user" "test" {
   passwords_wo_version = %[3]d
 }
 `, rName, password, version)
+}
+
+func TestAccElastiCacheUser_authModePasswordWOSingle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_authModePasswordWOSingle(rName, "password123456789", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password_wo_1",
+					"password_wo_version",
+					"no_password_required",
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_authModePasswordWODual(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_authModePasswordWODual(rName, "password123456789", "password987654321", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password_wo_1",
+					"password_wo_2",
+					"password_wo_version",
+					"no_password_required",
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_authModePasswordWORotation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user1, user2 awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_authModePasswordWOSingle(rName, "password123456789", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+				),
+			},
+			// Update password by incrementing version
+			{
+				Config: testAccUserConfig_authModePasswordWOSingle(rName, "newpassword1234567", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_authModePasswordWOReduceToOne(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user1, user2 awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_authModePasswordWODual(rName, "password123456789", "password987654321", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+				),
+			},
+			// Reduce to single password by incrementing version
+			{
+				Config: testAccUserConfig_authModePasswordWOSingle(rName, "password123456789", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_authModePasswordWOConflictsWithPasswords(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserConfig_authModePasswordWOConflict(rName),
+				ExpectError: regexache.MustCompile(`"password_wo_1": conflicts with passwords`),
+			},
+		},
+	})
+}
+
+func testAccUserConfig_authModePasswordWOSingle(rName, password string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id            = %[1]q
+  user_name          = "username1"
+  access_string      = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine             = "redis"
+  password_wo_1      = %[2]q
+  password_wo_version = %[3]d
+
+  authentication_mode {
+    type = "password"
+  }
+}
+`, rName, password, version)
+}
+
+func testAccUserConfig_authModePasswordWODual(rName, password1, password2 string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id             = %[1]q
+  user_name           = "username1"
+  access_string       = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine              = "redis"
+  password_wo_1       = %[2]q
+  password_wo_2       = %[3]q
+  password_wo_version = %[4]d
+
+  authentication_mode {
+    type = "password"
+  }
+}
+`, rName, password1, password2, version)
+}
+
+func testAccUserConfig_authModePasswordWOConflict(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id             = %[1]q
+  user_name           = "username1"
+  access_string       = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine              = "redis"
+  passwords           = ["aaaaaaaaaaaaaaaa"]
+  password_wo_1       = "bbbbbbbbbbbbbbbb"
+  password_wo_version = 1
+
+  authentication_mode {
+    type = "password"
+  }
+}
+`, rName)
 }
