@@ -360,6 +360,10 @@ func dataSourceDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"engine_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrEngineVersion: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -489,6 +493,10 @@ func dataSourceDomain() *schema.Resource {
 					},
 				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
+				"use_case": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"vpc_options": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -638,7 +646,9 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
 	}
 
+	d.Set("engine_mode", ds.EngineMode)
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	d.Set("use_case", ds.UseCase)
 	if ds.IdentityCenterOptions != nil {
 		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting identity_center_options: %s", err)
