@@ -78,6 +78,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), recordID)
 
 			name := strings.TrimSuffix(aws.ToString(item.Name), ".")
+			typ := string(item.Type)
 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
@@ -87,7 +88,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			rd.Set("zone_id", query.ZoneID.ValueString())
 			// The Resource Identity `name` attribute is populated from the resource `fqdn` attribute
 			rd.Set("fqdn", name)
-			rd.Set(names.AttrType, string(item.Type))
+			rd.Set(names.AttrType, typ)
 			if item.SetIdentifier != nil {
 				rd.Set("set_identifier", aws.ToString(item.SetIdentifier))
 			}
@@ -102,7 +103,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 				}
 			}
 
-			result.DisplayName = aws.ToString(item.Name)
+			result.DisplayName = fmt.Sprintf("%s %s", name, typ)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
