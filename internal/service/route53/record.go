@@ -464,13 +464,7 @@ func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceReco
 		}
 	}
 
-	fqdn := strings.TrimSuffix(aws.ToString(record.Name), ".")
-	// findResourceRecordSetByFourPartKey returns the FQDN in API-normalized form.
-	// For backwards compatibility, restore any '*' as the leftmost label in the domain name.
-	// \052 is the octal representation of '*'.
-	if after, ok := strings.CutPrefix(fqdn, `\052.`); ok {
-		fqdn = `*.` + after
-	}
+	fqdn := denormalizeDomainName(record.Name)
 	d.Set("fqdn", fqdn)
 
 	if geoLocation := record.GeoLocation; geoLocation != nil {

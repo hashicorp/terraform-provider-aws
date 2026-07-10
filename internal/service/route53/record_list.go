@@ -77,7 +77,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			recordID := createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), recordID)
 
-			name := strings.TrimSuffix(aws.ToString(item.Name), ".")
+			name := denormalizeDomainName(item.Name)
 			typ := string(item.Type)
 
 			result := request.NewListResult(ctx)
