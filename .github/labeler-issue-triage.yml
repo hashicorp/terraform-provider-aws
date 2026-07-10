@@ -418,6 +418,8 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/lambdamicrovms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
 service/launchwizard:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
