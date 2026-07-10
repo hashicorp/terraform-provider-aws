@@ -212,6 +212,43 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_secretSourceForceNew(t *te
 	})
 }
 
+func TestAccBedrockAgentCorePaymentCredentialProvider_externalImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_payment_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPaymentCredentialProviderConfig_stripePrivyExternalBoth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentCredentialProviderExists(ctx, t, resourceName),
+				),
+			},
+			{
+				// Regression: when both secrets are EXTERNAL, every field is readable
+				// from the API, so import must round-trip the whole
+				// provider_configuration block with NO ImportStateVerifyIgnore. Read
+				// hydrates the identifiers, secret sources, secret ARNs, and the
+				// external secret references.
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+		},
+	})
+}
+
 func testAccCheckPaymentCredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -281,6 +318,48 @@ resource "aws_bedrockagentcore_payment_credential_provider" "test" {
       app_secret                = "sk_test_secret"
       authorization_id          = "auth_test_id"
       authorization_private_key = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPaymentCredentialProviderConfig_stripePrivyExternalBoth(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ app = "sk_test_secret", auth = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI" })
+}
+
+resource "aws_bedrockagentcore_payment_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "StripePrivy"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  provider_configuration {
+    stripe_privy_configuration {
+      app_id            = "app_test_id"
+      app_secret_source = "EXTERNAL"
+
+      app_secret_config {
+        json_key  = "app"
+        secret_id = aws_secretsmanager_secret_version.test.secret_id
+      }
+
+      authorization_id                 = "auth_test_id"
+      authorization_private_key_source = "EXTERNAL"
+
+      authorization_private_key_config {
+        json_key  = "auth"
+        secret_id = aws_secretsmanager_secret_version.test.secret_id
+      }
     }
   }
 }
