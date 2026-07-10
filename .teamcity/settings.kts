@@ -3,6 +3,7 @@
  */
 
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
+import jetbrains.buildServer.configs.kotlin.buildFeatures.BuildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.buildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
@@ -145,8 +146,8 @@ object PullRequest : BuildType({
     features {
         buildCache {
             name = "go-mod-cache"
-            use = true
-            store = true
+            publish = BuildCache.Publishing.Always
+            use = BuildCache.Using.Always
             rules = "%env.HOME%/go/pkg/mod"
         }
 
