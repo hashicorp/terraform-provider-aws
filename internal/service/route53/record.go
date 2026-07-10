@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -37,13 +38,17 @@ import (
 	when `set_identifier` changes. Other changes to Identity-related attributes do not do this.
 */
 
+// For Resource Identity, the fully qualified `fqdn` is used for the `name` attribute to fully, uniquely identify the resource.
+// The `name` of the resource can be partial or fully-qualified so it does not do this.
+
 // @SDKResource("aws_route53_record", name="Record")
 // @IdentityAttribute("zone_id")
-// @IdentityAttribute("name")
+// @IdentityAttribute("name", resourceAttributeName="fqdn")
 // @IdentityAttribute("type")
 // @IdentityAttribute("set_identifier", optional="true")
 // @MutableIdentity
 // @ImportIDHandler("recordImportID")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
@@ -55,6 +60,21 @@ func resourceRecord() *schema.Resource {
 		ReadWithoutTimeout:   resourceRecordRead,
 		UpdateWithoutTimeout: resourceRecordUpdate,
 		DeleteWithoutTimeout: resourceRecordDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				if v, ok := d.GetOk("fqdn"); ok {
+					d.Set(names.AttrName, v)
+					d.SetId(createRecordImportID(d))
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
