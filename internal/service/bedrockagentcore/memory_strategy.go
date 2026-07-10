@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -92,6 +94,13 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
 				},
 				Required: true,
+				// ModifyMemoryStrategyInput has no Name field, so the service cannot
+				// rename a strategy; a change must force replacement rather than plan an
+				// in-place update that the API silently ignores (leaving state and the
+				// server name divergent -> "inconsistent result after apply").
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespaces": schema.SetAttribute{
 				CustomType:         fwtypes.SetOfStringType,
@@ -253,6 +262,21 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					// memory_record_schema can be updated in place, but the API ignores a
+					// nil (cleared) MemoryRecordSchema and retains the prior value, so a
+					// set->unset removal yields "inconsistent result after apply" (block
+					// count 0 -> 1). Force replacement when it is removed.
+					listplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							stateHas := !request.StateValue.IsNull() && len(request.StateValue.Elements()) > 0
+							planHas := !request.PlanValue.IsNull() && len(request.PlanValue.Elements()) > 0
+							response.RequiresReplace = stateHas && !planHas
+						},
+						"Removing memory_record_schema requires replacement.",
+						"Removing memory_record_schema requires replacement.",
+					),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"metadata_schema": schema.ListNestedBlock{
@@ -336,6 +360,16 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 																				Attributes: map[string]schema.Attribute{
 																					"min_value": schema.Float64Attribute{
 																						Optional: true,
+																						// Require at least one bound so an empty
+																						// number_validation {} is rejected at plan
+																						// instead of being discarded by the API ->
+																						// "inconsistent result after apply".
+																						Validators: []validator.Float64{
+																							float64validator.AtLeastOneOf(
+																								path.MatchRelative().AtParent().AtName("min_value"),
+																								path.MatchRelative().AtParent().AtName("max_value"),
+																							),
+																						},
 																					},
 																					"max_value": schema.Float64Attribute{
 																						Optional: true,
@@ -354,6 +388,16 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 																						CustomType:  fwtypes.ListOfStringType,
 																						ElementType: types.StringType,
 																						Optional:    true,
+																						// Require at least one field so an empty
+																						// string_list_validation {} is rejected at plan
+																						// instead of being discarded by the API ->
+																						// "inconsistent result after apply".
+																						Validators: []validator.List{
+																							listvalidator.AtLeastOneOf(
+																								path.MatchRelative().AtParent().AtName("allowed_values"),
+																								path.MatchRelative().AtParent().AtName("max_items"),
+																							),
+																						},
 																					},
 																					"max_items": schema.Int32Attribute{
 																						Optional: true,
@@ -382,6 +426,109 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Delete: true,
 			}),
 		},
+	}
+}
+
+type errorIfSingleBlockRemoved_ struct {
+	label string
+}
+
+func errorIfSingleBlockRemoved(label string) planmodifier.List {
+	return errorIfSingleBlockRemoved_{label: label}
+}
+
+func (m errorIfSingleBlockRemoved_) Description(context.Context) string {
+	return "Disallow removing previously configured " + m.label + " block"
+}
+
+func (m errorIfSingleBlockRemoved_) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	// Skip create or destroy.
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	// Defer until known values
+	if req.StateValue.IsUnknown() || req.PlanValue.IsUnknown() {
+		return
+	}
+
+	// Read the configuration override type as a nullable enum. When the prior or
+	// planned strategy is not CUSTOM there is no configuration block, so
+	// configuration[0].type is null; reading it into a bare awstypes.OverrideType
+	// panics with a null-value conversion error and aborts plan generation.
+	overrideTypePath := path.Root(names.AttrConfiguration).AtListIndex(0).AtName(names.AttrType)
+
+	var plannedType fwtypes.StringEnum[awstypes.OverrideType]
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, overrideTypePath, &plannedType))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var stateType fwtypes.StringEnum[awstypes.OverrideType]
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, overrideTypePath, &stateType))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// No configuration block on one side (non-CUSTOM strategy): nothing to guard.
+	if plannedType.IsNull() || plannedType.IsUnknown() || stateType.IsNull() || stateType.IsUnknown() {
+		return
+	}
+
+	if plannedType.ValueEnum() != stateType.ValueEnum() {
+		return
+	}
+
+	stateList, sDiags := req.StateValue.ToListValue(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sDiags)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	planList, pDiags := req.PlanValue.ToListValue(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, pDiags)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
+		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
+	}
+}
+
+func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data memoryStrategyResourceModel
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Type.IsUnknown() {
+		return
+	}
+
+	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
+		if data.Configuration.IsNull() || data.Configuration.IsUnknown() {
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the configuration block is required."))
+			return
+		} else {
+			c, diags := data.Configuration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
+			}
+		}
+	} else {
+		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
+		}
 	}
 }
 
