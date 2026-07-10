@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add `self_managed` block to `configuration` for the `SELF_MANAGED` override type
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_memory_strategy: Force replacement when `name` changes. The service API does not support renaming a strategy, so an in-place update previously produced `Provider produced inconsistent result after apply`.
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_memory_strategy: Absorb the server-retained `description` when removed from configuration. The service API ignores a null description and retains the previously stored value; the attribute is now `Optional`+`Computed` so the resource converges instead of producing `Provider produced inconsistent result after apply` and a perpetual diff.
+```
