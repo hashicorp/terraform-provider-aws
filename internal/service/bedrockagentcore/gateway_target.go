@@ -2675,14 +2675,26 @@ func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 	var diags diag.Diagnostics
 	m.InlinePayload = fwtypes.NewListNestedObjectValueOfNull[inlinePayloadModel](ctx)
 	m.S3 = fwtypes.NewListNestedObjectValueOfNull[s3ConfigurationModel](ctx)
-	switch t := v.(type) {
+
+	// This is called two ways: directly with the union interface still holding a
+	// pointer (the passthrough schema path), and via AutoFlex which delivers a
+	// dereferenced value (the mcp_server open_api_schema / smithy_model path).
+	// Normalize a pointer to its value so both dispatch to the same cases.
+	switch p := v.(type) {
 	case *awstypes.ApiSchemaConfigurationMemberInlinePayload:
+		v = *p
+	case *awstypes.ApiSchemaConfigurationMemberS3:
+		v = *p
+	}
+
+	switch t := v.(type) {
+	case awstypes.ApiSchemaConfigurationMemberInlinePayload:
 		var model inlinePayloadModel
 		model.Payload = types.StringValue(t.Value)
 		m.InlinePayload = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 		return diags
 
-	case *awstypes.ApiSchemaConfigurationMemberS3:
+	case awstypes.ApiSchemaConfigurationMemberS3:
 		var model s3ConfigurationModel
 		d := fwflex.Flatten(ctx, t.Value, &model)
 		smerr.AddEnrich(ctx, &diags, d)
