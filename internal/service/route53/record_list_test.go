@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRoute53Record_List_basic(t *testing.T) {
+func TestAccRoute53Record_List_fullName(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_route53_record.test[0]"
@@ -45,7 +45,7 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Record/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_fullname/"),
 				ConfigVariables: config.Variables{
 					"subdomainName":  config.StringVariable(subdomainName),
 					"zoneName":       config.StringVariable(zoneName),
@@ -71,7 +71,7 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Record/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_fullname/"),
 				ConfigVariables: config.Variables{
 					"subdomainName":  config.StringVariable(subdomainName),
 					"zoneName":       config.StringVariable(zoneName),
@@ -101,7 +101,7 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_includeResource(t *testing.T) {
+func TestAccRoute53Record_List_fullName_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_record.test[0]"
@@ -122,7 +122,7 @@ func TestAccRoute53Record_List_includeResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Record/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_fullname_include_resource/"),
 				ConfigVariables: config.Variables{
 					"subdomainName":  config.StringVariable(subdomainName),
 					"zoneName":       config.StringVariable(zoneName),
@@ -137,7 +137,7 @@ func TestAccRoute53Record_List_includeResource(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Record/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_fullname_include_resource/"),
 				ConfigVariables: config.Variables{
 					"subdomainName":  config.StringVariable(subdomainName),
 					"zoneName":       config.StringVariable(zoneName),
