@@ -18,13 +18,13 @@ if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
 	exit 1
 fi
 
-function build_test_binary {
-	local pkg="${1:?build_test_binary: PKG argument is required}"
-	local out
-	out="$(basename "${pkg}").test"
-	echo "Building test binary for ${pkg} -> ${out}"
-	go test -c -o "${out}" "${pkg}"
-}
+#function build_test_binary {
+#	local pkg="${1:?build_test_binary: PKG argument is required}"
+#	local out
+#	out="$(basename "${pkg}").test"
+#	echo "Building test binary for ${pkg} -> ${out}"
+#	go test -c -o "${out}" "${pkg}"
+#}
 
 # shellcheck disable=2157 # These aren't constant strings, they're TeamCity variable substitution
 if [[ -n "%ACCTEST_ROLE_ARN%" || -n "%ACCTEST_ALTERNATE_ROLE_ARN%" ]]; then
@@ -74,7 +74,9 @@ EOF
 	fi
 fi
 
-build_test_binary "${PKG%/...}"
-binary="$(basename "${PKG%/...}").test"
+#build_test_binary "${PKG%/...}"
+#binary="$(basename "${PKG%/...}").test"
 
-TF_ACC=1 teamcity-go-test -test "./${binary}" -json -run="%TEST_PREFIX%" -parallelism "%ACCTEST_PARALLELISM%"
+echo "Running acceptance tests for ${PKG} with pattern %TEST_PATTERN%"
+
+TF_ACC=1 go test -json -run="%TEST_PREFIX%" -parallelism "%ACCTEST_PARALLELISM%"
