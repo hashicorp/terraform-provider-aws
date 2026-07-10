@@ -79,4 +79,4 @@ fi
 
 echo "Running acceptance tests for ${PKG} with pattern %TEST_PATTERN%"
 
-TF_ACC=1 go test -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0
+TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0
