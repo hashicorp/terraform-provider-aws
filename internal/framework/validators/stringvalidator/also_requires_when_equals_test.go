@@ -156,7 +156,6 @@ func TestAlsoRequiresWhenEquals(t *testing.T) {
 			if got := response.Diagnostics.ErrorsCount(); got != tc.expErrors {
 				t.Fatalf("expected %d error(s), got %d: %s", tc.expErrors, got, response.Diagnostics)
 			}
-
 		})
 	}
 }
