@@ -77,13 +77,16 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			recordID := createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), recordID)
 
+			name := strings.TrimSuffix(aws.ToString(item.Name), ".")
+
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(recordID)
 
 			// Set identity attributes
 			rd.Set("zone_id", query.ZoneID.ValueString())
-			rd.Set(names.AttrName, strings.TrimSuffix(aws.ToString(item.Name), "."))
+			// The Resource Identity `name` attribute is populated from the resource `fqdn` attribute
+			rd.Set("fqdn", name)
 			rd.Set(names.AttrType, string(item.Type))
 			if item.SetIdentifier != nil {
 				rd.Set("set_identifier", aws.ToString(item.SetIdentifier))
