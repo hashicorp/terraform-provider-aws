@@ -3,6 +3,16 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # Authenticate internally using TeamCity's system-provided tokens
-curl -H "Authorization: Bearer %system.teamcity.auth.userId%:%system.teamcity.auth.password%" \
+results="$(curl -s -u "%system.teamcity.auth.userId%:%system.teamcity.auth.password%" \
      -H "Accept: application/json" \
-     "%teamcity.serverUrl%/app/rest/testOccurrences?locator=build:(id:%teamcity.build.id%)"
+     "%teamcity.serverUrl%/app/rest/testOccurrences?locator=build:(id:%teamcity.build.id%)" |
+	jq -r '.testOccurrence[] | "\(.name): [\(.status)]"')"
+
+echo "${results}"
+
+# "%BRANCH_NAME%" is in the format "refs/pull/48516/merge"
+#pr_number="$(echo "%BRANCH_NAME%" | sed -E 's#refs/pull/([0-9]+)/merge#\1#')"
+#
+#body="$(printf '```console\n%s\n```' "${results}")"
+#
+#"%system.teamcity.build.checkoutDir%/tools/gh" pr comment "${pr_number}" --body "${body}"
