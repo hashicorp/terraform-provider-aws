@@ -95,10 +95,10 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 
 ### Removing from a Distribution
 
-Response Header Policies must be disassociated from all distributions before it can be safely deleted.
+Response header policies must be disassociated from all distributions before they can be safely deleted.
 When managing both a policy and distribution in the same Terraform configuration, use the [`create_before_destroy` lifecycle argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) on the policy resource to ensure that the distribution will be updated or deleted before the policy.
 
-```hcl
+```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
   name = "example-policy"
 
@@ -122,7 +122,7 @@ resource "aws_cloudfront_distribution" "example" {
   default_cache_behavior {
     allowed_methods            = ["GET", "HEAD"]
     cached_methods             = ["GET", "HEAD"]
-    target_origin_id           = "test"
+    target_origin_id           = "example"
     viewer_protocol_policy     = "allow-all"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
 
@@ -143,13 +143,13 @@ This resource supports the following arguments:
 
 * `name` - (Required) A unique name to identify the response headers policy.
 * `comment` - (Optional) A comment to describe the response headers policy. The comment cannot be longer than 128 characters.
-* `cors_config` - (Optional) A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
+* `cors_config` - (Optional) A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [CORS Config](#cors-config) for more information.
 * `custom_headers_config` - (Optional) Object that contains an attribute `items` that contains a list of custom headers. See [Custom Header](#custom-header) for more information.
 * `remove_headers_config` - (Optional) A configuration for a set of HTTP headers to remove from the HTTP response. Object that contains an attribute `items` that contains a list of headers. See [Remove Header](#remove-header) for more information.
 * `security_headers_config` - (Optional) A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
 * `server_timing_headers_config` - (Optional) A configuration for enabling the Server-Timing header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
-### Cors Config
+### CORS Config
 
 * `access_control_allow_credentials` - (Required) A Boolean value that CloudFront uses as the value for the `Access-Control-Allow-Credentials` HTTP response header.
 * `access_control_allow_headers` - (Required) Object that contains an attribute `items` that contains a list of HTTP header names that CloudFront includes as values for the `Access-Control-Allow-Headers` HTTP response header.
@@ -226,7 +226,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Response Headers Policies using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront response header policies using the `id`. For example:
 
 ```terraform
 import {
@@ -235,7 +235,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudfront Response Headers Policies using the `id`. For example:
+Using `terraform import`, import CloudFront response header policies using the `id`. For example:
 
 ```console
 % terraform import aws_cloudfront_response_headers_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f9
