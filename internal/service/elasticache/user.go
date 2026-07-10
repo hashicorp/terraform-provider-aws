@@ -133,9 +133,8 @@ func resourceUser() *schema.Resource {
 					RequiredWith:  []string{"password_wo_version"},
 				},
 				"password_wo_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					AtLeastOneOf: []string{"password_wo_1", "password_wo_2"},
+					Type:     schema.TypeInt,
+					Optional: true,
 				},
 				"passwords_wo": {
 					Type:          schema.TypeString,

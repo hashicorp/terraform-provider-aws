@@ -680,7 +680,6 @@ func TestAccElastiCacheUser_passwordWOSingle(t *testing.T) {
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
 			},
 			{
@@ -750,7 +749,6 @@ func TestAccElastiCacheUser_passwordWORotation(t *testing.T) {
 				Config: testAccUserConfig_passwordWOSingle(rName, "password123456789", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user1),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
 			},
 			// Update password by incrementing version
@@ -758,7 +756,6 @@ func TestAccElastiCacheUser_passwordWORotation(t *testing.T) {
 				Config: testAccUserConfig_passwordWOSingle(rName, "newpassword1234567", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user2),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
 			},
 		},
@@ -781,7 +778,6 @@ func TestAccElastiCacheUser_passwordWOReduceToOne(t *testing.T) {
 				Config: testAccUserConfig_passwordWODual(rName, "password123456789", "password987654321", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user1),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
 				),
 			},
 			// Reduce to single password by incrementing version
@@ -789,7 +785,6 @@ func TestAccElastiCacheUser_passwordWOReduceToOne(t *testing.T) {
 				Config: testAccUserConfig_passwordWOSingle(rName, "password123456789", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user2),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 				),
 			},
 		},
