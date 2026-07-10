@@ -167,7 +167,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 2: Create CUSTOM strategy with consolidation block
 			{
-				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SEMANTIC_OVERRIDE", "Focus on semantic relationships", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SEMANTIC_OVERRIDE", "Focus on semantic relationships", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -176,7 +176,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Focus on semantic relationships"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
@@ -188,7 +188,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 3: Add extraction block and update consolidation properties (same override type)
 			{
-				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "Updated semantic consolidation", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract semantic meaning", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "Updated semantic consolidation", "us.anthropic.claude-sonnet-4-5-20250929-v1:0", "Extract semantic meaning", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -196,10 +196,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Updated semantic consolidation"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-sonnet-20240229-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract semantic meaning"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -209,12 +209,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 4: Try to remove consolidation block → should ERROR
 			{
-				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, "SEMANTIC_OVERRIDE", "Extract semantic meaning", "anthropic.claude-3-haiku-20240307-v1:0"),
-				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block is not allowed"),
+				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, "SEMANTIC_OVERRIDE", "Extract semantic meaning", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
+				ExpectError: regexache.MustCompile("(?s)Removing the previously configured .consolidation. block is not\\s+allowed"),
 			},
 			//// Step 5: Change override type → should replace resource
 			{
-				Config: testAccMemoryStrategyConfig_custom(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract user preferences", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config: testAccMemoryStrategyConfig_custom(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "us.anthropic.claude-sonnet-4-5-20250929-v1:0", "Extract user preferences", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -223,10 +223,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "USER_PREFERENCE_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Store user preferences"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-sonnet-20240229-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract user preferences"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -237,12 +237,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
 			{
-				Config:      testAccMemoryStrategyConfig_custom(rName, "SUMMARY_OVERRIDE", "Summary consolidation", "anthropic.claude-3-sonnet-20240229-v1:0", "Summary extraction", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config:      testAccMemoryStrategyConfig_custom(rName, "SUMMARY_OVERRIDE", "Summary consolidation", "us.anthropic.claude-sonnet-4-5-20250929-v1:0", "Summary extraction", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 				ExpectError: regexache.MustCompile("(?s)When\\s+configuration\\s+type\\s+is\\s+`SUMMARY_OVERRIDE`,\\s+the\\s+extraction\\s+block\\s+cannot\\s+be\\s+defined"),
 			},
 			//// Step 7: SUMMARY_OVERRIDE with no extraction block → should succeed
 			{
-				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SUMMARY_OVERRIDE", "Summary consolidation only", "anthropic.claude-3-sonnet-20240229-v1:0"),
+				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SUMMARY_OVERRIDE", "Summary consolidation only", "us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -251,15 +251,15 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SUMMARY_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Summary consolidation only"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-sonnet-20240229-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 			},
 			//Step 8: Add 6 more CUSTOM strategies → should ERROR on too many
 			{
-				Config:      testAccMemoryStrategyConfig_customTooMany(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract user preferences", "anthropic.claude-3-haiku-20240307-v1:0"),
-				ExpectError: regexache.MustCompile("Resource limit exceeded for memory strategies for memory"),
+				Config:      testAccMemoryStrategyConfig_customTooMany(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "us.anthropic.claude-sonnet-4-5-20250929-v1:0", "Extract user preferences", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
+				ExpectError: regexache.MustCompile("(?s)Resource limit exceeded for memory strategies"),
 			},
 			// Step 9: Import test
 			{
