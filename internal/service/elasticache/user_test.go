@@ -680,7 +680,7 @@ func TestAccElastiCacheUser_passwordWOSingle(t *testing.T) {
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
 			},
 			{
@@ -715,7 +715,7 @@ func TestAccElastiCacheUser_passwordWODual(t *testing.T) {
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
 				),
 			},
@@ -750,7 +750,7 @@ func TestAccElastiCacheUser_passwordWORotation(t *testing.T) {
 				Config: testAccUserConfig_passwordWOSingle(rName, "password123456789", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user1),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
 			},
 			// Update password by incrementing version
@@ -758,7 +758,7 @@ func TestAccElastiCacheUser_passwordWORotation(t *testing.T) {
 				Config: testAccUserConfig_passwordWOSingle(rName, "newpassword1234567", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user2),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 				),
 			},
 		},
@@ -817,11 +817,11 @@ func TestAccElastiCacheUser_passwordWOConflictsWithPasswords(t *testing.T) {
 func testAccUserConfig_passwordWOSingle(rName, password string, version int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
-  user_id            = %[1]q
-  user_name          = "username1"
-  access_string      = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine             = "redis"
-  password_wo_1      = %[2]q
+  user_id             = %[1]q
+  user_name           = "username1"
+  access_string       = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine              = "redis"
+  password_wo_1       = %[2]q
   password_wo_version = %[3]d
 
   authentication_mode {
