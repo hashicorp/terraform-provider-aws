@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package planmodifiers_test
+package listplanmodifier_test
 
 import (
 	"context"
@@ -15,10 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 )
 
-func TestListDefaultValueFromPath(t *testing.T) {
+func TestDefaultValueFromPath(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -171,7 +171,7 @@ func TestListDefaultValueFromPath(t *testing.T) {
 			response := planmodifier.ListResponse{
 				PlanValue: test.request.PlanValue,
 			}
-			fwplanmodifiers.ListDefaultValueFromPath[types.List](path.Root("src")).PlanModifyList(context.Background(), test.request, &response)
+			tflistplanmodifier.DefaultValueFromPath[types.List](path.Root("src")).PlanModifyList(context.Background(), test.request, &response)
 
 			if diff := cmp.Diff(test.expected, response); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

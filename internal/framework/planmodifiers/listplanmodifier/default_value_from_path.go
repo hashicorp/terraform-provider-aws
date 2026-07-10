@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package planmodifiers
+package listplanmodifier
 
 import (
 	"context"
@@ -11,27 +11,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// ListDefaultValueFromPath returns a plan modifier that sets a list's default value
+// DefaultValueFromPath returns a plan modifier that sets a list's default value
 // from the planned value at another path.
-func ListDefaultValueFromPath[T basetypes.ListValuable](path path.Path) planmodifier.List {
-	return listDefaultValueFromPath[T]{
+func DefaultValueFromPath[T basetypes.ListValuable](path path.Path) planmodifier.List {
+	return defaultValueFromPath[T]{
 		path: path,
 	}
 }
 
-type listDefaultValueFromPath[T basetypes.ListValuable] struct {
+type defaultValueFromPath[T basetypes.ListValuable] struct {
 	path path.Path
 }
 
-func (m listDefaultValueFromPath[T]) Description(ctx context.Context) string {
+func (m defaultValueFromPath[T]) Description(ctx context.Context) string {
 	return m.MarkdownDescription(ctx)
 }
 
-func (m listDefaultValueFromPath[T]) MarkdownDescription(context.Context) string {
+func (m defaultValueFromPath[T]) MarkdownDescription(context.Context) string {
 	return "The default value of this attribute is another attribute's value."
 }
 
-func (m listDefaultValueFromPath[T]) PlanModifyList(ctx context.Context, request planmodifier.ListRequest, response *planmodifier.ListResponse) {
+func (m defaultValueFromPath[T]) PlanModifyList(ctx context.Context, request planmodifier.ListRequest, response *planmodifier.ListResponse) {
 	// Do nothing if there is a known planned value.
 	if !request.PlanValue.IsUnknown() {
 		return
