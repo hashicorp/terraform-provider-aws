@@ -147,7 +147,7 @@ object PullRequest : BuildType({
             name = "go-mod-cache"
             use = true
             store = true
-            rules = "%env.GOPATH%/pkg/mod"
+            rules = "%env.HOME%/go/pkg/mod"
         }
 
         feature {
