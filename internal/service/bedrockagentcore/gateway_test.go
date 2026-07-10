@@ -1448,3 +1448,112 @@ resource "aws_bedrockagentcore_policy_engine" "test" {
 }
 `, rName, rNamePolicyEngine, mode))
 }
+
+// TestAccBedrockAgentCoreGateway_payloadFilterRequiresExclude confirms that a
+// payload_filter block without the required exclude sub-block is rejected at plan
+// time. Previously SizeBetween(1,1) was skipped when exclude was absent, so
+// payload_filter {} passed validation and only failed at apply with a client-side
+// "missing required field ...PayloadFilter.Exclude".
+func TestAccBedrockAgentCoreGateway_payloadFilterRequiresExclude(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayConfig_payloadFilterNoExclude(rName),
+				ExpectError: regexache.MustCompile("Invalid Block"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGateway_interceptorRequiresLambda confirms that an
+// interceptor block without the required lambda sub-block is rejected at plan time.
+// Previously interceptor {} expanded to nil and surfaced a confusing "always an
+// error in the provider" message instead of a plan-time validation error.
+func TestAccBedrockAgentCoreGateway_interceptorRequiresLambda(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayConfig_interceptorNoLambda(rName),
+				ExpectError: regexache.MustCompile("Invalid Block"),
+			},
+		},
+	})
+}
+
+func testAccGatewayConfig_payloadFilterNoExclude(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST"]
+
+    interceptor {
+      lambda {
+        arn = "arn:aws:lambda:us-west-2:123456789012:function:test"
+      }
+    }
+
+    input_configuration {
+      pass_request_headers = true
+
+      payload_filter {}
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayConfig_interceptorNoLambda(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST"]
+
+    interceptor {}
+
+    input_configuration {
+      pass_request_headers = true
+
+      payload_filter {
+        exclude {
+          field = "RESPONSE_BODY"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}

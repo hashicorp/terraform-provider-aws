@@ -157,6 +157,11 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 												"exclude": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorPayloadExclusionSelectorModel](ctx),
 													Validators: []validator.List{
+														// The API requires PayloadFilter.Exclude, but SizeBetween is
+														// skipped when the block is absent, so payload_filter {} without
+														// exclude passed plan and only failed at apply. IsRequired makes
+														// the omission a plan-time error.
+														listvalidator.IsRequired(),
 														listvalidator.SizeBetween(1, 1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -184,6 +189,10 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 									"lambda": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaInterceptorConfigurationModel](ctx),
 										Validators: []validator.List{
+											// lambda is the only interceptor variant and is required; without
+											// it interceptor {} expanded to nil and surfaced a confusing
+											// "always an error in the provider" message. Require it at plan.
+											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
