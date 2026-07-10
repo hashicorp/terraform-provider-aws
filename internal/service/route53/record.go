@@ -415,7 +415,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	record, _, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
@@ -427,10 +427,10 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Route 53 Record (%s): %s", d.Id(), err)
 	}
 
-	return resourceRecordFlatten(d, record, fqdn)
+	return resourceRecordFlatten(d, record)
 }
 
-func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceRecordSet, fqdn *string) diag.Diagnostics {
+func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceRecordSet) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if alias := record.AliasTarget; alias != nil {
@@ -463,13 +463,16 @@ func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceReco
 			return sdkdiag.AppendErrorf(diags, "setting failover_routing_policy: %s", err)
 		}
 	}
+
+	fqdn := strings.TrimSuffix(aws.ToString(record.Name), ".")
 	// findResourceRecordSetByFourPartKey returns the FQDN in API-normalized form.
 	// For backwards compatibility, restore any '*' as the leftmost label in the domain name.
 	// \052 is the octal representation of '*'.
-	if v := aws.ToString(fqdn); strings.HasPrefix(v, `\052.`) {
-		fqdn = aws.String(`*.` + strings.TrimPrefix(v, `\052.`))
+	if after, ok := strings.CutPrefix(fqdn, `\052.`); ok {
+		fqdn = `*.` + after
 	}
 	d.Set("fqdn", fqdn)
+
 	if geoLocation := record.GeoLocation; geoLocation != nil {
 		tfList := []any{map[string]any{
 			"continent":   aws.ToString(geoLocation.ContinentCode),

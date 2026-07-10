@@ -90,7 +90,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			}
 
 			if request.IncludeResource {
-				diags := resourceRecordFlatten(rd, &item, item.Name)
+				diags := resourceRecordFlatten(rd, &item)
 				if diags.HasError() {
 					tflog.Error(ctx, "Reading Route 53 Record", map[string]any{
 						"error": sdkdiag.DiagnosticsString(diags),
