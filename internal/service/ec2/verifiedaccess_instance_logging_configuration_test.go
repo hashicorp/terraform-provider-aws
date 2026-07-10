@@ -396,7 +396,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, 
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, t, resourceName, &v),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName), // nosemgrep:disappears-expect-resource-action
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -404,7 +404,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, 
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},

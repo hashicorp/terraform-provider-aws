@@ -61,13 +61,13 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	input := &ses.SetIdentityMailFromDomainInput{
+	input := ses.SetIdentityMailFromDomainInput{
 		BehaviorOnMXFailure: awstypes.BehaviorOnMXFailure(d.Get("behavior_on_mx_failure").(string)),
 		Identity:            aws.String(domainName),
 		MailFromDomain:      aws.String(d.Get("mail_from_domain").(string)),
 	}
 
-	_, err := conn.SetIdentityMailFromDomain(ctx, input)
+	_, err := conn.SetIdentityMailFromDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES MAIL FROM Domain (%s): %s", domainName, err)
@@ -108,9 +108,10 @@ func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES MAIL FROM Domain: %s", d.Id())
-	_, err := conn.SetIdentityMailFromDomain(ctx, &ses.SetIdentityMailFromDomainInput{
+	input := ses.SetIdentityMailFromDomainInput{
 		Identity: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.SetIdentityMailFromDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES MAIL FROM Domain (%s): %s", d.Id(), err)
@@ -120,16 +121,16 @@ func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findIdentityMailFromDomainAttributesByIdentity(ctx context.Context, conn *ses.Client, identity string) (*awstypes.IdentityMailFromDomainAttributes, error) {
-	input := &ses.GetIdentityMailFromDomainAttributesInput{
+	input := ses.GetIdentityMailFromDomainAttributesInput{
 		Identities: []string{identity},
 	}
-	output, err := findIdentityMailFromDomainAttributes(ctx, conn, input)
+	output, err := findIdentityMailFromDomainAttributes(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if v, ok := output[identity]; ok {
+	if v, ok := output[identity]; ok && v.MailFromDomain != nil {
 		return &v, nil
 	}
 

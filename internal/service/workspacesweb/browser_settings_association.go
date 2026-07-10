@@ -26,7 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_browser_settings_association", name="Browser Settings Association")
-// @Testing(tagsTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.BrowserSettings")
 // @Testing(importStateIdFunc="testAccBrowserSettingsAssociationImportStateIdFunc)"
 func newBrowserSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {

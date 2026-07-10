@@ -10,12 +10,16 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
@@ -40,33 +44,100 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"filters_config": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeHate),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthHigh),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthHigh),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeViolence),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"topics_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"definition": knownvalue.StringExact("Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."),
+									"examples": knownvalue.ListExact([]knownvalue.Check{
+										tfknownvalue.StringExact("Where should I invest my money?"),
+									}),
+									names.AttrName: knownvalue.StringExact("investment_topic"),
+									names.AttrType: tfknownvalue.StringExact(awstypes.GuardrailTopicTypeDeny),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("self-assured"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -97,7 +168,7 @@ func TestAccBedrockGuardrail_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrail, resourceName),
 				),
@@ -133,9 +204,9 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_kmsKey(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -166,13 +237,13 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "0"),
@@ -183,32 +254,182 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("self-assured"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccGuardrailConfig_update(rName, "test", "test", "MEDIUM", "^\\d{3}-\\d{2}-\\d{4}$", "NAME", "investment_topic", "HATE"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGuardrailConfig_update(rName, "test", "test", awstypes.GuardrailFilterStrengthMedium, "^\\d{3}-\\d{2}-\\d{4}$", awstypes.GuardrailPiiEntityTypeName, "investment_topic", "self-assured"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", "MEDIUM"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{3}-\\d{2}-\\d{4}$"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "NAME"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "investment_topic"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"filters_config": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeHate),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"topics_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"definition": knownvalue.StringExact("Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."),
+									"examples": knownvalue.ListExact([]knownvalue.Check{
+										tfknownvalue.StringExact("Where should I invest my money?"),
+									}),
+									names.AttrName: knownvalue.StringExact("investment_topic"),
+									names.AttrType: tfknownvalue.StringExact(awstypes.GuardrailTopicTypeDeny),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("self-assured"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccGuardrailConfig_update(rName, "update", "update", "HIGH", "^\\d{4}-\\d{2}-\\d{4}$", "USERNAME", "earnings_topic", "HATRED"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGuardrailConfig_update(rName, "update", "update", awstypes.GuardrailFilterStrengthHigh, "^\\d{4}-\\d{2}-\\d{4}$", awstypes.GuardrailPiiEntityTypeUsername, "earnings_topic", "over-bored"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "update"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "update"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", "HIGH"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{4}-\\d{2}-\\d{4}$"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "USERNAME"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "earnings_topic"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATRED"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"filters_config": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":      knownvalue.Null(),
+									"input_enabled":     knownvalue.Null(),
+									"input_modalities":  knownvalue.Null(),
+									"input_strength":    tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthHigh),
+									"output_action":     knownvalue.Null(),
+									"output_enabled":    knownvalue.Null(),
+									"output_modalities": knownvalue.Null(),
+									"output_strength":   tfknownvalue.StringExact(awstypes.GuardrailFilterStrengthMedium),
+									names.AttrType:      tfknownvalue.StringExact(awstypes.GuardrailContentFilterTypeHate),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("topic_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"tier_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"tier_name": tfknownvalue.StringExact(awstypes.GuardrailTopicsTierNameClassic),
+								}),
+							}),
+							"topics_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"definition": knownvalue.StringExact("Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."),
+									"examples": knownvalue.ListExact([]knownvalue.Check{
+										tfknownvalue.StringExact("Where should I invest my money?"),
+									}),
+									names.AttrName: knownvalue.StringExact("earnings_topic"),
+									names.AttrType: tfknownvalue.StringExact(awstypes.GuardrailTopicTypeDeny),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("word_policy_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"managed_word_lists_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									names.AttrType:   tfknownvalue.StringExact(awstypes.GuardrailManagedWordsTypeProfanity),
+								}),
+							}),
+							"words_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"input_action":   knownvalue.Null(),
+									"input_enabled":  knownvalue.Null(),
+									"output_action":  knownvalue.Null(),
+									"output_enabled": knownvalue.Null(),
+									"text":           knownvalue.StringExact("over-bored"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -231,13 +452,13 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_wordConfigAction(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "0"),
@@ -246,15 +467,15 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(types.GuardrailManagedWordsTypeProfanity)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(awstypes.GuardrailManagedWordsTypeProfanity)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action", string(awstypes.GuardrailWordActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
 				),
@@ -268,13 +489,13 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 			},
 			{
 				Config: testAccGuardrailConfig_wordConfig_only(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "0"),
@@ -287,13 +508,13 @@ func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_enabled"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_enabled"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(types.GuardrailManagedWordsTypeProfanity)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(awstypes.GuardrailManagedWordsTypeProfanity)),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action"),
 					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_enabled"),
-					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "self-assured"),
 				),
 			},
 		},
@@ -319,7 +540,7 @@ func TestAccBedrockGuardrail_crossRegion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_crossRegion(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
@@ -358,24 +579,25 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_contentPolicyConfigAction(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "guardrail_arn", "bedrock", "guardrail/{guardrail_id}"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_action", string(types.GuardrailContentFilterActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_action", string(awstypes.GuardrailContentFilterActionBlock)),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.*", "TEXT"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", string(types.GuardrailFilterStrengthMedium)),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_action", string(types.GuardrailContentFilterActionNone)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", string(awstypes.GuardrailFilterStrengthMedium)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_action", string(awstypes.GuardrailContentFilterActionNone)),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_strength", string(types.GuardrailFilterStrengthMedium)),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.*", "IMAGE"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_strength", string(awstypes.GuardrailFilterStrengthMedium)),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "0"),
@@ -384,6 +606,50 @@ func TestAccBedrockGuardrail_contentPolicyConfigAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "0"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockGuardrail_contentPolicyConfig_ioModalities(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+	var guardrail bedrock.GetGuardrailOutput
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_contentPolicyConfig_ioModalities(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("content_policy_config").AtSliceIndex(0).AtMapKey("filters_config").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"input_modalities": knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(awstypes.GuardrailModalityImage),
+							tfknownvalue.StringExact(awstypes.GuardrailModalityText),
+						}),
+						"output_modalities": knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(awstypes.GuardrailModalityImage),
+							tfknownvalue.StringExact(awstypes.GuardrailModalityText),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -420,7 +686,7 @@ func testAccCheckGuardrailDestroy(ctx context.Context, t *testing.T) resource.Te
 			version := rs.Primary.Attributes[names.AttrVersion]
 
 			_, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, id, version)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
@@ -466,7 +732,6 @@ resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
-  description               = "test"
 
   content_policy_config {
     filters_config {
@@ -512,9 +777,9 @@ resource "aws_bedrock_guardrail" "test" {
   topic_policy_config {
     topics_config {
       name       = "investment_topic"
-      examples   = ["Where should I invest my money ?"]
+      examples   = ["Where should I invest my money?"]
       type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."
     }
   }
 
@@ -523,7 +788,7 @@ resource "aws_bedrock_guardrail" "test" {
       type = "PROFANITY"
     }
     words_config {
-      text = "HATE"
+      text = "self-assured"
     }
   }
 }
@@ -531,9 +796,7 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccGuardrailConfig_kmsKey(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -569,10 +832,10 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
-func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig string) string {
+func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging string, inputStrength awstypes.GuardrailFilterStrength, regexPattern string, piiType awstypes.GuardrailPiiEntityType, topicName, wordConfig string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
@@ -604,9 +867,9 @@ resource "aws_bedrock_guardrail" "test" {
   topic_policy_config {
     topics_config {
       name       = %[7]q
-      examples   = ["Where should I invest my money ?"]
+      examples   = ["Where should I invest my money?"]
       type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."
     }
   }
 
@@ -623,9 +886,7 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccGuardrailConfig_wordConfig_only(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -637,17 +898,15 @@ resource "aws_bedrock_guardrail" "test" {
       type = "PROFANITY"
     }
     words_config {
-      text = "HATE"
+      text = "self-assured"
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccGuardrailConfig_wordConfigAction(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -671,7 +930,7 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccGuardrailConfig_crossRegion(rName string) string {
@@ -737,9 +996,9 @@ resource "aws_bedrock_guardrail" "test" {
   topic_policy_config {
     topics_config {
       name       = "investment_topic"
-      examples   = ["Where should I invest my money ?"]
+      examples   = ["Where should I invest my money?"]
       type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns."
     }
     tier_config {
       tier_name = "STANDARD"
@@ -777,7 +1036,7 @@ func TestAccBedrockGuardrail_enhancedActions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailConfig_enhancedActions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, t, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "1"),
@@ -838,9 +1097,7 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccGuardrailConfig_contentPolicyConfigAction(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -861,5 +1118,30 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
-`, rName))
+`, rName)
+}
+
+func testAccGuardrailConfig_contentPolicyConfig_ioModalities(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  content_policy_config {
+    filters_config {
+      input_action      = "BLOCK"
+      input_enabled     = true
+      input_modalities  = ["IMAGE", "TEXT"]
+      input_strength    = "MEDIUM"
+      output_action     = "NONE"
+      output_enabled    = false
+      output_modalities = ["IMAGE", "TEXT"]
+      output_strength   = "MEDIUM"
+      type              = "HATE"
+    }
+  }
+}
+`, rName)
 }

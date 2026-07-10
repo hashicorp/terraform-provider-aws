@@ -158,6 +158,16 @@ To run `tflint` only against embedded configurations, use the `testacc-tflint-em
 make testacc-tflint-embedded
 ```
 
+### CHANGELOG Misspell / misspell
+
+Use the `changelog-misspell` target to spellcheck the CHANGELOG:
+
+```console
+make changelog-misspell
+```
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
+
 ### Copyright Checks / headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
@@ -272,6 +282,9 @@ Use the `golangci-lint2`, `golangci-lint3`, `golangci-lint4`, or `golangci-lint5
 
 ```console
 make golangci-lint2
+make golangci-lint3
+make golangci-lint4
+make golangci-lint5
 ```
 
 **Tip:** Running the second step against the entire codebase often takes the longest of all CI tests. If you're only working in one service package, you can save a lot of time limiting the scan to that service:
@@ -284,13 +297,43 @@ PKG=rds make golangci-lint2
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
 
+### Makefile and Documentation Alignment
+
+This check validates that the `GNUmakefile`, its `.PHONY` list, the [Makefile Cheat Sheet](makefile-cheat-sheet.md), and this Continuous Integration document stay in sync. It is implemented by the [`makelign`](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/makelign) tool.
+
+It catches issues such as a target rule that was added without being included in `.PHONY`, a `.PHONY` entry that no longer matches any rule (often a typo), and cheat-sheet rows that reference targets that were renamed or removed.
+
+Use the `makefile-lint` target to run the check:
+
+```console
+make makefile-lint
+```
+
 ### Modern Go Check
 
 This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
 
+Use the `modern-check` target to run the check:
+
+```console
+make modern-check
+```
+
+Use the `modern-fix` target to automatically apply fixes:
+
+```console
+make modern-fix
+```
+
 ### PR Target Check
 
 This check ensures that the `pull_request_target` event is only used in approved workflows. Unlike `pull_request`, which runs workflows against the pull request’s changes, `pull_request_target` runs against the base branch. This can cause issues to go undetected if the workflow is intended to validate the pull request itself. Restricting its use helps ensure that CI checks reflect the actual content of proposed changes.
+
+Use the `pr-target-check` target to run the check:
+
+```console
+make pr-target-check
+```
 
 ### Provider Checks
 
@@ -494,6 +537,28 @@ You can limit the scan to a service package by using the `PKG` environment varia
 PKG=rds make semgrep-code-quality
 ```
 
+#### Constants Check
+
+This scan flags string literals in service code that should use a constant from the `names` package (for example, `"arn"` should be `names.AttrARN`). The rules are generated from `names/data/names_data.hcl` and similar sources, so they grow as the codebase evolves.
+
+Use the `semgrep-constants` target to run the same check CI runs:
+
+```console
+make semgrep-constants
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```console
+PKG=rds make semgrep-constants
+```
+
+To apply the recommended fixes automatically, use `semgrep-fix-constants`:
+
+```console
+make semgrep-fix-constants
+```
+
 #### Naming Scan Caps/AWS/EC2
 
 Idiomatic Go uses [_mixed caps_](naming.md#mixed-caps) for multiword names, not camel case. In camel case, a name with the words "SMTP thing" would be `SmtpThing`. This is wrong in Go. In mixed caps, and therefore idiomatic Go, `SMTPThing` is correct. This scan ensures that many acronyms and initialisms are capitalized correctly in code.
@@ -548,6 +613,28 @@ Use the `skaff-check-compile` target to test building Skaff:
 
 ```console
 make skaff-check-compile
+```
+
+### Swiss Shepherd Checks
+
+Swiss Shepherd checks provider documentation for quality and consistency.
+
+Use the `swissshepherd` target to run the standard checks:
+
+```console
+make swissshepherd
+```
+
+Use the `swissshepherd-count` target to count all findings:
+
+```console
+make swissshepherd-count
+```
+
+Use the `swissshepherd-refresh` target to run checks and refresh cached schemas:
+
+```console
+make swissshepherd-refresh
 ```
 
 ### Website Checks

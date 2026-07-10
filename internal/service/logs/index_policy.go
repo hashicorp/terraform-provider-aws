@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,6 +30,9 @@ import (
 )
 
 // @FrameworkResource("aws_cloudwatch_log_index_policy", name="Index Policy")
+// @IdentityAttribute("log_group_name")
+// @Testing(importStateIdAttribute="log_group_name")
+// @Testing(preIdentityVersion="v6.51.0")
 func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexPolicyResource{}
 
@@ -39,6 +41,7 @@ func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, er
 
 type indexPolicyResource struct {
 	framework.ResourceWithModel[indexPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *indexPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -68,15 +71,16 @@ func (r *indexPolicyResource) Create(ctx context.Context, request resource.Creat
 
 	conn := r.Meta().LogsClient(ctx)
 
+	logGroupName := fwflex.StringValueFromFramework(ctx, data.LogGroupName)
 	input := cloudwatchlogs.PutIndexPolicyInput{
-		LogGroupIdentifier: fwflex.StringFromFramework(ctx, data.LogGroupName),
+		LogGroupIdentifier: aws.String(logGroupName),
 		PolicyDocument:     fwflex.StringFromFramework(ctx, data.PolicyDocument),
 	}
 
 	_, err := conn.PutIndexPolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Index Policy (%s)", data.LogGroupName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Index Policy (%s)", logGroupName), err.Error())
 
 		return
 	}
@@ -93,7 +97,8 @@ func (r *indexPolicyResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findIndexPolicyByLogGroupName(ctx, conn, data.LogGroupName.ValueString())
+	logGroupName := fwflex.StringValueFromFramework(ctx, data.LogGroupName)
+	output, err := findIndexPolicyByLogGroupName(ctx, conn, logGroupName)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -103,7 +108,7 @@ func (r *indexPolicyResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Index Policy (%s)", data.LogGroupName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Index Policy (%s)", logGroupName), err.Error())
 
 		return
 	}
@@ -124,15 +129,16 @@ func (r *indexPolicyResource) Update(ctx context.Context, request resource.Updat
 
 	conn := r.Meta().LogsClient(ctx)
 
+	logGroupName := fwflex.StringValueFromFramework(ctx, new.LogGroupName)
 	input := cloudwatchlogs.PutIndexPolicyInput{
-		LogGroupIdentifier: fwflex.StringFromFramework(ctx, new.LogGroupName),
+		LogGroupIdentifier: aws.String(logGroupName),
 		PolicyDocument:     fwflex.StringFromFramework(ctx, new.PolicyDocument),
 	}
 
 	_, err := conn.PutIndexPolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Index Policy (%s)", new.LogGroupName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Index Policy (%s)", logGroupName), err.Error())
 
 		return
 	}
@@ -149,23 +155,21 @@ func (r *indexPolicyResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().LogsClient(ctx)
 
-	_, err := conn.DeleteIndexPolicy(ctx, &cloudwatchlogs.DeleteIndexPolicyInput{
-		LogGroupIdentifier: fwflex.StringFromFramework(ctx, data.LogGroupName),
-	})
+	logGroupName := fwflex.StringValueFromFramework(ctx, data.LogGroupName)
+	input := cloudwatchlogs.DeleteIndexPolicyInput{
+		LogGroupIdentifier: aws.String(logGroupName),
+	}
+	_, err := conn.DeleteIndexPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Index Policy (%s)", data.LogGroupName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Index Policy (%s)", logGroupName), err.Error())
 
 		return
 	}
-}
-
-func (r *indexPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrLogGroupName), request, response)
 }
 
 func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.IndexPolicy, error) {

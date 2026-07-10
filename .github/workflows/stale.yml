@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: "40 17 * * *"
 
+permissions:
+  issues: write        # required to label and close issues
+  pull-requests: write # required to label and close pull requests
+
 jobs:
   stale:
     runs-on: ubuntu-latest

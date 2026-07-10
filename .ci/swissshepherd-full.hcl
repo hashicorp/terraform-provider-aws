@@ -197,6 +197,7 @@ check "schema_docs" {
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
+    "`{Path}` Block",
     "`{Block}` Block",
     "{Block} Block",
     "{Block} block",
@@ -206,12 +207,15 @@ check "schema_docs" {
     "{Title} Arguments",
     "{Title} Argument Reference",
     "{Title} Attribute Reference",
+    "Nested Schema for `{Path}`",
+    "`{Path}`",
     "`{Block}`",
     "{Block}",
     "{Title}",
   ]
 
   prefer_block_heading_styles = [
+    "`{Path}` Block",
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
