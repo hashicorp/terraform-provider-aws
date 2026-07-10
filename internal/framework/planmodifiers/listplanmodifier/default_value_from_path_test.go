@@ -4,7 +4,6 @@
 package listplanmodifier_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -39,18 +38,18 @@ func TestDefaultValueFromPath(t *testing.T) {
 	nullState := tfsdk.State{
 		Schema: testSchema,
 		Raw: tftypes.NewValue(
-			testSchema.Type().TerraformType(context.Background()),
+			testSchema.Type().TerraformType(t.Context()),
 			nil,
 		),
 	}
 	testPlan := func(src, dst types.List) tfsdk.Plan {
-		tfSrc, err := src.ToTerraformValue(context.Background())
+		tfSrc, err := src.ToTerraformValue(t.Context())
 
 		if err != nil {
 			panic("ToTerraformValue error: " + err.Error())
 		}
 
-		tfDst, err := dst.ToTerraformValue(context.Background())
+		tfDst, err := dst.ToTerraformValue(t.Context())
 
 		if err != nil {
 			panic("ToTerraformValue error: " + err.Error())
@@ -59,7 +58,7 @@ func TestDefaultValueFromPath(t *testing.T) {
 		return tfsdk.Plan{
 			Schema: testSchema,
 			Raw: tftypes.NewValue(
-				testSchema.Type().TerraformType(context.Background()),
+				testSchema.Type().TerraformType(t.Context()),
 				map[string]tftypes.Value{
 					"src": tfSrc,
 					"dst": tfDst,
@@ -68,13 +67,13 @@ func TestDefaultValueFromPath(t *testing.T) {
 		}
 	}
 	testState := func(src, dst types.List) tfsdk.State {
-		tfSrc, err := src.ToTerraformValue(context.Background())
+		tfSrc, err := src.ToTerraformValue(t.Context())
 
 		if err != nil {
 			panic("ToTerraformValue error: " + err.Error())
 		}
 
-		tfDst, err := dst.ToTerraformValue(context.Background())
+		tfDst, err := dst.ToTerraformValue(t.Context())
 
 		if err != nil {
 			panic("ToTerraformValue error: " + err.Error())
@@ -83,7 +82,7 @@ func TestDefaultValueFromPath(t *testing.T) {
 		return tfsdk.State{
 			Schema: testSchema,
 			Raw: tftypes.NewValue(
-				testSchema.Type().TerraformType(context.Background()),
+				testSchema.Type().TerraformType(t.Context()),
 				map[string]tftypes.Value{
 					"src": tfSrc,
 					"dst": tfDst,
@@ -171,7 +170,7 @@ func TestDefaultValueFromPath(t *testing.T) {
 			response := planmodifier.ListResponse{
 				PlanValue: test.request.PlanValue,
 			}
-			tflistplanmodifier.DefaultValueFromPath[types.List](path.Root("src")).PlanModifyList(context.Background(), test.request, &response)
+			tflistplanmodifier.DefaultValueFromPath[types.List](path.Root("src")).PlanModifyList(t.Context(), test.request, &response)
 
 			if diff := cmp.Diff(test.expected, response); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

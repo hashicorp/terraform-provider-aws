@@ -33,7 +33,7 @@ func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, request p
 	}
 
 	// Do nothing if there is not a known planned value.
-	if !request.PlanValue.IsUnknown() {
+	if request.PlanValue.IsUnknown() {
 		return
 	}
 
