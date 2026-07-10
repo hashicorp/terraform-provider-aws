@@ -1072,6 +1072,73 @@ func TestAccBedrockAgentCoreGateway_customTransformConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_customTransformConfigurationAddOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create the gateway WITHOUT custom_transform_configuration so the follow-up step
+				// exercises the pure Update add path (not the create-then-update path in Create).
+				Config: testAccGatewayConfig_customTransformConfigurationCleared(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_transform_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				// Adding custom_transform_configuration drives Update: fwflex.Diff -> Expand -> UpdateGateway
+				// -> waitGatewayUpdated -> State.Set(new). The PostApplyPostRefresh empty-plan assertion
+				// proves the planned value survives the next Read (which does not flatten this write-only
+				// field) with no perpetual diff.
+				Config: testAccGatewayConfig_customTransformConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_transform_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_transform_configuration").AtSliceIndex(0).AtMapKey("lambda").AtSliceIndex(0).AtMapKey(names.AttrARN), knownvalue.NotNull()),
+				},
+			},
+			{
+				// Re-apply the same WITH-block config to lock idempotency.
+				Config: testAccGatewayConfig_customTransformConfiguration(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccGatewayConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
