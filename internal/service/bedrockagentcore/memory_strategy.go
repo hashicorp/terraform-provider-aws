@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -91,6 +92,16 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+					),
+					tfstringvalidator.ConflictsWithWhenNotEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -107,6 +118,12 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 						names.AttrType: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.OverrideType](),
+							Validators: []validator.String{
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.OverrideTypeSummaryOverride,
+									path.MatchRelative().AtParent().AtName("extraction"),
+								),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -218,39 +235,6 @@ func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req plan
 
 	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
 		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
-	}
-}
-
-func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	var data memoryStrategyResourceModel
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if data.Type.IsUnknown() {
-		return
-	}
-
-	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
-		if data.Configuration.IsNull() || data.Configuration.IsUnknown() {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the configuration block is required."))
-			return
-		} else {
-			c, diags := data.Configuration.ToPtr(ctx)
-			smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
-				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
-			}
-		}
-	} else {
-		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
-		}
 	}
 }
 
