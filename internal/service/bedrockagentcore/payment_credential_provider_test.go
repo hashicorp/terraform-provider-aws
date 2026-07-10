@@ -212,6 +212,124 @@ func TestAccBedrockAgentCorePaymentCredentialProvider_secretSourceForceNew(t *te
 	})
 }
 
+func TestAccBedrockAgentCorePaymentCredentialProvider_coinbaseCDP(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_payment_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPaymentCredentialProviderConfig_coinbaseCDP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentCredentialProviderExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_vendor"), knownvalue.StringExact("CoinbaseCDP")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`.+`))),
+					// The service creates two managed secrets and returns their ARNs;
+					// assert both are surfaced under the coinbase_cdp_configuration block.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("coinbase_cdp_configuration").AtSliceIndex(0).AtMapKey("api_key_secret_arn").AtSliceIndex(0).AtMapKey("secret_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("coinbase_cdp_configuration").AtSliceIndex(0).AtMapKey("wallet_secret_arn").AtSliceIndex(0).AtMapKey("secret_arn"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				// The provider configuration holds write-only secrets that the API does
+				// not return, so the block cannot be reconstructed on import.
+				ImportStateVerifyIgnore: []string{
+					"provider_configuration",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCorePaymentCredentialProvider_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_payment_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckPaymentCredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPaymentCredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPaymentCredentialProviderConfig_stripePrivyUpdate(rName, "sk_test_secret_a", "auth_test_id_a"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentCredentialProviderExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Rotate a mutable, non-RequiresReplace field on the same resource so
+				// the plan routes through UpdatePaymentCredentialProvider. name and
+				// credential_provider_vendor force replace, and *_secret_source has
+				// UseStateForUnknown so the MANAGED source is preserved from state.
+				Config: testAccPaymentCredentialProviderConfig_stripePrivyUpdate(rName, "sk_test_secret_b", "auth_test_id_b"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPaymentCredentialProviderExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// Regression: rotating a mutable field must plan as an in-place
+						// Update, not a Replace.
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						// Guards against "inconsistent result after apply" if the server
+						// re-issues the managed *_secret_arn on update: the computed
+						// ARNs are UseStateForUnknown, so the post-refresh plan must be
+						// empty.
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					// app_secret is write-only (not returned by Get) so we cannot rely
+					// on it as the observable signal; authorization_id is preserved
+					// from plan through Update and is a good witness that the new
+					// values landed in state.
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("stripe_privy_configuration").AtSliceIndex(0).AtMapKey("authorization_id"),
+						knownvalue.StringExact("auth_test_id_b"),
+					),
+					// Managed secret ARN must remain populated after the update.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("stripe_privy_configuration").AtSliceIndex(0).AtMapKey("app_secret_arn").AtSliceIndex(0).AtMapKey("secret_arn"), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCorePaymentCredentialProvider_externalImport(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -435,4 +553,43 @@ resource "aws_bedrockagentcore_payment_credential_provider" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPaymentCredentialProviderConfig_coinbaseCDP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_payment_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "CoinbaseCDP"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  provider_configuration {
+    coinbase_cdp_configuration {
+      api_key_id     = "cdp_api_key_test_id"
+      api_key_secret = "okMt51zrUMy4Q5Aj8xq4aeCJnYBsL0My0uLh7rtZbpKrt6FbUZUQVjWM09bEeRUV+gngAI87kZE2RlVNul+3yQ=="
+      wallet_secret  = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgJaqW0+v7IzrjdC/k5qzeS/SgwPIXePLlDhaXynCtM8OhRANCAASsNiwbLeBe6dinBO4VzaX/PLWJpwPO/qopblGO6GIQWz6q5K1u7qKMIhVsR6FTsNoiOox1142cJSePdX69ht5o"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPaymentCredentialProviderConfig_stripePrivyUpdate(rName, appSecret, authorizationID string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_payment_credential_provider" "test" {
+  name                       = %[1]q
+  credential_provider_vendor = "StripePrivy"
+
+  provider_configuration {
+    stripe_privy_configuration {
+      app_id                    = "app_test_id"
+      app_secret                = %[2]q
+      authorization_id          = %[3]q
+      authorization_private_key = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlzLhFfPe/14eR6GlFuWOzYTHgfXgyKs1yHwtpFISo6hRANCAAQPrRtegKcGCGBALTzewz0OnIpa9AeOe5BpcT0OS+Ej7odZ7fsTN8YgZzq5kBAY3u2UcZNHn6YJC70Z4bgpiuKI"
+    }
+  }
+}
+`, rName, appSecret, authorizationID)
 }
