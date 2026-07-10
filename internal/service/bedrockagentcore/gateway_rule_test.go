@@ -10,8 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
@@ -293,6 +296,165 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRouteMetadataClear(t *testing.T)
 	})
 }
 
+// TestAccBedrockAgentCoreGatewayRule_matchPaths exercises the condition.match_paths
+// union arm, which no other test configures — the custom conditionModel Flatten
+// dispatch to matchPathsModel (gateway_rule.go ~985-993) and the matchPathsModel
+// AutoFlex round-trip are otherwise unreachable.
+func TestAccBedrockAgentCoreGatewayRule_matchPaths(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := randomWithPrefixAndUnderscore(t)
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	resourceName := "aws_bedrockagentcore_gateway_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRuleConfig_matchPaths(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCondition+".#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.match_paths.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.match_principals.#", "0"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrCondition).AtSliceIndex(0).AtMapKey("match_paths").AtSliceIndex(0).AtMapKey("any_of"),
+						knownvalue.ListSizeExact(1),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrCondition).AtSliceIndex(0).AtMapKey("match_principals"),
+						knownvalue.ListSizeExact(0),
+					),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayRuleImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "rule_id",
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayRule_actionUpdate swaps the action union arm
+// (static_route -> weighted_route) in place. The action block has no
+// RequiresReplace, so this must PATCH via UpdateGatewayRule (gateway_rule.go
+// Update ~528-562) rather than replacing the resource. This path is untested
+// by the existing _update test, which only mutates condition/priority.
+func TestAccBedrockAgentCoreGatewayRule_actionUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := randomWithPrefixAndUnderscore(t)
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	resourceName := "aws_bedrockagentcore_gateway_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.static_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.weighted_route.#", "0"),
+				),
+			},
+			{
+				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.static_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.weighted_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.weighted_route.0.traffic_split.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("route_to_target").AtSliceIndex(0).AtMapKey("static_route"),
+						knownvalue.ListSizeExact(0),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("route_to_target").AtSliceIndex(0).AtMapKey("weighted_route").AtSliceIndex(0).AtMapKey("traffic_split"),
+						knownvalue.ListSizeExact(2),
+					),
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayRule_matchPrincipalsMulti exercises the
+// hand-written matchPrincipalsModel Expand/Flatten slice loops (gateway_rule.go
+// ~1074-1105) with two any_of entries. Every existing config uses exactly one
+// entry, so an ordering/round-trip bug in that custom loop would be invisible.
+// Asserting both entries in order (ListExact, not ListSizeExact) is what
+// catches reordering.
+func TestAccBedrockAgentCoreGatewayRule_matchPrincipalsMulti(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRuntime := randomWithPrefixAndUnderscore(t)
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	resourceName := "aws_bedrockagentcore_gateway_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRuleConfig_matchPrincipalsMulti(rName, rNameRuntime, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.match_principals.0.any_of.#", "2"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrCondition).AtSliceIndex(0).AtMapKey("match_principals").AtSliceIndex(0).AtMapKey("any_of").AtSliceIndex(0).AtMapKey("iam_principal").AtSliceIndex(0).AtMapKey("operator"),
+						knownvalue.StringExact("StringLike"),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New(names.AttrCondition).AtSliceIndex(0).AtMapKey("match_principals").AtSliceIndex(0).AtMapKey("any_of").AtSliceIndex(1).AtMapKey("iam_principal").AtSliceIndex(0).AtMapKey("operator"),
+						knownvalue.StringExact("StringEquals"),
+					),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -543,6 +705,71 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
   }
 }
 `, rName))
+}
+
+// testAccGatewayRuleConfig_matchPaths pairs a static_route action with a
+// match_paths condition — the only test that exercises the match_paths union arm.
+func testAccGatewayRuleConfig_matchPaths(rName, rNameRuntime, rImageUri string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), `
+resource "aws_bedrockagentcore_gateway_rule" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  priority           = 100
+
+  action {
+    route_to_target {
+      static_route {
+        target_name = aws_bedrockagentcore_gateway_target.test.name
+      }
+    }
+  }
+
+  condition {
+    match_paths {
+      any_of = ["/${aws_bedrockagentcore_gateway_target.test.name}/*"]
+    }
+  }
+}
+`)
+}
+
+// testAccGatewayRuleConfig_matchPrincipalsMulti has two distinct iam_principal
+// entries under match_principals.any_of so the custom slice Expand/Flatten
+// round-trip is exercised with >1 element.
+func testAccGatewayRuleConfig_matchPrincipalsMulti(rName, rNameRuntime, rImageUri string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), `
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_bedrockagentcore_gateway_rule" "test" {
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  priority           = 100
+
+  action {
+    route_to_target {
+      static_route {
+        target_name = aws_bedrockagentcore_gateway_target.test.name
+      }
+    }
+  }
+
+  condition {
+    match_principals {
+      any_of {
+        iam_principal {
+          arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/agentcore-caller-*"
+          operator = "StringLike"
+        }
+      }
+      any_of {
+        iam_principal {
+          arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/agentcore-fixed"
+          operator = "StringEquals"
+        }
+      }
+    }
+  }
+}
+`)
 }
 
 func testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rImageUri string) string {
