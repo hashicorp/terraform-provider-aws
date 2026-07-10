@@ -77,4 +77,4 @@ fi
 build_test_binary "${PKG%/...}"
 binary="$(basename "${PKG%/...}").test"
 
-TF_ACC=1 teamcity-go-test -test "./${binary}" -parallelism "%ACCTEST_PARALLELISM%"
+TF_ACC=1 teamcity-go-test -test "./${binary}" -json -run="" -parallelism "%ACCTEST_PARALLELISM%"
