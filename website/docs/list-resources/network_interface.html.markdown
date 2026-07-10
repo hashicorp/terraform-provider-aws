@@ -43,7 +43,7 @@ This list resource supports the following arguments:
 
 * `filter` - (Optional) One or more filters to apply to the search. If multiple `filter` blocks are provided, they all must be true. For a full reference of filter names, see [describe-network-interfaces in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html).
 * `network_interface_ids` - (Optional) List of Network Interface IDs to query.
-* `region` - (Optional) [Region](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) to query. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region to query. Defaults to provider region.
 
 ### `filter` Block
 

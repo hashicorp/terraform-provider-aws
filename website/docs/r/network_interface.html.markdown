@@ -108,13 +108,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_network_interface.test
+  to = aws_network_interface.example
   identity = {
     id = "eni-e5aa89a3"
   }
 }
 
-resource "aws_network_interface" "test" {
+resource "aws_network_interface" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
