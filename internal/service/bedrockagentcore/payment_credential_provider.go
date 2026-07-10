@@ -160,7 +160,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"api_key_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										Computed:   true,
 										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
@@ -175,7 +177,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"wallet_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										Computed:   true,
 										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
@@ -217,7 +221,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"app_secret_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										Computed:   true,
 										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
@@ -239,7 +245,9 @@ func (r *paymentCredentialProviderResource) Schema(ctx context.Context, request 
 									"authorization_private_key_source": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
 										Optional:   true,
+										Computed:   true,
 										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
@@ -432,15 +440,38 @@ func flattenPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObjec
 			return diags
 		}
 		if coinbase == nil {
+			// On import, hydrate every field the API returns (identifier, secret
+			// sources, and for EXTERNAL secrets the secret reference), leaving only
+			// the write-only secret values null so the post-import plan is limited
+			// to re-supplying them (and is empty when both secrets are EXTERNAL).
 			coinbase = &coinbaseCdpConfigurationModel{
+				APIKeyID:           fwflex.StringToFramework(ctx, v.Value.ApiKeyId),
+				APIKeySecret:       types.StringNull(),
 				APIKeySecretARN:    fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
 				APIKeySecretConfig: fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
-				APIKeySecretSource: fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+				APIKeySecretSource: fwtypes.StringEnumValue(v.Value.ApiKeySecretSource),
+				WalletSecret:       types.StringNull(),
 				WalletSecretARN:    fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
 				WalletSecretConfig: fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
-				WalletSecretSource: fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+				WalletSecretSource: fwtypes.StringEnumValue(v.Value.WalletSecretSource),
+			}
+			if v.Value.ApiKeySecretSource == awstypes.SecretSourceTypeExternal {
+				coinbase.APIKeySecretConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &paymentSecretReferenceModel{
+					JSONKey:  fwflex.StringToFramework(ctx, v.Value.ApiKeySecretJsonKey),
+					SecretID: fwflex.StringToFramework(ctx, v.Value.ApiKeySecretArn.SecretArn),
+				})
+			}
+			if v.Value.WalletSecretSource == awstypes.SecretSourceTypeExternal {
+				coinbase.WalletSecretConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &paymentSecretReferenceModel{
+					JSONKey:  fwflex.StringToFramework(ctx, v.Value.WalletSecretJsonKey),
+					SecretID: fwflex.StringToFramework(ctx, v.Value.WalletSecretArn.SecretArn),
+				})
 			}
 		}
+		// The secret ARNs and sources are computed; the API is authoritative for
+		// them on create, update, and import, so always set them from the response.
+		coinbase.APIKeySecretSource = fwtypes.StringEnumValue(v.Value.ApiKeySecretSource)
+		coinbase.WalletSecretSource = fwtypes.StringEnumValue(v.Value.WalletSecretSource)
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.ApiKeySecretArn, &coinbase.APIKeySecretARN))
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.WalletSecretArn, &coinbase.WalletSecretARN))
 		if diags.HasError() {
@@ -455,15 +486,39 @@ func flattenPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObjec
 			return diags
 		}
 		if stripe == nil {
+			// On import, hydrate every field the API returns (identifiers, secret
+			// sources, and for EXTERNAL secrets the secret reference), leaving only
+			// the write-only secret values null so the post-import plan is limited
+			// to re-supplying them (and is empty when both secrets are EXTERNAL).
 			stripe = &stripePrivyConfigurationModel{
+				AppID:                         fwflex.StringToFramework(ctx, v.Value.AppId),
+				AppSecret:                     types.StringNull(),
 				AppSecretARN:                  fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
 				AppSecretConfig:               fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
-				AppSecretSource:               fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+				AppSecretSource:               fwtypes.StringEnumValue(v.Value.AppSecretSource),
+				AuthorizationID:               fwflex.StringToFramework(ctx, v.Value.AuthorizationId),
+				AuthorizationPrivateKey:       types.StringNull(),
 				AuthorizationPrivateKeyARN:    fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx),
 				AuthorizationPrivateKeyConfig: fwtypes.NewListNestedObjectValueOfNull[paymentSecretReferenceModel](ctx),
-				AuthorizationPrivateKeySource: fwtypes.StringEnumNull[awstypes.SecretSourceType](),
+				AuthorizationPrivateKeySource: fwtypes.StringEnumValue(v.Value.AuthorizationPrivateKeySource),
+			}
+			if v.Value.AppSecretSource == awstypes.SecretSourceTypeExternal {
+				stripe.AppSecretConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &paymentSecretReferenceModel{
+					JSONKey:  fwflex.StringToFramework(ctx, v.Value.AppSecretJsonKey),
+					SecretID: fwflex.StringToFramework(ctx, v.Value.AppSecretArn.SecretArn),
+				})
+			}
+			if v.Value.AuthorizationPrivateKeySource == awstypes.SecretSourceTypeExternal {
+				stripe.AuthorizationPrivateKeyConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &paymentSecretReferenceModel{
+					JSONKey:  fwflex.StringToFramework(ctx, v.Value.AuthorizationPrivateKeyJsonKey),
+					SecretID: fwflex.StringToFramework(ctx, v.Value.AuthorizationPrivateKeyArn.SecretArn),
+				})
 			}
 		}
+		// The secret ARNs and sources are computed; the API is authoritative for
+		// them on create, update, and import, so always set them from the response.
+		stripe.AppSecretSource = fwtypes.StringEnumValue(v.Value.AppSecretSource)
+		stripe.AuthorizationPrivateKeySource = fwtypes.StringEnumValue(v.Value.AuthorizationPrivateKeySource)
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.AppSecretArn, &stripe.AppSecretARN))
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v.Value.AuthorizationPrivateKeyArn, &stripe.AuthorizationPrivateKeyARN))
 		if diags.HasError() {
