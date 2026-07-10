@@ -355,7 +355,7 @@ func statusTenantDatabase(conn *rds.Client, id string) retry.StateRefreshFunc {
 	}
 }
 
-func waitTenantDatabaseAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.TenantDatabase, error) {
+func waitTenantDatabaseAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.TenantDatabase, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			instanceStatusCreating,
