@@ -233,6 +233,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+-> **Note:** OAuth2 client credentials are input-only in the AgentCore API and are not returned by the read operation. On import, `client_id`, `client_secret`, `client_secret_source`, `client_secret_config`, and the write-only `client_id_wo`/`client_secret_wo`/`client_credentials_wo_version` arguments cannot be recovered from the service, so the first `terraform plan` after import shows them as additions. Run `terraform apply` once to reconcile state from your configuration; subsequent plans are clean.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore OAuth2 Credential Provider using the provider name. For example:
 
 ```terraform
