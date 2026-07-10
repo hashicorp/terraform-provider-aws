@@ -494,7 +494,7 @@ func TestAccRoute53Record_fqdn(t *testing.T) {
 func TestAccRoute53Record_trailingPeriodAndZoneID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1 awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.default"
+	resourceName := "aws_route53_record.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2287,7 +2287,7 @@ resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_route53_record" "default" {
+resource "aws_route53_record" "test" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "www.DOmaiN.test."
   type    = "A"
