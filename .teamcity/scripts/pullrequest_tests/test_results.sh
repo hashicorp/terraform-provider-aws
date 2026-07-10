@@ -5,7 +5,7 @@
 # Authenticate internally using TeamCity's system-provided tokens
 results="$(curl -s -u "%system.teamcity.auth.userId%:%system.teamcity.auth.password%" \
      -H "Accept: application/json" \
-     "%teamcity.serverUrl%/app/rest/testOccurrences?locator=build:(id:%teamcity.build.id%)" |
+     "%teamcity.serverUrl%/app/rest/testOccurrences?locator=build:(id:%teamcity.build.id%),count:100000&fields=testOccurrence(name,status,duration)" |
 	jq -r '.testOccurrence[] | "\(.name): [\(.status)]"')"
 
 echo "${results}"
