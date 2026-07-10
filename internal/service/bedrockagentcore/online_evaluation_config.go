@@ -137,8 +137,9 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 					listvalidator.SizeAtMost(1),
 					// The service rejects clustering_config unless insight is also set
 					// ("clusteringConfig can only be set when insights are provided").
-					// insight already AlsoRequires clustering_config, so the two are
-					// mutually required.
+					// The reverse does NOT hold: insight without clustering_config is a
+					// valid, service-accepted configuration, so this requirement is
+					// one-directional (clustering => insight only).
 					listvalidator.AlsoRequires(path.MatchRoot("insight")),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -219,7 +220,6 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 				CustomType: fwtypes.NewListNestedObjectTypeOf[insightModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
-					listvalidator.AlsoRequires(path.MatchRoot("clustering_config")),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{

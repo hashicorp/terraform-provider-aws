@@ -386,9 +386,11 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightsAndClustering(t *test
 	})
 }
 
-func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightRequiresClusteringConfig(t *testing.T) {
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
 	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -401,8 +403,25 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_insightRequiresClusteringConf
 		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOnlineEvaluationConfigConfig_insightsWithoutClustering(rName),
-				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+				// insight without clustering_config is a valid, service-accepted configuration.
+				Config: testAccOnlineEvaluationConfigConfig_insightsWithoutClustering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("insight").AtSliceIndex(0).AtMapKey("insight_id"), knownvalue.StringExact("Builtin.Insight.FailureAnalysis")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("clustering_config"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
+				ImportStateVerifyIgnore: []string{
+					"enable_on_create",
+				},
 			},
 		},
 	})
