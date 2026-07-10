@@ -16,32 +16,32 @@ import (
 )
 
 var (
-	// _ validator.Bool    = ExactlyOneOfValidator{}
-	// _ validator.Float32 = ExactlyOneOfValidator{}
-	// _ validator.Float64 = ExactlyOneOfValidator{}
-	// _ validator.Int32   = ExactlyOneOfValidator{}
-	// _ validator.Int64   = ExactlyOneOfValidator{}
-	// _ validator.List    = ExactlyOneOfValidator{}
-	// _ validator.Map     = ExactlyOneOfValidator{}
-	// _ validator.Number  = ExactlyOneOfValidator{}
-	// _ validator.Object  = ExactlyOneOfValidator{}
-	// _ validator.Set     = ExactlyOneOfValidator{}
-	_ validator.String = ExactlyOneOfValidator{}
-	// _ validator.Dynamic = ExactlyOneOfValidator{}
+	// _ validator.Bool    = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Float32 = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Float64 = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Int32   = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Int64   = (*ExactlyOneOfValidator)(nil)
+	// _ validator.List    = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Map     = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Number  = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Object  = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Set     = (*ExactlyOneOfValidator)(nil)
+	_ validator.String = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Dynamic = (*ExactlyOneOfValidator)(nil)
 )
 
 type ExactlyOneOfValidator struct {
 	PathExpressions path.Expressions
 }
 
-type ExactlyOneOfValidatorRequest struct {
+type ValidatorRequest struct {
 	Config         tfsdk.Config
 	ConfigValue    attr.Value
 	Path           path.Path
 	PathExpression path.Expression
 }
 
-type ExactlyOneOfValidatorResponse struct {
+type ValidatorResponse struct {
 	Diagnostics diag.Diagnostics
 }
 
@@ -54,20 +54,20 @@ func (av ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
 }
 
 func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
-	validateReq := ExactlyOneOfValidatorRequest{
+	validateReq := ValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
 		Path:           req.Path,
 		PathExpression: req.PathExpression,
 	}
-	var validateResp ExactlyOneOfValidatorResponse
+	var validateResp ValidatorResponse
 
 	av.Validate(ctx, validateReq, &validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfValidatorRequest, res *ExactlyOneOfValidatorResponse) {
+func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ValidatorRequest, res *ValidatorResponse) {
 	count := 0
 	expressions := req.PathExpression.MergeExpressions(av.PathExpressions...)
 

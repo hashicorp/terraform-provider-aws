@@ -12,23 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
 var (
 	_ validator.String = (*ConflictsWithWhenEqualsValidator)(nil)
 )
-
-type conflictsWithWhenEqualsValidatorRequest struct {
-	Config         tfsdk.Config
-	ConfigValue    attr.Value
-	Path           path.Path
-	PathExpression path.Expression
-}
-
-type conflictsWithWhenEqualsValidatorResponse struct {
-	Diagnostics diag.Diagnostics
-}
 
 type ConflictsWithWhenEqualsValidator struct {
 	Value           attr.Value
@@ -44,20 +32,20 @@ func (v ConflictsWithWhenEqualsValidator) MarkdownDescription(ctx context.Contex
 }
 
 func (v ConflictsWithWhenEqualsValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := conflictsWithWhenEqualsValidatorRequest{
+	validateRequest := ValidatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse conflictsWithWhenEqualsValidatorResponse
+	var validateResponse ValidatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v ConflictsWithWhenEqualsValidator) validate(ctx context.Context, request conflictsWithWhenEqualsValidatorRequest, response *conflictsWithWhenEqualsValidatorResponse) {
+func (v ConflictsWithWhenEqualsValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
