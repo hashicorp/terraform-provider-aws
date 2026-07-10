@@ -6,7 +6,6 @@ package route53_test
 import (
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,10 +22,12 @@ import (
 
 func TestAccRoute53Record_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName1 := "aws_route53_record.test[0]"
 	resourceName2 := "aws_route53_record.test[1]"
+
+	zoneName := acctest.RandomDomain(t).String()
+	subdomainName := acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -43,19 +44,21 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Record/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
+					"subdomainName":  config.StringVariable(subdomainName),
+					"zoneName":       config.StringVariable(zoneName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(regexache.MustCompile(rName+`-0\..*\.com\.?`))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("ttl"), knownvalue.Int64Exact(300)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("10.0.0.0"),
 					})),
+
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(regexache.MustCompile(rName+`-1\..*\.com\.?`))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(subdomainName+"-1."+zoneName)),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("ttl"), knownvalue.Int64Exact(300)),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
@@ -69,20 +72,21 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Record/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
+					"subdomainName":  config.StringVariable(subdomainName),
+					"zoneName":       config.StringVariable(zoneName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_route53_record.test", map[string]knownvalue.Check{
 						"zone_id":           knownvalue.NotNull(),
-						names.AttrName:      knownvalue.StringRegexp(regexache.MustCompile(rName + `-0\.` + rName + `\.com\.?`)),
+						names.AttrName:      knownvalue.StringExact(subdomainName + "-0." + zoneName),
 						names.AttrType:      knownvalue.StringExact("A"),
 						"set_identifier":    knownvalue.Null(),
 						names.AttrAccountID: knownvalue.NotNull(),
 					}),
 					querycheck.ExpectIdentity("aws_route53_record.test", map[string]knownvalue.Check{
 						"zone_id":           knownvalue.NotNull(),
-						names.AttrName:      knownvalue.StringRegexp(regexache.MustCompile(rName + `-1\.` + rName + `\.com\.?`)),
+						names.AttrName:      knownvalue.StringExact(subdomainName + "-1." + zoneName),
 						names.AttrType:      knownvalue.StringExact("A"),
 						"set_identifier":    knownvalue.Null(),
 						names.AttrAccountID: knownvalue.NotNull(),
@@ -95,11 +99,13 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 
 func TestAccRoute53Record_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resourceName1 := "aws_route53_record.test[0]"
+	resourceName := "aws_route53_record.test[0]"
 
-	identity1 := tfstatecheck.Identity()
+	zoneName := acctest.RandomDomain(t).String()
+	subdomainName := acctest.RandString(t, 8)
+
+	identity := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -114,11 +120,12 @@ func TestAccRoute53Record_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Record/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
+					"subdomainName":  config.StringVariable(subdomainName),
+					"zoneName":       config.StringVariable(zoneName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					identity1.GetIdentity(resourceName1),
+					identity.GetIdentity(resourceName),
 				},
 			},
 			// Step 2: Query
@@ -126,16 +133,17 @@ func TestAccRoute53Record_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Record/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
+					"subdomainName":  config.StringVariable(subdomainName),
+					"zoneName":       config.StringVariable(zoneName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_route53_record.test", identity1.Checks()),
-					querycheck.ExpectResourceKnownValues("aws_route53_record.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_route53_record.test", identity.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_route53_record.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAlias), knownvalue.ListExact([]knownvalue.Check{})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("cidr_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("failover_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("fqdn"), knownvalue.StringRegexp(regexache.MustCompile(rName+`-0\.`+rName+`\.com\.?`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("fqdn"), knownvalue.StringExact(subdomainName+"-0."+zoneName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("geolocation_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("geoproximity_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("health_check_id"), knownvalue.StringExact("")),
