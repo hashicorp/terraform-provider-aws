@@ -77,20 +77,4 @@ fi
 build_test_binary "${PKG%/...}"
 binary="$(basename "${PKG%/...}").test"
 
-# TEST_LIST=$("./${binary}" -test.list="%TEST_PATTERN%" 2>/dev/null)
-
-# read -r -a split <<<"${TEST_LIST}"
-# TEST_COUNT=${#split[@]}
-
-# if [[ "${TEST_COUNT}" == 0 ]]; then
-# 	echo "Zero tests"
-# 	exit 0
-# elif [[ "${TEST_COUNT}" == 1 ]]; then
-# 	echo "Running 1 test:"
-# else
-# 	echo "Running ${TEST_COUNT} tests:"
-# fi
-# echo "${TEST_LIST}"
-# echo
-
-echo "${TEST_LIST}" | TF_ACC=1 teamcity-go-test -test "./${binary}" -parallelism "%ACCTEST_PARALLELISM%"
+TF_ACC=1 teamcity-go-test -test "./${binary}" -parallelism "%ACCTEST_PARALLELISM%"
