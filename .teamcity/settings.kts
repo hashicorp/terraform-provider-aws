@@ -150,19 +150,15 @@ object PullRequest : BuildType({
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
         }
+        script {
+            name = "Fetch Test Results"
+            scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
+        }
     }
 
     features {
         golang {
             testFormat = "json"
-        }
-
-        buildCache {
-            name = "go-mod-cache"
-            publish = true
-            use = true
-            publishOnlyChanged = false
-            rules = "%env.HOME%/go/pkg/mod"
         }
 
         feature {
