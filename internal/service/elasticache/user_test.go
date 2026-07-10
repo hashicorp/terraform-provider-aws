@@ -662,7 +662,7 @@ resource "aws_elasticache_user" "test" {
 `, rName, password, version)
 }
 
-func TestAccElastiCacheUser_authModePasswordWOSingle(t *testing.T) {
+func TestAccElastiCacheUser_passwordWOSingle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := acctest.RandomWithPrefix(t, "tf-acc")
@@ -675,7 +675,7 @@ func TestAccElastiCacheUser_authModePasswordWOSingle(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_authModePasswordWOSingle(rName, "password123456789", 1),
+				Config: testAccUserConfig_passwordWOSingle(rName, "password123456789", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -697,7 +697,7 @@ func TestAccElastiCacheUser_authModePasswordWOSingle(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_authModePasswordWODual(t *testing.T) {
+func TestAccElastiCacheUser_passwordWODual(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 	rName := acctest.RandomWithPrefix(t, "tf-acc")
@@ -710,7 +710,7 @@ func TestAccElastiCacheUser_authModePasswordWODual(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_authModePasswordWODual(rName, "password123456789", "password987654321", 1),
+				Config: testAccUserConfig_passwordWODual(rName, "password123456789", "password987654321", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -734,7 +734,7 @@ func TestAccElastiCacheUser_authModePasswordWODual(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_authModePasswordWORotation(t *testing.T) {
+func TestAccElastiCacheUser_passwordWORotation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user1, user2 awstypes.User
 	rName := acctest.RandomWithPrefix(t, "tf-acc")
@@ -747,7 +747,7 @@ func TestAccElastiCacheUser_authModePasswordWORotation(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_authModePasswordWOSingle(rName, "password123456789", 1),
+				Config: testAccUserConfig_passwordWOSingle(rName, "password123456789", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
@@ -755,7 +755,7 @@ func TestAccElastiCacheUser_authModePasswordWORotation(t *testing.T) {
 			},
 			// Update password by incrementing version
 			{
-				Config: testAccUserConfig_authModePasswordWOSingle(rName, "newpassword1234567", 2),
+				Config: testAccUserConfig_passwordWOSingle(rName, "newpassword1234567", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
@@ -765,7 +765,7 @@ func TestAccElastiCacheUser_authModePasswordWORotation(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_authModePasswordWOReduceToOne(t *testing.T) {
+func TestAccElastiCacheUser_passwordWOReduceToOne(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user1, user2 awstypes.User
 	rName := acctest.RandomWithPrefix(t, "tf-acc")
@@ -778,7 +778,7 @@ func TestAccElastiCacheUser_authModePasswordWOReduceToOne(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_authModePasswordWODual(rName, "password123456789", "password987654321", 1),
+				Config: testAccUserConfig_passwordWODual(rName, "password123456789", "password987654321", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
@@ -786,7 +786,7 @@ func TestAccElastiCacheUser_authModePasswordWOReduceToOne(t *testing.T) {
 			},
 			// Reduce to single password by incrementing version
 			{
-				Config: testAccUserConfig_authModePasswordWOSingle(rName, "password123456789", 2),
+				Config: testAccUserConfig_passwordWOSingle(rName, "password123456789", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
@@ -796,7 +796,7 @@ func TestAccElastiCacheUser_authModePasswordWOReduceToOne(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheUser_authModePasswordWOConflictsWithPasswords(t *testing.T) {
+func TestAccElastiCacheUser_passwordWOConflictsWithPasswords(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "tf-acc")
 
@@ -807,14 +807,14 @@ func TestAccElastiCacheUser_authModePasswordWOConflictsWithPasswords(t *testing.
 		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserConfig_authModePasswordWOConflict(rName),
+				Config:      testAccUserConfig_passwordWOConflict(rName),
 				ExpectError: regexache.MustCompile(`"password_wo_1": conflicts with passwords`),
 			},
 		},
 	})
 }
 
-func testAccUserConfig_authModePasswordWOSingle(rName, password string, version int) string {
+func testAccUserConfig_passwordWOSingle(rName, password string, version int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id            = %[1]q
@@ -831,7 +831,7 @@ resource "aws_elasticache_user" "test" {
 `, rName, password, version)
 }
 
-func testAccUserConfig_authModePasswordWODual(rName, password1, password2 string, version int) string {
+func testAccUserConfig_passwordWODual(rName, password1, password2 string, version int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id             = %[1]q
@@ -849,7 +849,7 @@ resource "aws_elasticache_user" "test" {
 `, rName, password1, password2, version)
 }
 
-func testAccUserConfig_authModePasswordWOConflict(rName string) string {
+func testAccUserConfig_passwordWOConflict(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id             = %[1]q
