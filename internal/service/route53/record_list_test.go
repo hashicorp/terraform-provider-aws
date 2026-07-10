@@ -469,3 +469,125 @@ func TestAccRoute53Record_List_trailingDot_includeResource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccRoute53Record_List_wildcard(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_route53_record.test"
+
+	zoneName := acctest.RandomDomain(t).String()
+
+	identity := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_wildcard/"),
+				ConfigVariables: config.Variables{
+					"zoneName": config.StringVariable(zoneName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity.GetIdentity(resourceName),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*."+zoneName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*."+zoneName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.Int64Exact(300)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_wildcard/"),
+				ConfigVariables: config.Variables{
+					"zoneName": config.StringVariable(zoneName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_route53_record.test", map[string]knownvalue.Check{
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.StringExact("*." + zoneName),
+						names.AttrType:      knownvalue.StringExact("A"),
+						"set_identifier":    knownvalue.Null(),
+						names.AttrAccountID: knownvalue.NotNull(),
+					}),
+					querycheck.ExpectResourceDisplayName("aws_route53_record.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact("*."+zoneName+" A")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_List_wildcard_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_route53_record.test"
+
+	zoneName := acctest.RandomDomain(t).String()
+
+	identity := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_wildcard_include_resource/"),
+				ConfigVariables: config.Variables{
+					"zoneName": config.StringVariable(zoneName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity.GetIdentity(resourceName),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*."+zoneName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*."+zoneName)),
+				},
+			},
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Record/list_wildcard_include_resource/"),
+				ConfigVariables: config.Variables{
+					"zoneName": config.StringVariable(zoneName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_route53_record.test", identity.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_route53_record.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact("*."+zoneName+" A")),
+					querycheck.ExpectResourceKnownValues("aws_route53_record.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAlias), knownvalue.ListExact([]knownvalue.Check{})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("cidr_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("failover_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("fqdn"), knownvalue.StringExact("*."+zoneName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("geolocation_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("geoproximity_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("health_check_id"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("latency_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("multivalue_answer_routing_policy"), knownvalue.Bool(false)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact("*."+zoneName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("10.0.0.0"),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ttl"), knownvalue.Int64Exact(300)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("weighted_routing_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+					}),
+				},
+			},
+		},
+	})
+}
