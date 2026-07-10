@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRDSDBTenantDatabase_basic(t *testing.T) {
+func TestAccRDSTenantDatabase_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -27,7 +27,7 @@ func TestAccRDSDBTenantDatabase_basic(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -36,12 +36,12 @@ func TestAccRDSDBTenantDatabase_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_basic(rName),
+				Config: testAccTenantDatabaseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "tenant_db_name", "TESTPDB"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
@@ -64,7 +64,7 @@ func TestAccRDSDBTenantDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSDBTenantDatabase_disappears(t *testing.T) {
+func TestAccRDSTenantDatabase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -72,7 +72,7 @@ func TestAccRDSDBTenantDatabase_disappears(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -81,12 +81,12 @@ func TestAccRDSDBTenantDatabase_disappears(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_basic(rName),
+				Config: testAccTenantDatabaseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceTenantDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,7 +100,7 @@ func TestAccRDSDBTenantDatabase_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRDSDBTenantDatabase_tenantDBName(t *testing.T) {
+func TestAccRDSTenantDatabase_tenantDBName(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -108,7 +108,7 @@ func TestAccRDSDBTenantDatabase_tenantDBName(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -117,12 +117,12 @@ func TestAccRDSDBTenantDatabase_tenantDBName(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_tenantDBName(rName, "MYPDB1"),
+				Config: testAccTenantDatabaseConfig_tenantDBName(rName, "MYPDB1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenant_db_name", "MYPDB1"),
 				),
 			},
@@ -135,9 +135,9 @@ func TestAccRDSDBTenantDatabase_tenantDBName(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDBTenantDatabaseConfig_tenantDBName(rName, "MYPDB2"),
+				Config: testAccTenantDatabaseConfig_tenantDBName(rName, "MYPDB2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenant_db_name", "MYPDB2"),
 				),
 			},
@@ -153,7 +153,7 @@ func TestAccRDSDBTenantDatabase_tenantDBName(t *testing.T) {
 	})
 }
 
-func TestAccRDSDBTenantDatabase_masterPassword(t *testing.T) {
+func TestAccRDSTenantDatabase_masterPassword(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -161,7 +161,7 @@ func TestAccRDSDBTenantDatabase_masterPassword(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -170,12 +170,12 @@ func TestAccRDSDBTenantDatabase_masterPassword(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_masterPassword(rName, "tFaccPass1!"),
+				Config: testAccTenantDatabaseConfig_masterPassword(rName, "tFaccPass1!"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -187,16 +187,16 @@ func TestAccRDSDBTenantDatabase_masterPassword(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDBTenantDatabaseConfig_masterPassword(rName, "tFaccPass2!"),
+				Config: testAccTenantDatabaseConfig_masterPassword(rName, "tFaccPass2!"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSDBTenantDatabase_manageMasterUserPassword(t *testing.T) {
+func TestAccRDSTenantDatabase_manageMasterUserPassword(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -204,7 +204,7 @@ func TestAccRDSDBTenantDatabase_manageMasterUserPassword(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -213,12 +213,12 @@ func TestAccRDSDBTenantDatabase_manageMasterUserPassword(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_manageMasterUserPassword(rName),
+				Config: testAccTenantDatabaseConfig_manageMasterUserPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
@@ -237,7 +237,7 @@ func TestAccRDSDBTenantDatabase_manageMasterUserPassword(t *testing.T) {
 	})
 }
 
-func TestAccRDSDBTenantDatabase_characterSet(t *testing.T) {
+func TestAccRDSTenantDatabase_characterSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -245,7 +245,7 @@ func TestAccRDSDBTenantDatabase_characterSet(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -254,12 +254,12 @@ func TestAccRDSDBTenantDatabase_characterSet(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_characterSet(rName, "UTF8"),
+				Config: testAccTenantDatabaseConfig_characterSet(rName, "UTF8"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "UTF8"),
 				),
 			},
@@ -275,7 +275,7 @@ func TestAccRDSDBTenantDatabase_characterSet(t *testing.T) {
 	})
 }
 
-func TestAccRDSDBTenantDatabase_ncharCharacterSet(t *testing.T) {
+func TestAccRDSTenantDatabase_ncharCharacterSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -283,7 +283,7 @@ func TestAccRDSDBTenantDatabase_ncharCharacterSet(t *testing.T) {
 
 	var v types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_db_tenant_database.test"
+	resourceName := "aws_rds_tenant_database.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -292,12 +292,12 @@ func TestAccRDSDBTenantDatabase_ncharCharacterSet(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_ncharCharacterSet(rName, "UTF8"),
+				Config: testAccTenantDatabaseConfig_ncharCharacterSet(rName, "UTF8"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resourceName, &v),
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "UTF8"),
 				),
 			},
@@ -313,11 +313,11 @@ func TestAccRDSDBTenantDatabase_ncharCharacterSet(t *testing.T) {
 	})
 }
 
-// TestAccRDSDBTenantDatabase_multipleParallel verifies that two PDBs on the
+// TestAccRDSTenantDatabase_multipleParallel verifies that two PDBs on the
 // same CDB can be destroyed concurrently without the second delete failing
 // because the CDB is in a non-available state while the first delete completes.
 // This exercises the RetryWhenIsA fix in resourceTenantDatabaseDelete.
-func TestAccRDSDBTenantDatabase_multipleParallel(t *testing.T) {
+func TestAccRDSTenantDatabase_multipleParallel(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -325,8 +325,8 @@ func TestAccRDSDBTenantDatabase_multipleParallel(t *testing.T) {
 
 	var pdb1, pdb2 types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resource1Name := "aws_db_tenant_database.pdb1"
-	resource2Name := "aws_db_tenant_database.pdb2"
+	resource1Name := "aws_rds_tenant_database.pdb1"
+	resource2Name := "aws_rds_tenant_database.pdb2"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -335,13 +335,13 @@ func TestAccRDSDBTenantDatabase_multipleParallel(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBTenantDatabaseDestroy(ctx, t),
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBTenantDatabaseConfig_multiple(rName),
+				Config: testAccTenantDatabaseConfig_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBTenantDatabaseExists(ctx, t, resource1Name, &pdb1),
-					testAccCheckDBTenantDatabaseExists(ctx, t, resource2Name, &pdb2),
+					testAccCheckTenantDatabaseExists(ctx, t, resource1Name, &pdb1),
+					testAccCheckTenantDatabaseExists(ctx, t, resource2Name, &pdb2),
 					resource.TestCheckResourceAttr(resource1Name, "tenant_db_name", "MYPDB1"),
 					resource.TestCheckResourceAttr(resource2Name, "tenant_db_name", "MYPDB2"),
 					resource.TestCheckResourceAttr(resource1Name, "db_instance_identifier", rName),
@@ -354,7 +354,7 @@ func TestAccRDSDBTenantDatabase_multipleParallel(t *testing.T) {
 	})
 }
 
-func testAccCheckDBTenantDatabaseExists(ctx context.Context, t *testing.T, n string, v *types.TenantDatabase) resource.TestCheckFunc {
+func testAccCheckTenantDatabaseExists(ctx context.Context, t *testing.T, n string, v *types.TenantDatabase) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -374,12 +374,12 @@ func testAccCheckDBTenantDatabaseExists(ctx context.Context, t *testing.T, n str
 	}
 }
 
-func testAccCheckDBTenantDatabaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckTenantDatabaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_db_tenant_database" {
+			if rs.Type != "aws_rds_tenant_database" {
 				continue
 			}
 
@@ -400,10 +400,10 @@ func testAccCheckDBTenantDatabaseDestroy(ctx context.Context, t *testing.T) reso
 	}
 }
 
-// testAccDBTenantDatabaseConfig_base provisions the CDB instance shared by all
+// testAccTenantDatabaseConfig_base provisions the CDB instance shared by all
 // tenant database configs. Oracle CDB requires a subnet group, a CDB parameter
 // group family, and multi_tenant = true on the db_instance.
-func testAccDBTenantDatabaseConfig_base(rName string) string {
+func testAccTenantDatabaseConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_baseVPC(rName),
@@ -457,11 +457,11 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName))
 }
 
-func testAccDBTenantDatabaseConfig_basic(rName string) string {
+func testAccTenantDatabaseConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		`
-resource "aws_db_tenant_database" "test" {
+resource "aws_rds_tenant_database" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   tenant_db_name         = "TESTPDB"
   username               = "tfacctest"
@@ -470,11 +470,11 @@ resource "aws_db_tenant_database" "test" {
 `)
 }
 
-func testAccDBTenantDatabaseConfig_tenantDBName(rName, pdbName string) string {
+func testAccTenantDatabaseConfig_tenantDBName(rName, pdbName string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_db_tenant_database" "test" {
+resource "aws_rds_tenant_database" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   tenant_db_name         = %[1]q
   username               = "tfacctest"
@@ -483,11 +483,11 @@ resource "aws_db_tenant_database" "test" {
 `, pdbName))
 }
 
-func testAccDBTenantDatabaseConfig_masterPassword(rName, password string) string {
+func testAccTenantDatabaseConfig_masterPassword(rName, password string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_db_tenant_database" "test" {
+resource "aws_rds_tenant_database" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   tenant_db_name         = "TESTPDB"
   username               = "tfacctest"
@@ -496,11 +496,11 @@ resource "aws_db_tenant_database" "test" {
 `, password))
 }
 
-func testAccDBTenantDatabaseConfig_manageMasterUserPassword(rName string) string {
+func testAccTenantDatabaseConfig_manageMasterUserPassword(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		`
-resource "aws_db_tenant_database" "test" {
+resource "aws_rds_tenant_database" "test" {
   db_instance_identifier      = aws_db_instance.test.identifier
   tenant_db_name              = "TESTPDB"
   username                    = "tfacctest"
@@ -509,11 +509,11 @@ resource "aws_db_tenant_database" "test" {
 `)
 }
 
-func testAccDBTenantDatabaseConfig_characterSet(rName, characterSet string) string {
+func testAccTenantDatabaseConfig_characterSet(rName, characterSet string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_db_tenant_database" "test" {
+resource "aws_rds_tenant_database" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   tenant_db_name         = "TESTPDB"
   username               = "tfacctest"
@@ -523,11 +523,11 @@ resource "aws_db_tenant_database" "test" {
 `, characterSet))
 }
 
-func testAccDBTenantDatabaseConfig_ncharCharacterSet(rName, ncharCharacterSet string) string {
+func testAccTenantDatabaseConfig_ncharCharacterSet(rName, ncharCharacterSet string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_db_tenant_database" "test" {
+resource "aws_rds_tenant_database" "test" {
   db_instance_identifier   = aws_db_instance.test.identifier
   tenant_db_name           = "TESTPDB"
   username                 = "tfacctest"
@@ -537,18 +537,18 @@ resource "aws_db_tenant_database" "test" {
 `, ncharCharacterSet))
 }
 
-func testAccDBTenantDatabaseConfig_multiple(rName string) string {
+func testAccTenantDatabaseConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDBTenantDatabaseConfig_base(rName),
+		testAccTenantDatabaseConfig_base(rName),
 		`
-resource "aws_db_tenant_database" "pdb1" {
+resource "aws_rds_tenant_database" "pdb1" {
   db_instance_identifier = aws_db_instance.test.identifier
   tenant_db_name         = "MYPDB1"
   username               = "pdb1admin"
   master_password        = "tFaccPass1!"
 }
 
-resource "aws_db_tenant_database" "pdb2" {
+resource "aws_rds_tenant_database" "pdb2" {
   db_instance_identifier = aws_db_instance.test.identifier
   tenant_db_name         = "MYPDB2"
   username               = "pdb2admin"

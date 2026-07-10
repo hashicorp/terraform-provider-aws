@@ -304,15 +304,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  resourceTenantDatabase,
-			TypeName: "aws_db_tenant_database",
-			Name:     "Tenant Database",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
-		},
-		{
 			Factory:  resourceCertificate,
 			TypeName: "aws_rds_certificate",
 			Name:     "Default Certificate",
@@ -395,6 +386,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReservedInstance,
 			TypeName: "aws_rds_reserved_instance",
 			Name:     "Reserved Instance",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  resourceTenantDatabase,
+			TypeName: "aws_rds_tenant_database",
+			Name:     "Tenant Database",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),

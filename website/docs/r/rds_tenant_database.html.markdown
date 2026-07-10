@@ -1,12 +1,12 @@
 ---
 subcategory: "RDS (Relational Database)"
 layout: "aws"
-page_title: "AWS: aws_db_tenant_database"
+page_title: "AWS: aws_rds_tenant_database"
 description: |-
   Manages an RDS Oracle tenant database (PDB) within a Container Database (CDB) instance.
 ---
 
-# Resource: aws_db_tenant_database
+# Resource: aws_rds_tenant_database
 
 Manages an RDS Oracle tenant database (Pluggable Database / PDB) within a Container Database (CDB) instance. Requires an `aws_db_instance` using a CDB engine (`oracle-ee-cdb` or `oracle-se2-cdb`) with `multi_tenant = true`.
 
@@ -29,7 +29,7 @@ resource "aws_db_instance" "cdb" {
   skip_final_snapshot = true
 }
 
-resource "aws_db_tenant_database" "example" {
+resource "aws_rds_tenant_database" "example" {
   db_instance_identifier = aws_db_instance.cdb.identifier
   tenant_db_name         = "MYPDB"
   username               = "pdbadmin"
@@ -40,7 +40,7 @@ resource "aws_db_tenant_database" "example" {
 ### With AWS Secrets Manager Password Management
 
 ```terraform
-resource "aws_db_tenant_database" "example" {
+resource "aws_rds_tenant_database" "example" {
   db_instance_identifier      = aws_db_instance.cdb.identifier
   tenant_db_name              = "MYPDB"
   username                    = "pdbadmin"
@@ -85,7 +85,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_db_tenant_database.example
+  to = aws_rds_tenant_database.example
   id = "tdb-12345678abcdefgh"
 }
 ```
@@ -93,5 +93,5 @@ import {
 Using `terraform import`, import RDS tenant databases using the `tenant_database_resource_id`:
 
 ```console
-% terraform import aws_db_tenant_database.example tdb-12345678abcdefgh
+% terraform import aws_rds_tenant_database.example tdb-12345678abcdefgh
 ```

@@ -1,5 +1,5 @@
 ```release-note:new-resource
-aws_db_tenant_database
+aws_rds_tenant_database
 ```
 
 ```release-note:enhancement

@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_tenant_database", name="Tenant Database")
+// @SDKResource("aws_rds_tenant_database", name="Tenant Database")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
 func resourceTenantDatabase() *schema.Resource {
