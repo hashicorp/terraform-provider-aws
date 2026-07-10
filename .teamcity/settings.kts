@@ -41,6 +41,7 @@ val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn"
 val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
+
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
         buildType(FullBuild)
@@ -114,6 +115,11 @@ project {
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
+
+        if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+            text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", ""))
+            text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+        }
     }
 
     subProject(Services)
@@ -137,8 +143,8 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
-            name = "Compile Test Binary"
-            scriptContent = File("./scripts/pullrequest_tests/compile_test_binary.sh").readText()
+            name = "Install Terraform Core"
+            scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
         }
         script {
             name = "Run Tests"
