@@ -954,6 +954,168 @@ func TestAccBedrockAgentCoreGateway_policyEngineConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_wafConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+	failureModePath := tfjsonpath.New("waf_configuration").AtMapKey("failure_mode")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// waf_configuration requires an associated WebACL, so first create the
+				// gateway and the association without it.
+				Config: testAccGatewayConfig_wafConfiguration(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+			},
+			{
+				// With a WebACL associated, waf_configuration can be applied via update.
+				Config: testAccGatewayConfig_wafConfiguration(rName, "FAIL_OPEN"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, failureModePath, knownvalue.StringExact("FAIL_OPEN")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_acl_arn"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				// The failure mode is updatable in place.
+				Config: testAccGatewayConfig_wafConfiguration(rName, "FAIL_CLOSE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, failureModePath, knownvalue.StringExact("FAIL_CLOSE")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_wafConfigurationAtCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// waf_configuration cannot be set at create (it requires an associated
+				// WebACL, which cannot exist before the gateway does).
+				Config:      testAccGatewayConfig_wafConfigurationAtCreate(rName),
+				ExpectError: regexache.MustCompile(`waf_configuration cannot be set when creating`),
+			},
+		},
+	})
+}
+
+func testAccGatewayConfig_wafConfiguration(rName, failureMode string) string {
+	waf := ""
+	if failureMode != "" {
+		waf = fmt.Sprintf(`
+  waf_configuration = {
+    failure_mode = %q
+  }
+`, failureMode)
+	}
+
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+%[2]s}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_association" "test" {
+  resource_arn = aws_bedrockagentcore_gateway.test.gateway_arn
+  web_acl_arn  = aws_wafv2_web_acl.test.arn
+}
+`, rName, waf))
+}
+
+func testAccGatewayConfig_wafConfigurationAtCreate(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+
+  waf_configuration = {
+    failure_mode = "FAIL_OPEN"
+  }
+}
+`, rName))
+}
+
 func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)

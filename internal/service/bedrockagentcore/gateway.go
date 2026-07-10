@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -116,8 +117,26 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			names.AttrTags:              tftags.TagsAttribute(),
-			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			// waf_configuration is server-managed: the AgentCore API synthesizes it
+			// (defaulting failure_mode to FAIL_CLOSE) once a WebACL is associated with
+			// the gateway, so it must be Optional+Computed to absorb that default when
+			// the practitioner does not manage it. It cannot be a block (blocks have no
+			// Computed concept and would perpetually diff against the default), nor a
+			// SingleNestedAttribute (schema-level nesting requires protocol v6, but this
+			// provider is served over v5). ObjectAttribute is the v5-compatible idiom;
+			// failure_mode's enum is enforced by the model's StringEnum custom type.
+			// TODO: Once Protocol v6 is supported, convert this to a schema.SingleNestedAttribute.
+			"waf_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[gatewayWafConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"web_acl_arn":               framework.ARNAttributeComputedOnly(),
 			"workload_identity_details": framework.ResourceComputedListOfObjectsAttribute[workloadIdentityDetailsModel](ctx, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
@@ -289,6 +308,25 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 	var data gatewayResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// waf_configuration is only accepted by UpdateGateway once a WebACL is
+	// associated with the gateway, which cannot happen during creation. Reject it
+	// here with a clear message instead of surfacing a raw service error. Read from
+	// the config rather than the plan because waf_configuration is Optional+Computed,
+	// so its planned value is unknown (not null) whenever the practitioner omits it.
+	var config gatewayResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !config.WafConfiguration.IsNull() {
+		response.Diagnostics.AddAttributeError(
+			path.Root("waf_configuration"),
+			"Invalid Attribute Combination",
+			"waf_configuration cannot be set when creating a gateway because it requires an associated WebACL. Create the gateway, associate a WebACL (for example with aws_wafv2_web_acl_association), then set waf_configuration in a subsequent apply.",
+		)
 		return
 	}
 
@@ -604,7 +642,13 @@ type gatewayResourceModel struct {
 	Tags                      tftags.Map                                                             `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                             `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                         `tfsdk:"timeouts"`
+	WafConfiguration          fwtypes.ObjectValueOf[gatewayWafConfigurationModel]                    `tfsdk:"waf_configuration"`
+	WebACLARN                 types.String                                                           `tfsdk:"web_acl_arn"`
 	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]          `tfsdk:"workload_identity_details"`
+}
+
+type gatewayWafConfigurationModel struct {
+	FailureMode fwtypes.StringEnum[awstypes.WafFailureMode] `tfsdk:"failure_mode"`
 }
 
 type gatewayPolicyEngineConfigurationModel struct {

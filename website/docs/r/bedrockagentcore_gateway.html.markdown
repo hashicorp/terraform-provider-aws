@@ -110,6 +110,29 @@ resource "aws_bedrockagentcore_gateway" "example" {
 }
 ```
 
+### Gateway with WAF Configuration
+
+`waf_configuration` requires an AWS WAF WebACL to already be associated with the gateway, so associate one with [`aws_wafv2_web_acl_association`](wafv2_web_acl_association.html.markdown) first. Because the association cannot exist until the gateway does, `waf_configuration` cannot be set in the same apply that creates the gateway; set it in a subsequent apply.
+
+```terraform
+resource "aws_bedrockagentcore_gateway" "example" {
+  name     = "gateway-with-waf"
+  role_arn = aws_iam_role.example.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  waf_configuration = {
+    failure_mode = "FAIL_OPEN"
+  }
+}
+
+resource "aws_wafv2_web_acl_association" "example" {
+  resource_arn = aws_bedrockagentcore_gateway.example.gateway_arn
+  web_acl_arn  = aws_wafv2_web_acl.example.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -130,6 +153,7 @@ The following arguments are optional:
 * `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Omit this argument to create a gateway that routes traffic directly to HTTP targets such as AgentCore Runtime agents (see [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) `target_configuration.http`).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `waf_configuration` - (Optional) WAF configuration for the gateway. This can only be set on a gateway that already has a WebACL associated (for example with [`aws_wafv2_web_acl_association`](wafv2_web_acl_association.html.markdown)); it cannot be set in the same apply that creates the gateway. Once a WebACL is associated, the service manages this value (defaulting `failure_mode` to `FAIL_CLOSE`), so it is also Computed. See [`waf_configuration`](#waf_configuration) below.
 
 ### `authorizer_configuration`
 
@@ -230,6 +254,12 @@ The `streaming_configuration` block supports the following:
 
 * `enable_response_streaming` - (Optional) Boolean indicating whether response streaming is enabled for the gateway.
 
+### `waf_configuration`
+
+The `waf_configuration` block supports the following:
+
+* `failure_mode` - (Required) How the gateway handles requests when AWS WAF is unavailable or returns an error. Valid values: `FAIL_OPEN`, `FAIL_CLOSE`. Defaults to `FAIL_CLOSE` when a WebACL is associated and `waf_configuration` is not set.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -238,6 +268,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `gateway_id` - Unique identifier of the Gateway.
 * `gateway_url` - URL endpoint for the gateway.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `web_acl_arn` - ARN of the AWS WAF WebACL associated with the gateway, if any. Associate a WebACL with [`aws_wafv2_web_acl_association`](wafv2_web_acl_association.html.markdown).
 * `workload_identity_details` - Workload identity details for the gateway. See [`workload_identity_details`](#workload_identity_details) below.
 
 ### `workload_identity_details`
