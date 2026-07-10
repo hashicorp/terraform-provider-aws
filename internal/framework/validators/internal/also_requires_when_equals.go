@@ -111,7 +111,7 @@ func (v AlsoRequiresWhenEqualsValidator) validate(ctx context.Context, request a
 				// Collect all errors.
 				responseDiags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 					request.Path,
-					fmt.Sprintf("Attribute %[1]q must be specified when %[2]q is %[3]q", mp, request.Path, v.Value),
+					fmt.Sprintf("Attribute %[1]q must be configured when %[2]q is %[3]s", mp, request.Path, v.Value),
 				))
 			}
 		}
