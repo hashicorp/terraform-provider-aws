@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRoute53Record_List_fullName(t *testing.T) {
+func TestAccRoute53Record_List_FullName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_route53_record.test[0]"
@@ -101,7 +101,7 @@ func TestAccRoute53Record_List_fullName(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_fullName_includeResource(t *testing.T) {
+func TestAccRoute53Record_List_FullName_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_record.test[0]"
@@ -170,7 +170,7 @@ func TestAccRoute53Record_List_fullName_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_shortName(t *testing.T) {
+func TestAccRoute53Record_List_ShortName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_route53_record.test[0]"
@@ -251,7 +251,7 @@ func TestAccRoute53Record_List_shortName(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_shortName_includeResource(t *testing.T) {
+func TestAccRoute53Record_List_ShortName_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_record.test[0]"
@@ -320,7 +320,7 @@ func TestAccRoute53Record_List_shortName_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_trailingDot(t *testing.T) {
+func TestAccRoute53Record_List_TrailingDot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_route53_record.test[0]"
@@ -401,7 +401,7 @@ func TestAccRoute53Record_List_trailingDot(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_trailingDot_includeResource(t *testing.T) {
+func TestAccRoute53Record_List_TrailingDot_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_record.test[0]"
@@ -470,7 +470,7 @@ func TestAccRoute53Record_List_trailingDot_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_wildcard(t *testing.T) {
+func TestAccRoute53Record_List_Wildcard_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_record.test"
@@ -528,7 +528,7 @@ func TestAccRoute53Record_List_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_List_wildcard_includeResource(t *testing.T) {
+func TestAccRoute53Record_List_Wildcard_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_record.test"
