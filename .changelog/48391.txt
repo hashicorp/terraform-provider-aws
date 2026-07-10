@@ -1,3 +1,11 @@
 ```release-note:new-resource
 aws_db_tenant_database
 ```
+
+```release-note:enhancement
+resource/aws_db_instance: Add `multi_tenant` argument
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `multi_tenant` attribute
+```
