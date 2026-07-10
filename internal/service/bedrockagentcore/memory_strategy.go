@@ -34,6 +34,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -136,7 +137,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("consolidation"),
+								tflistplanmodifier.ErrorIfSingleBlockRemoved(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -153,7 +154,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							CustomType: fwtypes.NewListNestedObjectTypeOf[overrideDetailsModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("extraction"),
+								tflistplanmodifier.ErrorIfSingleBlockRemoved(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -175,66 +176,6 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Delete: true,
 			}),
 		},
-	}
-}
-
-type errorIfSingleBlockRemoved_ struct {
-	label string
-}
-
-func errorIfSingleBlockRemoved(label string) planmodifier.List {
-	return errorIfSingleBlockRemoved_{label: label}
-}
-
-func (m errorIfSingleBlockRemoved_) Description(context.Context) string {
-	return "Disallow removing previously configured " + m.label + " block"
-}
-
-func (m errorIfSingleBlockRemoved_) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	// Skip create or destroy.
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
-		return
-	}
-
-	// Defer until known values
-	if req.StateValue.IsUnknown() || req.PlanValue.IsUnknown() {
-		return
-	}
-
-	var plannedType awstypes.OverrideType
-	overrideTypePath := path.Root(names.AttrConfiguration).AtListIndex(0).AtName(names.AttrType)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, overrideTypePath, &plannedType))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var stateType awstypes.OverrideType
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, overrideTypePath, &stateType))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if plannedType != stateType {
-		return
-	}
-
-	stateList, sDiags := req.StateValue.ToListValue(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, sDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	planList, pDiags := req.PlanValue.ToListValue(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, pDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
-		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
 	}
 }
 
