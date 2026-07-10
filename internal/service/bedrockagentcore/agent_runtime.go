@@ -372,6 +372,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
+							"private_endpoint": privateEndpointSchema(ctx),
 							"private_endpoint_overrides": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
 								Validators: []validator.List{
@@ -690,7 +691,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpointOverrides(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -727,7 +728,7 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpointOverrides(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -782,7 +783,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
-		authorizerConfiguration, authDiags := preserveAuthorizerPrivateEndpointOverrides(ctx, new.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+		authorizerConfiguration, authDiags := preserveAuthorizerPrivateEndpoints(ctx, new.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 		smerr.AddEnrich(ctx, &response.Diagnostics, authDiags)
 		if response.Diagnostics.HasError() {
 			return
@@ -1255,13 +1256,13 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 	return &awstypes.UpdatedAuthorizerConfiguration{}, diags
 }
 
-// preserveAuthorizerPrivateEndpointOverrides copies the configured private_endpoint_overrides
-// from src (the prior plan or state) into dst (the value just flattened from the API response).
-// The service omits privateEndpointOverrides from Get responses, so without this the configured
-// block would be cleared on refresh, producing "Provider produced inconsistent result after
-// apply: block count changed from 1 to 0" and a perpetual replace. It is shared by every resource
-// that embeds authorizerConfigurationModel (agent_runtime, gateway, harness, registry).
-func preserveAuthorizerPrivateEndpointOverrides(ctx context.Context, dst, src fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
+// preserveAuthorizerPrivateEndpoints copies the configured private_endpoint and
+// private_endpoint_overrides from src (the prior plan or state) into dst (the value just
+// flattened from the API response). The service omits both from Get responses, so without this
+// the configured blocks would be cleared on refresh, producing "Provider produced inconsistent
+// result after apply: block count changed from 1 to 0" and a perpetual replace. It is shared by
+// every resource that embeds authorizerConfigurationModel (agent_runtime, gateway, harness, registry).
+func preserveAuthorizerPrivateEndpoints(ctx context.Context, dst, src fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if dst.IsNull() || src.IsNull() {
@@ -1288,6 +1289,7 @@ func preserveAuthorizerPrivateEndpointOverrides(ctx context.Context, dst, src fw
 		return dst, diags
 	}
 
+	dstJWT.PrivateEndpoint = srcJWT.PrivateEndpoint
 	dstJWT.PrivateEndpointOverrides = srcJWT.PrivateEndpointOverrides
 	dstAuth.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstJWT)
 
@@ -1301,6 +1303,7 @@ type customJWTAuthorizerConfigurationModel struct {
 	AllowedWorkloadConfiguration fwtypes.ListNestedObjectValueOf[allowedWorkloadConfigurationModel]  `tfsdk:"allowed_workload_configuration"`
 	CustomClaim                  fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
 	DiscoveryURL                 types.String                                                        `tfsdk:"discovery_url"`
+	PrivateEndpoint              fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
 	PrivateEndpointOverrides     fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]       `tfsdk:"private_endpoint_overrides"`
 }
 

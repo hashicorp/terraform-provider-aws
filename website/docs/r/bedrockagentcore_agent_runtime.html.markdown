@@ -229,6 +229,7 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. Supports `hosting_environment` (Optional, 1-10 entries each with an `arn` argument) and `workload_identities` (Optional, 1-10 entries).
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. Requires exactly one of `managed_vpc_resource` or `self_managed_lattice_resource`.
 * `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. Each entry supports `domain` (Required) and `private_endpoint` (Required). The `private_endpoint` block requires exactly one of `managed_vpc_resource` or `self_managed_lattice_resource`.
 
 ### `custom_claim`
