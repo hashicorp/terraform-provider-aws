@@ -67,7 +67,7 @@ resource "aws_elasticache_user" "test" {
 }
 ```
 
-### Using Write-Only Passwords in authentication_mode (Terraform 1.11+)
+### Using Write-Only Passwords (Terraform 1.11+)
 
 ```terraform
 resource "aws_elasticache_user" "test" {
@@ -77,10 +77,6 @@ resource "aws_elasticache_user" "test" {
   engine              = "redis"
   password_wo_1       = var.elasticache_password
   password_wo_version = 1 # Increment to trigger password update
-
-  authentication_mode {
-    type = "password"
-  }
 }
 ```
 
@@ -97,10 +93,6 @@ resource "aws_elasticache_user" "test" {
   password_wo_1       = var.current_password
   password_wo_2       = var.new_password
   password_wo_version = 2 # Increment to trigger password update
-
-  authentication_mode {
-    type = "password"
-  }
 }
 ```
 
