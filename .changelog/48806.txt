@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_flow_log: Add `tag_field_specifications` argument to support the Flow Logs Amazon EC2 Tags feature fields (e.g., `${instance-tag}`) in `log_format`
+```

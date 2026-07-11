@@ -536,6 +536,40 @@ func TestAccVPCFlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
 	})
 }
 
+func TestAccVPCFlowLog_tagFieldSpecifications(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_tagFieldSpecifications(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+					resource.TestCheckResourceAttr(resourceName, "tag_field_specifications.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag_field_specifications.*", map[string]string{
+						names.AttrResourceType: "instance",
+						"tag_keys.#":           "2",
+						"tag_keys.0":           "Name",
+						"tag_keys.1":           "Environment",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCFlowLog_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
@@ -1172,6 +1206,32 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
   log_format           = "$${version} $${vpc-id} $${subnet-id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_tagFieldSpecifications(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  log_format           = "$${version} $${vpc-id} $${instance-tag} $${instance-tag-2}"
+
+  tag_field_specifications {
+    resource_type = "instance"
+    tag_keys      = ["Name", "Environment"]
+  }
 
   tags = {
     Name = %[1]q
