@@ -839,6 +839,11 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if t.Value.AdditionalParams != nil {
+			if json, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams); err == nil {
+				data.AdditionalParams = fwtypes.NewSmithyJSONValue(json, document.NewLazyDocument)
+			}
+		}
 		m.BedrockModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.HarnessModelConfigurationMemberGeminiModelConfig:
 		var data harnessGeminiModelConfigModel
@@ -871,6 +876,11 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberBedrockModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if !data.AdditionalParams.IsNull() {
+			if doc, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, data.AdditionalParams), document.NewLazyDocument); err == nil {
+				r.Value.AdditionalParams = doc
+			}
+		}
 		return &r, diags
 	case !m.GeminiModelConfig.IsNull():
 		data, d := m.GeminiModelConfig.ToPtr(ctx)
@@ -895,7 +905,7 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 }
 
 type harnessBedrockModelConfigModel struct {
-	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params"`
+	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
 	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
 	ModelID          types.String                           `tfsdk:"model_id"`
 	Temperature      types.Float32                          `tfsdk:"temperature"`
