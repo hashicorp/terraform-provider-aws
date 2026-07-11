@@ -52,6 +52,19 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if d.HasChange("rate_limit") {
+		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			RateLimit:          aws.String(d.Get("rate_limit").(string)),
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) RateLimit attribute: %s", d.Id(), err)
+		}
+	}
+
 	return diags
 }
 

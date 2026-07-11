@@ -65,7 +65,8 @@ func dataSourceConnection() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				"rate_limiter_status": rateLimiterStatusSchema(),
+				names.AttrTags:        tftags.TagsSchemaComputed(),
 				"vlan_id": {
 					Type:     schema.TypeInt,
 					Computed: true,
@@ -109,6 +110,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("partner_name", connection.PartnerName)
 	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
+	d.Set("rate_limiter_status", flattenRateLimiterStatus(connection.RateLimiterStatus))
 
 	tags, err := listTags(ctx, conn, arn)
 
