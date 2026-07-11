@@ -37,6 +37,16 @@ This data source exports the following attributes in addition to the arguments a
 * `owner_account_id` - ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - Name of the service provider associated with the connection.
+* `rate_limiter_status` - Rate limiter status for the connection. See [`rate_limiter_status` Block](#rate_limiter_status-block) below.
 * `state` - State of the connection.
 * `tags` - Map of tags for the resource.
 * `vlan_id` - The VLAN ID.
+
+### `rate_limiter_status` Block
+
+`rate_limiter_status` exports the following attributes:
+
+* `max_allowed` - Maximum number of rate limiters allowed on the connection.
+* `in_use` - Number of rate limiters currently in use.
+* `remaining` - Number of rate limiters remaining (available).
+* `total_bandwidth` - Total bandwidth allocated across all rate limiters.
