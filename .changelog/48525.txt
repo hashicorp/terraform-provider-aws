@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53_record: Addition of the `TF_AWS_ROUTE53_RECORD_BATCH_READS` feature flag environment variable to reduce AWS API calls when managing many records in a zone, improving plan and apply speeds at scale.
+```

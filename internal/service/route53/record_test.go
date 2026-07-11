@@ -6,10 +6,14 @@ package route53_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -284,10 +289,10 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_route53_record.test[0]", plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_route53_record.test.0", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_route53_record.test[0]", plancheck.ResourceActionCreate),
 					},
 				},
 			},
@@ -1948,6 +1953,282 @@ func TestAccRoute53Record_escapedJustSpace(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccRoute53Record_BatchReads_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, recordName.String()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
+				),
+				// Verify no phantom diff after the initial creation read-back.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_multipleInZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r1, r2, r3 awstypes.ResourceRecordSet
+	zoneName := acctest.RandomDomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// All three records must be found via a single zone scan.
+			{
+				Config: testAccRecordConfig_batchReadsMultiple(zoneName.String(), "30"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.a", &r1),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.b", &r2),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.c", &r3),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Update one record's TTL — only that resource should show a change; the
+			// other two must produce no diff, confirming stale cache entries are not
+			// returned after a write.
+			{
+				Config: testAccRecordConfig_batchReadsMultiple(zoneName.String(), "60"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_route53_record.a", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction("aws_route53_record.b", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("aws_route53_record.c", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_wildcard(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.wildcard"
+	zoneName := acctest.RandomDomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// The API returns "\052.zone." for wildcard names; verify the cache key
+			// normalization resolves that back to "*" so the record is found.
+			{
+				Config: testAccRecordConfig_batchReadsWildcard(zoneName.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("*."+zoneName.String())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("fqdn"), knownvalue.StringExact("*."+zoneName.String())),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_outOfBandChangeIgnored(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	var zoneID string
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+	// This test is to validate the documented lmitations once batching is
+	// enabled. Modifications outsite of terraform will not be detected if
+	// performed after the cache is populated and during the current terraform
+	// run.
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: apply the record, populating the zone cache. Capture the
+			// record set and zone ID so Step 2 can delete them directly.
+			{
+				Config: testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
+					func(s *terraform.State) error {
+						rs := s.RootModule().Resources["aws_route53_zone.test"]
+						zoneID = tfroute53.CleanZoneID(rs.Primary.ID)
+						return nil
+					},
+				),
+			},
+			// Step 2: delete the record directly via the AWS API, bypassing
+			// resourceRecordDelete so the zone cache is NOT invalidated. Because
+			// the cache still holds the stale entry, the refresh reads it as
+			// present and the plan is empty — Terraform does not detect the
+			// out-of-band drift. This is a known limitation of batched reads:
+			// changes made outside Terraform are invisible until the cache is
+			// cleared (e.g. by a provider restart).
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
+					_, err := conn.ChangeResourceRecordSets(ctx, &route53.ChangeResourceRecordSetsInput{
+						HostedZoneId: aws.String(zoneID),
+						ChangeBatch: &awstypes.ChangeBatch{
+							Changes: []awstypes.Change{
+								{
+									Action:            awstypes.ChangeActionDelete,
+									ResourceRecordSet: &v,
+								},
+							},
+						},
+					})
+					if err != nil {
+						t.Fatalf("deleting Route 53 record outside Terraform: %s", err)
+					}
+				},
+				Config: testAccRecordConfig_batchReads(zoneName.String(), recordName.String()),
+				// Stale cache: the out-of-band deletion is not detected.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_typeChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var r1, r2 awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_batchReadsTypeChange(zoneName.String(), "CNAME", "www.terraform.io"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &r1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+				},
+			},
+			// Changing the type takes the delete+create code path and evicts the old
+			// cache key. Verify the new record is readable without a phantom diff.
+			{
+				Config: testAccRecordConfig_batchReadsTypeChange(zoneName.String(), "A", "127.0.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &r2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_BatchReads_cacheSharing(t *testing.T) {
+	ctx := acctest.Context(t)
+	zoneName := acctest.RandomDomain(t)
+
+	factories, rec := acctest.ProtoV5ProviderFactoriesWithCallRecorder(ctx, t)
+
+	var cacheWarmMark apicall.Cursor
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatchReads(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: factories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: apply 3 batched records in the same zone, warming the zone cache.
+			{
+				Config: testAccRecordConfig_batchReadsMultiple(zoneName.String(), "30"),
+			},
+			// Step 2: re-plan the identical config. Terraform refreshes all 3 records;
+			// every read should be served from the in-process zone cache so no
+			// ListResourceRecordSets call should reach the AWS API.
+			{
+				PreConfig: func() { cacheWarmMark = rec.Mark() },
+				Config:    testAccRecordConfig_batchReadsMultiple(zoneName.String(), "30"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckAPICallNotMade(rec, &cacheWarmMark, "Route 53", "ListResourceRecordSets"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccPreCheckBatchReads(t *testing.T) {
+	if v, _ := strconv.ParseBool(os.Getenv("TF_AWS_ROUTE53_RECORD_BATCH_READS")); !v {
+		t.Skip("Environment variable TF_AWS_ROUTE53_RECORD_BATCH_READS is not set to a true value")
+	}
 }
 
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
@@ -3706,4 +3987,84 @@ resource "aws_route53_record" "test" {
   }
 }
 `, rName, zoneName))
+}
+
+func testAccRecordConfig_batchReads(zoneName, recordName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1"]
+}
+`, zoneName, recordName)
+}
+
+func testAccRecordConfig_batchReadsMultiple(zoneName, ttlA string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "a" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "a.%[1]s"
+  type    = "A"
+  ttl     = %[2]q
+  records = ["127.0.0.1"]
+}
+
+resource "aws_route53_record" "b" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "b.%[1]s"
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.2"]
+}
+
+resource "aws_route53_record" "c" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "c.%[1]s"
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.3"]
+}
+`, zoneName, ttlA)
+}
+
+func testAccRecordConfig_batchReadsWildcard(zoneName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "wildcard" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "*.%[1]s"
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1"]
+}
+`, zoneName)
+}
+
+func testAccRecordConfig_batchReadsTypeChange(zoneName, rrType, record string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "www.%[1]s"
+  type    = %[2]q
+  ttl     = "30"
+  records = [%[3]q]
+}
+`, zoneName, rrType, record)
 }

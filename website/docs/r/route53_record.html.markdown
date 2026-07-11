@@ -158,6 +158,18 @@ resource "aws_route53_record" "example" {
 }
 ```
 
+### Batched reads for zones with many records
+
+AWS Route 53 enforces a [5 requests-per-second rate limit](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html#limits-api-requests) on all AWS Route 53 APIs for an AWS account. Plans that manage many records in the same AWS account trigger throttling and cause slow plan and apply times because each record issues its own API calls during read/write operations.
+
+Setting the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to `true` causes the provider to fetch all records for hosted zones referrenced by `aws_route53_records` once and cache the results in memory for the duration of the plan or apply, regardless of how many records are managed. No per-resource configuration is required.
+
+```console
+% TF_AWS_ROUTE53_RECORD_BATCH_READS=true terraform plan
+```
+
+~> **Warning:** When `TF_AWS_ROUTE53_RECORD_BATCH_READS` is set, the provider caches the full zone state at the start of the run and serves all subsequent reads from that cache. The caching layer ensures removal of cache entries for any records that are updated during Terraform apply operations; however, any changes made to records outside of Terraform (e.g. via the AWS Console or CLI) after the cache is populated will not be detected for the duration of that plan or apply. To pick up out-of-band changes, run `terraform refresh` or a new `terraform plan` to start with a fresh cache.
+
 ## Argument Reference
 
 This resource supports the following arguments:
