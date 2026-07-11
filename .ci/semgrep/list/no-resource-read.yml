@@ -37,7 +37,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/dynamodb/table_list.go"
         - "/internal/service/ecs/task_definition_list.go"
         - "/internal/service/kms/alias_list.go"
         - "/internal/service/kms/key_list.go"
