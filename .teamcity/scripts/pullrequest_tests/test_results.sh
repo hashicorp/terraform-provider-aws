@@ -7,7 +7,7 @@ sleep 10
 results=$(curl -s -u "%system.teamcity.auth.userId%:%system.teamcity.auth.password%" \
      -H "Accept: application/json" \
      "%teamcity.serverUrl%/app/rest/testOccurrences?locator=build:(id:%teamcity.build.id%),count:100000&fields=testOccurrence(name,status,duration)" |
-	jq -r '.testOccurrence[] | "\(.name): [\(.status)]"')
+	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status)] \(.duration/1000)s"')
 
 echo "${results}"
 
