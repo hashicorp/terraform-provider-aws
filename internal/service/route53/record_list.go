@@ -61,6 +61,8 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 		}
 	}
 
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("zone_id"), query.ZoneID.ValueString())
+
 	tflog.Info(ctx, "Listing Route 53 Records")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &route53.ListResourceRecordSetsInput{
@@ -73,16 +75,18 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 				return
 			}
 
-			// Create a unique ID for this record
-			recordID := createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), recordID)
-
 			name := denormalizeDomainName(item.Name)
 			typ := string(item.Type)
 
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+			ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrType), typ)
+			if item.SetIdentifier != nil {
+				ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("set_identifier"), aws.ToString(item.SetIdentifier))
+			}
+
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
-			rd.SetId(recordID)
+			rd.SetId(createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item))
 
 			// Set identity attributes
 			rd.Set("zone_id", query.ZoneID.ValueString())
@@ -109,8 +113,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting Route 53 Record result", map[string]any{
-					names.AttrID: recordID,
-					"diags":      result.Diagnostics,
+					"diags": result.Diagnostics,
 				})
 				continue
 			}
