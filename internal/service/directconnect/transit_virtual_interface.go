@@ -112,6 +112,11 @@ func resourceTransitVirtualInterface() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"vlan": {
@@ -159,6 +164,10 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 
 	if v, ok := d.GetOk("customer_address"); ok {
 		input.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewTransitVirtualInterface.RateLimit = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateTransitVirtualInterface(ctx, input)
@@ -213,6 +222,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

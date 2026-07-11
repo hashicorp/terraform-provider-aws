@@ -106,6 +106,12 @@ func resourceHostedPublicVirtualInterface() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					MinItems: 1,
 				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 				"vlan": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -151,6 +157,10 @@ func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.R
 
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
 		input.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewPublicVirtualInterfaceAllocation.RateLimit = aws.String(v.(string))
 	}
 
 	output, err := conn.AllocatePublicVirtualInterface(ctx, input)
@@ -205,6 +215,7 @@ func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.Res
 	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_filter_prefixes: %s", err)
 	}
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags
