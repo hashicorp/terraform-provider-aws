@@ -91,7 +91,7 @@ func resourceSMBFileShare() *schema.Resource {
 							"cache_stale_timeout_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(300, 2592000),
+								ValidateFunc: validation.Any(validation.IntBetween(300, 2592000), validation.IntInSlice([]int{0})),
 							},
 						},
 					},
@@ -585,7 +585,7 @@ func expandCacheAttributes(tfMap map[string]any) *awstypes.CacheAttributes {
 
 	apiObject := &awstypes.CacheAttributes{}
 
-	if v, ok := tfMap["cache_stale_timeout_in_seconds"].(int); ok && v != 0 {
+	if v, ok := tfMap["cache_stale_timeout_in_seconds"].(int); ok {
 		apiObject.CacheStaleTimeoutInSeconds = aws.Int32(int32(v))
 	}
 

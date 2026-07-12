@@ -75,7 +75,7 @@ func resourceNFSFileShare() *schema.Resource {
 							"cache_stale_timeout_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(300, 2592000),
+								ValidateFunc: validation.Any(validation.IntBetween(300, 2592000), validation.IntInSlice([]int{0})),
 							},
 						},
 					},
