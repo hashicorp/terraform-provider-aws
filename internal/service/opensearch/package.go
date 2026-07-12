@@ -68,19 +68,16 @@ func resourcePackage() *schema.Resource {
 				"package_source": {
 					Type:     schema.TypeList,
 					Required: true,
-					ForceNew: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrS3BucketName: {
 								Type:     schema.TypeString,
 								Required: true,
-								ForceNew: true,
 							},
 							"s3_key": {
 								Type:     schema.TypeString,
 								Required: true,
-								ForceNew: true,
 							},
 						},
 					},
