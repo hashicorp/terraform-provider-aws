@@ -13,10 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -110,6 +113,20 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"code_artifact": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[codeArtifactModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrURI: schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -377,19 +394,34 @@ func findImageByARN(ctx context.Context, conn *lambdamicrovms.Client, arn string
 
 type imageResourceModel struct {
 	framework.WithRegionModel
-	AdditionalOsCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]  `tfsdk:"additional_os_capabilities"`
-	BaseImageArn             fwtypes.ARN                                    `tfsdk:"base_image_arn"`
-	BaseImageVersion         types.String                                   `tfsdk:"base_image_version"`
-	BuildRoleArn             fwtypes.ARN                                    `tfsdk:"build_role_arn"`
-	Description              types.String                                   `tfsdk:"description"`
-	EgressNetworkConnectors  fwtypes.ListOfString                           `tfsdk:"egress_network_connectors"`
-	EnvironmentVariables     fwtypes.MapOfString                            `tfsdk:"environment_variables"`
-	ImageArn                 types.String                                   `tfsdk:"arn"`
-	LatestActiveImageVersion types.String                                   `tfsdk:"latest_active_image_version"`
-	LatestFailedImageVersion types.String                                   `tfsdk:"latest_failed_image_version"`
-	Name                     types.String                                   `tfsdk:"name"`
-	State                    fwtypes.StringEnum[awstypes.MicrovmImageState] `tfsdk:"state"`
-	Timeouts                 timeouts.Value                                 `tfsdk:"timeouts"`
+	AdditionalOsCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]      `tfsdk:"additional_os_capabilities"`
+	BaseImageArn             fwtypes.ARN                                        `tfsdk:"base_image_arn"`
+	BaseImageVersion         types.String                                       `tfsdk:"base_image_version"`
+	BuildRoleArn             fwtypes.ARN                                        `tfsdk:"build_role_arn"`
+	CodeArtifact             fwtypes.ListNestedObjectValueOf[codeArtifactModel] `tfsdk:"code_artifact"`
+	Description              types.String                                       `tfsdk:"description"`
+	EgressNetworkConnectors  fwtypes.ListOfString                               `tfsdk:"egress_network_connectors"`
+	EnvironmentVariables     fwtypes.MapOfString                                `tfsdk:"environment_variables"`
+	ImageArn                 types.String                                       `tfsdk:"arn"`
+	LatestActiveImageVersion types.String                                       `tfsdk:"latest_active_image_version"`
+	LatestFailedImageVersion types.String                                       `tfsdk:"latest_failed_image_version"`
+	Name                     types.String                                       `tfsdk:"name"`
+	State                    fwtypes.StringEnum[awstypes.MicrovmImageState]     `tfsdk:"state"`
+	Timeouts                 timeouts.Value                                     `tfsdk:"timeouts"`
+}
+
+type codeArtifactModel struct {
+	URI types.String `tfsdk:"uri"`
+}
+
+var _ flex.Expander = codeArtifactModel{}
+
+func (m codeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return &awstypes.CodeArtifactMemberUri{
+		Value: m.URI.ValueString(),
+	}, diags
 }
 
 func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
