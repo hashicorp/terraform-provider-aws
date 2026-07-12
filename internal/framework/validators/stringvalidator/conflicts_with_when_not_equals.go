@@ -5,6 +5,7 @@ package stringvalidator
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -12,6 +13,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
+
+type whenNotEquals[T ~string] struct {
+	value T
+}
+
+func (w whenNotEquals[T]) Eval(_ context.Context, v attr.Value) bool {
+	return !v.Equal(types.StringValue(string(w.value)))
+}
+
+func (w whenNotEquals[T]) String() string {
+	return "not equals " + strconv.Quote(string(w.value))
+}
 
 // ConflictsWithWhenNotEquals checks that each path.Expression has a null
 // configuration value when the stringy attribute being validated does not have
@@ -21,9 +34,7 @@ import (
 // validated.
 func ConflictsWithWhenNotEquals[T ~string](value T, expressions ...path.Expression) validator.String {
 	return internal.ConflictsWithWhenValidator{
-		When: func(_ context.Context, v attr.Value) bool {
-			return !v.Equal(types.StringValue(string(value)))
-		},
+		When:            whenNotEquals[T]{value: value},
 		PathExpressions: expressions,
 	}
 }

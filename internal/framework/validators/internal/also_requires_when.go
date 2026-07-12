@@ -19,8 +19,15 @@ var (
 	_ validator.String = (*AlsoRequiresWhenValidator)(nil)
 )
 
+type When interface {
+	// Eval returns true if the condition is met for the given attribute value.
+	Eval(context.Context, attr.Value) bool
+	// String returns a string representation of the condition, usable in an error message.
+	String() string
+}
+
 type AlsoRequiresWhenValidator struct {
-	When            func(context.Context, attr.Value) bool
+	When            When
 	PathExpressions path.Expressions
 }
 
@@ -65,7 +72,7 @@ func (v AlsoRequiresWhenValidator) validate(ctx context.Context, request Validat
 		return
 	}
 
-	if !v.When(ctx, request.ConfigValue) {
+	if !v.When.Eval(ctx, request.ConfigValue) {
 		return
 	}
 
@@ -99,7 +106,7 @@ func (v AlsoRequiresWhenValidator) validate(ctx context.Context, request Validat
 				// Collect all errors.
 				responseDiags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 					request.Path,
-					fmt.Sprintf("Attribute %[1]q must be configured", mp),
+					fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", mp, request.Path, v.When.String()),
 				))
 			}
 		}

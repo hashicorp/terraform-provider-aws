@@ -4,12 +4,8 @@
 package stringvalidator
 
 import (
-	"context"
-
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
 
@@ -21,9 +17,7 @@ import (
 // validated.
 func ConflictsWithWhenEquals[T ~string](value T, expressions ...path.Expression) validator.String {
 	return internal.ConflictsWithWhenValidator{
-		When: func(_ context.Context, v attr.Value) bool {
-			return v.Equal(types.StringValue(string(value)))
-		},
+		When:            whenEquals[T]{value: value},
 		PathExpressions: expressions,
 	}
 }

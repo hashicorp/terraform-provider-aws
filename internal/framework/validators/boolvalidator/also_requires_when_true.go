@@ -13,6 +13,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
 
+type whenTrue struct{}
+
+func (whenTrue) Eval(_ context.Context, v attr.Value) bool {
+	return v.Equal(types.BoolValue(true))
+}
+
+func (whenTrue) String() string {
+	return "is true"
+}
+
 // AlsoRequiresWhenTrue checks that each path.Expression has a non-null
 // configuration value when the bool attribute being validated has a known
 // value of true.
@@ -27,9 +37,7 @@ import (
 // validated.
 func AlsoRequiresWhenTrue(expressions ...path.Expression) validator.Bool {
 	return internal.AlsoRequiresWhenValidator{
-		When: func(_ context.Context, v attr.Value) bool {
-			return v.Equal(types.BoolValue(true))
-		},
+		When:            whenTrue{},
 		PathExpressions: expressions,
 	}
 }

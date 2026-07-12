@@ -19,7 +19,7 @@ var (
 )
 
 type ConflictsWithWhenValidator struct {
-	When            func(context.Context, attr.Value) bool
+	When            When
 	PathExpressions path.Expressions
 }
 
@@ -50,7 +50,7 @@ func (v ConflictsWithWhenValidator) validate(ctx context.Context, request Valida
 		return
 	}
 
-	if !v.When(ctx, request.ConfigValue) {
+	if !v.When.Eval(ctx, request.ConfigValue) {
 		return
 	}
 
@@ -84,7 +84,7 @@ func (v ConflictsWithWhenValidator) validate(ctx context.Context, request Valida
 				// Collect all errors.
 				responseDiags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 					request.Path,
-					fmt.Sprintf("Attribute %[1]q must not be configured", mp),
+					fmt.Sprintf("Attribute %[1]q must not be configured when %[2]q %[3]s", mp, request.Path, v.When.String()),
 				))
 			}
 		}
