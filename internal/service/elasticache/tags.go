@@ -14,13 +14,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const eventualConsistencyTimeout = 5 * time.Minute
+
 // updateTags wraps the generated updateTagsBase with additional retry logic
 // for UserNotFoundFault and UserGroupNotFoundFault, which occur transiently
 // when ElastiCache users/user groups are in a brief internal "modifying" state
 // during tag operations.
 // See: https://github.com/hashicorp/terraform-provider-aws/issues/47638
 func updateTags(ctx context.Context, conn *elasticache.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*elasticache.Options)) error {
-	_, err := tfresource.RetryWhen[any](ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhen[any](ctx, eventualConsistencyTimeout,
 		func(ctx context.Context) (any, error) {
 			return nil, updateTagsBase(ctx, conn, identifier, oldTagsMap, newTagsMap, optFns...)
 		},
