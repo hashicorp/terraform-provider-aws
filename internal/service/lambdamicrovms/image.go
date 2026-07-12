@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -40,6 +41,7 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_lambdamicrovms_image", name="Image")
 // @ArnIdentity
+// @Testing(importIgnore="base_image_arn;base_image_version;build_role_arn;code_artifact;egress_network_connectors")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdamicrovms;lambdamicrovms.GetMicrovmImageOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
@@ -77,6 +79,10 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"base_image_version": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"build_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -89,6 +95,10 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"environment_variables": schema.MapAttribute{
 				CustomType:  fwtypes.MapOfStringType,
@@ -422,6 +432,19 @@ func (m codeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &awstypes.CodeArtifactMemberUri{
 		Value: m.URI.ValueString(),
 	}, diags
+}
+
+var _ flex.Flattener = &codeArtifactModel{}
+
+func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.CodeArtifactMemberUri:
+		m.URI = types.StringValue(t.Value)
+	}
+
+	return diags
 }
 
 func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

@@ -69,6 +69,9 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -83,10 +86,12 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -100,10 +105,12 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -156,6 +163,9 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+				},
 			},
 
 			// Step 3: Import command without appended "@<region>"
@@ -171,6 +181,9 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+				},
 			},
 
 			// Step 4: Import block with Import ID and appended "@<region>"
@@ -186,10 +199,12 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
@@ -205,10 +220,12 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 6: Import block with Resource Identity
@@ -223,10 +240,12 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

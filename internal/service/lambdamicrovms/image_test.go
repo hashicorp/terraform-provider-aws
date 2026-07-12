@@ -2,22 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package lambdamicrovms_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
 	// TIP: ==== IMPORTS ====
@@ -38,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -46,9 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
@@ -58,104 +39,19 @@ import (
 	tflambdamicrovms "github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestImageExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tflambdamicrovms.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance tests access AWS and cost money to run.
 func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	var v lambdamicrovms.GetMicrovmImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_image.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaMicrovmsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
@@ -165,30 +61,30 @@ func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
 			{
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`image:.+$`)),
+					testAccCheckImageExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.MicrovmImageStateCreated)),
+					resource.TestCheckResourceAttr(resourceName, "code_artifact.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`microvm-image:.+$`)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"base_image_arn",
+					"base_image_version",
+					"build_role_arn",
+					"code_artifact",
+					"egress_network_connectors",
+				},
 			},
 		},
 	})
 }
-
 func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -196,12 +92,12 @@ func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v lambdamicrovms.GetMicrovmImageOutput
 	resourceName := "aws_lambdamicrovms_image.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaMicrovmsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
@@ -209,16 +105,10 @@ func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageConfig_basic(rName, testAccImageVersionNewer),
+				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageExists(ctx, t, resourceName),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceImage = newImageResource
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflambdamicrovms.ResourceImage, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdamicrovms.ResourceImage, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -243,49 +133,51 @@ func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
-			_, err := tflambdamicrovms.FindImageByID(ctx, conn, rs.Primary.ID)
+			_, err := tflambdamicrovms.FindImageByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-			    return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.ID, err)
+				return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], err)
 			}
 
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckImageExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckImageExists(ctx context.Context, t *testing.T, name string, v *lambdamicrovms.GetMicrovmImageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		arn := rs.Primary.Attributes[names.AttrARN]
+		if arn == "" {
 			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
 
-		_, err := tflambdamicrovms.FindImageByID(ctx, conn, rs.Primary.ID)
-		return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, rs.Primary.ID, err)
+		out, err := tflambdamicrovms.FindImageByARN(ctx, conn, arn)
+		if err != nil {
+			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, rs.Primary.ID, err)
+		}
+		*v = *out
+
+		return nil
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
 
-	input := &lambdamicrovms.ListImagesInput{}
+	input := &lambdamicrovms.ListMicrovmImagesInput{}
 
-	_, err := conn.ListImages(ctx, input)
+	_, err := conn.ListMicrovmImages(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -295,29 +187,66 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccImageConfig_basic(rName, version string) string {
+// The microvm image needs an IAM role and S3 URI where the zip file with the code and Dockerfile is.
+// This creates the pre-requisites required for creating a basic microvm image
+func testAccImageConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
   name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
 }
 
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = ["s3:GetObject"]
+      Effect   = "Allow"
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "code.zip"
+  source = "test-fixtures/code.zip"
+}
+`, rName)
+}
+
+func testAccImageConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccImageConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambdamicrovms_image" "test" {
-  image_name             = %[1]q
-  engine_type             = "ActiveLambdaMicrovms"
-  engine_version          = %[2]q
-  host_instance_type      = "lambdamicrovms.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  name           = %[1]q
+  base_image_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:aws:microvm-image:al2023-1"
+  build_role_arn = aws_iam_role.test.arn
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  code_artifact {
+    uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   }
 }
-`, rName, version)
+`, rName))
 }
