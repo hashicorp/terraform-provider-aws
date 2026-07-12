@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -426,14 +426,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_attempts": schema.Int32Attribute{
-							Optional: true,
-							Computed: true,
-							Default:  int32default.StaticInt32(defaultConnectionAttempts),
+							Optional:      true,
+							Computed:      true,
+							PlanModifiers: []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 						},
 						"connection_timeout": schema.Int32Attribute{
-							Optional: true,
-							Computed: true,
-							Default:  int32default.StaticInt32(defaultConnectionTimeout),
+							Optional:      true,
+							Computed:      true,
+							PlanModifiers: []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 						},
 						names.AttrDomainName: schema.StringAttribute{
 							Required: true,
@@ -485,14 +485,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
 									},
 									"origin_keepalive_timeout": schema.Int32Attribute{
-										Optional: true,
-										Computed: true,
-										Default:  int32default.StaticInt32(defaultOriginKeepaliveTimeout),
+										Optional:      true,
+										Computed:      true,
+										PlanModifiers: []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 									},
 									"origin_read_timeout": schema.Int32Attribute{
-										Optional: true,
-										Computed: true,
-										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
+										Optional:      true,
+										Computed:      true,
+										PlanModifiers: []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 									},
 									"origin_protocol_policy": schema.StringAttribute{
 										Required:   true,
@@ -546,14 +546,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"origin_keepalive_timeout": schema.Int32Attribute{
-										Optional: true,
-										Computed: true,
-										Default:  int32default.StaticInt32(defaultOriginKeepaliveTimeout),
+										Optional:      true,
+										Computed:      true,
+										PlanModifiers: []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 									},
 									"origin_read_timeout": schema.Int32Attribute{
-										Optional: true,
-										Computed: true,
-										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
+										Optional:      true,
+										Computed:      true,
+										PlanModifiers: []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 									},
 									"vpc_origin_id": schema.StringAttribute{
 										Required: true,
