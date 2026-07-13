@@ -40,6 +40,7 @@ func (v discriminatorRequires[T]) ValidateString(ctx context.Context, request va
 		return
 	}
 
+	expression = request.PathExpression.Merge(expression)
 	matchedPaths, diags := request.Config.PathMatches(ctx, expression)
 	response.Diagnostics.Append(diags...)
 	if diags.HasError() {
