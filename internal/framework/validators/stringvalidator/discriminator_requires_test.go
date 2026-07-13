@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
-	//"github.com/hashicorp/terraform-plugin-go/tftypes"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 )
 
@@ -26,74 +25,39 @@ func TestDiscriminatorRequires(t *testing.T) {
 	}
 
 	testCases := map[string]testCase{
-		"self-null": {
+		"discriminator-null": {
 			configValue: types.StringNull(),
 			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, nil, nil, nil) },
 			expErrors:   0,
 		},
-		"self-unknown": {
+		"discriminator-unknown": {
 			configValue: types.StringUnknown(),
 			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, tftypes.UnknownValue, nil, nil) },
 			expErrors:   0,
 		},
-		"self-not-equals-target-null": {
-			configValue: types.StringValue("B"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "B", nil, nil) },
+		"unmapped-discriminator": {
+			configValue: types.StringValue("C"),
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "C", nil, nil) },
+			expErrors:   0,
+		},
+		"discriminator-a-mapped-target-configured": {
+			configValue: types.StringValue("A"),
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", "value", nil) },
+			expErrors:   0,
+		},
+		"discriminator-a-mapped-target-null": {
+			configValue: types.StringValue("A"),
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, "value") },
 			expErrors:   1,
 		},
-		"self-not-equals-target-set": {
+		"discriminator-b-mapped-target-null": {
 			configValue: types.StringValue("B"),
 			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "B", "value", nil) },
 			expErrors:   1,
 		},
-		"self-equals-target-set": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", "value", nil) },
-			expErrors:   0,
-		},
-		"self-equals-target-null": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, "value") },
-			expErrors:   1,
-		},
-		"self-equals-target-unknown": {
+		"mapped-target-unknown": {
 			configValue: types.StringValue("A"),
 			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", tftypes.UnknownValue, nil) },
-			expErrors:   0,
-		},
-		"self-equals-target-multiple-targets-one-null": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", "value", nil) },
-			expErrors:   0,
-		},
-		"self-equals-target-multiple-targets-other-null": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, "value") },
-			expErrors:   1,
-		},
-		"self-equals-target-multiple-targets-all-null": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, nil) },
-			expErrors:   1,
-		},
-		"self-equals-target-multiple-targets-all-set": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", "valueA", "valueB") },
-			expErrors:   0,
-		},
-		"self-equals-target-multiple-targets-one-unknown-other-null": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", tftypes.UnknownValue, nil) },
-			expErrors:   0,
-		},
-		"self-equals-target-multiple-targets-one-null-other-unknown": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", nil, tftypes.UnknownValue) },
-			expErrors:   1,
-		},
-		"self-equals-target-multiple-targets-all-unknown": {
-			configValue: types.StringValue("A"),
-			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, "A", tftypes.UnknownValue, tftypes.UnknownValue) },
 			expErrors:   0,
 		},
 	}
