@@ -644,21 +644,21 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
+	}
 
-		guardrail, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
-				err.Error(),
-			)
-			return
-		}
+	findOut, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-		// Set values for unknowns.
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, guardrail, &plan, r.flexOpt)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	// Set values for unknowns.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, findOut, &plan, r.flexOpt)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
