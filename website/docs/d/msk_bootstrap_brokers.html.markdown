@@ -29,13 +29,13 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster.
-* `bootstrap_brokers_public_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs.
-* `bootstrap_brokers_public_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs.
-* `bootstrap_brokers_public_tls` - One or more DNS names (or IP addresses) and TLS port pairs.
-* `bootstrap_brokers_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs.
-* `bootstrap_brokers_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs.
-* `bootstrap_brokers_tls` - One or more DNS names (or IP addresses) and TLS port pairs.
-* `bootstrap_brokers_vpc_connectivity_sasl_iam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity.
-* `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity.
-* `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity.
+* `bootstrap_brokers` - Comma-separated list of `hostname:port` pairs of Kafka brokers for plaintext connectivity. Empty string if plaintext is not enabled.
+* `bootstrap_brokers_public_sasl_iam` - Comma-separated list of `hostname:port` pairs for public SASL/IAM access. Empty string if not enabled.
+* `bootstrap_brokers_public_sasl_scram` - Comma-separated list of `hostname:port` pairs for public SASL/SCRAM access. Empty string if not enabled.
+* `bootstrap_brokers_public_tls` - Comma-separated list of `hostname:port` pairs for public TLS access. Empty string if not enabled.
+* `bootstrap_brokers_sasl_iam` - Comma-separated list of `hostname:port` pairs for SASL/IAM access. Empty string if not enabled.
+* `bootstrap_brokers_sasl_scram` - Comma-separated list of `hostname:port` pairs for SASL/SCRAM access. Empty string if not enabled.
+* `bootstrap_brokers_tls` - Comma-separated list of `hostname:port` pairs for TLS access. Empty string if not enabled.
+* `bootstrap_brokers_vpc_connectivity_sasl_iam` - Comma-separated list of `hostname:port` pairs for VPC connectivity with SASL/IAM. Empty string if not enabled.
+* `bootstrap_brokers_vpc_connectivity_sasl_scram` - Comma-separated list of `hostname:port` pairs for VPC connectivity with SASL/SCRAM. Empty string if not enabled.
+* `bootstrap_brokers_vpc_connectivity_tls` - Comma-separated list of `hostname:port` pairs for VPC connectivity with TLS. Empty string if not enabled.
