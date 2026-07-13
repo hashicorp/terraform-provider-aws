@@ -71,10 +71,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:   true,
 				Computed:   true,
 				Validators: []validator.String{
-					tfstringvalidator.AlsoRequiresWhenEquals(
-						awstypes.RegistryAuthorizerTypeCustomJwt,
-						path.MatchRelative().AtParent().AtName("authorizer_configuration"),
-					),
+					tfstringvalidator.DiscriminatorRequires(map[awstypes.RegistryAuthorizerType]path.Expression{
+						awstypes.RegistryAuthorizerTypeCustomJwt: path.MatchRelative().AtParent().AtName("authorizer_configuration"),
+					}),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
