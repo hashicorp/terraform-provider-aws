@@ -92,11 +92,7 @@ func (r *pipelineResourcePolicyResource) Read(ctx context.Context, request resou
 
 	resourceArn := data.ResourceARN.ValueString()
 
-	input := &osis.GetResourcePolicyInput{
-		ResourceArn: aws.String(resourceArn),
-	}
-
-	output, err := conn.GetResourcePolicy(ctx, input)
+	output, err := findPipelineResourcePolicyByResourceARN(ctx, conn, resourceArn)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -172,4 +168,30 @@ type pipelineResourcePolicyResourceModel struct {
 	framework.WithRegionModel
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
+}
+
+// findPipelineResourcePolicyByResourceARN retrieves a pipeline resource policy by its resource ARN.
+// Returns a NotFoundError if the policy is empty or the resource is not found.
+func findPipelineResourcePolicyByResourceARN(ctx context.Context, conn *osis.Client, resourceARN string) (*osis.GetResourcePolicyOutput, error) {
+	input := &osis.GetResourcePolicyInput{
+		ResourceArn: aws.String(resourceARN),
+	}
+
+	output, err := conn.GetResourcePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil || *output.Policy == "{}" {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
 }

@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -246,16 +245,14 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 	}
 
 	if endpoint == nil {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return endpoint, nil
 }
 
-func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID string) retry.StateRefreshFunc {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findPipelineEndpointByID(ctx, conn, endpointID)
 
 		if retry.NotFound(err) {
@@ -271,7 +268,7 @@ func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID s
 }
 
 func waitPipelineEndpointCreated(ctx context.Context, conn *osis.Client, endpointID string, timeout time.Duration) (*awstypes.PipelineEndpoint, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineEndpointStatusCreating),
 		Target:     enum.Slice(awstypes.PipelineEndpointStatusActive),
 		Refresh:    statusPipelineEndpoint(ctx, conn, endpointID),
@@ -290,7 +287,7 @@ func waitPipelineEndpointCreated(ctx context.Context, conn *osis.Client, endpoin
 }
 
 func waitPipelineEndpointDeleted(ctx context.Context, conn *osis.Client, endpointID string, timeout time.Duration) (*awstypes.PipelineEndpoint, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineEndpointStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusPipelineEndpoint(ctx, conn, endpointID),
