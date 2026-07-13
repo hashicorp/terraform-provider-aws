@@ -97,6 +97,20 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"reflection_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[reflectionConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"namespace_templates": schema.ListAttribute{
+							CustomType: fwtypes.ListOfStringType,
+							Optional:   true,
+						},
+					},
+				},
+			},
 			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -145,6 +159,29 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									},
 									"model_id": schema.StringAttribute{
 										Required: true,
+									},
+								},
+							},
+						},
+						"reflection": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[reflectionOverrideModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								errorIfSingleBlockRemoved("reflection"),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"append_to_prompt": schema.StringAttribute{
+										Required: true,
+									},
+									"model_id": schema.StringAttribute{
+										Required: true,
+									},
+									"namespace_templates": schema.ListAttribute{
+										CustomType: fwtypes.ListOfStringType,
+										Optional:   true,
 									},
 								},
 							},
@@ -246,10 +283,18 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
 			}
+			if !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the reflection_configuration block must be omitted."))
+			}
 		}
 	} else {
 		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
 			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
+		}
+		if data.Type.ValueEnum() != awstypes.MemoryStrategyTypeEpisodic {
+			if !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `EPISODIC`, the reflection_configuration block must be omitted."))
+			}
 		}
 	}
 }
@@ -311,6 +356,17 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			found.Configuration = nil
 		}
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+
+		// Flatten reflection configuration for built-in EPISODIC type
+		if plan.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic && found.Configuration != nil && found.Configuration.Reflection != nil {
+			if episodicReflection, ok := found.Configuration.Reflection.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
+				var rc reflectionConfigurationModel
+				if episodicReflection.Value.NamespaceTemplates != nil {
+					rc.NamespaceTemplates = fwflex.FlattenFrameworkStringValueListOfString(ctx, episodicReflection.Value.NamespaceTemplates)
+				}
+				plan.ReflectionConfiguration, _ = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rc)
+			}
+		}
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -360,6 +416,19 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
+
+	// Flatten reflection configuration for built-in EPISODIC type.
+	// The API returns reflection config inside StrategyConfiguration, which is
+	// cleared for non-CUSTOM types before flattening. We handle it separately.
+	if state.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic && out.Configuration != nil && out.Configuration.Reflection != nil {
+		if episodicReflection, ok := out.Configuration.Reflection.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
+			var rc reflectionConfigurationModel
+			if episodicReflection.Value.NamespaceTemplates != nil {
+				rc.NamespaceTemplates = fwflex.FlattenFrameworkStringValueListOfString(ctx, episodicReflection.Value.NamespaceTemplates)
+			}
+			state.ReflectionConfiguration, _ = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rc)
+		}
+	}
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -611,15 +680,16 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
-	Description            types.String                                              `tfsdk:"description"`
-	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
-	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
-	MemoryID               types.String                                              `tfsdk:"memory_id"`
-	Name                   types.String                                              `tfsdk:"name"`
-	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
-	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
-	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
+	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]     `tfsdk:"configuration"`
+	Description             types.String                                                  `tfsdk:"description"`
+	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID        types.String                                                  `tfsdk:"memory_strategy_id"`
+	MemoryID                types.String                                                  `tfsdk:"memory_id"`
+	Name                    types.String                                                  `tfsdk:"name"`
+	Namespaces              fwtypes.SetOfString                                           `tfsdk:"namespaces"`
+	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[reflectionConfigurationModel] `tfsdk:"reflection_configuration"`
+	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]               `tfsdk:"type"`
+	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
 func (m *memoryStrategyResourceModel) GetIdentifier() string {
@@ -695,11 +765,27 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
-		// The API requires the reflection namespace to be the same as or a prefix
-		// of the episodic namespace. Set it to match the episodic namespaces.
-		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
-			Namespaces: r.Value.Namespaces,
+		// Build reflection configuration from user-provided values or defaults.
+		// If no reflection_configuration block is provided, set namespaceTemplates
+		// to match the episodic namespaces (matching the legacy default behavior).
+		reflectionConfig := &awstypes.EpisodicReflectionConfigurationInput{}
+		if !m.ReflectionConfiguration.IsNull() && !m.ReflectionConfiguration.IsUnknown() {
+			rc, rcDiags := m.ReflectionConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, rcDiags)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if !rc.NamespaceTemplates.IsNull() && !rc.NamespaceTemplates.IsUnknown() {
+				smerr.AddEnrich(ctx, &diags, rc.NamespaceTemplates.ElementsAs(ctx, &reflectionConfig.NamespaceTemplates, false))
+				if diags.HasError() {
+					return nil, diags
+				}
+			}
+		} else {
+			// Default: use episodic namespaces as reflection namespaces
+			reflectionConfig.Namespaces = r.Value.Namespaces
 		}
+		r.Value.ReflectionConfiguration = reflectionConfig
 		return &r, diags
 	default:
 		diags.AddError(
@@ -728,9 +814,10 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 }
 
 type customConfigurationModel struct {
-	Type          fwtypes.StringEnum[awstypes.OverrideType]             `tfsdk:"type"`
-	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"extraction"`
+	Type          fwtypes.StringEnum[awstypes.OverrideType]                `tfsdk:"type"`
+	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel]    `tfsdk:"consolidation"`
+	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel]    `tfsdk:"extraction"`
+	Reflection    fwtypes.ListNestedObjectValueOf[reflectionOverrideModel] `tfsdk:"reflection"`
 }
 
 var (
@@ -770,6 +857,26 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 				smerr.AddEnrich(ctx, &diags, d)
 				if diags.HasError() {
 					return diags
+				}
+			}
+		}
+
+		if t.Reflection != nil {
+			switch rt := t.Reflection.(type) {
+			case *awstypes.ReflectionConfigurationMemberCustomReflectionConfiguration:
+				if customReflection, ok := rt.Value.(*awstypes.CustomReflectionConfigurationMemberEpisodicReflectionOverride); ok {
+					var reflection reflectionOverrideModel
+					smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, customReflection.Value, &reflection))
+					if diags.HasError() {
+						return diags
+					}
+					if !reflection.AppendToPrompt.IsNull() && !reflection.ModelID.IsNull() {
+						m.Reflection, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &reflection)
+						smerr.AddEnrich(ctx, &diags, d)
+						if diags.HasError() {
+							return diags
+						}
+					}
 				}
 			}
 		}
@@ -864,6 +971,14 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 		}
 	}
 
+	var reflection *reflectionOverrideModel
+	if !m.Reflection.IsNull() {
+		reflection, d = m.Reflection.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+	}
 	switch m.Type.ValueEnum() {
 	case awstypes.OverrideTypeSemanticOverride:
 		if consolidation != nil {
@@ -949,6 +1064,17 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 				Value: &extractionInput,
 			}
 		}
+
+		if reflection != nil {
+			var reflectionInput awstypes.CustomReflectionConfigurationInputMemberEpisodicReflectionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, reflection, &reflectionInput.Value))
+			if diags.HasError() {
+				return nil, diags
+			}
+			result.Reflection = &awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration{
+				Value: &reflectionInput,
+			}
+		}
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -962,6 +1088,18 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 type overrideDetailsModel struct {
 	AppendToPrompt types.String `tfsdk:"append_to_prompt"`
 	ModelID        types.String `tfsdk:"model_id"`
+}
+
+// reflectionConfigurationModel is the model for the built-in EPISODIC reflection_configuration block.
+type reflectionConfigurationModel struct {
+	NamespaceTemplates fwtypes.ListOfString `tfsdk:"namespace_templates"`
+}
+
+// reflectionOverrideModel is the model for the reflection block inside configuration (CUSTOM EPISODIC_OVERRIDE).
+type reflectionOverrideModel struct {
+	AppendToPrompt     types.String         `tfsdk:"append_to_prompt"`
+	ModelID            types.String         `tfsdk:"model_id"`
+	NamespaceTemplates fwtypes.ListOfString `tfsdk:"namespace_templates"`
 }
 
 var (

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add `reflection_configuration` configuration block for `EPISODIC` strategy type
+```
