@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -18,9 +19,23 @@ func emptyVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
-				"visual_id":           idSchema(),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
+				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+			},
+		},
+	}
+}
+
+func emptyVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_EmptyVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringComputedOnly(),
+				attrVisualID:          idDataSourceSchema(),
+				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
 		},
 	}
@@ -41,7 +56,7 @@ func expandEmptyVisual(tfList []any) *awstypes.EmptyVisual {
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		apiObject.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -58,7 +73,7 @@ func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []any {
 
 	tfMap := map[string]any{
 		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
-		"visual_id":           aws.ToString(apiObject.VisualId),
+		attrVisualID:          aws.ToString(apiObject.VisualId),
 	}
 
 	if apiObject.Actions != nil {

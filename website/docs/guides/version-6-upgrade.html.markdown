@@ -254,7 +254,7 @@ To prepare:
 
 ## Data Source `aws_ami`
 
-When using `most_recent = true`, your configuration **must now include** an `owner` or a `filter` that identifies the image by `image-id` or `owner-id`.
+When using `most_recent = true`, your configuration **must now include** `owners` or a `filter` that identifies the image by `image-id` or `owner-id`.
 
 - **Before (v5 and earlier):**
   Terraform allowed this setup and showed only a warning.
@@ -266,10 +266,10 @@ When using `most_recent = true`, your configuration **must now include** an `own
 
 Do one of the following:
 
-- Add `owner`:
+- Add `owners`:
 
 ```terraform
-owner = "amazon"
+owners = ["amazon"]
 ```
 
 - Or add a `filter` block that includes either `image-id` or `owner-id`:

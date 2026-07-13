@@ -57,90 +57,92 @@ func resourceGrant() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"constraints": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_context_equals": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							// ConflictsWith encryption_context_subset handled in Create, see grantConstraintsIsValid
-						},
-						"encryption_context_subset": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							// ConflictsWith encryption_context_equals handled in Create, see grantConstraintsIsValid
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"constraints": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_context_equals": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// ConflictsWith encryption_context_subset handled in Create, see grantConstraintsIsValid
+							},
+							"encryption_context_subset": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// ConflictsWith encryption_context_equals handled in Create, see grantConstraintsIsValid
+							},
 						},
 					},
+					Set: resourceGrantConstraintsHash,
 				},
-				Set: resourceGrantConstraintsHash,
-			},
-			"grant_creation_tokens": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"grant_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grant_token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"grantee_principal": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					verify.ValidServicePrincipal,
-				),
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validGrantName,
-			},
-			"operations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.GrantOperation](),
+				"grant_creation_tokens": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"retire_on_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"retiring_principal": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					verify.ValidServicePrincipal,
-				),
-			},
+				"grant_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"grant_token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"grantee_principal": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						verify.ValidServicePrincipal,
+					),
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validGrantName,
+				},
+				"operations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.GrantOperation](),
+					},
+				},
+				"retire_on_delete": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"retiring_principal": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						verify.ValidServicePrincipal,
+					),
+				},
+			}
 		},
 	}
 }

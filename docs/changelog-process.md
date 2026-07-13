@@ -31,6 +31,18 @@ resource/aws_example_thing: Add `not_broken` attribute
 ```
 ``````
 
+While generally an antipattern to have a PR contain multiple resources/data sources, in the case that it is required a changelog file should have multiple new resource/data sources blocks. ie
+
+``````
+```release-note:new-resource
+aws_ecs_daemon
+```
+
+```release-note:new-resource
+aws_ecs_daemon_task_definition
+```
+``````
+
 ## Pull request types to CHANGELOG
 
 The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made to decide whether a change should have an entry.
@@ -64,6 +76,26 @@ A new full-length documentation entry gives the title of the documentation added
 ``````
 ```release-note:new-guide
 Custom Service Endpoint Configuration
+```
+``````
+
+#### New list resource
+
+A new list resource should only contain the name of the resource, and use the `release-note:new-list-resource` header.
+
+``````
+```release-note:new-list-resource
+aws_ebs_volume_attachment
+```
+``````
+
+### Resource identity support
+
+Adding resource identity support should use the `release-note:enhancement` header and have a prefix indicating the resource it corresponds to, a colon and "Adding resource identity support".
+
+``````
+```release-note:enhancement
+resource/aws_ebs_volume_attachment: Add resource identity support
 ```
 ``````
 

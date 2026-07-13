@@ -239,6 +239,7 @@ The following arguments are optional:
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `num_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `cluster_mode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
+* `durability` - (Optional) Specifies the durability mode for the replication group. Valid values are `default`, `async`, `sync`, or `disabled`. Requires cluster mode enabled and Valkey 9.0 or higher.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
   Valid values are `redis` or `valkey`.
   Default is `redis`.

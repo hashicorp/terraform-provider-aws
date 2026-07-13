@@ -50,6 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `oci_vcn_id` - The unique identifier  Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.
 * `oci_vcn_url` - The URL of the OCI VCN for the ODB network.
 * `percent_progress` - The amount of progress made on the current operation on the ODB network, expressed as a percentage.
+* `ec2_placement_group_ids` - A list of EC2 placement group IDs associated with the ODB network.
 * `peered_cidrs` - The list of CIDR ranges from the peered VPC that are allowed access to the ODB network. Please refer odb network peering documentation.
 * `status` - The status of the network resource.
 * `status_reason` - Additional information about the current status of the ODB network.

@@ -9,6 +9,8 @@ var (
 	ResourceCapacityProvider         = resourceCapacityProvider
 	ResourceCluster                  = resourceCluster
 	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
+	ResourceDaemon                   = newDaemonResource
+	ResourceDaemonTaskDefinition     = newDaemonTaskDefinitionResource
 	ResourceExpressGatewayService    = newExpressGatewayServiceResource
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
@@ -16,8 +18,11 @@ var (
 	ResourceTaskSet                  = resourceTaskSet
 
 	ClusterNameFromARN                      = clusterNameFromARN
+	DaemonNameFromARN                       = daemonNameFromARN
 	FindCapacityProviderByARN               = findCapacityProviderByARN
 	FindClusterByNameOrARN                  = findClusterByNameOrARN
+	FindDaemonByARN                         = findDaemonByARN
+	FindDaemonTaskDefinitionByARN           = findDaemonTaskDefinitionByARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
 	FindExpressGatewayServiceByARN          = findExpressGatewayServiceByARN
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey

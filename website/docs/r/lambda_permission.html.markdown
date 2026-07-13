@@ -36,7 +36,7 @@ resource "aws_lambda_function" "test_lambda" {
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -234,6 +234,14 @@ The following arguments are optional:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `read` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

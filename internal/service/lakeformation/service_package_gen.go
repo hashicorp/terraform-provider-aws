@@ -36,7 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_lakeformation_identity_center_configuration",
 			Name:     "Identity Center Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrCatalogID),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrCatalogID, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

@@ -36,39 +36,41 @@ func resourceUsageLimit() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"amount": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"breach_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.UsageLimitBreachActionLog,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
-			},
-			"period": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.UsageLimitPeriodMonthly,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
-			},
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"usage_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitUsageType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"amount": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"breach_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.UsageLimitBreachActionLog,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
+				},
+				"period": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.UsageLimitPeriodMonthly,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
+				},
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"usage_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitUsageType](),
+				},
+			}
 		},
 	}
 }

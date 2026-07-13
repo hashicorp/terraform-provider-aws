@@ -54,281 +54,283 @@ func resourceBudget() *schema.Resource {
 
 		CustomizeDiff: validateFilterExpressionDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_adjust_data": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_adjust_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AutoAdjustType](),
-						},
-						"historical_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"budget_adjustment_period": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 60),
-									},
-									"lookback_available_periods": {
-										Type:     schema.TypeInt,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_adjust_data": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_adjust_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AutoAdjustType](),
+							},
+							"historical_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"budget_adjustment_period": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 60),
+										},
+										"lookback_available_periods": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"last_auto_adjust_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"billing_view_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"budget_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.BudgetType](),
-			},
-			"cost_filter": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"filter_expression"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"last_auto_adjust_time": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			"cost_types": {
-				Type:          schema.TypeList,
-				Computed:      true,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"metrics"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"include_credit": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_discount": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_other_subscription": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_recurring": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_refund": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_subscription": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_support": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_tax": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_upfront": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"use_amortized": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"use_blended": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
+				"billing_view_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"limit_amount": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
-				ConflictsWith:    []string{"planned_limit"},
-			},
-			"limit_unit": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"planned_limit"},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-			},
-			"notification": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"comparison_operator": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
-						},
-						"notification_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
-						},
-						"subscriber_email_addresses": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"subscriber_sns_topic_arns": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidARN,
-							},
-						},
-						"threshold": {
-							Type:     schema.TypeFloat,
-							Required: true,
-						},
-						"threshold_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
-						},
-					},
-				},
-			},
-			"planned_limit": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"amount": {
-							Type:             schema.TypeString,
-							Required:         true,
-							DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
-						},
-						names.AttrStartTime: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validTimePeriodTimestamp,
-						},
-						names.AttrUnit: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-				ConflictsWith: []string{"limit_amount", "limit_unit"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"time_period_end": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "2087-06-15_00:00",
-				ValidateFunc: validTimePeriodTimestamp,
-			},
-			"time_period_start": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validTimePeriodTimestamp,
-			},
-			"time_unit": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
-			},
-			"filter_expression": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"cost_filter"},
-				RequiredWith:  []string{"metrics"},
-				// AWS Budgets API enforces: "Expression nested depth cannot be more than 2" which is not mentioned in docs
-				// Schema level 3 = AWS depth 2 (because operators added when level > 1)
-				Elem: filterExpressionElem(filterExpressionDepth),
-			},
-			"metrics": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"cost_types"},
-				RequiredWith:  []string{"filter_expression"},
-				Elem: &schema.Schema{
+				"budget_type": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BudgetType](),
 				},
-			},
+				"cost_filter": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"filter_expression"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"cost_types": {
+					Type:          schema.TypeList,
+					Computed:      true,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"metrics"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"include_credit": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_discount": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_other_subscription": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_recurring": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_refund": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_subscription": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_support": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_tax": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"include_upfront": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"use_amortized": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"use_blended": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+				},
+				"limit_amount": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
+					ConflictsWith:    []string{"planned_limit"},
+				},
+				"limit_unit": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"planned_limit"},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+				},
+				"notification": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"comparison_operator": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
+							},
+							"notification_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+							},
+							"subscriber_email_addresses": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"subscriber_sns_topic_arns": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+							"threshold": {
+								Type:     schema.TypeFloat,
+								Required: true,
+							},
+							"threshold_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
+							},
+						},
+					},
+				},
+				"planned_limit": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"amount": {
+								Type:             schema.TypeString,
+								Required:         true,
+								DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
+							},
+							names.AttrStartTime: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validTimePeriodTimestamp,
+							},
+							names.AttrUnit: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+					ConflictsWith: []string{"limit_amount", "limit_unit"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"time_period_end": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "2087-06-15_00:00",
+					ValidateFunc: validTimePeriodTimestamp,
+				},
+				"time_period_start": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validTimePeriodTimestamp,
+				},
+				"time_unit": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
+				},
+				"filter_expression": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"cost_filter"},
+					RequiredWith:  []string{"metrics"},
+					// AWS Budgets API enforces: "Expression nested depth cannot be more than 2" which is not mentioned in docs
+					// Schema level 3 = AWS depth 2 (because operators added when level > 1)
+					Elem: filterExpressionElem(filterExpressionDepth),
+				},
+				"metrics": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"cost_types"},
+					RequiredWith:  []string{"filter_expression"},
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+					},
+				},
+			}
 		},
 	}
 }

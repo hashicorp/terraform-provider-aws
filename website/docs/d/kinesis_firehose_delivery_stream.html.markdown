@@ -10,7 +10,7 @@ description: |-
 
 Use this data source to get information about a Kinesis Firehose Delivery Stream for use in other resources.
 
-For more details, see the [Amazon Kinesis Firehose Documentation][1].
+For more details, see the [Amazon Kinesis Firehose Documentation](https://aws.amazon.com/documentation/firehose/).
 
 ## Example Usage
 
@@ -33,5 +33,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ARN of the Kinesis Firehose Delivery Stream.
 * `arn` - ARN of the Kinesis Firehose Delivery Stream (same as `id`).
-
-[1]: https://aws.amazon.com/documentation/firehose/

@@ -92,6 +92,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			names.AttrCertificate: certificateSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -196,6 +197,8 @@ func (r *codeInterpreterResource) Create(ctx context.Context, request resource.C
 	codeInterpreterID := aws.ToString(out.CodeInterpreterId)
 
 	if _, err := waitCodeInterpreterCreated(ctx, conn, codeInterpreterID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("code_interpreter_id"), codeInterpreterID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
@@ -349,6 +352,7 @@ func findCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 
 type codeInterpreterResourceModel struct {
 	framework.WithRegionModel
+	Certificates         fwtypes.ListNestedObjectValueOf[certificateModel]                         `tfsdk:"certificate"`
 	CodeInterpreterARN   types.String                                                              `tfsdk:"code_interpreter_arn"`
 	CodeInterpreterID    types.String                                                              `tfsdk:"code_interpreter_id"`
 	Description          types.String                                                              `tfsdk:"description"`

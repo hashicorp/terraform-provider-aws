@@ -10,12 +10,14 @@ var (
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 	ResourceInferenceProfile                    = newInferenceProfileResource
+	ResourceFoundationModelAgreement            = newFoundationModelAgreementResource
 
 	FindCustomModelByID                     = findCustomModelByID
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
+	FindFoundationModelAgreementByID        = findFoundationModelAgreementByID
 
 	WaitModelCustomizationJobCompleted = waitModelCustomizationJobCompleted
 )
