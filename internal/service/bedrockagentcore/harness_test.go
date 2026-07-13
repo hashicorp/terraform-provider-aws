@@ -513,6 +513,47 @@ func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 	})
 }
 
+// TestAccBedrockAgentCoreHarness_truncation_clear covers the set->unset
+// transition for the truncation block. truncation is Optional+Computed
+// (UseStateForUnknown), so removing it from config lets state absorb the
+// retained server value instead of showing a perpetual diff; the re-plan after
+// refresh must show no changes.
+func TestAccBedrockAgentCoreHarness_truncation_clear(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_truncationSlidingWindow(rName, 50),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttr(resourceName, "truncation.0.strategy", "sliding_window"),
+				),
+			},
+			{
+				// Identical to the create config minus the truncation block.
+				Config: testAccHarnessConfig_systemPrompt(rName, "You are a helpful assistant."),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -685,6 +726,46 @@ func TestAccBedrockAgentCoreHarness_memory_disabled(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreHarness_memory_clear covers the set->unset transition
+// for the memory block. memory is Optional+Computed (UseStateForUnknown), so
+// removing it from config lets state absorb the retained server value instead
+// of showing a perpetual diff; the re-plan after refresh must show no changes.
+func TestAccBedrockAgentCoreHarness_memory_clear(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_memoryManaged(rName, 45),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttr(resourceName, "memory.0.managed_memory_configuration.0.event_expiry_duration", "45"),
+				),
+			},
+			{
+				// Identical to the create config minus the memory block.
+				Config: testAccHarnessConfig_systemPrompt(rName, "You are a helpful assistant."),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 			},
