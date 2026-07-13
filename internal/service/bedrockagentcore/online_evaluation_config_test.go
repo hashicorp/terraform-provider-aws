@@ -812,7 +812,7 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_frequenciesUnique(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOnlineEvaluationConfigConfig_frequenciesDuplicate(rName),
-				ExpectError: regexache.MustCompile("Duplicate List Value"),
+				ExpectError: regexache.MustCompile("must not contain duplicate values"),
 			},
 		},
 	})
@@ -910,6 +910,48 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_descriptionClear(t *testing.T
 			},
 			{
 				Config: testAccOnlineEvaluationConfigConfig_evaluator(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_clusteringConfigClear confirms the
+// set->unset transition for clustering_config converges. The Update API PATCH-merges and
+// retains clustering_config when omitted (the SDK requires Frequencies, so an empty value
+// is not a clear signal), so clustering_config is Optional+Computed and removing it must
+// produce an empty re-plan instead of a perpetual diff.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_clusteringConfigClear(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_insightsAndClustering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "clustering_config.#", "1"),
+				),
+			},
+			{
+				// Remove clustering_config (keep insight). Optional+Computed absorbs the
+				// server-retained value, so the post-apply refresh plan is empty.
+				Config: testAccOnlineEvaluationConfigConfig_insightsWithoutClustering(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),

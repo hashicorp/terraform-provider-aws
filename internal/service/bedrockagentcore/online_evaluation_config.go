@@ -79,6 +79,32 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 	)
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			// clustering_config is an object-typed Optional+Computed ListAttribute (not a
+			// block): the Update API PATCH-merges and cannot clear it once set (omitting it
+			// retains the server value, and the SDK requires Frequencies so an empty value is
+			// not a clear signal). Computed lets state absorb the retained server value so a
+			// set->unset transition converges instead of a perpetual diff, mirroring
+			// description. A block cannot be Computed, and protocol v5 does not support nested
+			// attributes, so the frequencies size/uniqueness validators are enforced in
+			// ValidateConfig instead of on a nested attribute.
+			"clustering_config": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[clusteringConfigModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					// The service rejects clustering_config unless insight is also set. The
+					// reverse does NOT hold (insight without clustering_config is valid), so
+					// this requirement is one-directional (clustering => insight only).
+					listvalidator.AlsoRequires(path.MatchRoot("insight")),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[clusteringConfigModel](ctx),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				// The Update API retains description when omitted and rejects an empty
@@ -131,30 +157,6 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"clustering_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[clusteringConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-					// The service rejects clustering_config unless insight is also set
-					// ("clusteringConfig can only be set when insights are provided").
-					// The reverse does NOT hold: insight without clustering_config is a
-					// valid, service-accepted configuration, so this requirement is
-					// one-directional (clustering => insight only).
-					listvalidator.AlsoRequires(path.MatchRoot("insight")),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"frequencies": schema.ListAttribute{
-							ElementType: fwtypes.StringEnumType[awstypes.ClusteringFrequency](),
-							Required:    true,
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 3),
-								listvalidator.UniqueValues(),
-							},
-						},
-					},
-				},
-			},
 			"data_source_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceConfigModel](ctx),
 				Validators: []validator.List{
@@ -346,6 +348,50 @@ func (r *onlineEvaluationConfigResource) ConfigValidators(context.Context) []res
 			path.MatchRoot("evaluator"),
 			path.MatchRoot("insight"),
 		),
+	}
+}
+
+// ValidateConfig enforces the clustering_config.frequencies size and uniqueness
+// constraints offline. clustering_config is an object-typed Optional+Computed
+// ListAttribute (so set->unset converges), which cannot carry per-nested-attribute
+// validators, so those checks live here instead.
+func (r *onlineEvaluationConfigResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data onlineEvaluationConfigResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.ClusteringConfig.IsNull() || data.ClusteringConfig.IsUnknown() {
+		return
+	}
+
+	clusteringConfigs, d := data.ClusteringConfig.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for _, cc := range clusteringConfigs {
+		if cc.Frequencies.IsNull() || cc.Frequencies.IsUnknown() {
+			continue
+		}
+		elements := cc.Frequencies.Elements()
+		if len(elements) < 1 || len(elements) > 3 {
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("clustering_config.frequencies must contain between 1 and 3 values, got %d", len(elements)))
+		}
+		seen := make(map[string]struct{}, len(elements))
+		for _, e := range elements {
+			se, ok := e.(fwtypes.StringEnum[awstypes.ClusteringFrequency])
+			if !ok || se.IsNull() || se.IsUnknown() {
+				continue
+			}
+			v := se.ValueString()
+			if _, dup := seen[v]; dup {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("clustering_config.frequencies must not contain duplicate values: %q appears more than once", v))
+			}
+			seen[v] = struct{}{}
+		}
 	}
 }
 
