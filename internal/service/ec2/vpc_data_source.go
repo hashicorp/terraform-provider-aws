@@ -117,6 +117,10 @@ func dataSourceVPC() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"address_attribute": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -267,6 +271,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 			"network_border_group":  aws.ToString(v.NetworkBorderGroup),
 			"ipam_pool_id":          aws.ToString(v.Ipv6Pool),
 			names.AttrSource:        aws.String(string(v.IpSource)),
+			"address_attribute":     aws.String(string(v.Ipv6AddressAttribute)),
 		}
 		ipv6Associations = append(ipv6Associations, association)
 	}
