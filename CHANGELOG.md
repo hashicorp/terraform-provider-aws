@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_autoscaling_group` ([#48928](https://github.com/hashicorp/terraform-provider-aws/issues/48928))
 * **New List Resource:** `aws_cloudwatch_log_stream` ([#48878](https://github.com/hashicorp/terraform-provider-aws/issues/48878))
 * **New List Resource:** `aws_network_interface` ([#48887](https://github.com/hashicorp/terraform-provider-aws/issues/48887))
 * **New List Resource:** `aws_sfn_state_machine` ([#48840](https://github.com/hashicorp/terraform-provider-aws/issues/48840))
