@@ -174,47 +174,9 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"embedding_model_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[embeddingModelConfigurationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEmbeddingModelConfigurationModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													PlanModifiers: []planmodifier.List{
-														listplanmodifier.RequiresReplace(),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"dimensions": schema.Int64Attribute{
-																Optional: true,
-																PlanModifiers: []planmodifier.Int64{
-																	int64planmodifier.RequiresReplace(),
-																},
-															},
-															"embedding_data_type": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
-																Optional:   true,
-																PlanModifiers: []planmodifier.String{
-																	stringplanmodifier.RequiresReplace(),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
+									"embedding_model_configuration": embeddingModelConfigurationSchema(ctx),
 									"server_side_encryption_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[managedKBServerSideEncryptionConfigurationModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[serverSideEncryptionConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
@@ -629,115 +591,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"embedding_model_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[embeddingModelConfigurationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEmbeddingModelConfigurationModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													PlanModifiers: []planmodifier.List{
-														listplanmodifier.RequiresReplace(),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"dimensions": schema.Int64Attribute{
-																Optional: true,
-																PlanModifiers: []planmodifier.Int64{
-																	int64planmodifier.RequiresReplace(),
-																},
-															},
-															"embedding_data_type": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
-																Optional:   true,
-																PlanModifiers: []planmodifier.String{
-																	stringplanmodifier.RequiresReplace(),
-																},
-															},
-														},
-														Blocks: map[string]schema.Block{
-															"audio": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[audioConfigurationModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtMost(1),
-																},
-																PlanModifiers: []planmodifier.List{
-																	listplanmodifier.RequiresReplace(),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Blocks: map[string]schema.Block{
-																		"segmentation_configuration": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[audioSegmentationConfigurationModel](ctx),
-																			Validators: []validator.List{
-																				listvalidator.IsRequired(),
-																				listvalidator.SizeAtLeast(1),
-																				listvalidator.SizeAtMost(1),
-																			},
-																			PlanModifiers: []planmodifier.List{
-																				listplanmodifier.RequiresReplace(),
-																			},
-																			NestedObject: schema.NestedBlockObject{
-																				Attributes: map[string]schema.Attribute{
-																					"fixed_length_duration": schema.Int64Attribute{
-																						Required: true,
-																						PlanModifiers: []planmodifier.Int64{
-																							int64planmodifier.RequiresReplace(),
-																						},
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-															"video": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[videoConfigurationModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtMost(1),
-																},
-																PlanModifiers: []planmodifier.List{
-																	listplanmodifier.RequiresReplace(),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Blocks: map[string]schema.Block{
-																		"segmentation_configuration": schema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[videoSegmentationConfigurationModel](ctx),
-																			Validators: []validator.List{
-																				listvalidator.IsRequired(),
-																				listvalidator.SizeAtLeast(1),
-																				listvalidator.SizeAtMost(1),
-																			},
-																			PlanModifiers: []planmodifier.List{
-																				listplanmodifier.RequiresReplace(),
-																			},
-																			NestedObject: schema.NestedBlockObject{
-																				Attributes: map[string]schema.Attribute{
-																					"fixed_length_duration": schema.Int64Attribute{
-																						Required: true,
-																						PlanModifiers: []planmodifier.Int64{
-																							int64planmodifier.RequiresReplace(),
-																						},
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
+									"embedding_model_configuration": embeddingModelConfigurationSchema(ctx),
 									"supplemental_data_storage_configuration": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[supplementalDataStorageConfigurationModel](ctx),
 										Validators: []validator.List{
@@ -1382,6 +1236,118 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 	}
 }
 
+func embeddingModelConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[embeddingModelConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"bedrock_embedding_model_configuration": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEmbeddingModelConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"dimensions": schema.Int64Attribute{
+								Optional: true,
+								PlanModifiers: []planmodifier.Int64{
+									int64planmodifier.RequiresReplace(),
+								},
+							},
+							"embedding_data_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
+								Optional:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"audio": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[audioConfigurationModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"segmentation_configuration": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[audioSegmentationConfigurationModel](ctx),
+											Validators: []validator.List{
+												listvalidator.IsRequired(),
+												listvalidator.SizeAtLeast(1),
+												listvalidator.SizeAtMost(1),
+											},
+											PlanModifiers: []planmodifier.List{
+												listplanmodifier.RequiresReplace(),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													"fixed_length_duration": schema.Int64Attribute{
+														Required: true,
+														PlanModifiers: []planmodifier.Int64{
+															int64planmodifier.RequiresReplace(),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"video": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[videoConfigurationModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"segmentation_configuration": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[videoSegmentationConfigurationModel](ctx),
+											Validators: []validator.List{
+												listvalidator.IsRequired(),
+												listvalidator.SizeAtLeast(1),
+												listvalidator.SizeAtMost(1),
+											},
+											PlanModifiers: []planmodifier.List{
+												listplanmodifier.RequiresReplace(),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													"fixed_length_duration": schema.Int64Attribute{
+														Required: true,
+														PlanModifiers: []planmodifier.Int64{
+															int64planmodifier.RequiresReplace(),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data knowledgeBaseResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -1789,14 +1755,10 @@ type vectorKnowledgeBaseConfigurationModel struct {
 }
 
 type managedKnowledgeBaseConfigurationModel struct {
-	EmbeddingModelARN                 fwtypes.ARN                                                                      `tfsdk:"embedding_model_arn"`
-	EmbeddingModelConfiguration       fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]                `tfsdk:"embedding_model_configuration"`
-	EmbeddingModelType                fwtypes.StringEnum[awstypes.EmbeddingModelType]                                  `tfsdk:"embedding_model_type"`
-	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[managedKBServerSideEncryptionConfigurationModel] `tfsdk:"server_side_encryption_configuration"`
-}
-
-type managedKBServerSideEncryptionConfigurationModel struct {
-	KMSKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
+	EmbeddingModelARN                 fwtypes.ARN                                                             `tfsdk:"embedding_model_arn"`
+	EmbeddingModelConfiguration       fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]       `tfsdk:"embedding_model_configuration"`
+	EmbeddingModelType                fwtypes.StringEnum[awstypes.EmbeddingModelType]                         `tfsdk:"embedding_model_type"`
+	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[serverSideEncryptionConfigurationModel] `tfsdk:"server_side_encryption_configuration"`
 }
 
 type embeddingModelConfigurationModel struct {
