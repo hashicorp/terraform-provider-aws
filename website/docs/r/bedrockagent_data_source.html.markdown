@@ -155,12 +155,53 @@ The following arguments are optional:
 
 The `data_source_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`.
+* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`, `MANAGED_KNOWLEDGE_BASE_CONNECTOR`.
 * `confluence_configuration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
+* `managed_knowledge_base_connector_configuration` - (Optional) Details about the configuration of a Managed Knowledge Base connector data source. See [`managed_knowledge_base_connector_configuration` block](#managed_knowledge_base_connector_configuration-block) for details.
 * `s3_configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
 * `salesforce_configuration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
 * `share_point_configuration` - (Optional) Details about the configuration of the SharePoint data source. See [`share_point_data_source_configuration` block](#share_point_data_source_configuration-block) for details.
 * `web_configuration` - (Optional) Details about the configuration of the web data source. See [`web_data_source_configuration` block](#web_data_source_configuration-block) for details.
+
+### `managed_knowledge_base_connector_configuration` block
+
+The `managed_knowledge_base_connector_configuration` configuration block supports the following arguments:
+
+* `connector_parameters` - (Optional) JSON-encoded string containing the connector-specific parameters. The structure depends on the connector type (S3, SharePoint, Google Drive, etc.). See [Managed Knowledge Base connector parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-connectors.html) for details on each connector type.
+* `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` block](#deletion_protection_configuration-block) for details.
+* `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` block](#media_extraction_configuration-block) for details.
+
+### `deletion_protection_configuration` block
+
+The `deletion_protection_configuration` configuration block supports the following arguments:
+
+* `enable_deletion_protection` - (Optional) Whether to enable deletion protection for the data source. When enabled, the data source cannot be deleted.
+
+### `media_extraction_configuration` block
+
+The `media_extraction_configuration` configuration block supports the following arguments:
+
+* `audio_extraction_configuration` - (Optional) Configuration for extracting audio content. See [`audio_extraction_configuration` block](#audio_extraction_configuration-block) for details.
+* `image_extraction_configuration` - (Optional) Configuration for extracting image content. See [`image_extraction_configuration` block](#image_extraction_configuration-block) for details.
+* `video_extraction_configuration` - (Optional) Configuration for extracting video content. See [`video_extraction_configuration` block](#video_extraction_configuration-block) for details.
+
+### `audio_extraction_configuration` block
+
+The `audio_extraction_configuration` configuration block supports the following arguments:
+
+* `audio_extraction_status` - (Optional) Whether audio extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `image_extraction_configuration` block
+
+The `image_extraction_configuration` configuration block supports the following arguments:
+
+* `image_extraction_status` - (Optional) Whether image extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `video_extraction_configuration` block
+
+The `video_extraction_configuration` configuration block supports the following arguments:
+
+* `video_extraction_status` - (Optional) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
 ### `confluence_data_source_configuration` block
 
