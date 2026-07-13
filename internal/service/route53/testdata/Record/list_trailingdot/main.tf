@@ -2,18 +2,20 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_route53_record" "test" {
+  count = var.resource_count
+
   zone_id = aws_route53_zone.test.zone_id
-  name    = var.recordName
+  name    = "${var.subdomainName}-${count.index}.${var.zoneName}."
   type    = "A"
-  ttl     = "30"
-  records = ["127.0.0.1", "127.0.0.27"]
+  ttl     = 300
+  records = ["10.0.0.${count.index}"]
 }
 
 resource "aws_route53_zone" "test" {
   name = var.zoneName
 }
 
-variable "recordName" {
+variable "subdomainName" {
   type     = string
   nullable = false
 }
@@ -23,13 +25,8 @@ variable "zoneName" {
   nullable = false
 }
 
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.4.0"
-    }
-  }
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }
-
-provider "aws" {}
