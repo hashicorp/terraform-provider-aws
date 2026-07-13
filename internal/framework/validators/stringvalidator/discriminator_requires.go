@@ -47,11 +47,6 @@ func (v discriminatorRequires[T]) ValidateString(ctx context.Context, request va
 	}
 
 	for _, mp := range matchedPaths {
-		// Skip self.
-		if mp.Equal(request.Path) {
-			continue
-		}
-
 		var mpVal attr.Value
 		response.Diagnostics.Append(request.Config.GetAttribute(ctx, mp, &mpVal)...)
 		if response.Diagnostics.HasError() {
@@ -64,7 +59,7 @@ func (v discriminatorRequires[T]) ValidateString(ctx context.Context, request va
 		}
 
 		if mpVal.IsNull() {
-			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			response.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 				request.Path,
 				fmt.Sprintf("Attribute %[1]q must be configured when %[2]q equals %[3]q", mp, request.Path, vDiscriminating),
 			))
