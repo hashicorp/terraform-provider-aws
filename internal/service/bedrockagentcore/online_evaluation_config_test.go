@@ -999,6 +999,92 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_enableOnCreateForcesNew(t *te
 	})
 }
 
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_filterClearing confirms the
+// set->unset transition for the optional rule.filter block. Update re-sends the
+// full rule, so removing the filter block must converge to an empty plan rather
+// than a perpetual diff or an inconsistent result after apply.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_filterClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluatorFilter(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+				),
+			},
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluator(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreOnlineEvaluationConfig_sessionConfigClearing confirms the
+// set->unset transition for the optional rule.session_config block. Update re-sends
+// the full rule, so removing the session_config block must converge to an empty plan
+// rather than a perpetual diff or an inconsistent result after apply.
+func TestAccBedrockAgentCoreOnlineEvaluationConfig_sessionConfigClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
+	rName := testAccRandomOnlineEvaluationConfigName(t)
+	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOnlineEvaluationConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluatorSessionConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.session_config.#", "1"),
+				),
+			},
+			{
+				Config: testAccOnlineEvaluationConfigConfig_evaluator(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.session_config.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccOnlineEvaluationConfigConfig_evaluator(rName string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
@@ -1020,6 +1106,73 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   rule {
     sampling_config {
       sampling_percentage = 10.0
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_evaluatorFilter(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+
+    filter {
+      key      = "environment"
+      operator = "Equals"
+
+      value {
+        string_value = "production"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccOnlineEvaluationConfigConfig_evaluatorSessionConfig(rName string) string {
+	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_online_evaluation_config" "test" {
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
+
+  data_source_config {
+    cloudwatch_logs {
+      log_group_names = [aws_cloudwatch_log_group.test.name]
+      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
+    }
+  }
+
+  evaluator {
+    evaluator_id = "Builtin.Helpfulness"
+  }
+
+  rule {
+    sampling_config {
+      sampling_percentage = 10.0
+    }
+
+    session_config {
+      session_timeout_minutes = 20
     }
   }
 }
