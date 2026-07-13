@@ -26,6 +26,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"StructuredDataStoreRedshiftServerless":  testAccKnowledgeBase_StructuredDataStore_redshiftServerless,
 			"RDS":                                    testAccKnowledgeBase_RDS_basic,
 			"RDSSupplementalDataStorage":             testAccKnowledgeBase_RDS_supplementalDataStorage,
+			"Managed":                                testAccKnowledgeBase_Managed_basic,
 		},
 		"DataSource": {
 			acctest.CtBasic:         testAccDataSource_basic,
