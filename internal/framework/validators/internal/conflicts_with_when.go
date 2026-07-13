@@ -15,23 +15,29 @@ import (
 )
 
 var (
-	_ validator.String = (*ConflictsWithWhenValidator)(nil)
+	_ validator.String = (*conflictsWithWhenValidator)(nil)
 )
 
-type ConflictsWithWhenValidator struct {
-	When            When
-	PathExpressions path.Expressions
+func ConflictsWithWhenValidator(when When, expressions ...path.Expression) conflictsWithWhenValidator {
+	return conflictsWithWhenValidator{whenValidator{
+		When:            when,
+		PathExpressions: expressions,
+	}}
 }
 
-func (v ConflictsWithWhenValidator) Description(ctx context.Context) string {
+type conflictsWithWhenValidator struct {
+	whenValidator
+}
+
+func (v conflictsWithWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v ConflictsWithWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v conflictsWithWhenValidator) MarkdownDescription(ctx context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are not also configured: %[1]q", v.PathExpressions)
 }
 
-func (v ConflictsWithWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+func (v conflictsWithWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	validateRequest := ValidatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
@@ -45,50 +51,16 @@ func (v ConflictsWithWhenValidator) ValidateString(ctx context.Context, request 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v ConflictsWithWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
-		return
-	}
-
-	if !v.When.Eval(ctx, request.ConfigValue) {
-		return
-	}
-
-	var responseDiags diag.Diagnostics
-
-	for _, expression := range request.PathExpression.MergeExpressions(v.PathExpressions...) {
-		matchedPaths, diags := request.Config.PathMatches(ctx, expression)
-		response.Diagnostics.Append(diags...)
-		if diags.HasError() {
-			continue
+func (v conflictsWithWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+	v.whenValidator.validate(ctx, request, response, func(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
+		var diags diag.Diagnostics
+		if !matchedValue.IsNull() {
+			// Collect all errors.
+			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+				requestPath,
+				fmt.Sprintf("Attribute %[1]q must not be configured when %[2]q %[3]s", matchedPath, requestPath, v.When.String()),
+			))
 		}
-
-		for _, mp := range matchedPaths {
-			// Skip self.
-			if mp.Equal(request.Path) {
-				continue
-			}
-
-			var mpVal attr.Value
-			response.Diagnostics.Append(request.Config.GetAttribute(ctx, mp, &mpVal)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			// Defer if any target is unknown; we cannot decide yet.
-			if mpVal.IsUnknown() {
-				return
-			}
-
-			if !mpVal.IsNull() {
-				// Collect all errors.
-				responseDiags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-					request.Path,
-					fmt.Sprintf("Attribute %[1]q must not be configured when %[2]q %[3]s", mp, request.Path, v.When.String()),
-				))
-			}
-		}
-	}
-
-	response.Diagnostics.Append(responseDiags...)
+		return diags
+	})
 }

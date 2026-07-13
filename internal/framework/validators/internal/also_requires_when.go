@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ validator.Bool   = (*AlsoRequiresWhenValidator)(nil)
-	_ validator.String = (*AlsoRequiresWhenValidator)(nil)
+	_ validator.Bool   = (*alsoRequiredWhenValidator)(nil)
+	_ validator.String = (*alsoRequiredWhenValidator)(nil)
 )
 
 type When interface {
@@ -26,48 +26,73 @@ type When interface {
 	String() string
 }
 
-type AlsoRequiresWhenValidator struct {
+func AlsoRequiredWhenValidator(when When, expressions ...path.Expression) alsoRequiredWhenValidator {
+	return alsoRequiredWhenValidator{whenValidator{
+		When:            when,
+		PathExpressions: expressions,
+	}}
+}
+
+type alsoRequiredWhenValidator struct {
+	whenValidator
+}
+
+func (v alsoRequiredWhenValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v alsoRequiredWhenValidator) MarkdownDescription(ctx context.Context) string {
+	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.PathExpressions)
+}
+
+func (v alsoRequiredWhenValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
+	validateRequest := ValidatorRequest{
+		Config:         request.Config,
+		ConfigValue:    request.ConfigValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var validateResponse ValidatorResponse
+
+	v.validate(ctx, validateRequest, &validateResponse)
+
+	response.Diagnostics.Append(validateResponse.Diagnostics...)
+}
+
+func (v alsoRequiredWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	validateRequest := ValidatorRequest{
+		Config:         request.Config,
+		ConfigValue:    request.ConfigValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var validateResponse ValidatorResponse
+
+	v.validate(ctx, validateRequest, &validateResponse)
+
+	response.Diagnostics.Append(validateResponse.Diagnostics...)
+}
+
+func (v alsoRequiredWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+	v.whenValidator.validate(ctx, request, response, func(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
+		var diags diag.Diagnostics
+		if matchedValue.IsNull() {
+			// Collect all errors.
+			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+				requestPath,
+				fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", matchedPath, requestPath, v.When.String()),
+			))
+		}
+		return diags
+	})
+}
+
+type whenValidator struct {
 	When            When
 	PathExpressions path.Expressions
 }
 
-func (v AlsoRequiresWhenValidator) Description(ctx context.Context) string {
-	return v.MarkdownDescription(ctx)
-}
-
-func (v AlsoRequiresWhenValidator) MarkdownDescription(ctx context.Context) string {
-	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.PathExpressions)
-}
-
-func (v AlsoRequiresWhenValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
-	validateRequest := ValidatorRequest{
-		Config:         request.Config,
-		ConfigValue:    request.ConfigValue,
-		Path:           request.Path,
-		PathExpression: request.PathExpression,
-	}
-	var validateResponse ValidatorResponse
-
-	v.validate(ctx, validateRequest, &validateResponse)
-
-	response.Diagnostics.Append(validateResponse.Diagnostics...)
-}
-
-func (v AlsoRequiresWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := ValidatorRequest{
-		Config:         request.Config,
-		ConfigValue:    request.ConfigValue,
-		Path:           request.Path,
-		PathExpression: request.PathExpression,
-	}
-	var validateResponse ValidatorResponse
-
-	v.validate(ctx, validateRequest, &validateResponse)
-
-	response.Diagnostics.Append(validateResponse.Diagnostics...)
-}
-
-func (v AlsoRequiresWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+func (v whenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
@@ -102,13 +127,8 @@ func (v AlsoRequiresWhenValidator) validate(ctx context.Context, request Validat
 				return
 			}
 
-			if mpVal.IsNull() {
-				// Collect all errors.
-				responseDiags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-					request.Path,
-					fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", mp, request.Path, v.When.String()),
-				))
-			}
+			// Collect all errors.
+			responseDiags.Append(cb(ctx, request.Path, mp, mpVal)...)
 		}
 	}
 

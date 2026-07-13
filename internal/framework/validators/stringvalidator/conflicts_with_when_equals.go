@@ -16,8 +16,5 @@ import (
 // Relative path.Expressions are resolved using the attribute being
 // validated.
 func ConflictsWithWhenEquals[T ~string](value T, expressions ...path.Expression) validator.String {
-	return internal.ConflictsWithWhenValidator{
-		When:            whenEquals[T]{value: value},
-		PathExpressions: expressions,
-	}
+	return internal.ConflictsWithWhenValidator(whenEquals[T]{value: value}, expressions...)
 }
