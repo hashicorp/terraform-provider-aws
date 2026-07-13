@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -43,9 +44,17 @@ func (d *guardrailsDataSource) Schema(ctx context.Context, request datasource.Sc
 						regexache.MustCompile(`^(([a-z0-9]+)|(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:[0-9]{12}:guardrail/[a-z0-9]+))$`),
 						"must be a guardrail ID (lowercase alphanumeric) or a full guardrail ARN",
 					),
+					stringvalidator.ConflictsWith(path.MatchRoot("name_regex")),
 				},
 			},
 			"guardrails": framework.DataSourceComputedListOfObjectAttribute[guardrailSummaryModel](ctx),
+			"name_regex": schema.StringAttribute{
+				CustomType: fwtypes.RegexpType,
+				Optional:   true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("guardrail_identifier")),
+				},
+			},
 		},
 	}
 }
@@ -72,6 +81,10 @@ func (d *guardrailsDataSource) Read(ctx context.Context, request datasource.Read
 
 	items := make([]guardrailSummaryModel, 0, len(summaries))
 	for _, summary := range summaries {
+		if !data.NameRegex.IsNull() && !data.NameRegex.ValueRegexp().MatchString(aws.ToString(summary.Name)) {
+			continue
+		}
+
 		var item guardrailSummaryModel
 		response.Diagnostics.Append(fwflex.Flatten(ctx, &summary, &item)...)
 		if response.Diagnostics.HasError() {
@@ -123,6 +136,7 @@ type guardrailsDataSourceModel struct {
 	GuardrailIdentifier types.String                                           `tfsdk:"guardrail_identifier"`
 	Guardrails          fwtypes.ListNestedObjectValueOf[guardrailSummaryModel] `tfsdk:"guardrails"`
 	ID                  types.String                                           `tfsdk:"id"`
+	NameRegex           fwtypes.Regexp                                         `tfsdk:"name_regex"`
 }
 
 type guardrailSummaryModel struct {

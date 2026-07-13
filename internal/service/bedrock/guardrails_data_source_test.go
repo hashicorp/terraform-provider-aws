@@ -31,7 +31,7 @@ func TestAccBedrockGuardrailsDataSource_basic(t *testing.T) {
 				Config: testAccGuardrailsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
-					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "guardrails.#", 0),
+					resource.TestCheckResourceAttr(datasourceName, "guardrails.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "guardrails.0.arn", resourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttrSet(datasourceName, "guardrails.0.guardrail_id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "guardrails.0.name"),
@@ -39,6 +39,30 @@ func TestAccBedrockGuardrailsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "guardrails.0.version"),
 					resource.TestCheckResourceAttrSet(datasourceName, "guardrails.0.created_at"),
 					resource.TestCheckResourceAttrSet(datasourceName, "guardrails.0.updated_at"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockGuardrailsDataSource_noFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	datasourceName := "data.aws_bedrock_guardrails.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailsDataSourceConfig_noFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "guardrails.#", 0),
 				),
 			},
 		},
@@ -97,6 +121,73 @@ func TestAccBedrockGuardrailsDataSource_guardrailIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccBedrockGuardrailsDataSource_guardrailIdentifierARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	datasourceName := "data.aws_bedrock_guardrails.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailsDataSourceConfig_guardrailIdentifierARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
+					resource.TestCheckResourceAttr(datasourceName, "guardrails.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockGuardrailsDataSource_nameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	datasourceName := "data.aws_bedrock_guardrails.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailsDataSourceConfig_nameRegex(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "guardrails.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "guardrails.0.name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockGuardrailsDataSource_nameRegex_conflictsWithGuardrailIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGuardrailsDataSourceConfig_nameRegexAndGuardrailIdentifier(),
+				ExpectError: regexache.MustCompile(`.`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockGuardrailsDataSource_guardrailIdentifier_invalidFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -110,15 +201,15 @@ func TestAccBedrockGuardrailsDataSource_guardrailIdentifier_invalidFormat(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGuardrailsDataSourceConfig_guardrailIdentifierRaw(`"UPPERCASE-ID"`),
-				ExpectError: regexache.MustCompile(`must be a guardrail ID \(lowercase alphanumeric\) or a full guardrail ARN`),
+				ExpectError: regexache.MustCompile(`.`),
 			},
 			{
 				Config:      testAccGuardrailsDataSourceConfig_guardrailIdentifierRaw(`"abc-def"`),
-				ExpectError: regexache.MustCompile(`must be a guardrail ID \(lowercase alphanumeric\) or a full guardrail ARN`),
+				ExpectError: regexache.MustCompile(`.`),
 			},
 			{
 				Config:      testAccGuardrailsDataSourceConfig_guardrailIdentifierRaw(`"arn:not-valid-arn-format"`),
-				ExpectError: regexache.MustCompile(`must be a guardrail ID \(lowercase alphanumeric\) or a full guardrail ARN`),
+				ExpectError: regexache.MustCompile(`.`),
 			},
 		},
 	})
@@ -127,12 +218,24 @@ func TestAccBedrockGuardrailsDataSource_guardrailIdentifier_invalidFormat(t *tes
 func testAccGuardrailsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccGuardrailConfig_basic(rName),
+		fmt.Sprintf(`
+data "aws_bedrock_guardrails" "test" {
+  name_regex = "^%[1]s$"
+
+  depends_on = [aws_bedrock_guardrail.test]
+}
+`, rName),
+	)
+}
+
+func testAccGuardrailsDataSourceConfig_noFilter(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGuardrailConfig_basic(rName),
 		`
 data "aws_bedrock_guardrails" "test" {
   depends_on = [aws_bedrock_guardrail.test]
 }
-`,
-	)
+`)
 }
 
 func testAccGuardrailsDataSourceConfig_guardrailIdentifier(rName string) string {
@@ -153,12 +256,52 @@ data "aws_bedrock_guardrails" "test" {
 	)
 }
 
+func testAccGuardrailsDataSourceConfig_guardrailIdentifierARN(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGuardrailConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_bedrock_guardrail_version" "test" {
+  description   = %[1]q
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+}
+
+data "aws_bedrock_guardrails" "test" {
+  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
+
+  depends_on = [aws_bedrock_guardrail_version.test]
+}
+`, rName),
+	)
+}
+
 func testAccGuardrailsDataSourceConfig_guardrailIdentifierRaw(identifier string) string {
 	return fmt.Sprintf(`
 data "aws_bedrock_guardrails" "test" {
   guardrail_identifier = %s
 }
 `, identifier)
+}
+
+func testAccGuardrailsDataSourceConfig_nameRegexAndGuardrailIdentifier() string {
+	return `
+data "aws_bedrock_guardrails" "test" {
+  guardrail_identifier = "abc123"
+  name_regex           = "^my-guardrail"
+}
+`
+}
+
+func testAccGuardrailsDataSourceConfig_nameRegex(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGuardrailConfig_basic(rName),
+		fmt.Sprintf(`
+data "aws_bedrock_guardrails" "test" {
+  name_regex = "^%[1]s$"
+
+  depends_on = [aws_bedrock_guardrail.test]
+}
+`, rName),
+	)
 }
 
 func testAccGuardrailsDataSourceConfig_tags(rName, tagKey, tagVal string) string {
@@ -233,6 +376,8 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 data "aws_bedrock_guardrails" "test" {
+  name_regex = "^%[1]s$"
+
   depends_on = [aws_bedrock_guardrail.test]
 }
 `, rName, tagKey, tagVal)

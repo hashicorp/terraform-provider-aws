@@ -18,6 +18,14 @@ Terraform data source for listing AWS Bedrock Guardrails.
 data "aws_bedrock_guardrails" "example" {}
 ```
 
+### Filter by Name Regex
+
+```terraform
+data "aws_bedrock_guardrails" "example" {
+  name_regex = "^my-guardrail-"
+}
+```
+
 ### Filter by Tag Using HCL
 
 ```terraform
@@ -43,7 +51,8 @@ data "aws_bedrock_guardrails" "versions" {
 
 This data source supports the following arguments:
 
-* `guardrail_identifier` - (Optional) ID or ARN of a specific guardrail. When set, returns all versions (DRAFT and numbered versions) of that guardrail instead of the DRAFT version of all guardrails. Must be a lowercase alphanumeric guardrail ID or a full guardrail ARN in the format `arn:aws(-[^:]+)?:bedrock:{region}:{account-id}:guardrail/{id}`.
+* `guardrail_identifier` - (Optional) ID or ARN of a specific guardrail. When set, returns all versions (DRAFT and numbered versions) of that guardrail instead of the DRAFT version of all guardrails. Must be a lowercase alphanumeric guardrail ID or a full guardrail ARN in the format `arn:aws(-[^:]+)?:bedrock:{region}:{account-id}:guardrail/{id}`. Conflicts with `name_regex`.
+* `name_regex` - (Optional) Regular expression to filter guardrails by name. Only guardrails whose name matches the expression are returned. This is a client-side filter applied after all guardrails are fetched from AWS. Conflicts with `guardrail_identifier`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
