@@ -62,6 +62,7 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_group_offset_sync_mode", "LEGACY"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.#", "1"),
@@ -155,6 +156,7 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_group_offset_sync_mode", "LEGACY"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.#", "1"),
@@ -179,8 +181,9 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_group_offset_sync_mode", "LEGACY"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_exclude.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.synchronise_consumer_group_offsets", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.detect_and_copy_new_consumer_groups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
@@ -330,6 +333,72 @@ func TestAccKafkaReplicator_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_consumerGroupOffsetSyncMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_consumerGroupOffsetSyncMode(rName, sourceCluster, targetCluster, "LEGACY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_group_offset_sync_mode", "LEGACY"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topic_name_configuration.0.type", "IDENTICAL"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "3"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReplicatorConfig_consumerGroupOffsetSyncMode(rName, sourceCluster, targetCluster, "ENHANCED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_group_offset_sync_mode", "ENHANCED"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topic_name_configuration.0.type", "IDENTICAL"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "3"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1044,4 +1113,58 @@ resource "aws_msk_replicator" "test" {
   }
 }
 `, rName))
+}
+
+func testAccReplicatorConfig_consumerGroupOffsetSyncMode(rName, sourceCluster, targetCluster, syncMode string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
+resource "aws_msk_replicator" "test" {
+  replicator_name            = %[1]q
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
+
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
+
+  kafka_cluster {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
+
+  replication_info_list {
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
+
+    topic_replication {
+      topics_to_replicate = ["topic1", "topic2", "topic3"]
+
+      topic_name_configuration {
+        type = "IDENTICAL"
+      }
+    }
+
+    consumer_group_replication {
+      consumer_groups_to_replicate    = ["group1", "group2", "group3"]
+      consumer_group_offset_sync_mode = %[4]q
+    }
+  }
+}
+`, rName, sourceCluster, targetCluster, syncMode))
 }
