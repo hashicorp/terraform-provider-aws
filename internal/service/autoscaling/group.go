@@ -1329,7 +1329,6 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 
@@ -1342,6 +1341,12 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", d.Id(), err)
 	}
+
+	return append(diags, resourceGroupFlatten(ctx, meta.(*conns.AWSClient), g, d)...)
+}
+
+func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *awstypes.AutoScalingGroup, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
@@ -1417,6 +1422,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("warm_pool_size", g.WarmPoolSize)
 
+	ignoreTagsConfig := awsClient.IgnoreTagsConfig(ctx)
 	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), tagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
