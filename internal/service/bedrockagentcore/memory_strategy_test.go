@@ -767,6 +767,53 @@ func TestAccBedrockAgentCoreMemoryStrategy_typeSwitchNonCustomToCustom(t *testin
 	})
 }
 
+// TestAccBedrockAgentCoreMemoryStrategy_descriptionClearing confirms that removing
+// the optional description after it was set converges to an empty plan rather than a
+// perpetual diff or "inconsistent result after apply". description is a plain Optional
+// attribute (not Optional+Computed), so the cleared value must round-trip: if the API
+// silently retained the prior description on update, state would diverge from the
+// null-in-config plan and the PostApplyPostRefresh plan would be non-empty.
+func TestAccBedrockAgentCoreMemoryStrategy_descriptionClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create SEMANTIC strategy with a description set.
+			{
+				Config: testAccMemoryStrategyConfig_descriptionToggle(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description clearing test"),
+				),
+			},
+			// Step 2: Remove the description; the set->unset transition must converge.
+			{
+				Config: testAccMemoryStrategyConfig_descriptionToggle(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccMemoryStrategyConfig_semanticNamed(rName, strategyName string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
@@ -815,6 +862,23 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 %[2]s
 }
 `, rName, schemaBlock))
+}
+
+func testAccMemoryStrategyConfig_descriptionToggle(rName string, withDescription bool) string {
+	descriptionLine := ""
+	if withDescription {
+		descriptionLine = `
+  description               = "Description clearing test"`
+	}
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  namespaces                = ["default"]%[2]s
+}
+`, rName, descriptionLine))
 }
 
 func testAccMemoryStrategyConfig_emptyNumberValidation(rName string) string {

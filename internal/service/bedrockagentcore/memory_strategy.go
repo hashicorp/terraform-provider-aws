@@ -64,7 +64,16 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
+				// Optional+Computed: ModifyMemoryStrategyInput carries Description, but the
+				// PATCH-style API ignores a nil (cleared) value and retains the prior
+				// description. Absorbing the server value keeps state consistent instead of
+				// producing "inconsistent result after apply" and a perpetual diff. A
+				// description cannot be removed once set.
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
