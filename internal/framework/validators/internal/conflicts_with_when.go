@@ -55,7 +55,6 @@ func (v conflictsWithWhenValidator) validate(ctx context.Context, request Valida
 	v.whenValidator.validate(ctx, request, response, func(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
 		var diags diag.Diagnostics
 		if !matchedValue.IsNull() {
-			// Collect all errors.
 			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 				requestPath,
 				fmt.Sprintf("Attribute %[1]q must not be configured when %[2]q %[3]s", matchedPath, requestPath, v.When.String()),

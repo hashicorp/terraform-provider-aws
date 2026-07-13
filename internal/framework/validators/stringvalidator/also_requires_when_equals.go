@@ -33,5 +33,5 @@ func (w whenEquals[T]) String() string {
 // Relative path.Expressions are resolved using the attribute being
 // validated.
 func AlsoRequiresWhenEquals[T ~string](value T, expressions ...path.Expression) validator.String {
-	return internal.AlsoRequiredWhenValidator(whenEquals[T]{value: value}, expressions...)
+	return internal.AlsoRequiresWhenValidator(whenEquals[T]{value: value}, expressions...)
 }

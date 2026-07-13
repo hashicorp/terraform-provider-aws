@@ -36,5 +36,5 @@ func (whenTrue) String() string {
 // Relative path.Expressions are resolved using the attribute being
 // validated.
 func AlsoRequiresWhenTrue(expressions ...path.Expression) validator.Bool {
-	return internal.AlsoRequiredWhenValidator(whenTrue{}, expressions...)
+	return internal.AlsoRequiresWhenValidator(whenTrue{}, expressions...)
 }

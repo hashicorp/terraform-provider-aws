@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ validator.Bool   = (*alsoRequiredWhenValidator)(nil)
-	_ validator.String = (*alsoRequiredWhenValidator)(nil)
+	_ validator.Bool   = (*alsoRequiresWhenValidator)(nil)
+	_ validator.String = (*alsoRequiresWhenValidator)(nil)
 )
 
 type When interface {
@@ -26,26 +26,26 @@ type When interface {
 	String() string
 }
 
-func AlsoRequiredWhenValidator(when When, expressions ...path.Expression) alsoRequiredWhenValidator {
-	return alsoRequiredWhenValidator{whenValidator{
+func AlsoRequiresWhenValidator(when When, expressions ...path.Expression) alsoRequiresWhenValidator {
+	return alsoRequiresWhenValidator{whenValidator{
 		When:            when,
 		PathExpressions: expressions,
 	}}
 }
 
-type alsoRequiredWhenValidator struct {
+type alsoRequiresWhenValidator struct {
 	whenValidator
 }
 
-func (v alsoRequiredWhenValidator) Description(ctx context.Context) string {
+func (v alsoRequiresWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v alsoRequiredWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v alsoRequiresWhenValidator) MarkdownDescription(ctx context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.PathExpressions)
 }
 
-func (v alsoRequiredWhenValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
+func (v alsoRequiresWhenValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
 	validateRequest := ValidatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
@@ -59,7 +59,7 @@ func (v alsoRequiredWhenValidator) ValidateBool(ctx context.Context, request val
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v alsoRequiredWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+func (v alsoRequiresWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	validateRequest := ValidatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
@@ -73,11 +73,10 @@ func (v alsoRequiredWhenValidator) ValidateString(ctx context.Context, request v
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v alsoRequiredWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+func (v alsoRequiresWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
 	v.whenValidator.validate(ctx, request, response, func(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
 		var diags diag.Diagnostics
 		if matchedValue.IsNull() {
-			// Collect all errors.
 			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 				requestPath,
 				fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", matchedPath, requestPath, v.When.String()),
