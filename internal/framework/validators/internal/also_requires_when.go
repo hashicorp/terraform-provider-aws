@@ -28,8 +28,8 @@ type When interface {
 
 func AlsoRequiresWhenValidator(when When, expressions ...path.Expression) alsoRequiresWhenValidator {
 	return alsoRequiresWhenValidator{whenValidator{
-		When:            when,
-		PathExpressions: expressions,
+		when:            when,
+		pathExpressions: expressions,
 	}}
 }
 
@@ -42,7 +42,7 @@ func (v alsoRequiresWhenValidator) Description(ctx context.Context) string {
 }
 
 func (v alsoRequiresWhenValidator) MarkdownDescription(ctx context.Context) string {
-	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.PathExpressions)
+	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.pathExpressions)
 }
 
 func (v alsoRequiresWhenValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
@@ -74,21 +74,23 @@ func (v alsoRequiresWhenValidator) ValidateString(ctx context.Context, request v
 }
 
 func (v alsoRequiresWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.whenValidator.validate(ctx, request, response, func(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
-		var diags diag.Diagnostics
-		if matchedValue.IsNull() {
-			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-				requestPath,
-				fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", matchedPath, requestPath, v.When.String()),
-			))
-		}
-		return diags
-	})
+	v.whenValidator.validate(ctx, request, response, v.eval)
+}
+
+func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if matchedValue.IsNull() {
+		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			requestPath,
+			fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", matchedPath, requestPath, v.when.String()),
+		))
+	}
+	return diags
 }
 
 type whenValidator struct {
-	When            When
-	PathExpressions path.Expressions
+	when            When
+	pathExpressions path.Expressions
 }
 
 func (v whenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
@@ -96,13 +98,13 @@ func (v whenValidator) validate(ctx context.Context, request ValidatorRequest, r
 		return
 	}
 
-	if !v.When.Eval(ctx, request.ConfigValue) {
+	if !v.when.Eval(ctx, request.ConfigValue) {
 		return
 	}
 
 	var responseDiags diag.Diagnostics
 
-	for _, expression := range request.PathExpression.MergeExpressions(v.PathExpressions...) {
+	for _, expression := range request.PathExpression.MergeExpressions(v.pathExpressions...) {
 		matchedPaths, diags := request.Config.PathMatches(ctx, expression)
 		response.Diagnostics.Append(diags...)
 		if diags.HasError() {
