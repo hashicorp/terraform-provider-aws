@@ -663,6 +663,76 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																},
 															},
 														},
+														Blocks: map[string]schema.Block{
+															"audio": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[audioConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"segmentation_configuration": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[audioSegmentationConfigurationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.IsRequired(),
+																				listvalidator.SizeAtLeast(1),
+																				listvalidator.SizeAtMost(1),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"fixed_length_duration": schema.Int64Attribute{
+																						Required: true,
+																						PlanModifiers: []planmodifier.Int64{
+																							int64planmodifier.RequiresReplace(),
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"video": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[videoConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"segmentation_configuration": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[videoSegmentationConfigurationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.IsRequired(),
+																				listvalidator.SizeAtLeast(1),
+																				listvalidator.SizeAtMost(1),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"fixed_length_duration": schema.Int64Attribute{
+																						Required: true,
+																						PlanModifiers: []planmodifier.Int64{
+																							int64planmodifier.RequiresReplace(),
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
 													},
 												},
 											},
@@ -1734,8 +1804,26 @@ type embeddingModelConfigurationModel struct {
 }
 
 type bedrockEmbeddingModelConfigurationModel struct {
-	Dimensions        types.Int64                                    `tfsdk:"dimensions"`
-	EmbeddingDataType fwtypes.StringEnum[awstypes.EmbeddingDataType] `tfsdk:"embedding_data_type"`
+	Audio             fwtypes.ListNestedObjectValueOf[audioConfigurationModel] `tfsdk:"audio"`
+	Dimensions        types.Int64                                              `tfsdk:"dimensions"`
+	EmbeddingDataType fwtypes.StringEnum[awstypes.EmbeddingDataType]           `tfsdk:"embedding_data_type"`
+	Video             fwtypes.ListNestedObjectValueOf[videoConfigurationModel] `tfsdk:"video"`
+}
+
+type audioConfigurationModel struct {
+	SegmentationConfiguration fwtypes.ListNestedObjectValueOf[audioSegmentationConfigurationModel] `tfsdk:"segmentation_configuration"`
+}
+
+type audioSegmentationConfigurationModel struct {
+	FixedLengthDuration types.Int64 `tfsdk:"fixed_length_duration"`
+}
+
+type videoConfigurationModel struct {
+	SegmentationConfiguration fwtypes.ListNestedObjectValueOf[videoSegmentationConfigurationModel] `tfsdk:"segmentation_configuration"`
+}
+
+type videoSegmentationConfigurationModel struct {
+	FixedLengthDuration types.Int64 `tfsdk:"fixed_length_duration"`
 }
 
 type supplementalDataStorageConfigurationModel struct {
