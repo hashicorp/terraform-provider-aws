@@ -185,10 +185,11 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -244,10 +245,11 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -369,9 +371,10 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
 							"vector_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"supplemental_data_storage_configuration": knownvalue.ListExact([]knownvalue.Check{
@@ -428,10 +431,11 @@ func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(1),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeKendra),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeKendra),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
 						}),
 					})),
 				},
@@ -477,10 +481,11 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -530,10 +535,11 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -611,7 +617,8 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned(t *testing.T) 
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
 							"sql_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									names.AttrType: tfknownvalue.StringExact(awstypes.QueryEngineTypeRedshift),
@@ -671,7 +678,8 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftServerless(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
 							"sql_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									names.AttrType: tfknownvalue.StringExact(awstypes.QueryEngineTypeRedshift),
@@ -731,10 +739,11 @@ func testAccKnowledgeBase_NeptuneAnalytics_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
