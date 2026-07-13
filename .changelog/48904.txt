@@ -3,5 +3,5 @@ resource/aws_bedrockagent_knowledge_base: Add support for Managed Knowledge Base
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagent_data_source: Add support for `MANAGED_KNOWLEDGE_BASE_CONNECTOR` data source type with `connector_parameters`, `media_extraction_configuration`, and `deletion_protection_configuration`
+resource/aws_bedrockagent_data_source: Add `data_source_configuration.managed_knowledge_base_connector_configuration` block
 ```
