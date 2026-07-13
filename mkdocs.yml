@@ -56,7 +56,7 @@ nav:
       - Error Handling: error-handling.md
       - Finders and Listers: finders-and-listers.md
       - Go-VCR: go-vcr.md
-      - Github Actions Caching: github-actions-caching.md
+      - GitHub Actions Caching: github-actions-caching.md
       - ID Attributes: id-attributes.md
       - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md
