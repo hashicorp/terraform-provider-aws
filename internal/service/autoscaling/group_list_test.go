@@ -126,8 +126,8 @@ func TestAccAutoScalingGroup_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("tag"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"key":                 knownvalue.StringExact(acctest.CtKey1),
-								"value":               knownvalue.StringExact(acctest.CtValue1),
+								names.AttrKey:         knownvalue.StringExact(acctest.CtKey1),
+								names.AttrValue:       knownvalue.StringExact(acctest.CtValue1),
 								"propagate_at_launch": knownvalue.Bool(false),
 							}),
 						})),

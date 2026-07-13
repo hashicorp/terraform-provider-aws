@@ -55,7 +55,7 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := autoscaling.DescribeAutoScalingGroupsInput{}
-		for g, err := range listAutoScalingGroups(ctx, conn, &input) {
+		for g, err := range listGroups(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -73,7 +73,7 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 
 			if request.IncludeResource {
 				diags := resourceGroupFlatten(ctx, awsClient, &g, rd)
-				if diags.HasError() || rd.Id() == "" {
+				if diags.HasError() {
 					tflog.Error(ctx, "Reading Auto Scaling Group", map[string]any{
 						names.AttrName: name,
 						"diags":        sdkdiag.DiagnosticsString(diags),
@@ -97,7 +97,7 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 	}
 }
 
-func listAutoScalingGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) iter.Seq2[awstypes.AutoScalingGroup, error] {
+func listGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) iter.Seq2[awstypes.AutoScalingGroup, error] {
 	return func(yield func(awstypes.AutoScalingGroup, error) bool) {
 		pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
 		for pages.HasMorePages() {
