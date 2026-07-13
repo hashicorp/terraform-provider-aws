@@ -254,6 +254,53 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_interceptorConfigurationClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_interceptorConfigurations(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				// Remove the interceptor_configuration block and assert the set->unset transition converges.
+				Config: testAccGatewayConfig_interceptorConfigurationsCleared(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -303,6 +350,53 @@ func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated description")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_descriptionClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_description(rName, "Initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Initial description")),
+				},
+			},
+			{
+				// Remove the description attribute and assert the set->unset transition converges.
+				Config: testAccGatewayConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 				},
 			},
 		},
@@ -955,6 +1049,54 @@ func TestAccBedrockAgentCoreGateway_policyEngineConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_policyEngineConfigurationClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNamePolicyEngine := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine, awstypes.GatewayPolicyEngineModeLogOnly),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_configuration"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				// Remove the policy_engine_configuration block and assert the set->unset transition converges.
+				Config: testAccGatewayConfig_policyEngineConfigurationCleared(rName, rNamePolicyEngine),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -1338,6 +1480,41 @@ resource "aws_bedrockagentcore_gateway" "test" {
 `, rName))
 }
 
+func testAccGatewayConfig_interceptorConfigurationsCleared(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "%[1]s-lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+}
+`, rName))
+}
+
 func testAccGatewayConfig_customJWTAuthorizer(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
 	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway" "test" {
@@ -1447,6 +1624,29 @@ resource "aws_bedrockagentcore_policy_engine" "test" {
   name = %[2]q
 }
 `, rName, rNamePolicyEngine, mode))
+}
+
+func testAccGatewayConfig_policyEngineConfigurationCleared(rName, rNamePolicyEngine string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[2]q
+}
+`, rName, rNamePolicyEngine))
 }
 
 // TestAccBedrockAgentCoreGateway_payloadFilterRequiresExclude confirms that a
