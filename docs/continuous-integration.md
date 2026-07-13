@@ -793,5 +793,6 @@ make terraform-fmt
     Install [Terraform](https://developer.hashicorp.com/terraform/install) to run this check. On macOS, you can use Homebrew:
 
 ```console
-brew install terraform
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 ```
