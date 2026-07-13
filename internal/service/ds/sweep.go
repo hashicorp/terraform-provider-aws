@@ -38,6 +38,7 @@ func RegisterSweepers() {
 		Name: "aws_directory_service_region",
 		F:    sweepRegions,
 	})
+	awsv2.Register("aws_ds_ad_assessment", sweepADAssessments)
 }
 
 func sweepDirectories(region string) error {
