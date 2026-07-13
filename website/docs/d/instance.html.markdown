@@ -38,7 +38,7 @@ This data source supports the following arguments:
 exactly match a pair on the desired Instance.
 * `filter` - (Optional) One or more filters to apply to the search.
   If multiple `filter` blocks are provided, they all must be true.
-  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html).
   See [`filter` Block](#filter-block) below.
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `get_user_data` - (Optional) Retrieve Base64 encoded User Data contents into the `user_data_base64` attribute. A SHA-1 hash of the User Data contents will always be present in the `user_data` attribute. Defaults to `false`.
@@ -54,7 +54,7 @@ a single Instance ID only.
 The `filter` block supports the following arguments:
 
 * `name` - (Required) Name of the filter.
-  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html).
 * `values` - (Required) One or more values to match.
 
 ## Attribute Reference
@@ -144,5 +144,3 @@ interpolation.
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
-
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

@@ -41,313 +41,315 @@ func resourceLifecyclePolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
-					validation.StringLenBetween(1, 500),
-				),
-			},
-			"default_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DefaultPolicyTypeValues](),
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"policy_details": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cross_region_copy": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MaxItems: 3,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEncryptionConfiguration: {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"cmk_arn": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: verify.ValidARN,
-															},
-															names.AttrEncrypted: {
-																Type:     schema.TypeBool,
-																Optional: true,
-																Default:  false,
-															},
-														},
-													},
-												},
-												"retain_rule": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrInterval: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"interval_unit": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
+						validation.StringLenBetween(1, 500),
+					),
+				},
+				"default_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DefaultPolicyTypeValues](),
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"policy_details": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAction: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cross_region_copy": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEncryptionConfiguration: {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"cmk_arn": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+																names.AttrEncrypted: {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																	Default:  false,
+																},
 															},
 														},
 													},
-												},
-												names.AttrTarget: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
-												},
-											},
-										},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 120),
-											validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
-										),
-									},
-								},
-							},
-						},
-						"copy_tags": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							Default:       false,
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
-						},
-						"create_interval": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Default:       1,
-							ValidateFunc:  validation.IntBetween(1, 7),
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("default_policy").(string) == "" {
-									if old == "0" && new == "1" {
-										return true
-									}
-								}
-								return false
-							},
-						},
-						"exclusions": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							RequiredWith:  []string{"default_policy"},
-							ConflictsWith: []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"exclude_boot_volumes": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"exclude_tags": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"exclude_volume_types": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 6,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"extend_deletion": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							Default:       false,
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
-						},
-						"event_source": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrParameters: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"description_regex": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1000),
-												},
-												"event_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.EventTypeValues](),
-												},
-												"snapshot_owner": {
-													Type:     schema.TypeSet,
-													Required: true,
-													MaxItems: 50,
-													Elem: &schema.Schema{
+													"retain_rule": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrInterval: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"interval_unit": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+																},
+															},
+														},
+													},
+													names.AttrTarget: {
 														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidAccountID,
+														Required:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
 													},
 												},
 											},
 										},
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EventSourceValues](),
-									},
-								},
-							},
-						},
-						names.AttrParameters: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"exclude_boot_volume": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"no_reboot": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 120),
+												validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+											),
+										},
 									},
 								},
 							},
-						},
-						"policy_language": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PolicyLanguageValues](),
-						},
-						"policy_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.PolicyTypeValuesEbsSnapshotManagement,
-							ValidateDiagFunc: enum.Validate[awstypes.PolicyTypeValues](),
-						},
-						"resource_locations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.ResourceLocationValues](),
+							"copy_tags": {
+								Type:          schema.TypeBool,
+								Optional:      true,
+								Default:       false,
+								ConflictsWith: []string{"policy_details.0.schedule"},
+								RequiredWith:  []string{"default_policy"},
 							},
-						},
-						names.AttrResourceType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
-							RequiredWith:     []string{"default_policy"},
-						},
-						"resource_types": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							},
-							ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
-						},
-						"retain_interval": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Default:       7,
-							ValidateFunc:  validation.IntBetween(2, 14),
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("default_policy").(string) == "" {
-									if old == "0" && new == "7" {
-										return true
+							"create_interval": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								Default:       1,
+								ValidateFunc:  validation.IntBetween(1, 7),
+								ConflictsWith: []string{"policy_details.0.schedule"},
+								RequiredWith:  []string{"default_policy"},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if d.Get("default_policy").(string) == "" {
+										if old == "0" && new == "1" {
+											return true
+										}
 									}
-								}
-								return false
+									return false
+								},
 							},
-						},
-						names.AttrSchedule: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 4,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"archive_rule": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"archive_retain_rule": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"retention_archive_tier": {
-																Type:     schema.TypeList,
-																Required: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"count": {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntBetween(1, 1000),
-																		},
-																		names.AttrInterval: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		"interval_unit": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+							"exclusions": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								MaxItems:      1,
+								RequiredWith:  []string{"default_policy"},
+								ConflictsWith: []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"exclude_boot_volumes": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"exclude_tags": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"exclude_volume_types": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 6,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"extend_deletion": {
+								Type:          schema.TypeBool,
+								Optional:      true,
+								Default:       false,
+								ConflictsWith: []string{"policy_details.0.schedule"},
+								RequiredWith:  []string{"default_policy"},
+							},
+							"event_source": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrParameters: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"description_regex": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(0, 1000),
+													},
+													"event_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.EventTypeValues](),
+													},
+													"snapshot_owner": {
+														Type:     schema.TypeSet,
+														Required: true,
+														MaxItems: 50,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidAccountID,
+														},
+													},
+												},
+											},
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.EventSourceValues](),
+										},
+									},
+								},
+							},
+							names.AttrParameters: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"exclude_boot_volume": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"no_reboot": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"policy_language": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PolicyLanguageValues](),
+							},
+							"policy_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.PolicyTypeValuesEbsSnapshotManagement,
+								ValidateDiagFunc: enum.Validate[awstypes.PolicyTypeValues](),
+							},
+							"resource_locations": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.ResourceLocationValues](),
+								},
+							},
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+								ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+								RequiredWith:     []string{"default_policy"},
+							},
+							"resource_types": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+								},
+								ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
+							},
+							"retain_interval": {
+								Type:          schema.TypeInt,
+								Optional:      true,
+								Default:       7,
+								ValidateFunc:  validation.IntBetween(2, 14),
+								ConflictsWith: []string{"policy_details.0.schedule"},
+								RequiredWith:  []string{"default_policy"},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if d.Get("default_policy").(string) == "" {
+										if old == "0" && new == "7" {
+											return true
+										}
+									}
+									return false
+								},
+							},
+							names.AttrSchedule: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 4,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"archive_rule": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"archive_retain_rule": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"retention_archive_tier": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"count": {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntBetween(1, 1000),
+																			},
+																			names.AttrInterval: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			"interval_unit": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+																			},
 																		},
 																	},
 																},
@@ -357,316 +359,316 @@ func resourceLifecyclePolicy() *schema.Resource {
 												},
 											},
 										},
-									},
-									"copy_tags": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
-									"create_rule": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cron_expression": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile("^cron\\([^\n]{11,100}\\)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
-												},
-												names.AttrInterval: {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
-												},
-												"interval_unit": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													Computed:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.IntervalUnitValues](),
-												},
-												names.AttrLocation: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													Computed:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.LocationValues](),
-												},
-												"scripts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"execute_operation_on_script_failure": {
-																Type:     schema.TypeBool,
-																Computed: true,
-																Optional: true,
-															},
-															"execution_handler": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.All(
-																	validation.StringLenBetween(0, 200),
-																	validation.StringMatch(regexache.MustCompile("^([a-zA-Z0-9_\\-.]{3,128}|[a-zA-Z0-9_\\-.:/]{3,200}|[A-Z0-9_]+)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
-																),
-															},
-															"execution_handler_service": {
-																Type:             schema.TypeString,
-																Computed:         true,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.ExecutionHandlerServiceValues](),
-															},
-															"execution_timeout": {
-																Type:         schema.TypeInt,
-																Computed:     true,
-																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 120),
-															},
-															"maximum_retry_count": {
-																Type:         schema.TypeInt,
-																Computed:     true,
-																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 3),
-															},
-															"stages": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 2,
-																Elem: &schema.Schema{
+										"copy_tags": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+										},
+										"create_rule": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cron_expression": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile("^cron\\([^\n]{11,100}\\)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
+													},
+													names.AttrInterval: {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
+													},
+													"interval_unit": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.IntervalUnitValues](),
+													},
+													names.AttrLocation: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.LocationValues](),
+													},
+													"scripts": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"execute_operation_on_script_failure": {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																	Optional: true,
+																},
+																"execution_handler": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(0, 200),
+																		validation.StringMatch(regexache.MustCompile("^([a-zA-Z0-9_\\-.]{3,128}|[a-zA-Z0-9_\\-.:/]{3,200}|[A-Z0-9_]+)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+																	),
+																},
+																"execution_handler_service": {
 																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.StageValues](),
+																	Computed:         true,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ExecutionHandlerServiceValues](),
+																},
+																"execution_timeout": {
+																	Type:         schema.TypeInt,
+																	Computed:     true,
+																	Optional:     true,
+																	ValidateFunc: validation.IntBetween(1, 120),
+																},
+																"maximum_retry_count": {
+																	Type:         schema.TypeInt,
+																	Computed:     true,
+																	Optional:     true,
+																	ValidateFunc: validation.IntBetween(1, 3),
+																},
+																"stages": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MinItems: 1,
+																	MaxItems: 2,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.StageValues](),
+																	},
 																},
 															},
 														},
 													},
-												},
-												"times": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													MaxItems: 1,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringMatch(regexache.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
-													},
-												},
-											},
-										},
-									},
-									"cross_region_copy_rule": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 3,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cmk_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"copy_tags": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Computed: true,
-												},
-												"deprecate_rule": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrInterval: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"interval_unit": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
-															},
+													"times": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														MaxItems: 1,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringMatch(regexache.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
 														},
 													},
 												},
-												names.AttrEncrypted: {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"retain_rule": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrInterval: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"interval_unit": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+											},
+										},
+										"cross_region_copy_rule": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 3,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cmk_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"copy_tags": {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Computed: true,
+													},
+													"deprecate_rule": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrInterval: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"interval_unit": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+																},
 															},
 														},
 													},
-												},
-												names.AttrTarget: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
-												},
-												"target_region": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidRegionName,
-												},
-											},
-										},
-									},
-									"deprecate_rule": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"count": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 1000),
-												},
-												names.AttrInterval: {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												"interval_unit": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
-												},
-											},
-										},
-									},
-									"fast_restore_rule": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAvailabilityZones: {
-													Type:     schema.TypeSet,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 10,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"count": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 1000),
-												},
-												names.AttrInterval: {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												"interval_unit": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
-												},
-											},
-										},
-									},
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 120),
-									},
-									"retain_rule": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"count": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 1000),
-												},
-												names.AttrInterval: {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												"interval_unit": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
-												},
-											},
-										},
-									},
-									"share_rule": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_accounts": {
-													Type:     schema.TypeSet,
-													Required: true,
-													MinItems: 1,
-													Elem: &schema.Schema{
+													names.AttrEncrypted: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+													"retain_rule": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrInterval: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"interval_unit": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+																},
+															},
+														},
+													},
+													names.AttrTarget: {
 														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidAccountID,
+														Optional:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
+													},
+													"target_region": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidRegionName,
 													},
 												},
-												"unshare_interval": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												"unshare_interval_unit": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+											},
+										},
+										"deprecate_rule": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"count": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntBetween(1, 1000),
+													},
+													names.AttrInterval: {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"interval_unit": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+													},
 												},
 											},
 										},
-									},
-									"tags_to_add": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"variable_tags": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										"fast_restore_rule": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAvailabilityZones: {
+														Type:     schema.TypeSet,
+														Required: true,
+														MinItems: 1,
+														MaxItems: 10,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"count": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntBetween(1, 1000),
+													},
+													names.AttrInterval: {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"interval_unit": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+													},
+												},
+											},
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 120),
+										},
+										"retain_rule": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"count": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntBetween(1, 1000),
+													},
+													names.AttrInterval: {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"interval_unit": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+													},
+												},
+											},
+										},
+										"share_rule": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_accounts": {
+														Type:     schema.TypeSet,
+														Required: true,
+														MinItems: 1,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidAccountID,
+														},
+													},
+													"unshare_interval": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													"unshare_interval_unit": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+													},
+												},
+											},
+										},
+										"tags_to_add": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"variable_tags": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"target_tags": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							"target_tags": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SettablePolicyStateValuesEnabled,
-				ValidateDiagFunc: enum.Validate[awstypes.SettablePolicyStateValues](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SettablePolicyStateValuesEnabled,
+					ValidateDiagFunc: enum.Validate[awstypes.SettablePolicyStateValues](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

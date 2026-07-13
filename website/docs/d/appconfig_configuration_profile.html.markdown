@@ -25,9 +25,9 @@ data "aws_appconfig_configuration_profile" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) ID of the AppConfig application to which this configuration profile belongs.
 * `configuration_profile_id` - (Required) ID of the Configuration Profile.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -36,10 +36,12 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Configuration Profile.
 * `description` - Description of the Configuration Profile.
 * `id` - AppConfig Configuration Profile ID and Application ID separated by a colon `(:)`.
+* `kms_key_identifier` - KMS key identifier for encrypting the configuration data.
 * `location_uri` - Location URI of the Configuration Profile.
 * `name` - Name of the Configuration Profile.
 * `retrieval_role_arn` - ARN of an IAM role with permission to access the configuration at the specified location_uri.
 * `tags` - Map of tags for the resource.
+* `type` - Type of the Configuration Profile.
 * `validator` - Nested list of methods for validating the configuration.
     * `content` - Either the JSON Schema content or the ARN of an AWS Lambda function.
     * `type` - Type of validator. Valid values: JSON_SCHEMA and LAMBDA.

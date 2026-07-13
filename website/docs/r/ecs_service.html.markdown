@@ -195,7 +195,7 @@ resource "aws_ecs_service" "example" {
       log_driver = "awslogs"
       options = {
         "awslogs-group"         = aws_cloudwatch_log_group.example.name
-        "awslogs-region"        = data.aws_region.current.name
+        "awslogs-region"        = data.aws_region.current.region
         "awslogs-stream-prefix" = "service-connect"
       }
     }

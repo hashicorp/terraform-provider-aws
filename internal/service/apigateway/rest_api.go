@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
@@ -37,7 +38,11 @@ import (
 
 // @SDKResource("aws_api_gateway_rest_api", name="REST API")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetRestApiOutput", importIgnore="put_rest_api_mode")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPICreate,
@@ -47,128 +52,146 @@ func resourceRestAPI() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
 				d.Set("put_rest_api_mode", types.PutModeOverwrite)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_key_source": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ApiKeySourceType](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"binary_media_types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"disable_execute_api_endpoint": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"endpoint_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddressType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
-						},
-						"types": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_key_source": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ApiKeySourceType](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"binary_media_types": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"disable_execute_api_endpoint": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"endpoint_access_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.EndpointAccessMode](),
+				},
+				"endpoint_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddressType: {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.EndpointType](),
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.IpAddressType](),
 							},
-						},
-						"vpc_endpoint_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"types": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.EndpointType](),
+								},
+							},
+							"vpc_endpoint_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
 						},
 					},
 				},
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fail_on_warnings": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"minimum_compression_size": {
-				Type:         nullable.TypeNullableInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-1, 10485760),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// suppress null trigger when value is already null
-					return old == "" && new == "-1"
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"put_rest_api_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.PutModeOverwrite,
-				ValidateDiagFunc: enum.Validate[types.PutMode](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "" && new == string(types.PutModeOverwrite) {
-						return true
-					}
-					return false
+				"fail_on_warnings": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-			},
-			"root_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"minimum_compression_size": {
+					Type:         nullable.TypeNullableInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-1, 10485760),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// suppress null trigger when value is already null
+						return old == "" && new == "-1"
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"put_rest_api_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.PutModeOverwrite,
+					ValidateDiagFunc: enum.Validate[types.PutMode](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == "" && new == string(types.PutModeOverwrite) {
+							return true
+						}
+						return false
+					},
+				},
+				"root_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.SecurityPolicy](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: endpointConfigurationPlantimeValidate,
@@ -201,6 +224,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DisableExecuteApiEndpoint = v.(bool)
 	}
 
+	if v, ok := d.GetOk("endpoint_access_mode"); ok {
+		input.EndpointAccessMode = types.EndpointAccessMode(v.(string))
+	}
+
 	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
@@ -218,6 +245,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		input.Policy = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("security_policy"); ok {
+		input.SecurityPolicy = types.SecurityPolicy(v.(string))
 	}
 
 	output, err := conn.CreateRestApi(ctx, &input)
@@ -291,14 +322,27 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceRestAPIFlatten(ctx, c, d, api); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if err := resourceRestAPIReadRootResourceID(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, api *apigateway.GetRestApiOutput) error {
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
+	d.Set("endpoint_access_mode", api.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
+		return fmt.Errorf("setting endpoint_configuration: %w", err)
 	}
 	d.Set("execution_arn", apiInvokeARN(ctx, c, d.Id()))
 	if api.MinimumCompressionSize == nil {
@@ -307,7 +351,26 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("minimum_compression_size", flex.Int32ToStringValue(api.MinimumCompressionSize))
 	}
 	d.Set(names.AttrName, api.Name)
+	d.Set("security_policy", api.SecurityPolicy)
 
+	policy, err := flattenAPIPolicy(api.Policy)
+	if err != nil {
+		return err
+	}
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
+	if err != nil {
+		return err
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	setTagsOut(ctx, api.Tags)
+
+	return nil
+}
+
+func resourceRestAPIReadRootResourceID(ctx context.Context, conn *apigateway.Client, d *schema.ResourceData) error {
 	input := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
@@ -321,24 +384,10 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	case retry.NotFound(err):
 		d.Set("root_resource_id", nil)
 	default:
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
+		return fmt.Errorf("reading API Gateway REST API (%s) root resource: %w", d.Id(), err)
 	}
 
-	policy, err := flattenAPIPolicy(api.Policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
-
-	setTagsOut(ctx, api.Tags)
-
-	return diags
+	return nil
 }
 
 func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -401,6 +450,14 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				Op:    types.OpReplace,
 				Path:  aws.String("/disableExecuteApiEndpoint"),
 				Value: aws.String(value),
+			})
+		}
+
+		if d.HasChange("endpoint_access_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/endpointAccessMode"),
+				Value: aws.String(d.Get("endpoint_access_mode").(string)),
 			})
 		}
 
@@ -493,6 +550,14 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				Op:    types.OpReplace,
 				Path:  aws.String("/policy"),
 				Value: aws.String(policy),
+			})
+		}
+
+		if d.HasChange("security_policy") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/securityPolicy"),
+				Value: aws.String(d.Get("security_policy").(string)),
 			})
 		}
 
@@ -659,6 +724,14 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
+	if v, ok := d.GetOk("endpoint_access_mode"); ok && resourceRestAPIAttrConfigured(d, "endpoint_access_mode") && types.EndpointAccessMode(v.(string)) != output.EndpointAccessMode {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/endpointAccessMode"),
+			Value: aws.String(v.(string)),
+		})
+	}
+
 	// Compare the defined values to the output values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
 	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		endpointConfiguration := expandEndpointConfiguration(v.([]any)[0].(map[string]any))
@@ -721,7 +794,10 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk(names.AttrPolicy); ok {
+	// Only re-apply policy after OpenAPI import when policy was configured
+	// explicitly. For Optional+Computed policy, GetOk can be true for a
+	// value that was read from the prior API state.
+	if v, ok := d.GetOk(names.AttrPolicy); ok && resourceRestAPIAttrConfigured(d, names.AttrPolicy) {
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 
@@ -733,7 +809,24 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		}
 	}
 
+	if v, ok := d.GetOk("security_policy"); ok && resourceRestAPIAttrConfigured(d, "security_policy") && types.SecurityPolicy(v.(string)) != output.SecurityPolicy {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/securityPolicy"),
+			Value: aws.String(v.(string)),
+		})
+	}
+
 	return operations
+}
+
+func resourceRestAPIAttrConfigured(d *schema.ResourceData, attr string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.Type().IsObjectType() || !rawConfig.Type().HasAttribute(attr) {
+		return false
+	}
+
+	return !rawConfig.GetAttr(attr).IsNull()
 }
 
 // escapeJSONPointer escapes string per RFC 6901

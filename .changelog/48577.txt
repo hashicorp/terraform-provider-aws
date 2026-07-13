@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_lightsail_key_pair: Mark `private_key` as sensitive
+```
+
+```release-note:bug
+resource/aws_lightsail_bucket_access_key: Mark `secret_access_key` as sensitive
+```
+
+```release-note:bug
+data-source/aws_codeartifact_authorization_token: Mark `authorization_token` as sensitive
+```

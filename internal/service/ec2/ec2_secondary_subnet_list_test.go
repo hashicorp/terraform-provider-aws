@@ -146,13 +146,13 @@ func testAccEC2SecondarySubnet_List_filtered(t *testing.T) {
 					querycheck.ExpectNoIdentity("aws_ec2_secondary_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected1.Value(),
+						names.AttrID:        notExpected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_ec2_secondary_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected2.Value(),
+						names.AttrID:        notExpected2.ValueCheck(),
 					}),
 				},
 			},

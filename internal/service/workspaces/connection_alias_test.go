@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -23,7 +24,7 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +59,7 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,6 +79,14 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspaces.ResourceConnectionAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -87,7 +96,7 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
-	rName := acctest.RandomFQDomainName()
+	rName := acctest.RandomFQDomainName(t)
 	resourceName := "aws_workspaces_connection_alias.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

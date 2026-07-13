@@ -174,7 +174,7 @@ func TestExpandPrimitives(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandFloat64toFloat32(t *testing.T) {
@@ -307,7 +307,7 @@ func TestExpandFloat64toFloat32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -430,7 +430,7 @@ func TestExpandFloat32toFloat64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -565,7 +565,7 @@ func TestExpandInt64toInt32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -680,7 +680,7 @@ func TestExpandInt32toInt64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -740,7 +740,7 @@ func TestFlattenPrimitivePack(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenFloat64(t *testing.T) {
@@ -894,7 +894,7 @@ func TestFlattenFloat64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1010,7 +1010,7 @@ func TestFlattenFloat32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1166,7 +1166,7 @@ func TestFlattenInt64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1282,7 +1282,7 @@ func TestFlattenInt32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1310,5 +1310,5 @@ func TestFlattenTopLevelInt64Ptr(t *testing.T) {
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runTopLevelTestCases(t, testCases, runChecks{})
 }

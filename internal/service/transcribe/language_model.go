@@ -47,57 +47,59 @@ func ResourceLanguageModel() *schema.Resource {
 			Create: schema.DefaultTimeout(600 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_model_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.BaseModelName](),
-			},
-			"input_data_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_access_role_arn": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-						},
-						"s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"tuning_data_s3_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_model_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.BaseModelName](),
+				},
+				"input_data_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_access_role_arn": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+							},
+							"s3_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"tuning_data_s3_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrLanguageCode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.LanguageCode](),
-			},
-			"model_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrLanguageCode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.LanguageCode](),
+				},
+				"model_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

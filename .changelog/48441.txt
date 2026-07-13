@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_dms_s3_endpoint: The `kms_key_arn` attribute has been deprecated. All configurations using `kms_key_arn` should be updated to use the `server_side_encryption_kms_key_id` attribute instead.
+```
+
+```release-note:bug
+resource/aws_dms_s3_endpoint: Fix perpetual diff when `kms_key_arn` is set but not returned by the API for S3 engine endpoints.
+```

@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -22,7 +23,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -55,6 +56,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtFalse),
 				),
 			},
 			{
@@ -74,7 +76,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -93,6 +95,14 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -103,7 +113,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -157,7 +167,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -205,7 +215,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -253,7 +263,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -308,7 +318,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	alias := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -374,7 +384,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -431,6 +441,69 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 	})
 }
 
+func TestAccDSDirectory_enableDirectoryDataAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ds awstypes.DirectoryDescription
+	resourceName := "aws_directory_service_directory.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_enableDirectoryDataAccess(rName, domainName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &ds),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtTrue),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Large"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPassword,
+				},
+			},
+			{
+				Config: testAccDirectoryConfig_enableDirectoryDataAccess(rName, domainName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &ds),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDirectoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
@@ -467,7 +540,6 @@ func testAccCheckDirectoryExists(ctx context.Context, t *testing.T, n string, v 
 		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		output, err := tfds.FindDirectoryByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -684,5 +756,25 @@ resource "aws_directory_service_directory" "test" {
   desired_number_of_domain_controllers = %[2]d
 }
 `, domain, desiredNumber),
+	)
+}
+
+func testAccDirectoryConfig_enableDirectoryDataAccess(rName, domain string, enableDirectoryDataAccess bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  enable_directory_data_access = %[2]t
+}
+`, domain, enableDirectoryDataAccess),
 	)
 }

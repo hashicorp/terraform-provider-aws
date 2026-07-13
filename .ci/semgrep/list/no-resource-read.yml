@@ -1,0 +1,58 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: no-sdkv2-resource-read
+    languages: [go]
+    message: Do not call the resource Read function in a List Resource's List function.
+    paths:
+      include:
+        - "/internal/service"
+      exclude:
+        - "/internal/service/route53/record_list.go"
+        - "/internal/service/route53resolver/rule_association_list.go"
+        - "/internal/service/s3/bucket_acl_list.go"
+        - "/internal/service/s3/bucket_public_access_block_list.go"
+        - "/internal/service/s3/object_list.go"
+        - "/internal/service/secretsmanager/secret_list.go"
+        - "/internal/service/secretsmanager/secret_version_list.go"
+        - "/internal/service/sqs/queue_list.go"
+        - "/internal/service/ssm/parameter_list.go"
+    patterns:
+      - pattern: |
+          func ($L *$TYPE) List($CTX context.Context, $REQ list.ListRequest, $STREAM *list.ListResultsStream) {
+            ...
+            $RESULT := $FN(...)
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^resource\w+Read$
+    severity: WARNING
+
+  - id: no-empty-id-check-after-flatten
+    languages: [go]
+    message: Do not check for empty ID after calling a flatten function in a List Resource. The flatten function does not clear the ID.
+    paths:
+      include:
+        - "/internal/service"
+      exclude:
+        - "/internal/service/dynamodb/table_list.go"
+        - "/internal/service/ecs/task_definition_list.go"
+        - "/internal/service/kms/alias_list.go"
+        - "/internal/service/kms/key_list.go"
+        - "/internal/service/lambda/permission_list.go"
+        - "/internal/service/route53/zone_list.go"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $DIAGS := $FN(...)
+              if $DIAGS.HasError() || $RD.Id() == "" { ... }
+          - pattern: |
+              $DIAGS := $FN(...)
+              ...
+              if $RD.Id() == "" { ... }
+      - metavariable-regex:
+          metavariable: $FN
+          regex: ^resource\w+Flatten$
+    severity: WARNING

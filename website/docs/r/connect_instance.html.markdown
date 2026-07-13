@@ -28,7 +28,7 @@ resource "aws_connect_instance" "test" {
 }
 ```
 
-## Example Usage with Existing Active Directory
+### Example Usage with Existing Active Directory
 
 ```terraform
 resource "aws_connect_instance" "test" {
@@ -40,7 +40,7 @@ resource "aws_connect_instance" "test" {
 }
 ```
 
-## Example Usage with SAML
+### Example Usage with SAML
 
 ```terraform
 resource "aws_connect_instance" "test" {

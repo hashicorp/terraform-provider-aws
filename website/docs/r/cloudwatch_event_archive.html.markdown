@@ -25,7 +25,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 }
 ```
 
-## Example Usage Optional Arguments
+### Example Usage Optional Arguments
 
 ```terraform
 resource "aws_cloudwatch_event_bus" "order" {
@@ -43,7 +43,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 }
 ```
 
-## Example Usage CMK Encryption
+### Example Usage CMK Encryption
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -131,17 +131,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge archive using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_archive.imported_event_archive.test
-  id = "order-archive"
+  to = aws_cloudwatch_event_archive.example
+  identity = {
+    name = "example-archive"
+  }
+}
+
+resource "aws_cloudwatch_event_archive" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import an EventBridge archive using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the archive.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Archives using `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_archive.example
+  id = "example-archive"
+}
+```
+
+Using `terraform import`, import Archives using `name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+% terraform import aws_cloudwatch_event_archive.example example-archive
 ```

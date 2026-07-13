@@ -54,6 +54,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3tables_table_bucket_replication.example
+  identity = {
+    table_bucket_arn = "arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket"
+  }
+}
+
+resource "aws_s3tables_table_bucket_replication" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `table_bucket_arn` (String) ARN of the S3 Tables Table Bucket.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Bucket Replication using the `table_bucket_arn`. For example:
 
 ```terraform

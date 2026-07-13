@@ -14,90 +14,99 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_ipam_pool_cidr_allocation", name="IPAM Pool CIDR Allocation")
+// @Tags(identifierAttribute="ipam_pool_allocation_id")
+// @Testing(tagsTest=false)
 func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPoolCIDRAllocationCreate,
 		ReadWithoutTimeout:   resourceIPAMPoolCIDRAllocationRead,
+		UpdateWithoutTimeout: resourceIPAMPoolCIDRAllocationUpdate,
 		DeleteWithoutTimeout: resourceIPAMPoolCIDRAllocationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cidr": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ConflictsWith: []string{"netmask_length"},
-				ValidateFunc: validation.Any(
-					verify.ValidIPv4CIDRNetworkAddress,
-					verify.ValidIPv6CIDRNetworkAddress,
-				),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"disallowed_cidrs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cidr": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					ConflictsWith: []string{"netmask_length"},
 					ValidateFunc: validation.Any(
 						verify.ValidIPv4CIDRNetworkAddress,
-						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 128),
+						verify.ValidIPv6CIDRNetworkAddress,
 					),
 				},
-			},
-			"ipam_pool_allocation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ValidateFunc:  validation.IntBetween(0, 128),
-				ConflictsWith: []string{"cidr"},
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"disallowed_cidrs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.Any(
+							verify.ValidIPv4CIDRNetworkAddress,
+							// Follow the numbers used for netmask_length
+							validation.IsCIDRNetwork(0, 128),
+						),
+					},
+				},
+				"ipam_pool_allocation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					ValidateFunc:  validation.IntBetween(0, 128),
+					ConflictsWith: []string{"cidr"},
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -108,8 +117,9 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 
 	ipamPoolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
-		IpamPoolId:  aws.String(ipamPoolID),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
+		IpamPoolId:        aws.String(ipamPoolID),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamPoolAllocation),
 	}
 
 	if v, ok := d.GetOk("cidr"); ok {
@@ -189,7 +199,15 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
 	d.Set(names.AttrResourceType, allocation.ResourceType)
 
+	setTagsOut(ctx, allocation.Tags)
+
 	return diags
+}
+
+func resourceIPAMPoolCIDRAllocationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	// Only tags can be updated; transparent tagging handles the update
+	var diags diag.Diagnostics
+	return append(diags, resourceIPAMPoolCIDRAllocationRead(ctx, d, meta)...)
 }
 
 func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

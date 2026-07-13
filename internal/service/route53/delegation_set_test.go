@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -56,7 +57,7 @@ func TestAccRoute53DelegationSet_withZones(t *testing.T) {
 	primaryZoneResourceName := "aws_route53_zone.primary"
 	secondaryZoneResourceName := "aws_route53_zone.secondary"
 
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	zoneName1 := fmt.Sprintf("primary.%s", domain)
 	zoneName2 := fmt.Sprintf("secondary.%s", domain)
 
@@ -104,6 +105,14 @@ func TestAccRoute53DelegationSet_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceDelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

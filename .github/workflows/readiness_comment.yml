@@ -4,8 +4,8 @@
 name: Readiness Comment
 
 permissions:
-  contents: read
-  pull-requests: write
+  contents: read        # required for checkout
+  pull-requests: write  # required to comment on pull requests
 
 on:
   pull_request_target:
@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Check for Dependency or Changelog Changes
         id: filter
-        uses: dorny/paths-filter@9d7afb8d214ad99e78fbd4247752c4caed2b6e4c # v4.0.0
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         with:
           filters: |
             dependencies:
@@ -42,7 +42,7 @@ jobs:
           !github.event.pull_request.draft
           && !contains(toJSON(github.event.pull_request.labels.*.name), 'no-changelog-needed')
         id: changelog-update-needed
-        uses: dorny/paths-filter@9d7afb8d214ad99e78fbd4247752c4caed2b6e4c # v4.0.0
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         with:
           predicate-quantifier: 'every'
           filters: |
@@ -52,7 +52,7 @@ jobs:
             has:
               - '.changelog/**'
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         id: checkout
         if: |
           steps.filter.outputs.changelog == 'true'

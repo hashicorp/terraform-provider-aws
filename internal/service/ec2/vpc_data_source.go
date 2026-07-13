@@ -34,140 +34,142 @@ func dataSourceVPC() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cidr_block_associations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrCIDRBlock: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"network_border_group": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipam_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSource: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"cidr_block_associations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrCIDRBlock: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"network_border_group": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipam_pool_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSource: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"default": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns_hostnames": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_dns_support": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_network_address_usage_metrics": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block_associations": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"address_attribute": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrCIDRBlock: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSource: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"network_border_group": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipam_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"default": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns_hostnames": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_dns_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_network_address_usage_metrics": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_tenancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block_associations": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"address_attribute": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrCIDRBlock: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSource: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"network_border_group": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipam_pool_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"ipv6_cidr_block": {
-				Type:       schema.TypeString,
-				Deprecated: "ipv6_cidr_block is deprecated. Use ipv6_cidr_block_associations instead.",
-				Computed:   true,
-			},
-			"ipv6_association_id": {
-				Type:       schema.TypeString,
-				Deprecated: "ipv6_association_id is deprecated. Use ipv6_cidr_block_associations instead.",
-				Computed:   true,
-			},
-			"main_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"ipv6_cidr_block": {
+					Type:       schema.TypeString,
+					Deprecated: "ipv6_cidr_block is deprecated. Use ipv6_cidr_block_associations instead.",
+					Computed:   true,
+				},
+				"ipv6_association_id": {
+					Type:       schema.TypeString,
+					Deprecated: "ipv6_association_id is deprecated. Use ipv6_cidr_block_associations instead.",
+					Computed:   true,
+				},
+				"main_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

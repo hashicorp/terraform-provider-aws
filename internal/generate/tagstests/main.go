@@ -10,8 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"iter"
 	"os"
 	"path"
@@ -85,7 +83,19 @@ func main() {
 		g: g,
 	}
 
-	v.processDir(".")
+	for file, err := range common.ScanDirectory(".") {
+		if err != nil {
+			g.Fatalf("%s", err.Error())
+		}
+
+		v.packageName = file.PackageName()
+		v.fileName = file.Name()
+
+		v.processFile(file.File())
+
+		v.fileName = ""
+		v.packageName = ""
+	}
 
 	if err := errors.Join(v.errs...); err != nil {
 		g.Fatalf("%s", err.Error())
@@ -473,35 +483,6 @@ type visitor struct {
 	taggedResources []ResourceDatum
 }
 
-// processDir scans a single service package directory and processes contained Go sources files.
-func (v *visitor) processDir(path string) {
-	fileSet := token.NewFileSet()
-	packageMap, err := parser.ParseDir(fileSet, path, func(fi os.FileInfo) bool {
-		// Skip tests.
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
-
-	if err != nil {
-		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
-
-		return
-	}
-
-	for name, pkg := range packageMap {
-		v.packageName = name
-
-		for name, file := range pkg.Files {
-			v.fileName = name
-
-			v.processFile(file)
-
-			v.fileName = ""
-		}
-
-		v.packageName = ""
-	}
-}
-
 // processFile processes a single Go source file.
 func (v *visitor) processFile(file *ast.File) {
 	ast.Walk(v, file)
@@ -518,7 +499,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs: tests.InitCommonArgs(),
 	}
 	tagged := false
-	skip := false
+	generateTests := common.TriBooleanUnset
 	tlsKey := false
 	var tlsKeyCN string
 	hasIdentifierAttribute := false
@@ -527,7 +508,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			args, err := common.ParseArgs(m[3])
+			if err != nil {
+				v.errs = append(v.errs, fmt.Errorf("parsing annotation arguments in %s.%s: %w", v.packageName, v.functionName, err))
+				continue
+			}
+			switch annotationName := m[1]; annotationName {
 			case "FrameworkDataSource":
 				d.IsDataSource = true
 				fallthrough
@@ -594,11 +580,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					switch attr {
 					case "true":
 						// Add tagging tests for non-transparent tagging resources
-						tagged = true
+						generateTests = common.TriBooleanTrue
 
 					case "false":
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
-						skip = true
+						generateTests = common.TriBooleanFalse
 
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -669,7 +655,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = "acctest.RandomDomain().String()"
+			tlsKeyCN = "acctest.RandomDomain(t).String()"
 			d.GoImports = append(d.GoImports,
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
@@ -691,13 +677,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	if tagged {
-		if !skip {
+		if generateTests == common.TriBooleanTrue {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=true) specified, but resource type supports transparent tagging", v.packageName, v.functionName))
+			return
+		} else if generateTests != common.TriBooleanFalse {
 			if err := tests.Configure(&d.CommonArgs); err != nil {
 				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
-				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: @Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
 				return
 			}
 			if d.HasInherentRegionIdentity() {
@@ -712,6 +701,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			v.taggedResources = append(v.taggedResources, d)
+		}
+	} else {
+		if generateTests == common.TriBooleanFalse {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=false) specified, but resource type doesn't support tags", v.packageName, v.functionName))
+			return
 		}
 	}
 

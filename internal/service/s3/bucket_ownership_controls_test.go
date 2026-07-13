@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -65,6 +66,14 @@ func TestAccS3BucketOwnershipControls_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketOwnershipControls(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_ownership_controls.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_ownership_controls.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,6 +98,14 @@ func TestAccS3BucketOwnershipControls_Disappears_bucket(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), s3BucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_ownership_controls.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_ownership_controls.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -163,7 +180,7 @@ func testAccCheckBucketOwnershipControlsDestroy(ctx context.Context, t *testing.
 				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 			}
 
-			_, err := tfs3.FindOwnershipControls(ctx, conn, rs.Primary.ID)
+			_, err := tfs3.FindBucketOwnershipControls(ctx, conn, rs.Primary.ID)
 
 			if retry.NotFound(err) {
 				continue
@@ -192,7 +209,7 @@ func testAccCheckBucketOwnershipControlsExists(ctx context.Context, t *testing.T
 			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 		}
 
-		_, err := tfs3.FindOwnershipControls(ctx, conn, rs.Primary.ID)
+		_, err := tfs3.FindBucketOwnershipControls(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

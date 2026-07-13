@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_sagemaker_training_job
+```
+
+```release-note:new-list-resource
+aws_sagemaker_training_job
+```

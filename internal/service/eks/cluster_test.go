@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -92,6 +93,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "EXTENDED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.control_plane_egress_mode", "AWS_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "0"),
@@ -129,6 +131,14 @@ func TestAccEKSCluster_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -241,8 +251,15 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(false)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -252,15 +269,17 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(true)),
+				},
 			},
 		},
 	})
@@ -268,7 +287,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 
 func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -286,18 +305,28 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 				},
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(true)),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -628,7 +657,7 @@ func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
 
 func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -641,10 +670,18 @@ func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 			{
 				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-xl"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "tier-xl"),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_plane_scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"tier": tfknownvalue.StringExact(types.ProvisionedControlPlaneTierTierXl),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -653,13 +690,36 @@ func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
+				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-8xl"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_plane_scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"tier": tfknownvalue.StringExact(types.ProvisionedControlPlaneTierTier8xl),
+					})})),
+				},
+			},
+			{
 				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "standard"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "standard"),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_plane_scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"tier": tfknownvalue.StringExact(types.ProvisionedControlPlaneTierStandard),
+					})})),
+				},
 			},
 		},
 	})
@@ -1179,6 +1239,38 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 	})
 }
 
+// TestAccEKSCluster_VPC_controlPlaneEgressMode requires internet access: the VPC includes
+// a NAT gateway so the EKS control plane can reach AWS APIs in CUSTOMER_ROUTED egress mode.
+func TestAccEKSCluster_VPC_controlPlaneEgressMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_vpcControlPlaneEgressMode(rName, "CUSTOMER_ROUTED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.control_plane_egress_mode", "CUSTOMER_ROUTED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
@@ -1322,8 +1414,8 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	controlPlaneInstanceType := "m5d.large"
-
+	controlPlaneInstanceType := "r7izde.4xlarge"
+	etcdInstanceType := "r7izde.4xlarge"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
@@ -1334,9 +1426,9 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				Config: testAccClusterConfig_outpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.etcd_instance_type", etcdInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
 				),
 			},
@@ -1344,7 +1436,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons", "remote_network_config"},
 			},
 		},
 	})
@@ -1355,8 +1447,8 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	controlPlaneInstanceType := "m5d.large"
-
+	controlPlaneInstanceType := "r7izde.4xlarge"
+	etcdInstanceType := "r7izde.4xlarge"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
@@ -1367,11 +1459,12 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 				Config: testAccClusterConfig_outpostPlacement(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.etcd_instance_type", etcdInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_placement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.etcd_placement.#", "1"),
 				),
 			},
 			{
@@ -2457,6 +2550,165 @@ resource "aws_eks_cluster" "test" {
 `, rName, publicAccessCidr))
 }
 
+func testAccClusterConfig_vpcControlPlaneEgressMode(rName string, egressMode string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
+resource "aws_iam_role" "cluster" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "${data.aws_service_principal.eks.name}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "public" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count = 2
+
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_eip" "nat" {
+  count = 2
+
+  domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_nat_gateway" "test" {
+  count = 2
+
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index + 2}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_route_table" "private" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.test[count.index].id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.private[count.index].id
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    control_plane_egress_mode = %[2]q
+    endpoint_private_access   = true
+    endpoint_public_access    = false
+    subnet_ids                = aws_subnet.test[*].id
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+    aws_route_table_association.test,
+  ]
+}
+`, rName, egressMode))
+}
+
 func testAccClusterConfig_networkServiceIPv4CIDR(rName string, serviceIpv4Cidr string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
@@ -2505,26 +2757,31 @@ data "aws_outposts_outpost" "test" {
   id = "op-XXXXXXXX"
 }
 
-data "aws_subnets" test {
-  filter {
-    name   = "outpost-arn"
-    values = [data.aws_outposts_outpost.test.arn]
-  }
-}
-
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = data.aws_iam_role.cluster.arn
+  role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
-    control_plane_instance_type = "m5d.large"
+    control_plane_instance_type = "r7izde.4xlarge"
+    etcd_instance_type          = "r7izde.4xlarge"
     outpost_arns                = [data.aws_outposts_outpost.test.arn]
+  }
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with remote network config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  remote_network_config {
+    remote_pod_networks {
+      cidrs = ["100.64.0.0/16", "100.80.0.0/16", "100.96.0.0/16", "100.112.0.0/16"]
+    }
   }
 
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+    subnet_ids              = ["subnet-XXX"]
   }
 }
 `, rName))
@@ -2536,17 +2793,8 @@ data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
 
-data "aws_outposts_outposts" "test" {}
-
 data "aws_outposts_outpost" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)[0]
-}
-
-data "aws_subnets" test {
-  filter {
-    name   = "outpost-arn"
-    values = [data.aws_outposts_outpost.test.arn]
-  }
+  id = "op-XXXXXXXX"
 }
 
 resource "aws_placement_group" "test" {
@@ -2556,20 +2804,30 @@ resource "aws_placement_group" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = data.aws_iam_role.cluster.arn
+  role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
-    control_plane_instance_type = "m5d.large"
+    control_plane_instance_type = "r7izde.4xlarge"
     control_plane_placement {
-      group_name = aws_placement_group.test.name
+      spread_level = "host"
+    }
+    etcd_instance_type = "r7izde.4xlarge"
+    etcd_placement {
+      spread_level = "host"
     }
     outpost_arns = [data.aws_outposts_outpost.test.arn]
+  }
+
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with remote network config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
   }
 
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = false
-    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+    subnet_ids              = ["subnet-XXX"]
   }
 }
 `, rName))

@@ -108,7 +108,7 @@ This resource supports the following arguments:
 
 * `certificate_transparency_logging_preference` (Optional) - Certificate transparency logging preference. Valid values: `enabled`, `disabled`.
 * `primary_domain_name` (Optional) - Primary domain name for the certificate.
-* `validation_token_host` (Optional) - Host for validation token. Valid values: `cloudfront`, `domain`.
+* `validation_token_host` (Optional) - Host for validation token. Valid values: `cloudfront`, `self-hosted`.
 
 #### Parameter Arguments
 
@@ -124,6 +124,18 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Current status of the distribution tenant.
 * `etag` - Current version of the distribution tenant.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+~> **NOTE:** In versions prior to `v6.51.0`, resource timeouts were accepted but not enforced. Timeouts are now fully enforced. If you have previously configured custom timeouts, they will now take effect.
+
+~> **NOTE:** When using `managed_certificate_request`, the managed certificate issuance uses a fixed 3 hour timeout regardless of the configured resource timeout. This behavior will be updated in a future major version.
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `45m`)
+* `update` - (Default `45m`)
+* `delete` - (Default `45m`)
 
 ## Import
 
