@@ -45,15 +45,15 @@ type ValidatorResponse struct {
 	Diagnostics diag.Diagnostics
 }
 
-func (av ExactlyOneOfValidator) Description(ctx context.Context) string {
-	return av.MarkdownDescription(ctx)
+func (v ExactlyOneOfValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
 }
 
-func (av ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.PathExpressions)
+func (v ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", v.PathExpressions)
 }
 
-func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+func (v ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
 	validateReq := ValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
@@ -62,16 +62,15 @@ func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validato
 	}
 	var validateResp ValidatorResponse
 
-	av.Validate(ctx, validateReq, &validateResp)
+	v.validate(ctx, validateReq, &validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ValidatorRequest, res *ValidatorResponse) {
+func (v ExactlyOneOfValidator) validate(ctx context.Context, req ValidatorRequest, resp *ValidatorResponse) {
 	count := 0
-	expressions := req.PathExpression.MergeExpressions(av.PathExpressions...)
 
-	// If current attribute is unknown, delay validation
+	// If current attribute is unknown, delay validation.
 	if req.ConfigValue.IsUnknown() {
 		return
 	}
@@ -84,33 +83,27 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ValidatorReque
 		count++
 	}
 
-	for _, expression := range expressions {
+	expressions := req.PathExpression.MergeExpressions(v.PathExpressions...)
+	for _, expression := range req.PathExpression.MergeExpressions(v.PathExpressions...) {
 		matchedPaths, diags := req.Config.PathMatches(ctx, expression)
-
-		res.Diagnostics.Append(diags...)
-
-		// Collect all errors
+		resp.Diagnostics.Append(diags...)
 		if diags.HasError() {
 			continue
 		}
 
 		for _, mp := range matchedPaths {
-			// If the user specifies the same attribute this validator is applied to,
-			// also as part of the input, skip it
+			// Skip self.
 			if mp.Equal(req.Path) {
 				continue
 			}
 
 			var mpVal attr.Value
-			diags := req.Config.GetAttribute(ctx, mp, &mpVal)
-			res.Diagnostics.Append(diags...)
-
-			// Collect all errors
-			if diags.HasError() {
-				continue
+			resp.Diagnostics.Append(req.Config.GetAttribute(ctx, mp, &mpVal)...)
+			if resp.Diagnostics.HasError() {
+				return
 			}
 
-			// Delay validation until all involved attribute have a known value
+			// Defer if any target is unknown; we cannot decide yet.
 			if mpVal.IsUnknown() {
 				return
 			}
@@ -121,15 +114,14 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ValidatorReque
 		}
 	}
 
-	if count == 0 {
-		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+	switch {
+	case count == 0:
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", expressions),
 		))
-	}
-
-	if count > 1 {
-		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+	case count > 1:
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("%d attributes specified when one (and only one) of %s is required", count, expressions),
 		))
