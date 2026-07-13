@@ -27,34 +27,36 @@ func dataSourceQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueryLogConfigRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: namevaluesfilters.Schema(),
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validResolverName,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resolver_query_log_config_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestinationARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: namevaluesfilters.Schema(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validResolverName,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resolver_query_log_config_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"share_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

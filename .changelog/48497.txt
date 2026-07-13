@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `control_plane_egress_mode` argument to `vpc_config` block
+```
+
+```release-note:enhancement
+data-source/aws_eks_cluster: Add `control_plane_egress_mode` attribute to `vpc_config` block
+```

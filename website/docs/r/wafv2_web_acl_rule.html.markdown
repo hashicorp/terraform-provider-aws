@@ -833,6 +833,7 @@ resource "aws_wafv2_web_acl_rule" "example" {
 
 #### Optional
 
+* `account_id` (String) Account ID where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACL Rules using the `web_acl_arn` and `name` separated by a comma (`,`). For example:

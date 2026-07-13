@@ -233,8 +233,6 @@ The following arguments are optional:
 * `publicly_accessible` - (Default `false`) Configures the DB instance with a public IP to facilitate access. Other resources, such as a VPC, a subnet, an internet gateway, and a route table with routes, are also required to enabled public access, in addition to this argument. See "[Usage with Public Internet Access Enabled](#usage-with-public-internet-access-enabled)" for an example configuration with all required resources for public internet access.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested Fields
-
 #### `log_delivery_configuration`
 
 * `s3_configuration` - (Required) Configuration for S3 bucket log delivery.

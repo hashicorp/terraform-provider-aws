@@ -23,71 +23,73 @@ func dataSourceLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinkRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"label": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"label_template": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"link_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_group_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrFilter: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"label": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"label_template": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"link_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"log_group_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrFilter: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"metric_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrFilter: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"metric_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrFilter: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"link_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"link_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"link_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"sink_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"link_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"sink_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

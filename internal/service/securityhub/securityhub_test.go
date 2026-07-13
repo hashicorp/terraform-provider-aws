@@ -27,6 +27,13 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"tags":               testAccAccountV2_tags,
 			"Identity":           testAccSecurityHubAccountV2_identitySerial,
 		},
+		"ActionTarget": {
+			acctest.CtBasic:      testAccActionTarget_basic,
+			acctest.CtDisappears: testAccActionTarget_disappears,
+			"Description":        testAccActionTarget_Description,
+			"Name":               testAccActionTarget_Name,
+			"Identity":           testAccSecurityHubActionTarget_identitySerial,
+		},
 		"AggregatorV2": {
 			acctest.CtBasic:      testAccAggregatorV2_basic,
 			acctest.CtDisappears: testAccAggregatorV2_disappears,
@@ -45,12 +52,15 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"tags":               testAccAutomationRule_tags,
 			"Identity":           testAccSecurityHubAutomationRule_identitySerial,
 		},
-		"ActionTarget": {
-			acctest.CtBasic:      testAccActionTarget_basic,
-			acctest.CtDisappears: testAccActionTarget_disappears,
-			"Description":        testAccActionTarget_Description,
-			"Name":               testAccActionTarget_Name,
-			"Identity":           testAccSecurityHubActionTarget_identitySerial,
+		"AutomationRuleV2": {
+			acctest.CtBasic:       testAccAutomationRuleV2_basic,
+			acctest.CtDisappears:  testAccAutomationRuleV2_disappears,
+			"update":              testAccAutomationRuleV2_update,
+			"tags":                testAccAutomationRuleV2_tags,
+			"Identity":            testAccSecurityHubAutomationRuleV2_identitySerial,
+			"ListBasic":           testAccAutomationRuleV2_List_basic,
+			"ListIncludeResource": testAccAutomationRuleV2_List_includeResource,
+			"ListRegionOverride":  testAccAutomationRuleV2_List_regionOverride,
 		},
 		"ConfigurationPolicy": {
 			acctest.CtBasic:      testAccConfigurationPolicy_basic,

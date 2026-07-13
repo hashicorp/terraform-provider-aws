@@ -64,145 +64,147 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"at_rest_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"auth_token_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"automatic_failover_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"cache_node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cluster_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validRedisVersionString,
-					validValkeyVersionString,
-				),
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
-						oldVersion, err := gversion.NewVersion(old)
-						if err != nil {
-							return false
-						}
-						return oldVersion.Segments()[0] >= 6
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_node_groups": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"global_node_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"slots": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"at_rest_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"auth_token_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"automatic_failover_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"cache_node_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"cluster_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						validRedisVersionString,
+						validValkeyVersionString,
+					),
+					DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+						if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
+							oldVersion, err := gversion.NewVersion(old)
+							if err != nil {
+								return false
+							}
+							return oldVersion.Segments()[0] >= 6
+						}
+						return false
+					},
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"global_node_groups": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"global_node_group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"slots": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"global_replication_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_replication_group_id_suffix": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"global_replication_group_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					if (old == emptyDescription && new == "") || (old == "" && new == emptyDescription) {
-						return true
-					}
-					return false
+				"global_replication_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				StateFunc: func(v any) string {
-					s := v.(string)
-					if s == "" {
-						return emptyDescription
-					}
-					return s
+				"global_replication_group_id_suffix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			// global_replication_group_members cannot be correctly implemented because any secondary
-			// replication groups will be added after this resource completes.
-			// "global_replication_group_members": {
-			// 	Type:     schema.TypeSet,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"replication_group_id": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"replication_group_region": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"role": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
-			"num_node_groups": {
-				Type:         schema.TypeInt,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"primary_replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateReplicationGroupID,
-			},
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"global_replication_group_description": {
+					Type:     schema.TypeString,
+					Optional: true,
+					DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+						if (old == emptyDescription && new == "") || (old == "" && new == emptyDescription) {
+							return true
+						}
+						return false
+					},
+					StateFunc: func(v any) string {
+						s := v.(string)
+						if s == "" {
+							return emptyDescription
+						}
+						return s
+					},
+				},
+				// global_replication_group_members cannot be correctly implemented because any secondary
+				// replication groups will be added after this resource completes.
+				// "global_replication_group_members": {
+				// 	Type:     schema.TypeSet,
+				// 	Computed: true,
+				// 	Elem: &schema.Resource{
+				// 		Schema: map[string]*schema.Schema{
+				// 			"replication_group_id": {
+				// 				Type:     schema.TypeString,
+				// 				Computed: true,
+				// 			},
+				// 			"replication_group_region": {
+				// 				Type:     schema.TypeString,
+				// 				Computed: true,
+				// 			},
+				// 			"role": {
+				// 				Type:     schema.TypeString,
+				// 				Computed: true,
+				// 			},
+				// 		},
+				// 	},
+				// },
+				"num_node_groups": {
+					Type:         schema.TypeInt,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"primary_replication_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateReplicationGroupID,
+				},
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -440,9 +442,9 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("global_node_groups", flattenGlobalNodeGroups(globalReplicationGroup.GlobalNodeGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_node_groups: %s", err)
 	}
+
 	d.Set("num_node_groups", len(globalReplicationGroup.GlobalNodeGroups))
 	d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
-
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
 	return diags
@@ -873,8 +875,14 @@ func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []awstypes.Gl
 		return false
 	}
 
-	member := members[0]
-	return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled
+	for _, member := range members {
+		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
+			return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled ||
+				member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabling
+		}
+	}
+
+	return false
 }
 
 func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {

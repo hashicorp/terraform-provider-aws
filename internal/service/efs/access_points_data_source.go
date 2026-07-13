@@ -24,22 +24,24 @@ func dataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessPointsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFileSystemID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFileSystemID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -49,11 +51,11 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fileSystemID := d.Get(names.AttrFileSystemID).(string)
-	input := &efs.DescribeAccessPointsInput{
+	input := efs.DescribeAccessPointsInput{
 		FileSystemId: aws.String(fileSystemID),
 	}
 
-	output, err := findAccessPointDescriptions(ctx, conn, input)
+	output, err := findAccessPointDescriptions(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Access Points: %s", err)
@@ -77,7 +79,6 @@ func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *e
 	var output []awstypes.AccessPointDescription
 
 	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

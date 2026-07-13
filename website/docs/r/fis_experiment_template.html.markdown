@@ -48,7 +48,7 @@ resource "aws_fis_experiment_template" "example" {
 }
 ```
 
-## Example Usage with Report Configuration
+### Example Usage with Report Configuration
 
 ```terraform
 data "aws_partition" "current" {}
@@ -284,6 +284,14 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Experiment Template ID.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

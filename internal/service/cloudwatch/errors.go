@@ -4,9 +4,28 @@
 package cloudwatch
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"errors"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 var (
-	errCodeResourceNotFound = (*types.ResourceNotFound)(nil).ErrorCode()
+	errCodeResourceNotFound = (*awstypes.ResourceNotFound)(nil).ErrorCode()
 )
+
+func partialFailuresError(apiObjects []awstypes.PartialFailure) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		errs = append(errs, fmt.Errorf("%s %s: %w", aws.ToString(apiObject.ExceptionType), aws.ToString(apiObject.FailureResource), partialFailureError(apiObject)))
+	}
+
+	return errors.Join(errs...)
+}
+
+func partialFailureError(apiObject awstypes.PartialFailure) error {
+	return errs.APIError(aws.ToString(apiObject.FailureCode), aws.ToString(apiObject.FailureDescription))
+}
