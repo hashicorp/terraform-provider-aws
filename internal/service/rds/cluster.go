@@ -1470,128 +1470,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAllocatedStorage, dbc.AllocatedStorage)
-	clusterARN := aws.ToString(dbc.DBClusterArn)
-	d.Set(names.AttrARN, clusterARN)
-	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
-	d.Set(names.AttrAutoMinorVersionUpgrade, dbc.AutoMinorVersionUpgrade)
-	d.Set("backtrack_window", dbc.BacktrackWindow)
-	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	if dbc.CertificateDetails != nil {
-		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
-		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
+	if err := resourceClusterFlatten(ctx, conn, dbc, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
-	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
-	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
-	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
-		return aws.ToString(v.DBInstanceIdentifier)
-	}))
-	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
-	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
-	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
-	// Only set the DatabaseName if it is not nil. There is a known API bug where
-	// RDS accepts a DatabaseName but does not return it, causing a perpetual
-	// diff.
-	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
-	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
-	}
-	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
-	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
-	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
-	d.Set("db_system_id", dbc.DBSystemId)
-	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
-	if len(dbc.DomainMemberships) > 0 {
-		domainMembership := dbc.DomainMemberships[0]
-		d.Set(names.AttrDomain, domainMembership.Domain)
-		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
-	} else {
-		d.Set(names.AttrDomain, nil)
-		d.Set("domain_iam_role_name", nil)
-	}
-	d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
-	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
-	d.Set(names.AttrEndpoint, dbc.Endpoint)
-	d.Set(names.AttrEngine, dbc.Engine)
-	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
-	d.Set("engine_mode", dbc.EngineMode)
-	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
-	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
-	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
-	d.Set("iam_roles", tfslices.ApplyToAll(dbc.AssociatedRoles, func(v types.DBClusterRole) string {
-		return aws.ToString(v.RoleArn)
-	}))
-	d.Set(names.AttrIOPS, dbc.Iops)
-	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
-	// Note: the following attributes are not returned by the API
-	// when conducting a read after a create, so we rely on Terraform's
-	// implicit state passthrough, and they are treated as virtual attributes.
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
-	//
-	// manage_master_user_password
-	// master_password
-	//
-	// Expose the MasterUserSecret structure as a computed attribute
-	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
-	if dbc.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
-		}
-	} else {
-		d.Set("master_user_secret", nil)
-	}
-	d.Set("master_username", dbc.MasterUsername)
-	d.Set("monitoring_interval", dbc.MonitoringInterval)
-	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
-	d.Set("network_type", dbc.NetworkType)
-	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
-	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
-	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
-	d.Set(names.AttrPort, dbc.Port)
-	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
-	d.Set("reader_endpoint", dbc.ReaderEndpoint)
-	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
-	if dbc.ScalingConfigurationInfo != nil {
-		if err := d.Set("scaling_configuration", []any{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting scaling_configuration: %s", err)
-		}
-	} else {
-		d.Set("scaling_configuration", nil)
-	}
-	if dbc.ServerlessV2ScalingConfiguration != nil {
-		if err := d.Set("serverlessv2_scaling_configuration", []any{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
-		}
-	} else {
-		d.Set("serverlessv2_scaling_configuration", nil)
-	}
-	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
-	d.Set(names.AttrStorageType, dbc.StorageType)
-	d.Set("upgrade_rollout_order", dbc.UpgradeRolloutOrder)
-	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
-		return aws.ToString(v.VpcSecurityGroupId)
-	}))
-
-	// Fetch and save Global Cluster if engine mode global
-	d.Set("global_cluster_identifier", "")
-
-	if engineMode := aws.ToString(dbc.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
-		globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, clusterARN)
-
-		if err == nil {
-			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if retry.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
-			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
-			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-		} else {
-			return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster for RDS Cluster (%s): %s", d.Id(), err)
-		}
-	}
-
-	setTagsOut(ctx, dbc.TagList)
 
 	return diags
 }
@@ -2443,6 +2324,133 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 	}
 
 	return tfMap
+}
+
+func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DBCluster, d *schema.ResourceData) error {
+	d.Set(names.AttrAllocatedStorage, dbc.AllocatedStorage)
+	clusterARN := aws.ToString(dbc.DBClusterArn)
+	d.Set(names.AttrARN, clusterARN)
+	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
+	d.Set(names.AttrAutoMinorVersionUpgrade, dbc.AutoMinorVersionUpgrade)
+	d.Set("backtrack_window", dbc.BacktrackWindow)
+	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	if dbc.CertificateDetails != nil {
+		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
+		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
+	}
+	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
+	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
+	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
+	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
+		return aws.ToString(v.DBInstanceIdentifier)
+	}))
+	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
+	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
+	// Only set the DatabaseName if it is not nil. There is a known API bug where
+	// RDS accepts a DatabaseName but does not return it, causing a perpetual
+	// diff.
+	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
+	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
+	}
+	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
+	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
+	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("db_system_id", dbc.DBSystemId)
+	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
+	if len(dbc.DomainMemberships) > 0 {
+		domainMembership := dbc.DomainMemberships[0]
+		d.Set(names.AttrDomain, domainMembership.Domain)
+		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
+	} else {
+		d.Set(names.AttrDomain, nil)
+		d.Set("domain_iam_role_name", nil)
+	}
+	d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
+	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
+	d.Set(names.AttrEngine, dbc.Engine)
+	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
+	d.Set("engine_mode", dbc.EngineMode)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
+	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+	d.Set("iam_roles", tfslices.ApplyToAll(dbc.AssociatedRoles, func(v types.DBClusterRole) string {
+		return aws.ToString(v.RoleArn)
+	}))
+	d.Set(names.AttrIOPS, dbc.Iops)
+	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// Expose the MasterUserSecret structure as a computed attribute
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
+	if dbc.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return fmt.Errorf("setting master_user_secret: %w", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
+	d.Set("master_username", dbc.MasterUsername)
+	d.Set("monitoring_interval", dbc.MonitoringInterval)
+	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
+	d.Set("network_type", dbc.NetworkType)
+	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
+	d.Set(names.AttrPort, dbc.Port)
+	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
+	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
+	if dbc.ScalingConfigurationInfo != nil {
+		if err := d.Set("scaling_configuration", []any{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
+			return fmt.Errorf("setting scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("scaling_configuration", nil)
+	}
+	if dbc.ServerlessV2ScalingConfiguration != nil {
+		if err := d.Set("serverlessv2_scaling_configuration", []any{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
+			return fmt.Errorf("setting serverlessv2_scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("serverlessv2_scaling_configuration", nil)
+	}
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
+	d.Set(names.AttrStorageType, dbc.StorageType)
+	d.Set("upgrade_rollout_order", dbc.UpgradeRolloutOrder)
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
+
+	// Fetch and save Global Cluster if engine mode global
+	d.Set("global_cluster_identifier", "")
+
+	if engineMode := aws.ToString(dbc.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
+		globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, clusterARN)
+
+		if err == nil {
+			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+		} else if retry.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
+			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
+			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+		} else {
+			return fmt.Errorf("reading RDS Global Cluster for RDS Cluster (%s): %w", d.Id(), err)
+		}
+	}
+
+	setTagsOut(ctx, dbc.TagList)
+
+	return nil
 }
 
 func isProvisionedIOPSStorageType(storageType string) bool {
