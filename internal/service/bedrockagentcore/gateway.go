@@ -122,6 +122,31 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"custom_transform_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customTransformConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"lambda": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaTransformConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"interceptor_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayInterceptorConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -340,11 +365,42 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
+	// custom_transform_configuration is only accepted by UpdateGateway, not CreateGateway,
+	// so apply it with a follow-up update when set at create time.
+	customTransformConfiguration := data.CustomTransformConfiguration
+	if !customTransformConfiguration.IsNull() && !customTransformConfiguration.IsUnknown() {
+		var updateInput bedrockagentcorecontrol.UpdateGatewayInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &updateInput))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		updateInput.GatewayIdentifier = aws.String(gatewayID)
+
+		if _, err := conn.UpdateGateway(ctx, &updateInput); err != nil {
+			// The gateway was created but the follow-up update failed; taint so it is tracked and can be cleaned up.
+			response.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+			return
+		}
+
+		gateway, err = waitGatewayUpdated(ctx, conn, gatewayID, r.CreateTimeout(ctx, data.Timeouts))
+		if err != nil {
+			// The gateway was created but the follow-up update failed; taint so it is tracked and can be cleaned up.
+			response.State.SetAttribute(ctx, path.Root("gateway_id"), gatewayID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+			return
+		}
+	}
+
 	// Set values for unknowns.
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, gateway, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// custom_transform_configuration is not returned by GetGateway, so preserve the configured value.
+	data.CustomTransformConfiguration = customTransformConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -370,10 +426,15 @@ func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	// custom_transform_configuration is not returned by GetGateway, so preserve the value already in state.
+	customTransformConfiguration := data.CustomTransformConfiguration
+
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.CustomTransformConfiguration = customTransformConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -587,24 +648,25 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 
 type gatewayResourceModel struct {
 	framework.WithRegionModel
-	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]          `tfsdk:"authorizer_configuration"`
-	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                            `tfsdk:"authorizer_type"`
-	Description               types.String                                                           `tfsdk:"description"`
-	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                            `tfsdk:"exception_level"`
-	GatewayARN                types.String                                                           `tfsdk:"gateway_arn"`
-	GatewayID                 types.String                                                           `tfsdk:"gateway_id"`
-	GatewayURL                types.String                                                           `tfsdk:"gateway_url"`
-	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel]  `tfsdk:"interceptor_configuration"`
-	KMSKeyARN                 fwtypes.ARN                                                            `tfsdk:"kms_key_arn"`
-	Name                      types.String                                                           `tfsdk:"name"`
-	PolicyEngineConfiguration fwtypes.ListNestedObjectValueOf[gatewayPolicyEngineConfigurationModel] `tfsdk:"policy_engine_configuration"`
-	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]     `tfsdk:"protocol_configuration"`
-	ProtocolType              fwtypes.StringEnum[awstypes.GatewayProtocolType]                       `tfsdk:"protocol_type"`
-	RoleARN                   fwtypes.ARN                                                            `tfsdk:"role_arn"`
-	Tags                      tftags.Map                                                             `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                             `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                         `tfsdk:"timeouts"`
-	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]          `tfsdk:"workload_identity_details"`
+	AuthorizerConfiguration      fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]          `tfsdk:"authorizer_configuration"`
+	AuthorizerType               fwtypes.StringEnum[awstypes.AuthorizerType]                            `tfsdk:"authorizer_type"`
+	CustomTransformConfiguration fwtypes.ListNestedObjectValueOf[customTransformConfigurationModel]     `tfsdk:"custom_transform_configuration"`
+	Description                  types.String                                                           `tfsdk:"description"`
+	ExceptionLevel               fwtypes.StringEnum[awstypes.ExceptionLevel]                            `tfsdk:"exception_level"`
+	GatewayARN                   types.String                                                           `tfsdk:"gateway_arn"`
+	GatewayID                    types.String                                                           `tfsdk:"gateway_id"`
+	GatewayURL                   types.String                                                           `tfsdk:"gateway_url"`
+	InterceptorConfigurations    fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel]  `tfsdk:"interceptor_configuration"`
+	KMSKeyARN                    fwtypes.ARN                                                            `tfsdk:"kms_key_arn"`
+	Name                         types.String                                                           `tfsdk:"name"`
+	PolicyEngineConfiguration    fwtypes.ListNestedObjectValueOf[gatewayPolicyEngineConfigurationModel] `tfsdk:"policy_engine_configuration"`
+	ProtocolConfiguration        fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]     `tfsdk:"protocol_configuration"`
+	ProtocolType                 fwtypes.StringEnum[awstypes.GatewayProtocolType]                       `tfsdk:"protocol_type"`
+	RoleARN                      fwtypes.ARN                                                            `tfsdk:"role_arn"`
+	Tags                         tftags.Map                                                             `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                             `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                                         `tfsdk:"timeouts"`
+	WorkloadIdentityDetails      fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]          `tfsdk:"workload_identity_details"`
 }
 
 type gatewayPolicyEngineConfigurationModel struct {
@@ -735,5 +797,13 @@ func (m interceptorConfigurationModel) Expand(ctx context.Context) (any, diag.Di
 }
 
 type lambdaInterceptorConfigurationModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type customTransformConfigurationModel struct {
+	Lambda fwtypes.ListNestedObjectValueOf[lambdaTransformConfigurationModel] `tfsdk:"lambda"`
+}
+
+type lambdaTransformConfigurationModel struct {
 	ARN fwtypes.ARN `tfsdk:"arn"`
 }
