@@ -113,7 +113,11 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.0.authorized_audiences_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.0.authorized_audiences_list.0", names.AttrClientID),
 					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer.1.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test2", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.1.authorized_audiences_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.1.authorized_audiences_list.0", "client_id_2"),
 				),
 			},
 			{
