@@ -343,8 +343,12 @@ The `custom_jwt_authorizer` block supports the following:
 
 ### `allowed_workload_configuration` Block
 
-* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. Each entry supports an `arn` argument.
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment) below.
 * `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
+
+### `hosting_environment` Block
+
+* `arn` - (Required) ARN of the hosting environment.
 
 ### `private_endpoint_overrides` Block
 
@@ -355,8 +359,21 @@ The `custom_jwt_authorizer` block supports the following:
 
 Exactly one of the following must be specified:
 
-* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. Supports `endpoint_ip_address_type` (Required, one of `IPV4` or `IPV6`), `subnet_ids` (Required), `vpc_identifier` (Required), `routing_domain` (Optional), `security_group_ids` (Optional), and `tags` (Optional).
-* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. Supports `resource_configuration_identifier` (Required).
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+
+### `managed_vpc_resource` Block
+
+* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
+* `routing_domain` - (Optional) Routing domain for the endpoint.
+* `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `tags` - (Optional) Tags to assign to the managed VPC resource.
+
+### `self_managed_lattice_resource` Block
+
+* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 
