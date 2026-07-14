@@ -246,11 +246,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									// require_service_s3_endpoint is read-only: post-rollout (May 5, 2026)
-									// the API rejects it on both create and update with a ValidationException,
-									// while GetAgentRuntime returns a value for it. Modeling it as Computed
-									// surfaces the server value without allowing an unsettable input, and the
-									// Create/Update expand paths strip it so it is never transmitted.
 									"require_service_s3_endpoint": schema.BoolAttribute{
 										Computed: true,
 										PlanModifiers: []planmodifier.Bool{
@@ -378,31 +373,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
-							"private_endpoint": privateEndpointSchema(ctx),
-							"private_endpoint_overrides": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
-								Validators: []validator.List{
-									listvalidator.SizeAtMost(5),
-								},
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										names.AttrDomain: schema.StringAttribute{
-											Required: true,
-											Validators: []validator.String{
-												stringvalidator.LengthBetween(1, 253),
-											},
-										},
-									},
-									Blocks: map[string]schema.Block{
-										// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
-										// enforce it offline so a missing private_endpoint fails at plan
-										// instead of a client-side SDK error at apply.
-										"private_endpoint": privateEndpointSchema(ctx, listvalidator.IsRequired()),
-									},
-								},
-							},
 							"custom_claim": schema.SetNestedBlock{
-
 								CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
@@ -470,6 +441,29 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 												},
 											},
 										},
+									},
+								},
+							},
+							"private_endpoint": privateEndpointSchema(ctx),
+							"private_endpoint_overrides": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(5),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrDomain: schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 253),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
+										// enforce it offline so a missing private_endpoint fails at plan
+										// instead of a client-side SDK error at apply.
+										"private_endpoint": privateEndpointSchema(ctx, listvalidator.IsRequired()),
 									},
 								},
 							},
