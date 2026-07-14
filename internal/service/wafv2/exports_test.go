@@ -12,6 +12,7 @@ var (
 	ResourceWebACLAssociation          = resourceWebACLAssociation
 	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
 	ResourceAPIKey                     = newAPIKeyResource
+	ResourceRuleGroupPermissionPolicy  = newRuleGroupPermissionPolicyResource
 	ResourceWebACLRuleGroupAssociation = newResourceWebACLRuleGroupAssociation
 	ResourceWebACLRule                 = newResourceWebACLRule
 
@@ -19,6 +20,7 @@ var (
 	FindAPIKeyByTwoPartKey            = findAPIKeyByTwoPartKey
 	FindIPSetByThreePartKey           = findIPSetByThreePartKey
 	FindLoggingConfigurationByARN     = findLoggingConfigurationByARN
+	FindPermissionPolicyByARN         = findPermissionPolicyByARN
 	FindRegexPatternSetByThreePartKey = findRegexPatternSetByThreePartKey
 	FindRuleGroupByThreePartKey       = findRuleGroupByThreePartKey
 	FindWebACLByResourceARN           = findWebACLByResourceARN
