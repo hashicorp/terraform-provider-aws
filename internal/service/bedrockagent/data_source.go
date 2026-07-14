@@ -191,12 +191,12 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 							Required:   true,
 							Validators: []validator.String{
 								tfstringvalidator.DiscriminatorRequires(map[awstypes.DataSourceType]path.Expression{
-									awstypes.DataSourceTypeConfluence:                    path.MatchRelative().AtName("confluence_configuration"),
-									awstypes.DataSourceTypeManagedKnowledgeBaseConnector: path.MatchRelative().AtName("managed_knowledge_base_connector_configuration"),
-									awstypes.DataSourceTypeS3:                            path.MatchRelative().AtName("s3_configuration"),
-									awstypes.DataSourceTypeSalesforce:                    path.MatchRelative().AtName("salesforce_configuration"),
-									awstypes.DataSourceTypeSharepoint:                    path.MatchRelative().AtName("share_point_configuration"),
-									awstypes.DataSourceTypeWeb:                           path.MatchRelative().AtName("web_configuration"),
+									awstypes.DataSourceTypeConfluence:                    path.MatchRelative().AtParent().AtName("confluence_configuration"),
+									awstypes.DataSourceTypeManagedKnowledgeBaseConnector: path.MatchRelative().AtParent().AtName("managed_knowledge_base_connector_configuration"),
+									awstypes.DataSourceTypeS3:                            path.MatchRelative().AtParent().AtName("s3_configuration"),
+									awstypes.DataSourceTypeSalesforce:                    path.MatchRelative().AtParent().AtName("salesforce_configuration"),
+									awstypes.DataSourceTypeSharepoint:                    path.MatchRelative().AtParent().AtName("share_point_configuration"),
+									awstypes.DataSourceTypeWeb:                           path.MatchRelative().AtParent().AtName("web_configuration"),
 								}),
 							},
 						},
@@ -625,9 +625,9 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										Required:   true,
 										Validators: []validator.String{
 											tfstringvalidator.DiscriminatorRequires(map[awstypes.ChunkingStrategy]path.Expression{
-												awstypes.ChunkingStrategyFixedSize:    path.MatchRelative().AtName("fixed_size_chunking_configuration"),
-												awstypes.ChunkingStrategyHierarchical: path.MatchRelative().AtName("hierarchical_chunking_configuration"),
-												awstypes.ChunkingStrategySemantic:     path.MatchRelative().AtName("semantic_chunking_configuration"),
+												awstypes.ChunkingStrategyFixedSize:    path.MatchRelative().AtParent().AtName("fixed_size_chunking_configuration"),
+												awstypes.ChunkingStrategyHierarchical: path.MatchRelative().AtParent().AtName("hierarchical_chunking_configuration"),
+												awstypes.ChunkingStrategySemantic:     path.MatchRelative().AtParent().AtName("semantic_chunking_configuration"),
 											}),
 										},
 										PlanModifiers: []planmodifier.String{
@@ -862,8 +862,8 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										Required:   true,
 										Validators: []validator.String{
 											tfstringvalidator.DiscriminatorRequires(map[awstypes.ParsingStrategy]path.Expression{
-												awstypes.ParsingStrategyBedrockDataAutomation:  path.MatchRelative().AtName("bedrock_data_automation_configuration"),
-												awstypes.ParsingStrategyBedrockFoundationModel: path.MatchRelative().AtName("bedrock_foundation_model_configuration"),
+												awstypes.ParsingStrategyBedrockDataAutomation:  path.MatchRelative().AtParent().AtName("bedrock_data_automation_configuration"),
+												awstypes.ParsingStrategyBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
 											}),
 										},
 										PlanModifiers: []planmodifier.String{

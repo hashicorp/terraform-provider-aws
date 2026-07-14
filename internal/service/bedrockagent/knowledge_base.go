@@ -126,10 +126,10 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Required:   true,
 							Validators: []validator.String{
 								tfstringvalidator.DiscriminatorRequires(map[awstypes.KnowledgeBaseType]path.Expression{
-									awstypes.KnowledgeBaseTypeKendra:  path.MatchRelative().AtName("kendra_knowledge_base_configuration"),
-									awstypes.KnowledgeBaseTypeManaged: path.MatchRelative().AtName("managed_knowledge_base_configuration"),
-									awstypes.KnowledgeBaseTypeSql:     path.MatchRelative().AtName("sql_knowledge_base_configuration"),
-									awstypes.KnowledgeBaseTypeVector:  path.MatchRelative().AtName("vector_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeKendra:  path.MatchRelative().AtParent().AtName("kendra_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeManaged: path.MatchRelative().AtParent().AtName("managed_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeSql:     path.MatchRelative().AtParent().AtName("sql_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeVector:  path.MatchRelative().AtParent().AtName("vector_knowledge_base_configuration"),
 								}),
 							},
 							PlanModifiers: []planmodifier.String{
@@ -230,7 +230,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Required:   true,
 										Validators: []validator.String{
 											tfstringvalidator.DiscriminatorRequires(map[awstypes.QueryEngineType]path.Expression{
-												awstypes.QueryEngineTypeRedshift: path.MatchRelative().AtName("redshift_configuration"),
+												awstypes.QueryEngineTypeRedshift: path.MatchRelative().AtParent().AtName("redshift_configuration"),
 											}),
 										},
 										PlanModifiers: []planmodifier.String{
@@ -272,8 +272,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																Required:   true,
 																Validators: []validator.String{
 																	tfstringvalidator.DiscriminatorRequires(map[awstypes.RedshiftQueryEngineType]path.Expression{
-																		awstypes.RedshiftQueryEngineTypeProvisioned: path.MatchRelative().AtName("provisioned_configuration"),
-																		awstypes.RedshiftQueryEngineTypeServerless:  path.MatchRelative().AtName("serverless_configuration"),
+																		awstypes.RedshiftQueryEngineTypeProvisioned: path.MatchRelative().AtParent().AtName("provisioned_configuration"),
+																		awstypes.RedshiftQueryEngineTypeServerless:  path.MatchRelative().AtParent().AtName("serverless_configuration"),
 																	}),
 																},
 																PlanModifiers: []planmodifier.String{
@@ -546,8 +546,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																Required:   true,
 																Validators: []validator.String{
 																	tfstringvalidator.DiscriminatorRequires(map[awstypes.RedshiftQueryEngineStorageType]path.Expression{
-																		awstypes.RedshiftQueryEngineStorageTypeAwsDataCatalog: path.MatchRelative().AtName("aws_data_catalog_configuration"),
-																		awstypes.RedshiftQueryEngineStorageTypeRedshift:       path.MatchRelative().AtName("redshift_configuration"),
+																		awstypes.RedshiftQueryEngineStorageTypeAwsDataCatalog: path.MatchRelative().AtParent().AtName("aws_data_catalog_configuration"),
+																		awstypes.RedshiftQueryEngineStorageTypeRedshift:       path.MatchRelative().AtParent().AtName("redshift_configuration"),
 																	}),
 																},
 																PlanModifiers: []planmodifier.String{
@@ -659,7 +659,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																Required:   true,
 																Validators: []validator.String{
 																	tfstringvalidator.DiscriminatorRequires(map[awstypes.SupplementalDataStorageLocationType]path.Expression{
-																		awstypes.SupplementalDataStorageLocationTypeS3: path.MatchRelative().AtName("s3_location"),
+																		awstypes.SupplementalDataStorageLocationTypeS3: path.MatchRelative().AtParent().AtName("s3_location"),
 																	}),
 																},
 																PlanModifiers: []planmodifier.String{
@@ -732,14 +732,14 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Required:   true,
 							Validators: []validator.String{
 								tfstringvalidator.DiscriminatorRequires(map[awstypes.KnowledgeBaseStorageType]path.Expression{
-									awstypes.KnowledgeBaseStorageTypeMongoDbAtlas:             path.MatchRelative().AtName("mongo_db_atlas_configuration"),
-									awstypes.KnowledgeBaseStorageTypeNeptuneAnalytics:         path.MatchRelative().AtName("neptune_analytics_configuration"),
-									awstypes.KnowledgeBaseStorageTypeOpensearchManagedCluster: path.MatchRelative().AtName("opensearch_managed_cluster_configuration"),
-									awstypes.KnowledgeBaseStorageTypeOpensearchServerless:     path.MatchRelative().AtName("opensearch_serverless_configuration"),
-									awstypes.KnowledgeBaseStorageTypePinecone:                 path.MatchRelative().AtName("pinecone_configuration"),
-									awstypes.KnowledgeBaseStorageTypeRds:                      path.MatchRelative().AtName("rds_configuration"),
-									awstypes.KnowledgeBaseStorageTypeRedisEnterpriseCloud:     path.MatchRelative().AtName("redis_enterprise_cloud_configuration"),
-									awstypes.KnowledgeBaseStorageTypeS3Vectors:                path.MatchRelative().AtName("s3_vectors_configuration"),
+									awstypes.KnowledgeBaseStorageTypeMongoDbAtlas:             path.MatchRelative().AtParent().AtName("mongo_db_atlas_configuration"),
+									awstypes.KnowledgeBaseStorageTypeNeptuneAnalytics:         path.MatchRelative().AtParent().AtName("neptune_analytics_configuration"),
+									awstypes.KnowledgeBaseStorageTypeOpensearchManagedCluster: path.MatchRelative().AtParent().AtName("opensearch_managed_cluster_configuration"),
+									awstypes.KnowledgeBaseStorageTypeOpensearchServerless:     path.MatchRelative().AtParent().AtName("opensearch_serverless_configuration"),
+									awstypes.KnowledgeBaseStorageTypePinecone:                 path.MatchRelative().AtParent().AtName("pinecone_configuration"),
+									awstypes.KnowledgeBaseStorageTypeRds:                      path.MatchRelative().AtParent().AtName("rds_configuration"),
+									awstypes.KnowledgeBaseStorageTypeRedisEnterpriseCloud:     path.MatchRelative().AtParent().AtName("redis_enterprise_cloud_configuration"),
+									awstypes.KnowledgeBaseStorageTypeS3Vectors:                path.MatchRelative().AtParent().AtName("s3_vectors_configuration"),
 								}),
 							},
 							PlanModifiers: []planmodifier.String{
