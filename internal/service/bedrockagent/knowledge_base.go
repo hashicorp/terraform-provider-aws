@@ -39,6 +39,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -110,10 +112,26 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("kendra_knowledge_base_configuration"),
+							path.MatchRelative().AtName("managed_knowledge_base_configuration"),
+							path.MatchRelative().AtName("sql_knowledge_base_configuration"),
+							path.MatchRelative().AtName("vector_knowledge_base_configuration"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.KnowledgeBaseType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.KnowledgeBaseType]path.Expression{
+									awstypes.KnowledgeBaseTypeKendra:  path.MatchRelative().AtName("kendra_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeManaged: path.MatchRelative().AtName("managed_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeSql:     path.MatchRelative().AtName("sql_knowledge_base_configuration"),
+									awstypes.KnowledgeBaseTypeVector:  path.MatchRelative().AtName("vector_knowledge_base_configuration"),
+								}),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -124,12 +142,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							CustomType: fwtypes.NewListNestedObjectTypeOf[kendraKnowledgeBaseConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("kendra_knowledge_base_configuration"),
-									path.MatchRelative().AtParent().AtName("managed_knowledge_base_configuration"),
-									path.MatchRelative().AtParent().AtName("sql_knowledge_base_configuration"),
-									path.MatchRelative().AtParent().AtName("vector_knowledge_base_configuration"),
-								),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
@@ -207,10 +219,20 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("redshift_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									names.AttrType: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.QueryEngineType](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.QueryEngineType]path.Expression{
+												awstypes.QueryEngineTypeRedshift: path.MatchRelative().AtName("redshift_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -221,9 +243,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
-											listvalidator.ExactlyOneOf(
-												path.MatchRelative().AtParent().AtName("redshift_configuration"),
-											),
 										},
 										PlanModifiers: []planmodifier.List{
 											listplanmodifier.RequiresReplace(),
@@ -241,10 +260,22 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 														listplanmodifier.RequiresReplace(),
 													},
 													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("provisioned_configuration"),
+																path.MatchRelative().AtName("serverless_configuration"),
+															),
+														},
 														Attributes: map[string]schema.Attribute{
 															names.AttrType: schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.RedshiftQueryEngineType](),
 																Required:   true,
+																Validators: []validator.String{
+																	tfstringvalidator.DiscriminatorRequires(map[awstypes.RedshiftQueryEngineType]path.Expression{
+																		awstypes.RedshiftQueryEngineTypeProvisioned: path.MatchRelative().AtName("provisioned_configuration"),
+																		awstypes.RedshiftQueryEngineTypeServerless:  path.MatchRelative().AtName("serverless_configuration"),
+																	}),
+																},
 																PlanModifiers: []planmodifier.String{
 																	stringplanmodifier.RequiresReplace(),
 																},
@@ -255,10 +286,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftProvisionedConfigurationModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtMost(1),
-																	listvalidator.ExactlyOneOf(
-																		path.MatchRelative().AtParent().AtName("provisioned_configuration"),
-																		path.MatchRelative().AtParent().AtName("serverless_configuration"),
-																	),
 																},
 																PlanModifiers: []planmodifier.List{
 																	listplanmodifier.RequiresReplace(),
@@ -507,10 +534,22 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 														listplanmodifier.RequiresReplace(),
 													},
 													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("aws_data_catalog_configuration"),
+																path.MatchRelative().AtName("redshift_configuration"),
+															),
+														},
 														Attributes: map[string]schema.Attribute{
 															names.AttrType: schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.RedshiftQueryEngineStorageType](),
 																Required:   true,
+																Validators: []validator.String{
+																	tfstringvalidator.DiscriminatorRequires(map[awstypes.RedshiftQueryEngineStorageType]path.Expression{
+																		awstypes.RedshiftQueryEngineStorageTypeAwsDataCatalog: path.MatchRelative().AtName("aws_data_catalog_configuration"),
+																		awstypes.RedshiftQueryEngineStorageTypeRedshift:       path.MatchRelative().AtName("redshift_configuration"),
+																	}),
+																},
 																PlanModifiers: []planmodifier.String{
 																	stringplanmodifier.RequiresReplace(),
 																},
@@ -521,10 +560,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftQueryEngineAWSDataCatalogStorageConfigurationModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtMost(1),
-																	listvalidator.ExactlyOneOf(
-																		path.MatchRelative().AtParent().AtName("aws_data_catalog_configuration"),
-																		path.MatchRelative().AtParent().AtName("redshift_configuration"),
-																	),
 																},
 																PlanModifiers: []planmodifier.List{
 																	listplanmodifier.RequiresReplace(),
@@ -613,10 +648,20 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 														listplanmodifier.RequiresReplace(),
 													},
 													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("s3_location"),
+															),
+														},
 														Attributes: map[string]schema.Attribute{
 															names.AttrType: schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.SupplementalDataStorageLocationType](),
 																Required:   true,
+																Validators: []validator.String{
+																	tfstringvalidator.DiscriminatorRequires(map[awstypes.SupplementalDataStorageLocationType]path.Expression{
+																		awstypes.SupplementalDataStorageLocationTypeS3: path.MatchRelative().AtName("s3_location"),
+																	}),
+																},
 																PlanModifiers: []planmodifier.String{
 																	stringplanmodifier.RequiresReplace(),
 																},
@@ -669,10 +714,34 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("mongo_db_atlas_configuration"),
+							path.MatchRelative().AtName("neptune_analytics_configuration"),
+							path.MatchRelative().AtName("opensearch_managed_cluster_configuration"),
+							path.MatchRelative().AtName("opensearch_serverless_configuration"),
+							path.MatchRelative().AtName("pinecone_configuration"),
+							path.MatchRelative().AtName("rds_configuration"),
+							path.MatchRelative().AtName("redis_enterprise_cloud_configuration"),
+							path.MatchRelative().AtName("s3_vectors_configuration"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.KnowledgeBaseStorageType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.KnowledgeBaseStorageType]path.Expression{
+									awstypes.KnowledgeBaseStorageTypeMongoDbAtlas:             path.MatchRelative().AtName("mongo_db_atlas_configuration"),
+									awstypes.KnowledgeBaseStorageTypeNeptuneAnalytics:         path.MatchRelative().AtName("neptune_analytics_configuration"),
+									awstypes.KnowledgeBaseStorageTypeOpensearchManagedCluster: path.MatchRelative().AtName("opensearch_managed_cluster_configuration"),
+									awstypes.KnowledgeBaseStorageTypeOpensearchServerless:     path.MatchRelative().AtName("opensearch_serverless_configuration"),
+									awstypes.KnowledgeBaseStorageTypePinecone:                 path.MatchRelative().AtName("pinecone_configuration"),
+									awstypes.KnowledgeBaseStorageTypeRds:                      path.MatchRelative().AtName("rds_configuration"),
+									awstypes.KnowledgeBaseStorageTypeRedisEnterpriseCloud:     path.MatchRelative().AtName("redis_enterprise_cloud_configuration"),
+									awstypes.KnowledgeBaseStorageTypeS3Vectors:                path.MatchRelative().AtName("s3_vectors_configuration"),
+								}),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -683,16 +752,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							CustomType: fwtypes.NewListNestedObjectTypeOf[mongoDBAtlasConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("mongo_db_atlas_configuration"),
-									path.MatchRelative().AtParent().AtName("neptune_analytics_configuration"),
-									path.MatchRelative().AtParent().AtName("opensearch_managed_cluster_configuration"),
-									path.MatchRelative().AtParent().AtName("opensearch_serverless_configuration"),
-									path.MatchRelative().AtParent().AtName("pinecone_configuration"),
-									path.MatchRelative().AtParent().AtName("rds_configuration"),
-									path.MatchRelative().AtParent().AtName("redis_enterprise_cloud_configuration"),
-									path.MatchRelative().AtParent().AtName("s3_vectors_configuration"),
-								),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
