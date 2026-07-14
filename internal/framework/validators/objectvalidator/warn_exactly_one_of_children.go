@@ -35,20 +35,20 @@ func (av warnExactlyOneOfChildrenValidator) MarkdownDescription(_ context.Contex
 }
 
 func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	validateReq := internal.ExactlyOneOfValidatorRequest{
+	validateReq := internal.ValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
 		Path:           req.Path,
 		PathExpression: req.PathExpression,
 	}
-	var validateResp internal.ExactlyOneOfValidatorResponse
+	var validateResp internal.ValidatorResponse
 
 	av.validate(ctx, validateReq, &validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av warnExactlyOneOfChildrenValidator) validate(ctx context.Context, req internal.ExactlyOneOfValidatorRequest, res *internal.ExactlyOneOfValidatorResponse) {
+func (av warnExactlyOneOfChildrenValidator) validate(ctx context.Context, req internal.ValidatorRequest, res *internal.ValidatorResponse) {
 	count := 0
 	expressions := req.PathExpression.MergeExpressions(av.pathExpressions...)
 
