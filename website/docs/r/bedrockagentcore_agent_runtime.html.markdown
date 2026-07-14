@@ -174,6 +174,7 @@ The following arguments are optional:
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
+* `metadata_configuration` - (Optional) microVM Metadata Service (MMDS) configuration for the agent runtime. This configuration is applied via a follow-up update immediately after the runtime is created, because the create operation does not accept it. See [`metadata_configuration`](#metadata_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -285,6 +286,12 @@ The `lifecycle_configuration` block supports the following:
 
 * `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle runtime sessions.
 * `max_lifetime` - (Optional) Maximum lifetime for the instance in seconds.
+
+### `metadata_configuration`
+
+The `metadata_configuration` block supports the following:
+
+* `require_mmds_v2` - (Required) Whether the runtime microVM requires MMDSv2 (microVM Metadata Service Version 2). When `true`, the runtime microVM only accepts MMDSv2 requests. Agents created after February 15, 2026 must have this enabled.
 
 ### `network_configuration`
 
