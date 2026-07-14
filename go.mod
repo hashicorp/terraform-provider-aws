@@ -245,7 +245,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/ses v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.63.0
