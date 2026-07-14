@@ -538,7 +538,7 @@ This resource supports the following arguments:
 
 ### availability_zone_distribution
 
-- `capacity_distribution_strategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only` and `balanced-best-effort`. Default is `balanced-best-effort`.
+- `capacity_distribution_strategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only`, `balanced-best-effort`, and `reservations-then-balanced`. Default is `balanced-best-effort`. When `reservations-then-balanced` is set, you must also specify Capacity Reservations to prioritize through `capacity_reservation_specification` (or via a launch template) using a Capacity Reservation ID or Capacity Reservation resource group ARN.
 
 ### capacity_reservation_specification
 

@@ -972,6 +972,43 @@ func TestAccAutoScalingGroup_availabilityZoneDistribution(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_availabilityZoneDistributionReservationsThenBalanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_availabilityZoneDistributionWithCapacityReservation(rName, "reservations-then-balanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "reservations-then-balanced"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-first"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids.#", "1"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_availabilityZoneDistributionWithCapacityReservation(rName, "balanced-best-effort"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_withScalingActivityErrorPlacementGroupNotSupportedOnInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -5094,6 +5131,49 @@ resource "aws_autoscaling_group" "test" {
 
   availability_zone_distribution {
     capacity_distribution_strategy = %[2]q
+  }
+}
+`, rName, capacityDistributionStrategy))
+}
+
+func testAccGroupConfig_availabilityZoneDistributionWithCapacityReservation(rName, capacityDistributionStrategy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_ec2_capacity_reservation" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "t3.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+
+  availability_zone_distribution {
+    capacity_distribution_strategy = %[2]q
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = "capacity-reservations-first"
+
+    capacity_reservation_target {
+      capacity_reservation_ids = [aws_ec2_capacity_reservation.test.id]
+    }
   }
 }
 `, rName, capacityDistributionStrategy))
