@@ -87,17 +87,17 @@ func testAccApplyServiceUpdateActionConfig_replicationGroupID(rName string) stri
 action "aws_elasticache_apply_service_update" "test" {
   config {
     replication_group_id = local.update_action.replication_group_id
-	service_update_name  = local.update_action.service_update_name
+    service_update_name  = local.update_action.service_update_name
   }
 }
 
 locals {
   complete_update_actions = [
     for action in data.aws_elasticache_service_update_actions.test.update_actions : action
-	if action.update_action_status == "complete"
-	]
+    if action.update_action_status == "complete"
+  ]
 
-	update_action = local.complete_update_actions[0]
+  update_action = local.complete_update_actions[0]
 }
 
 resource "terraform_data" "trigger" {
@@ -120,7 +120,7 @@ data "aws_elasticache_service_update_actions" "test" {
 resource "time_sleep" "wait" {
   create_duration = "10m"
 
-  depends_on  = [aws_elasticache_replication_group.test]
+  depends_on = [aws_elasticache_replication_group.test]
 }
 `)
 }
@@ -131,17 +131,17 @@ func testAccApplyServiceUpdateActionConfig_cacheClusterID(rName string) string {
 action "aws_elasticache_apply_service_update" "test" {
   config {
     cache_cluster_id    = local.update_action.cache_cluster_id
-	service_update_name = local.update_action.service_update_name
+    service_update_name = local.update_action.service_update_name
   }
 }
 
 locals {
   complete_update_actions = [
     for action in data.aws_elasticache_service_update_actions.test.update_actions : action
-	if action.update_action_status == "complete"
-	]
+    if action.update_action_status == "complete"
+  ]
 
-	update_action = local.complete_update_actions[0]
+  update_action = local.complete_update_actions[0]
 }
 
 resource "terraform_data" "trigger" {
@@ -156,7 +156,7 @@ resource "terraform_data" "trigger" {
 
 data "aws_elasticache_service_update_actions" "test" {
   cache_cluster_id = aws_elasticache_cluster.test.cluster_id
-		
+
   depends_on = [time_sleep.wait]
 }
 
@@ -164,7 +164,7 @@ data "aws_elasticache_service_update_actions" "test" {
 resource "time_sleep" "wait" {
   create_duration = "10m"
 
-  depends_on  = [aws_elasticache_cluster.test]
+  depends_on = [aws_elasticache_cluster.test]
 }
 `)
 }
