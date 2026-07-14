@@ -16,62 +16,61 @@ import (
 )
 
 var (
-	// _ validator.Bool    = ExactlyOneOfValidator{}
-	// _ validator.Float32 = ExactlyOneOfValidator{}
-	// _ validator.Float64 = ExactlyOneOfValidator{}
-	// _ validator.Int32   = ExactlyOneOfValidator{}
-	// _ validator.Int64   = ExactlyOneOfValidator{}
-	// _ validator.List    = ExactlyOneOfValidator{}
-	// _ validator.Map     = ExactlyOneOfValidator{}
-	// _ validator.Number  = ExactlyOneOfValidator{}
-	// _ validator.Object  = ExactlyOneOfValidator{}
-	// _ validator.Set     = ExactlyOneOfValidator{}
-	_ validator.String = ExactlyOneOfValidator{}
-	// _ validator.Dynamic = ExactlyOneOfValidator{}
+	// _ validator.Bool    = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Float32 = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Float64 = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Int32   = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Int64   = (*ExactlyOneOfValidator)(nil)
+	// _ validator.List    = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Map     = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Number  = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Object  = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Set     = (*ExactlyOneOfValidator)(nil)
+	_ validator.String = (*ExactlyOneOfValidator)(nil)
+	// _ validator.Dynamic = (*ExactlyOneOfValidator)(nil)
 )
 
 type ExactlyOneOfValidator struct {
 	PathExpressions path.Expressions
 }
 
-type ExactlyOneOfValidatorRequest struct {
+type ValidatorRequest struct {
 	Config         tfsdk.Config
 	ConfigValue    attr.Value
 	Path           path.Path
 	PathExpression path.Expression
 }
 
-type ExactlyOneOfValidatorResponse struct {
+type ValidatorResponse struct {
 	Diagnostics diag.Diagnostics
 }
 
-func (av ExactlyOneOfValidator) Description(ctx context.Context) string {
-	return av.MarkdownDescription(ctx)
+func (v ExactlyOneOfValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
 }
 
-func (av ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", av.PathExpressions)
+func (v ExactlyOneOfValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("Ensure that one and only one attribute from this collection is set: %q", v.PathExpressions)
 }
 
-func (av ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
-	validateReq := ExactlyOneOfValidatorRequest{
+func (v ExactlyOneOfValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	validateReq := ValidatorRequest{
 		Config:         req.Config,
 		ConfigValue:    req.ConfigValue,
 		Path:           req.Path,
 		PathExpression: req.PathExpression,
 	}
-	var validateResp ExactlyOneOfValidatorResponse
+	var validateResp ValidatorResponse
 
-	av.Validate(ctx, validateReq, &validateResp)
+	v.validate(ctx, validateReq, &validateResp)
 
 	resp.Diagnostics.Append(validateResp.Diagnostics...)
 }
 
-func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfValidatorRequest, res *ExactlyOneOfValidatorResponse) {
+func (v ExactlyOneOfValidator) validate(ctx context.Context, req ValidatorRequest, resp *ValidatorResponse) {
 	count := 0
-	expressions := req.PathExpression.MergeExpressions(av.PathExpressions...)
 
-	// If current attribute is unknown, delay validation
+	// If current attribute is unknown, delay validation.
 	if req.ConfigValue.IsUnknown() {
 		return
 	}
@@ -84,33 +83,27 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfVa
 		count++
 	}
 
-	for _, expression := range expressions {
+	expressions := req.PathExpression.MergeExpressions(v.PathExpressions...)
+	for _, expression := range req.PathExpression.MergeExpressions(v.PathExpressions...) {
 		matchedPaths, diags := req.Config.PathMatches(ctx, expression)
-
-		res.Diagnostics.Append(diags...)
-
-		// Collect all errors
+		resp.Diagnostics.Append(diags...)
 		if diags.HasError() {
 			continue
 		}
 
 		for _, mp := range matchedPaths {
-			// If the user specifies the same attribute this validator is applied to,
-			// also as part of the input, skip it
+			// Skip self.
 			if mp.Equal(req.Path) {
 				continue
 			}
 
 			var mpVal attr.Value
-			diags := req.Config.GetAttribute(ctx, mp, &mpVal)
-			res.Diagnostics.Append(diags...)
-
-			// Collect all errors
-			if diags.HasError() {
-				continue
+			resp.Diagnostics.Append(req.Config.GetAttribute(ctx, mp, &mpVal)...)
+			if resp.Diagnostics.HasError() {
+				return
 			}
 
-			// Delay validation until all involved attribute have a known value
+			// Defer if any target is unknown; we cannot decide yet.
 			if mpVal.IsUnknown() {
 				return
 			}
@@ -121,15 +114,14 @@ func (av ExactlyOneOfValidator) Validate(ctx context.Context, req ExactlyOneOfVa
 		}
 	}
 
-	if count == 0 {
-		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+	switch {
+	case count == 0:
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", expressions),
 		))
-	}
-
-	if count > 1 {
-		res.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+	case count > 1:
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
 			req.Path,
 			fmt.Sprintf("%d attributes specified when one (and only one) of %s is required", count, expressions),
 		))
