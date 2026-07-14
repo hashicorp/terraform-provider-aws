@@ -14,6 +14,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -43,6 +45,7 @@ import (
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -255,7 +258,8 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"connector_parameters": schema.StringAttribute{
-										Optional: true,
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -1236,9 +1240,100 @@ type dataSourceConfigurationModel struct {
 }
 
 type managedKnowledgeBaseConnectorConfigurationModel struct {
-	ConnectorParameters             types.String                                                          `tfsdk:"connector_parameters"`
+	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters"`
 	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
 	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
+}
+
+var (
+	_ fwflex.Expander  = managedKnowledgeBaseConnectorConfigurationModel{}
+	_ fwflex.Flattener = &managedKnowledgeBaseConnectorConfigurationModel{}
+)
+
+func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ManagedKnowledgeBaseConnectorConfiguration
+
+	if !m.ConnectorParameters.IsNull() {
+		v, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ConnectorParameters), document.NewLazyDocument)
+		if err != nil {
+			diags.AddError("creating Smithy document", err.Error())
+			return nil, diags
+		}
+		r.ConnectorParameters = v
+	}
+
+	if !m.DeletionProtectionConfiguration.IsNull() {
+		data, d := m.DeletionProtectionConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var v awstypes.DeletionProtectionConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &r)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.DeletionProtectionConfiguration = &v
+	}
+
+	if !m.MediaExtractionConfiguration.IsNull() {
+		data, d := m.MediaExtractionConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var v awstypes.MediaExtractionConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &r)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.MediaExtractionConfiguration = &v
+	}
+
+	return &r, diags
+}
+
+func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.ManagedKnowledgeBaseConnectorConfiguration:
+		if v := t.ConnectorParameters; v != nil {
+			v, err := tfsmithy.DocumentToJSONString(v)
+			if err != nil {
+				diags.AddError("reading Smithy document", err.Error())
+				return diags
+			}
+			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
+		} else {
+			m.ConnectorParameters = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
+
+		if v := t.DeletionProtectionConfiguration; v != nil {
+			var data deletionProtectionConfigurationModel
+			diags.Append(fwflex.Flatten(ctx, v, &data)...)
+			if diags.HasError() {
+				return diags
+			}
+			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		} else {
+			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[deletionProtectionConfigurationModel](ctx)
+		}
+
+		if v := t.MediaExtractionConfiguration; v != nil {
+			var data mediaExtractionConfigurationModel
+			diags.Append(fwflex.Flatten(ctx, v, &data)...)
+			if diags.HasError() {
+				return diags
+			}
+			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		} else {
+			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfNull[mediaExtractionConfigurationModel](ctx)
+		}
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %T", v))
+	}
+	return diags
 }
 
 type deletionProtectionConfigurationModel struct {
