@@ -1,0 +1,8 @@
+```release-note:new-resource
+aws_webfunctions_function
+```
+
+```release-note:new-resource
+aws_webfunctions_endpoint
+```
+
