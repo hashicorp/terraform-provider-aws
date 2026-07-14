@@ -99,8 +99,8 @@ github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.1 h1:qm1wS9+XLmlKxay1I
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.1/go.mod h1:qAPd4oGBiNlaI5Kd2lAeoEJ4yCnUX/IX61qSMOB3uos=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1 h1:eOYu92kIPQHfmYmYzKjZ6z8V0v52+DSMr5ErlKWOw98=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1/go.mod h1:pYNYOEFQKBsKwkNQZjVwEuPFTkmSLvAsbSd0HZUwiDw=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.0 h1:yJzyMlT+70mkgxyB90LOWbBeVyjwaD9QD4SxGzTxTxc=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.0/go.mod h1:j5vRo6juGy8a/N7npknIfpAdRKXjpZoo50nkacwi5ws=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.1 h1:jbGzMILRlgFTwyakqJMM2Rt2rUK9luO0/n7yxU9vj1c=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.1/go.mod h1:j5vRo6juGy8a/N7npknIfpAdRKXjpZoo50nkacwi5ws=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.47.0 h1:AE0XU5Jv5d498ncF/ICcfNxYriVZTVKbsn57bFVKo7c=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.47.0/go.mod h1:wDJyBNCe3bGYS8NwpM0ZA4e9AYKw69ALOSJfSqv8Hqk=
 github.com/aws/aws-sdk-go-v2/service/billing v1.12.0 h1:tr/3zLSnkuQdzAepaax62eoXmu4/LdodCEL7qcLNkkY=
