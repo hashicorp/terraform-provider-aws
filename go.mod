@@ -280,7 +280,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.71.1
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.38.0
 	github.com/aws/smithy-go v1.27.3
 	github.com/beevik/etree v1.6.0
