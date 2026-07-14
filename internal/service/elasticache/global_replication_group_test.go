@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -1807,6 +1809,51 @@ func TestAccElastiCacheGlobalReplicationGroup_InheritValkeyEngine_SecondaryRepli
 	})
 }
 
+func TestAccElastiCacheGlobalReplicationGroup_sameReplicationGroupIDDifferentRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var providers []*schema.Provider
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+	var primaryReplicationGroup, secondaryReplicationGroup awstypes.ReplicationGroup
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	replicationGroupID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+	secondaryReplicationGroupResourceName := "aws_elasticache_replication_group.secondary"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalReplicationGroup(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+			acctest.CheckWithProviders(testAccCheckReplicationGroupDestroyWithProvider(ctx), &providers),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_sameReplicationGroupID(rName, replicationGroupID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					testAccCheckReplicationGroupExistsWithProvider(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckReplicationGroupExistsWithProvider(ctx, secondaryReplicationGroupResourceName, &secondaryReplicationGroup, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "replication_group_id", replicationGroupID),
+					resource.TestCheckResourceAttr(secondaryReplicationGroupResourceName, "replication_group_id", replicationGroupID),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGlobalReplicationGroupExists(ctx context.Context, t *testing.T, resourceName string, v *awstypes.GlobalReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -2609,4 +2656,81 @@ resource "aws_elasticache_replication_group" "secondary" {
 }
 `, rName, primaryReplicationGroupId, secondaryReplicationGroupId, globalAF, primaryAF, secondaryAF, engineName, engineVersion),
 	)
+}
+
+func testAccGlobalReplicationGroupConfig_sameReplicationGroupID(rName, replicationGroupID string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "primary"
+
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id        = %[2]q
+  description                 = "secondary"
+  global_replication_group_id = aws_elasticache_global_replication_group.test.id
+}
+`, rName, replicationGroupID))
+}
+
+func testAccCheckReplicationGroupExistsWithProvider(ctx context.Context, n string, v *awstypes.ReplicationGroup, providerF acctest.ProviderFunc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ElastiCache Replication Group ID is set")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+
+		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckReplicationGroupDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elasticache_replication_group" {
+				continue
+			}
+
+			_, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
