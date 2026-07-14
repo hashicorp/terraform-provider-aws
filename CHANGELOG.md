@@ -9,6 +9,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_bedrock_guardrail: Add `updated_at` attribute ([#48881](https://github.com/hashicorp/terraform-provider-aws/issues/48881))
 * resource/aws_msk_replicator: Add `consumer_group_offset_sync_mode` attribute to `consumer_group_replication` block ([#47670](https://github.com/hashicorp/terraform-provider-aws/issues/47670))
 * resource/aws_network_interface: Add resource identity support ([#48887](https://github.com/hashicorp/terraform-provider-aws/issues/48887))
 
