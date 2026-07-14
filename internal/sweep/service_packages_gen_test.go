@@ -272,6 +272,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/webfunctions"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
@@ -543,6 +544,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		waf.ServicePackage(ctx),
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
+		webfunctions.ServicePackage(ctx),
 		wellarchitected.ServicePackage(ctx),
 		workmail.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),

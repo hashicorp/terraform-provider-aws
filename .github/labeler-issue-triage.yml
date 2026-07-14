@@ -764,6 +764,8 @@ service/wafv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_wafv2_'
 service/wavelength:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_carrier_gateway'
+service/webfunctions:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_webfunctions_'
 service/wellarchitected:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_wellarchitected_'
 service/wisdom:

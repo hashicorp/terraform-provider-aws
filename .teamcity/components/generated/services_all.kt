@@ -262,6 +262,7 @@ val services = mapOf(
     "vpnsite" to ServiceSpec("VPN (Site-to-Site)", vpcLock = true, patternOverride = "TestAccSiteVPN", splitPackageRealPackage = "ec2"),
     "wafv2" to ServiceSpec("WAF"),
     "wavelength" to ServiceSpec("Wavelength", vpcLock = true, patternOverride = "TestAccWavelength", splitPackageRealPackage = "ec2"),
+    "webfunctions" to ServiceSpec("Lambda Web Functions"),
     "wellarchitected" to ServiceSpec("Well-Architected Tool"),
     "workmail" to ServiceSpec("WorkMail"),
     "workspaces" to ServiceSpec("WorkSpaces", vpcLock = true),

@@ -371,6 +371,7 @@ variable "service_labels" {
     "wafregional",
     "wafv2",
     "wavelength",
+    "webfunctions",
     "wellarchitected",
     "wisdom",
     "workdocs",

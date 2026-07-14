@@ -9162,6 +9162,31 @@ service "budgets" {
   is_global = true
 }
 
+service "webfunctions" {
+
+  sdk {
+    id             = "Lambda Web"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "WebFunctions"
+    human_friendly      = "Lambda Web Functions"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWebFunctions"
+  }
+
+  resource_prefix {
+    correct = "aws_webfunctions_"
+  }
+
+  provider_package_correct = "webfunctions"
+  doc_prefix               = ["webfunctions_"]
+  brand                    = "AWS"
+}
+
 service "wellarchitected" {
   sdk {
     id            = "WellArchitected"

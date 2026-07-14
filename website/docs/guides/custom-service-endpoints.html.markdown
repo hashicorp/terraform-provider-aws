@@ -346,6 +346,7 @@ provider "aws" {
 |WAF Classic|`waf`|`AWS_ENDPOINT_URL_WAF`|`waf`|
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
+|Lambda Web Functions|`webfunctions`|`AWS_ENDPOINT_URL_LAMBDA_WEB`|`lambda_web`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
 |WorkMail|`workmail`|`AWS_ENDPOINT_URL_WORKMAIL`|`workmail`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|

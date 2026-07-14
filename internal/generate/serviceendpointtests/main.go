@@ -46,7 +46,8 @@ func main() {
 			"route53profiles",         // Resolver modifies URL
 			"s3control",               // Resolver modifies URL
 			"simpledb",                // AWS SDK for Go v1
-			"timestreamwrite":         // Uses endpoint discovery
+			"timestreamwrite",         // Uses endpoint discovery
+			"webfunctions":            // Pre-GA hand-written SDK shim without middleware support; remove at GA
 			continue
 		}
 

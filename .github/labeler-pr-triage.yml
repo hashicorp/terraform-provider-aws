@@ -2427,6 +2427,12 @@ service/wavelength:
           - any-glob-to-any-file:
               - 'internal/service/ec2/**/wavelength_*'
               - 'website/**/ec2_carrier_*'
+service/webfunctions:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/webfunctions/**/*'
+              - 'website/**/webfunctions_*'
 service/wellarchitected:
   - any:
       - changed-files:

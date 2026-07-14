@@ -2080,6 +2080,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// webfunctions
+
+				"webfunctions": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// wellarchitected
 
 				"wellarchitected": schema.StringAttribute{
