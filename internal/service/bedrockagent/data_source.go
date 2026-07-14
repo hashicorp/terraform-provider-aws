@@ -39,6 +39,8 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -173,10 +175,30 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.AtMostOneOfChildren(
+							path.MatchRelative().AtName("confluence_configuration"),
+							path.MatchRelative().AtName("managed_knowledge_base_connector_configuration"),
+							path.MatchRelative().AtName("s3_configuration"),
+							path.MatchRelative().AtName("salesforce_configuration"),
+							path.MatchRelative().AtName("share_point_configuration"),
+							path.MatchRelative().AtName("web_configuration"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.DataSourceType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.DataSourceType]path.Expression{
+									awstypes.DataSourceTypeConfluence:                    path.MatchRelative().AtName("confluence_configuration"),
+									awstypes.DataSourceTypeManagedKnowledgeBaseConnector: path.MatchRelative().AtName("managed_knowledge_base_connector_configuration"),
+									awstypes.DataSourceTypeS3:                            path.MatchRelative().AtName("s3_configuration"),
+									awstypes.DataSourceTypeSalesforce:                    path.MatchRelative().AtName("salesforce_configuration"),
+									awstypes.DataSourceTypeSharepoint:                    path.MatchRelative().AtName("share_point_configuration"),
+									awstypes.DataSourceTypeWeb:                           path.MatchRelative().AtName("web_configuration"),
+								}),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -590,10 +612,24 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtMostOneOfChildren(
+										path.MatchRelative().AtName("fixed_size_chunking_configuration"),
+										path.MatchRelative().AtName("hierarchical_chunking_configuration"),
+										path.MatchRelative().AtName("semantic_chunking_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"chunking_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ChunkingStrategy](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ChunkingStrategy]path.Expression{
+												awstypes.ChunkingStrategyFixedSize:    path.MatchRelative().AtName("fixed_size_chunking_configuration"),
+												awstypes.ChunkingStrategyHierarchical: path.MatchRelative().AtName("hierarchical_chunking_configuration"),
+												awstypes.ChunkingStrategySemantic:     path.MatchRelative().AtName("semantic_chunking_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -814,10 +850,22 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtMostOneOfChildren(
+										path.MatchRelative().AtName("bedrock_data_automation_configuration"),
+										path.MatchRelative().AtName("bedrock_foundation_model_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"parsing_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ParsingStrategy](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ParsingStrategy]path.Expression{
+												awstypes.ParsingStrategyBedrockDataAutomation:  path.MatchRelative().AtName("bedrock_data_automation_configuration"),
+												awstypes.ParsingStrategyBedrockFoundationModel: path.MatchRelative().AtName("bedrock_foundation_model_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
