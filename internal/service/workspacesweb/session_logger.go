@@ -38,7 +38,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_session_logger", name="Session Logger")
 // @Tags(identifierAttribute="session_logger_arn")
-// @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.SessionLogger")
 // @Testing(importStateIdAttribute="session_logger_arn")
 func newSessionLoggerResource(_ context.Context) (resource.ResourceWithConfigure, error) {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_config_organization_managed_rule: Fix `interface conversion: interface {} is nil, not *configservice.DescribeOrganizationConfigRuleStatusesOutput` panics on delete
+```

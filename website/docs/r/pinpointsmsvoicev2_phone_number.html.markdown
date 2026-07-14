@@ -26,20 +26,24 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
 * `iso_country_code` - (Required) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 * `message_type` - (Required) Type of message. Valid values are `TRANSACTIONAL` for messages that are critical or time-sensitive and `PROMOTIONAL` for messages that aren’t critical or time-sensitive.
 * `number_capabilities` - (Required) Whether the origination identity can be used for text messages, voice calls or both. Valid values are `SMS` and `VOICE`.
 * `number_type` - (Required) Type of phone number to request. Possible values are `LONG_CODE`, `TOLL_FREE`, `TEN_DLC`, or `SIMULATOR`.
-* `opt_out_list_name` - (Optional) Name of the opt-out list to associate with the phone number.
+
+The following arguments are optional:
+
+* `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When `true`, the phone number cannot be deleted.
+* `force_disassociate` - (Optional) Whether to disassociate the phone number from any pool it is associated with before destroying it.
+* `opt_out_list_name` - (Optional) Name of the opt-out list to associate with the phone number. If omitted, AWS assigns the `Default` opt-out list.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registration_id` - (Optional) Use this field to attach your phone number for an external registration process.
 * `self_managed_opt_outs_enabled` - (Optional) When set to `false` an end recipient sends a message that begins with HELP or STOP to one of your dedicated numbers, AWS End User Messaging SMS and Voice automatically replies with a customizable message and adds the end recipient to the opt-out list. When set to true you’re responsible for responding to HELP and STOP requests. You’re also responsible for tracking and honoring opt-out request.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `two_way_channel_arn` - (Optional) Configuration for two-way SMS. Specify an ARN to receive incoming SMS messages, or `connect.[region].amazonaws.com` (with `[region]` replaced by the AWS Region of the Amazon Connect instance) to set Amazon Connect as the inbound destination.
-* `two_way_channel_enabled` - (Optional) By default this is set to `false`. When set to `true` you can receive incoming text messages from your end recipients.
+* `two_way_channel_enabled` - (Optional) Whether two-way messaging is enabled. When `true`, you can receive incoming text messages from your end recipients. If omitted, AWS sets this to `false`.
 * `two_way_channel_role` - (Optional) IAM Role ARN for a service to assume, to be able to post inbound SMS messages.
 
 ## Attribute Reference

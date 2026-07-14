@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -69,6 +70,12 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"authorizer_type": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.AuthorizerType](),
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.AuthorizerTypeCustomJwt,
+						path.MatchRelative().AtParent().AtName("authorizer_configuration"),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -264,24 +271,6 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				Delete: true,
 			}),
 		},
-	}
-}
-
-func (r *gatewayResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data gatewayResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if data.AuthorizerType.ValueEnum() == awstypes.AuthorizerTypeCustomJwt {
-		if data.AuthorizerConfiguration.IsNull() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("authorizer_configuration"),
-				"Missing Required Attribute",
-				"authorizer_configuration is required when authorizer_type is CUSTOM_JWT",
-			)
-		}
 	}
 }
 

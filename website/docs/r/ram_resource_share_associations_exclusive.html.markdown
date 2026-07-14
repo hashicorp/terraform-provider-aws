@@ -154,6 +154,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ram_resource_share_associations_exclusive.example
+  identity = {
+    "resource_share_arn" = "arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12"
+  }
+}
+
+resource "aws_ram_resource_share_associations_exclusive" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `resource_share_arn` (String) Amazon Resource Name (ARN) of the RAM resource share.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM Resource Share Association Exclusive using the `resource_share_arn`. For example:
 
 ```terraform
