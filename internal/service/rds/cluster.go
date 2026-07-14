@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -45,7 +46,13 @@ const (
 
 // @SDKResource("aws_rds_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("cluster_identifier")
+// @CustomImport
 // @Testing(tagsTest=false)
+// @Testing(idAttrDuplicates="cluster_identifier")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBCluster")
+// @Testing(preIdentityVersion="v6.54.0")
+// @Testing(importIgnore="allow_major_version_upgrade;apply_immediately;cluster_members;db_instance_parameter_group_name;enable_global_write_forwarding;enable_local_write_forwarding;manage_master_user_password;master_password;master_password_wo;master_user_secret_kms_key_id;skip_final_snapshot")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -2032,7 +2039,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
+	}
+
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
