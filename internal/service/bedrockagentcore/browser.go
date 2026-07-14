@@ -37,6 +37,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -139,15 +141,16 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("s3"),
+									),
+								},
 								Blocks: map[string]schema.Block{
 									"s3": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[enterprisePolicyS3LocationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
-											listvalidator.ExactlyOneOf(
-												// If another member is added to the union, this will need to be updated.
-												path.MatchRelative().AtParent().AtName("s3"),
-											),
 										},
 										PlanModifiers: []planmodifier.List{
 											listplanmodifier.RequiresReplace(),
@@ -205,6 +208,11 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 						"network_mode": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.BrowserNetworkMode](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.BrowserNetworkMode]path.Expression{
+									awstypes.BrowserNetworkModeVpc: path.MatchRelative().AtParent().AtName(names.AttrVPCConfig),
+								}),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -327,15 +335,16 @@ func certificateSchema(ctx context.Context) schema.ListNestedBlock {
 						listplanmodifier.RequiresReplace(),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("secrets_manager"),
+							),
+						},
 						Blocks: map[string]schema.Block{
 							"secrets_manager": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerLocationModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
-									listvalidator.ExactlyOneOf(
-										// If another member is added to the union, this will need to be updated.
-										path.MatchRelative().AtParent().AtName("secrets_manager"),
-									),
 								},
 								PlanModifiers: []planmodifier.List{
 									listplanmodifier.RequiresReplace(),

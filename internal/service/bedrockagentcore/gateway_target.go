@@ -40,6 +40,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -563,15 +564,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("http"),
+							path.MatchRelative().AtName("mcp"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"http": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[httpTargetConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("http"),
-									path.MatchRelative().AtParent().AtName("mcp"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{

@@ -130,15 +130,17 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("code_configuration"),
+							path.MatchRelative().AtName("container_configuration"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"code_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("container_configuration"),
-									path.MatchRelative().AtParent().AtName("code_configuration"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -164,15 +166,16 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("s3"),
+												),
+											},
 											Blocks: map[string]schema.Block{
 												"s3": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3CodeConfigurationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
-														listvalidator.ExactlyOneOf(
-															// If another member is added to the union, this will need to be updated.
-															path.MatchRelative().AtParent().AtName("s3"),
-														),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -207,10 +210,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("container_configuration"),
-									path.MatchRelative().AtParent().AtName("code_configuration"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -482,15 +481,17 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 			listvalidator.SizeAtMost(1),
 		}, extraValidators...),
 		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("managed_vpc_resource"),
+					path.MatchRelative().AtName("self_managed_lattice_resource"),
+				),
+			},
 			Blocks: map[string]schema.Block{
 				"managed_vpc_resource": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
-						listvalidator.ExactlyOneOf(
-							path.MatchRelative().AtParent().AtName("managed_vpc_resource"),
-							path.MatchRelative().AtParent().AtName("self_managed_lattice_resource"),
-						),
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
@@ -547,6 +548,13 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 			listvalidator.SizeAtMost(5),
 		},
 		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("efs_access_point"),
+					path.MatchRelative().AtName("s3_files_access_point"),
+					path.MatchRelative().AtName("session_storage"),
+				),
+			},
 			Blocks: map[string]schema.Block{
 				"efs_access_point": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[efsAccessPointConfigurationModel](ctx),
@@ -594,11 +602,6 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 					CustomType: fwtypes.NewListNestedObjectTypeOf[sessionStorageConfigurationModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
-						listvalidator.ExactlyOneOf(
-							path.MatchRelative().AtParent().AtName("efs_access_point"),
-							path.MatchRelative().AtParent().AtName("s3_files_access_point"),
-							path.MatchRelative().AtParent().AtName("session_storage"),
-						),
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
