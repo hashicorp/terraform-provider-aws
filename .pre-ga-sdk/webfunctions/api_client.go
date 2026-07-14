@@ -15,6 +15,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -118,7 +119,36 @@ func (c *Client) resolveBaseEndpoint(ctx context.Context) (string, error) {
 	return strings.TrimRight(ep.URI.String(), "/"), nil
 }
 
-// invoke signs and executes a single rest-json request.
+// withOptions returns a client whose options include per-operation overrides,
+// mirroring the generated client's per-call functional options.
+func (c *Client) withOptions(optFns []func(*Options)) *Client {
+	if len(optFns) == 0 {
+		return c
+	}
+	options := c.options.Copy()
+	for _, fn := range optFns {
+		fn(&options)
+	}
+	return &Client{options: options}
+}
+
+const (
+	maxInvokeAttempts = 3
+	retryBaseDelay    = 200 * time.Millisecond
+)
+
+func retryable(err error, status int) bool {
+	if status == http.StatusTooManyRequests || status >= 500 {
+		return true
+	}
+	var throttle *awstypes.ThrottlingException
+	var internal *awstypes.InternalServerException
+	return errors.As(err, &throttle) || errors.As(err, &internal)
+}
+
+// invoke signs and executes a single rest-json request, retrying throttled and
+// transient server errors with exponential backoff (the generated SDK client
+// retries by default; Terraform depends on that behavior).
 func (c *Client) invoke(ctx context.Context, method, path string, body any, out any) error {
 	var bodyBytes []byte
 	if body != nil {
@@ -138,11 +168,37 @@ func (c *Client) invoke(ctx context.Context, method, path string, body any, out 
 		return fmt.Errorf("invalid url %q: %w", u, perr)
 	}
 
+	var lastErr error
+	for attempt := range maxInvokeAttempts {
+		if attempt > 0 {
+			delay := retryBaseDelay << (attempt - 1)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+
+		status, err := c.invokeOnce(ctx, method, u, bodyBytes, body != nil, out)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if !retryable(err, status) {
+			return err
+		}
+	}
+	return lastErr
+}
+
+// invokeOnce performs one signed request/response cycle. It returns the HTTP
+// status (0 on transport failure) alongside the error for retry decisions.
+func (c *Client) invokeOnce(ctx context.Context, method, u string, bodyBytes []byte, hasBody bool, out any) (int, error) {
 	req, err := http.NewRequestWithContext(ctx, method, u, bytes.NewReader(bodyBytes))
 	if err != nil {
-		return fmt.Errorf("build request: %w", err)
+		return 0, fmt.Errorf("build request: %w", err)
 	}
-	if body != nil {
+	if hasBody {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -155,33 +211,33 @@ func (c *Client) invoke(ctx context.Context, method, path string, body any, out 
 
 	creds, err := c.options.Credentials.Retrieve(ctx)
 	if err != nil {
-		return fmt.Errorf("retrieve credentials: %w", err)
+		return 0, fmt.Errorf("retrieve credentials: %w", err)
 	}
 	if err := c.options.signer.SignHTTP(ctx, creds, req, payloadHash, signingService, c.options.Region, time.Now()); err != nil {
-		return fmt.Errorf("sign request: %w", err)
+		return 0, fmt.Errorf("sign request: %w", err)
 	}
 
 	resp, err := c.options.HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("execute request: %w", err)
+		return 0, fmt.Errorf("execute request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read response: %w", err)
+		return resp.StatusCode, fmt.Errorf("read response: %w", err)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return decodeError(resp, respBytes)
+		return resp.StatusCode, decodeError(resp, respBytes)
 	}
 
 	if out != nil && len(respBytes) > 0 {
 		if err := json.Unmarshal(respBytes, out); err != nil {
-			return fmt.Errorf("decode response: %w", err)
+			return resp.StatusCode, fmt.Errorf("decode response: %w", err)
 		}
 	}
-	return nil
+	return resp.StatusCode, nil
 }
 
 // decodeError maps a rest-json error response to the modeled typed exception so

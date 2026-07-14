@@ -40,9 +40,9 @@ type CreateWebFunctionOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) CreateWebFunction(ctx context.Context, in *CreateWebFunctionInput, _ ...func(*Options)) (*CreateWebFunctionOutput, error) {
+func (c *Client) CreateWebFunction(ctx context.Context, in *CreateWebFunctionInput, optFns ...func(*Options)) (*CreateWebFunctionOutput, error) {
 	out := &CreateWebFunctionOutput{}
-	if err := c.invoke(ctx, http.MethodPut, apiPrefix, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPut, apiPrefix, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -70,10 +70,10 @@ type GetWebFunctionOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) GetWebFunction(ctx context.Context, in *GetWebFunctionInput, _ ...func(*Options)) (*GetWebFunctionOutput, error) {
+func (c *Client) GetWebFunction(ctx context.Context, in *GetWebFunctionInput, optFns ...func(*Options)) (*GetWebFunctionOutput, error) {
 	out := &GetWebFunctionOutput{}
 	path := fmt.Sprintf("%s/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)))
-	if err := c.invoke(ctx, http.MethodGet, path, nil, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodGet, path, nil, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -93,10 +93,10 @@ type DeleteWebFunctionOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) DeleteWebFunction(ctx context.Context, in *DeleteWebFunctionInput, _ ...func(*Options)) (*DeleteWebFunctionOutput, error) {
+func (c *Client) DeleteWebFunction(ctx context.Context, in *DeleteWebFunctionInput, optFns ...func(*Options)) (*DeleteWebFunctionOutput, error) {
 	out := &DeleteWebFunctionOutput{}
 	path := fmt.Sprintf("%s/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)))
-	if err := c.invoke(ctx, http.MethodDelete, path, nil, nil); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodDelete, path, nil, nil); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -120,9 +120,9 @@ type ListWebFunctionsOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) ListWebFunctions(ctx context.Context, in *ListWebFunctionsInput, _ ...func(*Options)) (*ListWebFunctionsOutput, error) {
+func (c *Client) ListWebFunctions(ctx context.Context, in *ListWebFunctionsInput, optFns ...func(*Options)) (*ListWebFunctionsOutput, error) {
 	out := &ListWebFunctionsOutput{}
-	if err := c.invoke(ctx, http.MethodPost, apiPrefix, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPost, apiPrefix, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -157,10 +157,10 @@ type CreateWebFunctionRevisionOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) CreateWebFunctionRevision(ctx context.Context, in *CreateWebFunctionRevisionInput, _ ...func(*Options)) (*CreateWebFunctionRevisionOutput, error) {
+func (c *Client) CreateWebFunctionRevision(ctx context.Context, in *CreateWebFunctionRevisionInput, optFns ...func(*Options)) (*CreateWebFunctionRevisionOutput, error) {
 	out := &CreateWebFunctionRevisionOutput{}
 	path := fmt.Sprintf("%s/%s/revisions", apiPrefix, escapePath(aws.ToString(in.FunctionName)))
-	if err := c.invoke(ctx, http.MethodPost, path, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPost, path, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -192,10 +192,10 @@ type GetWebFunctionRevisionOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) GetWebFunctionRevision(ctx context.Context, in *GetWebFunctionRevisionInput, _ ...func(*Options)) (*GetWebFunctionRevisionOutput, error) {
+func (c *Client) GetWebFunctionRevision(ctx context.Context, in *GetWebFunctionRevisionInput, optFns ...func(*Options)) (*GetWebFunctionRevisionOutput, error) {
 	out := &GetWebFunctionRevisionOutput{}
 	path := fmt.Sprintf("%s/%s/revisions/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)), escapePath(aws.ToString(in.RevisionId)))
-	if err := c.invoke(ctx, http.MethodGet, path, nil, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodGet, path, nil, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -216,10 +216,10 @@ type DeleteWebFunctionRevisionOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) DeleteWebFunctionRevision(ctx context.Context, in *DeleteWebFunctionRevisionInput, _ ...func(*Options)) (*DeleteWebFunctionRevisionOutput, error) {
+func (c *Client) DeleteWebFunctionRevision(ctx context.Context, in *DeleteWebFunctionRevisionInput, optFns ...func(*Options)) (*DeleteWebFunctionRevisionOutput, error) {
 	out := &DeleteWebFunctionRevisionOutput{}
 	path := fmt.Sprintf("%s/%s/revisions/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)), escapePath(aws.ToString(in.RevisionId)))
-	if err := c.invoke(ctx, http.MethodDelete, path, nil, nil); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodDelete, path, nil, nil); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -244,10 +244,10 @@ type ListWebFunctionRevisionsOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) ListWebFunctionRevisions(ctx context.Context, in *ListWebFunctionRevisionsInput, _ ...func(*Options)) (*ListWebFunctionRevisionsOutput, error) {
+func (c *Client) ListWebFunctionRevisions(ctx context.Context, in *ListWebFunctionRevisionsInput, optFns ...func(*Options)) (*ListWebFunctionRevisionsOutput, error) {
 	out := &ListWebFunctionRevisionsOutput{}
 	path := fmt.Sprintf("%s/%s/list-revisions", apiPrefix, escapePath(aws.ToString(in.FunctionName)))
-	if err := c.invoke(ctx, http.MethodPost, path, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPost, path, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -292,10 +292,10 @@ type CreateWebFunctionEndpointOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) CreateWebFunctionEndpoint(ctx context.Context, in *CreateWebFunctionEndpointInput, _ ...func(*Options)) (*CreateWebFunctionEndpointOutput, error) {
+func (c *Client) CreateWebFunctionEndpoint(ctx context.Context, in *CreateWebFunctionEndpointInput, optFns ...func(*Options)) (*CreateWebFunctionEndpointOutput, error) {
 	out := &CreateWebFunctionEndpointOutput{}
 	path := fmt.Sprintf("%s/%s/endpoints", apiPrefix, escapePath(aws.ToString(in.FunctionName)))
-	if err := c.invoke(ctx, http.MethodPut, path, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPut, path, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -334,10 +334,10 @@ type GetWebFunctionEndpointOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) GetWebFunctionEndpoint(ctx context.Context, in *GetWebFunctionEndpointInput, _ ...func(*Options)) (*GetWebFunctionEndpointOutput, error) {
+func (c *Client) GetWebFunctionEndpoint(ctx context.Context, in *GetWebFunctionEndpointInput, optFns ...func(*Options)) (*GetWebFunctionEndpointOutput, error) {
 	out := &GetWebFunctionEndpointOutput{}
 	path := fmt.Sprintf("%s/%s/endpoints/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)), escapePath(aws.ToString(in.EndpointName)))
-	if err := c.invoke(ctx, http.MethodGet, path, nil, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodGet, path, nil, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -380,10 +380,10 @@ type UpdateWebFunctionEndpointOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) UpdateWebFunctionEndpoint(ctx context.Context, in *UpdateWebFunctionEndpointInput, _ ...func(*Options)) (*UpdateWebFunctionEndpointOutput, error) {
+func (c *Client) UpdateWebFunctionEndpoint(ctx context.Context, in *UpdateWebFunctionEndpointInput, optFns ...func(*Options)) (*UpdateWebFunctionEndpointOutput, error) {
 	out := &UpdateWebFunctionEndpointOutput{}
 	path := fmt.Sprintf("%s/%s/endpoints/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)), escapePath(aws.ToString(in.EndpointName)))
-	if err := c.invoke(ctx, http.MethodPatch, path, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPatch, path, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -404,10 +404,10 @@ type DeleteWebFunctionEndpointOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) DeleteWebFunctionEndpoint(ctx context.Context, in *DeleteWebFunctionEndpointInput, _ ...func(*Options)) (*DeleteWebFunctionEndpointOutput, error) {
+func (c *Client) DeleteWebFunctionEndpoint(ctx context.Context, in *DeleteWebFunctionEndpointInput, optFns ...func(*Options)) (*DeleteWebFunctionEndpointOutput, error) {
 	out := &DeleteWebFunctionEndpointOutput{}
 	path := fmt.Sprintf("%s/%s/endpoints/%s", apiPrefix, escapePath(aws.ToString(in.FunctionName)), escapePath(aws.ToString(in.EndpointName)))
-	if err := c.invoke(ctx, http.MethodDelete, path, nil, nil); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodDelete, path, nil, nil); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -432,10 +432,10 @@ type ListWebFunctionEndpointsOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) ListWebFunctionEndpoints(ctx context.Context, in *ListWebFunctionEndpointsInput, _ ...func(*Options)) (*ListWebFunctionEndpointsOutput, error) {
+func (c *Client) ListWebFunctionEndpoints(ctx context.Context, in *ListWebFunctionEndpointsInput, optFns ...func(*Options)) (*ListWebFunctionEndpointsOutput, error) {
 	out := &ListWebFunctionEndpointsOutput{}
 	path := fmt.Sprintf("%s/%s/list-endpoints", apiPrefix, escapePath(aws.ToString(in.FunctionName)))
-	if err := c.invoke(ctx, http.MethodPost, path, in, out); err != nil {
+	if err := c.withOptions(optFns).invoke(ctx, http.MethodPost, path, in, out); err != nil {
 		return nil, err
 	}
 	return out, nil

@@ -48,6 +48,8 @@ resource "aws_webfunctions_function" "example" {
 
 ## Argument Reference
 
+~> **Note:** Tags are not currently supported: the pre-GA Lambda Web Functions API only accepts tags at creation time and provides no APIs to read or update them, so Terraform cannot manage them without permanent drift. Tag support will be added when the GA API ships tag CRUD operations.
+
 The following arguments are required:
 
 * `function_name` - (Required) Name of the function. Changing this forces a new resource to be created.
@@ -57,7 +59,6 @@ The following arguments are optional:
 * `revision_config` - (Optional) Configuration block for the function's initial revision. [See below](#revision_config).
 * `endpoint_config` - (Optional) Configuration block for the function's endpoint. [See below](#endpoint_config).
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### revision_config
 
@@ -106,7 +107,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `domain_name` - Domain name of the endpoint, when an `endpoint_config` is configured.
 * `latest_revision_id` - ID of the most recently published revision. Reference this from `aws_webfunctions_endpoint` `revision_weights` to route traffic.
 * `state` - Current state of the function.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 
 ## Timeouts
 

@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -231,6 +232,13 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// The API defaults a missing autoDeploymentMode to Disabled, which then
+	// rejects the request unless revisionWeights are supplied. Default to
+	// LatestRevision explicitly (mirrors ValidateConfig's assumption).
+	if input.AutoDeploymentMode == "" && len(input.RevisionWeights) == 0 {
+		input.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
+	}
+
 	functionName := plan.FunctionName.ValueString()
 	endpointName := plan.EndpointName.ValueString()
 
@@ -249,6 +257,10 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	normalizeRevisionWeights(ctx, &plan)
+
+	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
+	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -264,6 +276,7 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	out, err := findEndpointByName(ctx, conn, state.FunctionName.ValueString(), state.EndpointName.ValueString())
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -276,8 +289,16 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	normalizeRevisionWeights(ctx, &state)
+
+	state.ID = types.StringValue(endpointCreateResourceID(state.FunctionName.ValueString(), state.EndpointName.ValueString()))
+	state.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func endpointCreateResourceID(functionName, endpointName string) string {
+	return functionName + flex.ResourceIdSeparator + endpointName
 }
 
 func (r *endpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -316,6 +337,9 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	normalizeRevisionWeights(ctx, &plan)
+	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
+	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -347,6 +371,16 @@ func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteReques
 	if _, err := waitEndpointDeleted(ctx, conn, functionName, endpointName, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
+	}
+}
+
+// normalizeRevisionWeights keeps revision_weights as configuration-only state:
+// under LatestRevision the server reports its ephemeral routing weights, which
+// must not surface as drift for a block the practitioner cannot configure.
+// Under Disabled the weights are required configuration and reflect the server.
+func normalizeRevisionWeights(ctx context.Context, m *endpointResourceModel) {
+	if awstypes.AutoDeploymentMode(m.AutoDeploymentMode.ValueString()) == awstypes.AutoDeploymentModeLatestRevision {
+		m.RevisionWeights = fwtypes.NewListNestedObjectValueOfNull[revisionWeightModel](ctx)
 	}
 }
 

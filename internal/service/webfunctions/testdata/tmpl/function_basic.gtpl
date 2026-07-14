@@ -15,6 +15,23 @@ resource "aws_s3_bucket_versioning" "test" {
   }
 }
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowLambdaAccess"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "function.zip"
@@ -43,11 +60,15 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 resource "aws_webfunctions_function" "test" {
 {{- template "region" }}
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
   function_name = var.rName
 
   revision_config {
     build_config {
-      runtime = "nodejs24.x"
+      runtime_config {
+        runtime = "nodejs24.x"
+      }
 
       code_config {
         s3_object {

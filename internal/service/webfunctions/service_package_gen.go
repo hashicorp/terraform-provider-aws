@@ -44,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_webfunctions_function",
 			Name:     "Function",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalARNIdentity(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,16 +26,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_webfunctions_function", name="Function")
-// @ArnIdentity
+// @IdentityAttribute("function_name")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/webfunctions;webfunctions.GetWebFunctionOutput")
 // @Testing(importStateIdAttribute="function_name")
@@ -53,11 +54,14 @@ func newFunctionResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 const (
 	ResNameFunction = "Function"
+
+	iamPropagationTimeout = 5 * time.Minute
 )
 
 type functionResource struct {
 	framework.ResourceWithModel[functionResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *functionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -104,12 +108,20 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"runtime": schema.StringAttribute{
-										Required: true,
-									},
-								},
 								Blocks: map[string]schema.Block{
+									"runtime_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"runtime": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
 									"code_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigModel](ctx),
 										Validators: []validator.List{
@@ -282,11 +294,29 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 
 	name := plan.FunctionName.ValueString()
 
-	_, err := conn.CreateWebFunction(ctx, &input)
+	// IAM/S3-policy eventual consistency: a freshly created execution role or
+	// bucket policy can take tens of seconds to become visible to the service.
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.CreateWebFunction(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be assumed") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not have s3:GetObject") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "S3 versioning enabled") {
+				return true, err
+			}
+			return false, err
+		})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
+	createOut := outputRaw.(*webfunctions.CreateWebFunctionOutput)
 
 	out, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
@@ -299,6 +329,15 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	plan.ID = fwflex.StringToFramework(ctx, out.FunctionName)
+	plan.ARN = fwflex.StringToFramework(ctx, out.FunctionArn)
+
+	plan.LatestRevisionID = types.StringNull()
+	if createOut.Revision != nil {
+		plan.LatestRevisionID = fwflex.StringToFramework(ctx, createOut.Revision.RevisionId)
+	}
+
+	plan.DomainName = types.StringNull()
 	if !plan.EndpointConfig.IsNull() {
 		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
 		if err != nil {
@@ -312,6 +351,13 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 			return
 		}
 		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+
+		var epModel endpointConfigModel
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -326,19 +372,56 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	out, err := findFunctionByName(ctx, conn, state.FunctionName.ValueString())
+	name := state.FunctionName.ValueString()
+
+	out, err := findFunctionByName(ctx, conn, name)
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.FunctionName.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	state.ID = fwflex.StringToFramework(ctx, out.FunctionName)
+	state.ARN = fwflex.StringToFramework(ctx, out.FunctionArn)
+
+	revisionID, err := findLatestRevisionID(ctx, conn, name)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+	state.LatestRevisionID = fwflex.StringToFramework(ctx, revisionID)
+
+	state.DomainName = types.StringNull()
+	switch endpointName, err := readEndpointName(ctx, conn, name, state.EndpointConfig); {
+	case err != nil:
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	case endpointName != "":
+		ep, err := findEndpointByName(ctx, conn, name, endpointName)
+		switch {
+		case retry.NotFound(err):
+		case err != nil:
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		default:
+			state.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+
+			var epModel endpointConfigModel
+			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			state.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
+		}
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -364,12 +447,23 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 		input.FunctionName = aws.String(name)
 
-		if _, err := conn.CreateWebFunctionRevision(ctx, &input); err != nil {
+		revOut, err := conn.CreateWebFunctionRevision(ctx, &input)
+		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
+
+		revisionID := aws.ToString(revOut.RevisionId)
+		if _, err := waitRevisionActive(ctx, conn, name, revisionID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+		plan.LatestRevisionID = fwflex.StringToFramework(ctx, revOut.RevisionId)
+	} else {
+		plan.LatestRevisionID = state.LatestRevisionID
 	}
 
+	plan.DomainName = state.DomainName
 	if !plan.EndpointConfig.Equal(state.EndpointConfig) && !plan.EndpointConfig.IsNull() {
 		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
 		if err != nil {
@@ -389,6 +483,13 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
+
+		ep, err := waitEndpointActive(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
 	}
 
 	out, err := waitFunctionUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
@@ -433,8 +534,21 @@ func (r *functionResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r *functionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("function_name"), req, resp)
+func readEndpointName(ctx context.Context, conn *webfunctions.Client, functionName string, cfg fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
+	if !cfg.IsNull() {
+		return endpointNameFromConfig(ctx, cfg)
+	}
+
+	out, err := conn.ListWebFunctionEndpoints(ctx, &webfunctions.ListWebFunctionEndpointsInput{
+		FunctionName: aws.String(functionName),
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(out.Endpoints) == 1 {
+		return aws.ToString(out.Endpoints[0].EndpointName), nil
+	}
+	return "", nil
 }
 
 func endpointNameFromConfig(ctx context.Context, l fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
@@ -471,7 +585,6 @@ type revisionConfigModel struct {
 type buildConfigModel struct {
 	CodeConfig    fwtypes.ListNestedObjectValueOf[codeConfigModel]    `tfsdk:"code_config"`
 	RuntimeConfig fwtypes.ListNestedObjectValueOf[runtimeConfigModel] `tfsdk:"runtime_config"`
-	Runtime       types.String                                        `tfsdk:"runtime"`
 }
 
 type codeConfigModel struct {
