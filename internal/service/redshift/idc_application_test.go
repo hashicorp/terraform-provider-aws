@@ -108,6 +108,15 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccIdcApplicationConfig_authorizedTokenIssuerListMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer.1.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test2", names.AttrARN),
+				),
+			},
+			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "redshift_idc_application_arn"),
@@ -391,6 +400,57 @@ resource "aws_redshift_idc_application" "test" {
   authorized_token_issuer {
     authorized_audiences_list = ["client_id"]
     trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test.arn
+  }
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  redshift_idc_application_name = %[1]q
+}
+`, rName))
+}
+
+func testAccIdcApplicationConfig_authorizedTokenIssuerListMultiple(rName string) string {
+	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_ssoadmin_trusted_token_issuer" "test" {
+  name                      = %[1]q
+  instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  trusted_token_issuer_type = "OIDC_JWT"
+
+  trusted_token_issuer_configuration {
+    oidc_jwt_configuration {
+      claim_attribute_path          = "email"
+      identity_store_attribute_path = "emails.value"
+      issuer_url                    = "https://example.com"
+      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
+    }
+  }
+}
+
+resource "aws_ssoadmin_trusted_token_issuer" "test2" {
+  name                      = "%[1]s-2"
+  instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  trusted_token_issuer_type = "OIDC_JWT"
+
+  trusted_token_issuer_configuration {
+    oidc_jwt_configuration {
+      claim_attribute_path          = "email"
+      identity_store_attribute_path = "emails.value"
+      issuer_url                    = "https://example2.com"
+      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
+    }
+  }
+}
+
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_redshift_idc_application" "test" {
+  authorized_token_issuer {
+    authorized_audiences_list = ["client_id"]
+    trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test.arn
+  }
+  authorized_token_issuer {
+    authorized_audiences_list = ["client_id_2"]
+    trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test2.arn
   }
   iam_role_arn                  = aws_iam_role.test.arn
   idc_display_name              = %[1]q
