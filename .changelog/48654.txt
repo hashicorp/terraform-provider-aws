@@ -17,3 +17,7 @@ resource/aws_bedrockagentcore_gateway: Add `allowed_workload_configuration`, `pr
 ```release-note:enhancement
 resource/aws_bedrockagentcore_registry: Add `allowed_workload_configuration`, `private_endpoint`, and `private_endpoint_overrides` configuration blocks to `authorizer_configuration.custom_jwt_authorizer`
 ```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix `Unsupported Type` errors when no `memory` is configured
+```

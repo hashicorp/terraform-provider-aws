@@ -574,7 +574,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
 	// private_endpoint_overrides can be restored after Flatten.
 	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, harness, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -699,6 +699,13 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if v := harness.Memory; v != nil {
+		switch v.(type) {
+		case *awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration:
+		default:
+			harness.Memory = nil
+		}
+	}
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
 	return diags
 }
