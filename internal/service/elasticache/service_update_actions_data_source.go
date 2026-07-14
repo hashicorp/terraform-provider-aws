@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -112,11 +113,17 @@ type serviceUpdateActionsDataSourceModel struct {
 }
 
 type updateActionModel struct {
-	CacheClusterID      types.String `tfsdk:"cache_cluster_id"`
-	Engine              types.String `tfsdk:"engine"`
-	EstimatedUpdateTime types.String `tfsdk:"estimated_update_time"`
-	ReplicationGroupID  types.String `tfsdk:"replication_group_id"`
-	ServiceUpdateName   types.String `tfsdk:"service_update_name"`
+	CacheClusterID                      types.String      `tfsdk:"cache_cluster_id"`
+	Engine                              types.String      `tfsdk:"engine"`
+	EstimatedUpdateTime                 types.String      `tfsdk:"estimated_update_time"`
+	ReplicationGroupID                  types.String      `tfsdk:"replication_group_id"`
+	ServiceUpdateName                   types.String      `tfsdk:"service_update_name"`
+	ServiceUpdateRecommendedApplyByDate timetypes.RFC3339 `tfsdk:"recommended_apply_by_date"`
+	ServiceUpdateReleaseDate            timetypes.RFC3339 `tfsdk:"release_date"`
+	ServiceUpdateSeverity               types.String      `tfsdk:"service_update_severity"`
+	ServiceUpdateStatus                 types.String      `tfsdk:"service_update_status"`
+	ServiceUpdateType                   types.String      `tfsdk:"service_update_type"`
+	UpdateActionStatus                  types.String      `tfsdk:"update_action_status"`
 }
 
 func findServiceUpdateActions(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUpdateActionsInput) ([]awstypes.UpdateAction, error) {
