@@ -143,6 +143,7 @@ val services = mapOf(
     "kms" to ServiceSpec("KMS (Key Management)"),
     "lakeformation" to ServiceSpec("Lake Formation"),
     "lambda" to ServiceSpec("Lambda", vpcLock = true),
+    "lambdamicrovms" to ServiceSpec("Lambda MicroVMs"),
     "launchwizard" to ServiceSpec("Launch Wizard"),
     "lexv2models" to ServiceSpec("Lex V2 Models"),
     "licensemanager" to ServiceSpec("License Manager"),

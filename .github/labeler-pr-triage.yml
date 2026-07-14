@@ -1335,6 +1335,12 @@ service/lambda:
           - any-glob-to-any-file:
               - 'internal/service/lambda/**/*'
               - 'website/**/lambda_*'
+service/lambdamicrovms:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/lambdamicrovms/**/*'
+              - 'website/**/lambdamicrovms_*'
 service/launchwizard:
   - any:
       - changed-files:
