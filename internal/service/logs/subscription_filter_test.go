@@ -276,6 +276,14 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.account\", \"@aws.region\", \"@source.log\"]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_fields.*", "@source.log"),
+				),
+			},
+			{
 				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[]"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
