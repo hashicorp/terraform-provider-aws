@@ -38,7 +38,7 @@ func (l *keywordListResource) ListResourceConfigSchema(ctx context.Context, requ
 		Attributes: map[string]listschema.Attribute{
 			"origination_identity": listschema.StringAttribute{
 				Required:    true,
-				Description: "Origination identity to list keywords for. Value is the ID or ARN of a phone number, pool, or sender ID.",
+				Description: "Origination identity to list keywords for. Value is the ID or ARN of a phone number or pool.",
 			},
 		},
 		Blocks: map[string]listschema.Block{},

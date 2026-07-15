@@ -99,7 +99,7 @@ func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"origination_identity": schema.StringAttribute{
-				Description: "Origination identity to attach the keyword to. Value is the ID or ARN of a phone number, pool, or sender ID.",
+				Description: "Origination identity to attach the keyword to. Value is the ID or ARN of a phone number or pool.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

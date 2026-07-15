@@ -26,5 +26,5 @@ list "aws_pinpointsmsvoicev2_keyword" "example" {
 
 This list resource supports the following arguments:
 
-* `origination_identity` - (Required) Origination identity to list keywords for. Value is the ID or ARN of a phone number, pool, or sender ID.
+* `origination_identity` - (Required) Origination identity to list keywords for. Value is the ID or ARN of a phone number or pool.
 * `region` - (Optional) Region to query. Defaults to provider region.

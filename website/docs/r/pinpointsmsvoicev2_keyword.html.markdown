@@ -80,7 +80,7 @@ The following arguments are required:
 
 * `keyword` - (Required) Keyword to configure. Changing this forces a new resource.
 * `keyword_message` - (Required) Message to send when the keyword is received.
-* `origination_identity` - (Required) Origination identity to attach the keyword to. Value is the ID or ARN of a phone number, pool, or sender ID. Changing this forces a new resource.
+* `origination_identity` - (Required) Origination identity to attach the keyword to. Value is the ID or ARN of a phone number or pool. Changing this forces a new resource.
 
 The following arguments are optional:
 
