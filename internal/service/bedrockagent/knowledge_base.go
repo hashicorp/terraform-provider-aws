@@ -1467,8 +1467,9 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	data.KnowledgeBaseID = fwflex.StringValueToFramework(ctx, knowledgeBaseID)
 
 	kb, err = waitKnowledgeBaseCreated(ctx, conn, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), knowledgeBaseID)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) create", knowledgeBaseID), err.Error())
 		return
 	}

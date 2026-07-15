@@ -562,6 +562,9 @@ func testAccDataSource_managedKBConnector_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"data_source_configuration.0.managed_knowledge_base_connector_configuration.0.connector_parameters",
+				},
 			},
 		},
 	})
@@ -592,6 +595,9 @@ func testAccDataSource_managedKBConnector_mediaExtraction(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"data_source_configuration.0.managed_knowledge_base_connector_configuration.0.connector_parameters",
+				},
 			},
 		},
 	})

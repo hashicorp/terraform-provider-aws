@@ -999,10 +999,12 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), id)
+		response.State.SetAttribute(ctx, path.Root("data_source_id"), dataSourceID)
+		response.State.SetAttribute(ctx, path.Root("knowledge_base_id"), knowledgeBaseID)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) create", dataSourceID, knowledgeBaseID), err.Error())
-
 		return
 	}
 
@@ -1297,7 +1299,7 @@ func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Cont
 			return nil, diags
 		}
 		var v awstypes.DeletionProtectionConfiguration
-		diags.Append(fwflex.Expand(ctx, data, &r)...)
+		diags.Append(fwflex.Expand(ctx, data, &v)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1311,7 +1313,7 @@ func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Cont
 			return nil, diags
 		}
 		var v awstypes.MediaExtractionConfiguration
-		diags.Append(fwflex.Expand(ctx, data, &r)...)
+		diags.Append(fwflex.Expand(ctx, data, &v)...)
 		if diags.HasError() {
 			return nil, diags
 		}
