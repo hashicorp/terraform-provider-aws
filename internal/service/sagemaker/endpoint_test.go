@@ -298,7 +298,7 @@ func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string) res
 
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
-		_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
+		_, err := tfsagemaker.FindEndpointByNameExcludeDeleting(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

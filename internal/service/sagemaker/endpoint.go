@@ -269,7 +269,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	tflog.Info(ctx, "Creating SageMaker AI Endpoint")
 
-	err := tfresource.Retry(ctx, propagationTimeout*3, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout*2, func(ctx context.Context) *tfresource.RetryError {
 		tflog.Info(ctx, "Calling CreateEndpoint")
 		_, err := conn.CreateEndpoint(ctx, &input)
 
@@ -312,7 +312,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	endpoint, err := findEndpointByName(ctx, conn, d.Id())
+	endpoint, err := findEndpointByNameExcludeDeleting(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
@@ -398,7 +398,7 @@ func endpointDeleteSync(ctx context.Context, conn *sagemaker.Client, name string
 	tflog.Trace(ctx, "Waiting for SageMaker AI Endpoint deletion")
 
 	if _, err := waitEndpointDeleted(ctx, conn, name); err != nil {
-		return fmt.Errorf("waiting for SageMaker AI Endpoint (%s) delete: %s", name, err)
+		return fmt.Errorf("waiting for SageMaker AI Endpoint (%s) delete: %w", name, err)
 	}
 
 	tflog.Info(ctx, "Deleted SageMaker AI Endpoint")
@@ -406,6 +406,7 @@ func endpointDeleteSync(ctx context.Context, conn *sagemaker.Client, name string
 	return nil
 }
 
+// findEndpointByName finds an Endpoint by name
 func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
 	input := sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(name),
@@ -413,6 +414,16 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 
 	output, err := findEndpoint(ctx, conn, &input)
 
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// findEndpointByNameExcludeDeleting finds an Endpoint by name, but excludes it if it is in status "Deleting"
+func findEndpointByNameExcludeDeleting(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+	output, err := findEndpointByName(ctx, conn, name)
 	if err != nil {
 		return nil, err
 	}
@@ -491,11 +502,10 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.EndpointStatusDeleting),
-		Target:                    []string{},
-		Refresh:                   statusEndpoint(conn, name),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 3,
+		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
+		Target:  []string{},
+		Refresh: statusEndpoint(conn, name),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
