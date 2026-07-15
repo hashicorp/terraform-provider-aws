@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package webfunctions
@@ -110,7 +110,7 @@ func findLatestRevisionID(ctx context.Context, conn *webfunctions.Client, functi
 	return latest.RevisionId, nil
 }
 
-func statusFunction(ctx context.Context, conn *webfunctions.Client, name string) retry.StateRefreshFunc {
+func statusFunction(conn *webfunctions.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findFunctionByName(ctx, conn, name)
 		if retry.NotFound(err) {
@@ -124,7 +124,7 @@ func statusFunction(ctx context.Context, conn *webfunctions.Client, name string)
 	}
 }
 
-func statusEndpoint(ctx context.Context, conn *webfunctions.Client, functionName, endpointName string) retry.StateRefreshFunc {
+func statusEndpoint(conn *webfunctions.Client, functionName, endpointName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findEndpointByName(ctx, conn, functionName, endpointName)
 		if retry.NotFound(err) {
@@ -138,7 +138,7 @@ func statusEndpoint(ctx context.Context, conn *webfunctions.Client, functionName
 	}
 }
 
-func statusRevision(ctx context.Context, conn *webfunctions.Client, functionName, revisionID string) retry.StateRefreshFunc {
+func statusRevision(conn *webfunctions.Client, functionName, revisionID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findRevisionByID(ctx, conn, functionName, revisionID)
 		if retry.NotFound(err) {
@@ -156,7 +156,7 @@ func waitRevisionActive(ctx context.Context, conn *webfunctions.Client, function
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RevisionStatePending),
 		Target:                    enum.Slice(awstypes.RevisionStateActive),
-		Refresh:                   statusRevision(ctx, conn, functionName, revisionID),
+		Refresh:                   statusRevision(conn, functionName, revisionID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -174,7 +174,7 @@ func waitFunctionCreated(ctx context.Context, conn *webfunctions.Client, name st
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.FunctionStatePending),
 		Target:                    enum.Slice(awstypes.FunctionStateActive),
-		Refresh:                   statusFunction(ctx, conn, name),
+		Refresh:                   statusFunction(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -192,7 +192,7 @@ func waitFunctionUpdated(ctx context.Context, conn *webfunctions.Client, name st
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.FunctionStatePending),
 		Target:                    enum.Slice(awstypes.FunctionStateActive),
-		Refresh:                   statusFunction(ctx, conn, name),
+		Refresh:                   statusFunction(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -210,7 +210,7 @@ func waitFunctionDeleted(ctx context.Context, conn *webfunctions.Client, name st
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FunctionStateActive, awstypes.FunctionStateDeleting),
 		Target:  []string{},
-		Refresh: statusFunction(ctx, conn, name),
+		Refresh: statusFunction(conn, name),
 		Timeout: timeout,
 	}
 
@@ -226,7 +226,7 @@ func waitEndpointActive(ctx context.Context, conn *webfunctions.Client, function
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EndpointStatePending),
 		Target:                    enum.Slice(awstypes.EndpointStateActive),
-		Refresh:                   statusEndpoint(ctx, conn, functionName, endpointName),
+		Refresh:                   statusEndpoint(conn, functionName, endpointName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -244,7 +244,7 @@ func waitEndpointDeleted(ctx context.Context, conn *webfunctions.Client, functio
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStateActive, awstypes.EndpointStateDeleting),
 		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, functionName, endpointName),
+		Refresh: statusEndpoint(conn, functionName, endpointName),
 		Timeout: timeout,
 	}
 

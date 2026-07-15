@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // DONOTCOPY: This is a GA-readiness skeleton. It targets the (not-yet-public)
@@ -81,7 +81,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 			"latest_revision_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"domain_name": schema.StringAttribute{
+			names.AttrDomainName: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -96,7 +96,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
-						"kms_key_arn": schema.StringAttribute{
+						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 						},
@@ -167,7 +167,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"execution_role_arn": schema.StringAttribute{
+									names.AttrExecutionRoleARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -241,7 +241,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"endpoint_type": schema.StringAttribute{
+						names.AttrEndpointType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
 							Required:   true,
 							PlanModifiers: []planmodifier.String{
@@ -517,9 +517,10 @@ func (r *functionResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	name := state.FunctionName.ValueString()
 
-	_, err := conn.DeleteWebFunction(ctx, &webfunctions.DeleteWebFunctionInput{
+	input := webfunctions.DeleteWebFunctionInput{
 		FunctionName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteWebFunction(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -539,9 +540,10 @@ func readEndpointName(ctx context.Context, conn *webfunctions.Client, functionNa
 		return endpointNameFromConfig(ctx, cfg)
 	}
 
-	out, err := conn.ListWebFunctionEndpoints(ctx, &webfunctions.ListWebFunctionEndpointsInput{
+	input := webfunctions.ListWebFunctionEndpointsInput{
 		FunctionName: aws.String(functionName),
-	})
+	}
+	out, err := conn.ListWebFunctionEndpoints(ctx, &input)
 	if err != nil {
 		return "", err
 	}

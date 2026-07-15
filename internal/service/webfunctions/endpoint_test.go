@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // DONOTCOPY: This is a GA-readiness skeleton. It targets the (not-yet-public)
@@ -11,14 +11,15 @@ package webfunctions_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/webfunctions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/webfunctions/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,7 +33,7 @@ func TestAccWebFunctionsEndpoint_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_webfunctions_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
@@ -47,9 +48,9 @@ func TestAccWebFunctionsEndpoint_basic(t *testing.T) {
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+/endpoint/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", "extra"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", string(awstypes.EndpointTypeHomeRegion)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeApplicationManaged)),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 				),
 			},
 			{
@@ -68,7 +69,7 @@ func TestAccWebFunctionsEndpoint_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_webfunctions_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
@@ -84,6 +85,11 @@ func TestAccWebFunctionsEndpoint_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwebfunctions.ResourceEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -95,7 +101,7 @@ func TestAccWebFunctionsEndpoint_multiRegion(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_webfunctions_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
@@ -108,7 +114,7 @@ func TestAccWebFunctionsEndpoint_multiRegion(t *testing.T) {
 				Config: testAccEndpointConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", string(awstypes.EndpointTypeMultiRegion)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeMultiRegion)),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment_mode", string(awstypes.AutoDeploymentModeDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "revision_weights.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revision_weights.0.weight", "100"),
@@ -190,12 +196,19 @@ resource "aws_webfunctions_endpoint" "test" {
 }
 
 func testAccEndpointConfig_multiRegion(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), `
+	// Pre-GA: the service is only available in us-east-1, eu-west-1 and us-west-2
+	// (see PreCheckRegion above). Pick a supported second region distinct from the
+	// test region.
+	secondRegion := endpoints.EuWest1RegionID
+	if acctest.Region() == endpoints.EuWest1RegionID {
+		secondRegion = endpoints.UsEast1RegionID
+	}
+	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
 resource "aws_webfunctions_endpoint" "test" {
   function_name        = aws_webfunctions_function.test.function_name
   endpoint_name        = "multi"
   endpoint_type        = "MultiRegion"
-  regions              = ["eu-west-1", data.aws_region.current.region]
+  regions              = [%[1]q, %[2]q]
   auth_type            = "ApplicationManaged"
   auto_deployment_mode = "Disabled"
 
@@ -204,5 +217,5 @@ resource "aws_webfunctions_endpoint" "test" {
     weight      = 100
   }
 }
-`)
+`, secondRegion, acctest.Region()))
 }

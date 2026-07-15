@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // DONOTCOPY: This is a GA-readiness skeleton. It targets the (not-yet-public)
@@ -84,7 +84,7 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"endpoint_type": schema.StringAttribute{
+			names.AttrEndpointType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -116,7 +116,7 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					listvalidator.SizeAtMost(5), // service replication quota (model ceiling is 100)
 				},
 			},
-			"domain_name": schema.StringAttribute{
+			names.AttrDomainName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -137,7 +137,7 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 						"revision_id": schema.StringAttribute{
 							Required: true,
 						},
-						"weight": schema.Int64Attribute{
+						names.AttrWeight: schema.Int64Attribute{
 							Required: true,
 							Validators: []validator.Int64{
 								int64validator.Between(1, 100),
@@ -356,10 +356,11 @@ func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteReques
 	functionName := state.FunctionName.ValueString()
 	endpointName := state.EndpointName.ValueString()
 
-	_, err := conn.DeleteWebFunctionEndpoint(ctx, &webfunctions.DeleteWebFunctionEndpointInput{
+	input := webfunctions.DeleteWebFunctionEndpointInput{
 		FunctionName: aws.String(functionName),
 		EndpointName: aws.String(endpointName),
-	})
+	}
+	_, err := conn.DeleteWebFunctionEndpoint(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
