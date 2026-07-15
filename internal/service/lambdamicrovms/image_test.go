@@ -4,24 +4,13 @@
 package lambdamicrovms_test
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the service/lambdamicrovms/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -31,12 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tflambdamicrovms "github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
@@ -124,6 +109,49 @@ func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLambdaMicrovmsImage_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 lambdamicrovms.GetMicrovmImageOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambdamicrovms_image.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_description(rName, "description one"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description one"),
+				),
+			},
+			{
+				Config: testAccImageConfig_description(rName, "description two"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageExists(ctx, t, resourceName, &v2),
+					testAccCheckImageNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description two"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
@@ -168,6 +196,15 @@ func testAccCheckImageExists(ctx context.Context, t *testing.T, name string, v *
 		}
 		*v = *out
 
+		return nil
+	}
+}
+
+func testAccCheckImageNotRecreated(before, after *lambdamicrovms.GetMicrovmImageOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if beforeARN, afterARN := aws.ToString(before.ImageArn), aws.ToString(after.ImageArn); beforeARN != afterARN {
+			return fmt.Errorf("Lambda MicroVMs Image was recreated: ARN changed from %s to %s", beforeARN, afterARN)
+		}
 		return nil
 	}
 }
@@ -249,4 +286,19 @@ resource "aws_lambdamicrovms_image" "test" {
   }
 }
 `, rName))
+}
+
+func testAccImageConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccImageConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambdamicrovms_image" "test" {
+  name           = %[1]q
+  description    = %[2]q
+  base_image_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:aws:microvm-image:al2023-1"
+  build_role_arn = aws_iam_role.test.arn
+
+  code_artifact {
+    uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
+  }
+}
+`, rName, description))
 }

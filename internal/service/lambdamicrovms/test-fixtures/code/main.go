@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
+	sleepDuration := time.Second * 5
 	for {
 		fmt.Println("hello")
-		time.Sleep(5 * time.Second)
+		time.Sleep(sleepDuration)
 	}
 }

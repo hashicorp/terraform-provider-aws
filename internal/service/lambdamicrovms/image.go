@@ -147,7 +147,6 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 }
 
 func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().LambdaMicrovmsClient(ctx)
 
 	var plan imageResourceModel
@@ -243,6 +242,13 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		input.ImageIdentifier = plan.ImageArn.ValueStringPointer()
 		input.ClientToken = aws.String(sdkid.UniqueId())
+
+		// The service resolves base_image_version to a full version (e.g. "0.0")
+		// that UpdateMicrovmImage rejects as input, so only send it when changed.
+		if plan.BaseImageVersion.Equal(state.BaseImageVersion) {
+			input.BaseImageVersion = nil
+		}
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -274,14 +280,11 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	}
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().LambdaMicrovmsClient(ctx)
 
 	var state imageResourceModel
