@@ -179,7 +179,8 @@ The `managed_knowledge_base_connector_configuration` configuration block support
 
 The `deletion_protection_configuration` configuration block supports the following arguments:
 
-* `enable_deletion_protection` - (Optional) Whether to enable deletion protection for the data source. When enabled, the data source cannot be deleted.
+* `deletion_protection_status` - (Required) Enable or disable deletion protection for the connector. Valid values: `ENABLED`, `DISABLED`.
+* `deletion_protection_threshold` - (Optional) Maximum percentage of documents that a sync job can delete from your index.
 
 ### `media_extraction_configuration` block
 
@@ -193,19 +194,19 @@ The `media_extraction_configuration` configuration block supports the following 
 
 The `audio_extraction_configuration` configuration block supports the following arguments:
 
-* `audio_extraction_status` - (Optional) Whether audio extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `audio_extraction_status` - (Required) Whether audio extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
 ### `image_extraction_configuration` block
 
 The `image_extraction_configuration` configuration block supports the following arguments:
 
-* `image_extraction_status` - (Optional) Whether image extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `image_extraction_status` - (Required) Whether image extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
 ### `video_extraction_configuration` block
 
 The `video_extraction_configuration` configuration block supports the following arguments:
 
-* `video_extraction_status` - (Optional) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `video_extraction_status` - (Required) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
 ### `confluence_data_source_configuration` block
 

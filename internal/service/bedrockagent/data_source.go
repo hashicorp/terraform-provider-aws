@@ -273,8 +273,15 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"enable_deletion_protection": schema.BoolAttribute{
+												"deletion_protection_status": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+													Required:   true,
+												},
+												"deletion_protection_threshold": schema.Int32Attribute{
 													Optional: true,
+													Validators: []validator.Int32{
+														int32validator.Between(0, 100),
+													},
 												},
 											},
 										},
@@ -294,7 +301,8 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"audio_extraction_status": schema.StringAttribute{
-																Optional: true,
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
 															},
 														},
 													},
@@ -307,7 +315,8 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"image_extraction_status": schema.StringAttribute{
-																Optional: true,
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
 															},
 														},
 													},
@@ -320,7 +329,8 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"video_extraction_status": schema.StringAttribute{
-																Optional: true,
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
 															},
 														},
 													},
@@ -1364,7 +1374,8 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 }
 
 type deletionProtectionConfigurationModel struct {
-	EnableDeletionProtection types.Bool `tfsdk:"enable_deletion_protection"`
+	DeletionProtectionStatus    fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"deletion_protection_status"`
+	DeletionProtectionThreshold types.Int32                                         `tfsdk:"deletion_protection_threshold"`
 }
 
 type mediaExtractionConfigurationModel struct {
@@ -1374,15 +1385,15 @@ type mediaExtractionConfigurationModel struct {
 }
 
 type audioExtractionConfigurationModel struct {
-	AudioExtractionStatus types.String `tfsdk:"audio_extraction_status"`
+	AudioExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"audio_extraction_status"`
 }
 
 type imageExtractionConfigurationModel struct {
-	ImageExtractionStatus types.String `tfsdk:"image_extraction_status"`
+	ImageExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"image_extraction_status"`
 }
 
 type videoExtractionConfigurationModel struct {
-	VideoExtractionStatus types.String `tfsdk:"video_extraction_status"`
+	VideoExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"video_extraction_status"`
 }
 
 type confluenceDataSourceConfigurationModel struct {

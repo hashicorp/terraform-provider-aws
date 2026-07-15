@@ -1104,6 +1104,10 @@ resource "aws_bedrockagent_data_source" "test" {
           image_extraction_status = "DISABLED"
         }
       }
+
+      deletion_protection_configuration {
+        deletion_protection_status = "DISABLED"
+      }
     }
   }
 }
