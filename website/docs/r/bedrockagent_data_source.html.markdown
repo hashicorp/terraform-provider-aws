@@ -45,6 +45,10 @@ resource "aws_bedrockagent_data_source" "example" {
           bucketName           = "my-documents-bucket"
           bucketOwnerAccountId = "123456789012"
         }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
       })
 
       media_extraction_configuration {
@@ -462,6 +466,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import

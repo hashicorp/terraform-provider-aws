@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -36,13 +37,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
@@ -62,6 +64,7 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 	r := &dataSourceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -595,6 +598,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 			"vector_ingestion_configuration": schema.ListNestedBlock{
@@ -968,7 +972,7 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*bedrockagent.CreateDataSourceOutput, error) {
 		return conn.CreateDataSource(ctx, &input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -978,17 +982,12 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	ds := outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource
-	dataSourceID := aws.ToString(ds.DataSourceId)
+	ds := output.DataSource
+	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
+	id := dataSourceCreateResourceID(dataSourceID, knowledgeBaseID)
 	data.DataSourceID = fwflex.StringValueToFramework(ctx, dataSourceID)
-	id, err := data.setID()
-	if err != nil {
-		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Data Source", err.Error())
-		return
-	}
 	data.ID = fwflex.StringValueToFramework(ctx, id)
 
-	knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
 	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
@@ -1009,15 +1008,15 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	dataSourceID, knowledgeBaseID, err := dataSourceParseResourceID(id)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.DataSourceID), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
 	ds, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
 	if retry.NotFound(err) {
@@ -1067,6 +1066,12 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
+
+		return
+	}
+
+	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, new.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) update", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
@@ -1154,7 +1159,26 @@ func statusDataSource(conn *bedrockagent.Client, dataSourceID, knowledgeBaseID s
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
+		Pending: enum.Slice(awstypes.DataSourceStatusCreating),
+		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataSourceStatusUpdating),
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
 		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
 		Timeout: timeout,
@@ -1208,25 +1232,18 @@ const (
 	dataSourceResourceIDPartCount = 2
 )
 
-func (m *dataSourceResourceModel) InitFromID() error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), dataSourceResourceIDPartCount, false)
-	if err != nil {
-		return err
-	}
-
-	m.DataSourceID = types.StringValue(parts[0])
-	m.KnowledgeBaseID = types.StringValue(parts[1])
-
-	return nil
+func dataSourceCreateResourceID(dataSourceID, knowledgeBaseID string) string {
+	id, _ := intflex.FlattenResourceId([]string{dataSourceID, knowledgeBaseID}, dataSourceResourceIDPartCount, false)
+	return id
 }
 
-func (m *dataSourceResourceModel) setID() (string, error) {
-	parts := []string{
-		m.DataSourceID.ValueString(),
-		m.KnowledgeBaseID.ValueString(),
+func dataSourceParseResourceID(id string) (string, string, error) {
+	parts, err := intflex.ExpandResourceId(id, dataSourceResourceIDPartCount, false)
+	if err != nil {
+		return "", "", err
 	}
 
-	return flex.FlattenResourceId(parts, dataSourceResourceIDPartCount, false)
+	return parts[0], parts[1], nil
 }
 
 type dataSourceConfigurationModel struct {
@@ -1304,6 +1321,16 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 				diags.AddError("reading Smithy document", err.Error())
 				return diags
 			}
+
+			// The Smithy document comes back as a string containing the JSON document (double quoted).
+			if strings.HasPrefix(v, `"{`) && strings.HasSuffix(v, `}"`) {
+				var inner string
+				if err := tfjson.DecodeFromString(v, &inner); err != nil {
+					diags.AddError("Decoding", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %s", err))
+				}
+				v = inner
+			}
+
 			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
 		} else {
 			m.ConnectorParameters = fwtypes.NewSmithyJSONNull[document.Interface]()

@@ -5,3 +5,11 @@ resource/aws_bedrockagent_knowledge_base: Add support for Managed Knowledge Base
 ```release-note:enhancement
 resource/aws_bedrockagent_data_source: Add `data_source_configuration.managed_knowledge_base_connector_configuration` block
 ```
+
+```release-note:enhancement
+resource/aws_bedrockagent_data_source: Add `timeouts.update` with a default value of `30m`
+```
+
+```release-note:bug
+resource/aws_bedrockagent_data_source: Short-circuit waiting for creation if the resource reaches a `FAILED` state
+```
