@@ -43,6 +43,9 @@ func (d *bucketsDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			names.AttrNamePrefix: schema.StringAttribute{
 				Optional: true,
 			},
+			"max_buckets": schema.Int32Attribute{
+				Optional: true,
+			},
 		},
 	}
 }
@@ -61,6 +64,7 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	input := s3.ListBucketsInput{
 		BucketRegion: aws.String(d.Meta().Region(ctx)),
 		Prefix:       flex.StringFromFramework(ctx, data.NamePrefix),
+		MaxBuckets:   flex.Int32FromFramework(ctx, data.MaxBuckets),
 	}
 
 	out, err := findBucketSummaries(ctx, conn, &input)
@@ -96,7 +100,8 @@ func findBucketSummaries(ctx context.Context, conn *s3.Client, input *s3.ListBuc
 type bucketsDataSourceModel struct {
 	framework.WithRegionModel
 	BucketSummaries fwtypes.ListNestedObjectValueOf[bucketSummaryModel] `tfsdk:"bucket_summaries"`
-	NamePrefix      types.String                                        `tfsdk:"name_prefix"`
+	NamePrefix      types.String    `tfsdk:"name_prefix"`
+	MaxBuckets      types.Int32     `tfsdk:"max_buckets"`
 }
 
 type bucketSummaryModel struct {
