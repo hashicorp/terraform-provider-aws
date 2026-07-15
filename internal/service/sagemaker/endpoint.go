@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -263,7 +265,12 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DeploymentConfig = expandDeploymentConfig(v.([]any))
 	}
 
-	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+
+	tflog.Info(ctx, "Creating SageMaker AI Endpoint")
+
+	err := tfresource.Retry(ctx, propagationTimeout*3, func(ctx context.Context) *tfresource.RetryError {
+		tflog.Info(ctx, "Calling CreateEndpoint")
 		_, err := conn.CreateEndpoint(ctx, &input)
 
 		if err != nil {
@@ -274,12 +281,12 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
 		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
-			d := resourceEndpoint().Data(nil)
-			d.SetId(name)
-			if diags := resourceEndpointDelete(ctx, d, meta); diags.HasError() {
-				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
+			tflog.Warn(ctx, "Error creating SageMaker AI Endpoint: Rolling back", map[string]any{
+				"error": err.Error(),
+			})
+			if err := endpointDeleteSync(ctx, conn, name); err != nil {
+				return tfresource.NonRetryableError(err)
 			}
-
 			return tfresource.RetryableError(err)
 		}
 
@@ -293,6 +300,8 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	tflog.Info(ctx, "Created SageMaker AI Endpoint")
 
 	d.SetId(name)
 
@@ -358,25 +367,43 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker AI Endpoint: %s", d.Id())
-	input := sagemaker.DeleteEndpointInput{
-		EndpointName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteEndpoint(ctx, &input)
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) delete: %s", d.Id(), err)
+	if err := endpointDeleteSync(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func endpointDeleteSync(ctx context.Context, conn *sagemaker.Client, name string) error {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+
+	tflog.Info(ctx, "Deleting SageMaker AI Endpoint")
+
+	input := sagemaker.DeleteEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	_, err := conn.DeleteEndpoint(ctx, &input)
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
+		tflog.Info(ctx, "SageMaker AI Endpoint not found")
+		return nil
+	}
+	if err != nil {
+		tflog.Info(ctx, "Error deleting SageMaker AI Endpoint", map[string]any{
+			"error": err.Error(),
+		})
+		return err
+	}
+
+	tflog.Trace(ctx, "Waiting for SageMaker AI Endpoint deletion")
+
+	if _, err := waitEndpointDeleted(ctx, conn, name); err != nil {
+		return fmt.Errorf("waiting for SageMaker AI Endpoint (%s) delete: %s", name, err)
+	}
+
+	tflog.Info(ctx, "Deleted SageMaker AI Endpoint")
+
+	return nil
 }
 
 func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
