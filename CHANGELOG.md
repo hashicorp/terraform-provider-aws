@@ -1,5 +1,9 @@
 ## 6.56.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_elasticache_service_update_actions` ([#48958](https://github.com/hashicorp/terraform-provider-aws/issues/48958))
+
 ## 6.55.0 (July 15, 2026)
 
 FEATURES:
