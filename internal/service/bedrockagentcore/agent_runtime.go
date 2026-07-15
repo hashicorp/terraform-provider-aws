@@ -822,6 +822,11 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
+	// Attempting to delete a non-existent agent runtime:
+	// "AccessDeniedException: User: ... is not authorized to perform: bedrock-agentcore:DeleteAgentRuntime".
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") {
+		return
+	}
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
