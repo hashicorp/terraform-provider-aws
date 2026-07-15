@@ -100,8 +100,8 @@ func findBucketSummaries(ctx context.Context, conn *s3.Client, input *s3.ListBuc
 type bucketsDataSourceModel struct {
 	framework.WithRegionModel
 	BucketSummaries fwtypes.ListNestedObjectValueOf[bucketSummaryModel] `tfsdk:"bucket_summaries"`
-	NamePrefix      types.String    `tfsdk:"name_prefix"`
-	MaxBuckets      types.Int32     `tfsdk:"max_buckets"`
+	NamePrefix      types.String                                        `tfsdk:"name_prefix"`
+	MaxBuckets      types.Int32                                         `tfsdk:"max_buckets"`
 }
 
 type bucketSummaryModel struct {
