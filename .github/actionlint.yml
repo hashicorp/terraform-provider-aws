@@ -4,3 +4,12 @@
 self-hosted-runner:
   # Labels of self-hosted runner in array of string
   labels: [custom-ubuntu-22.04-small, custom-ubuntu-22.04-medium, custom-ubuntu-22.04-large, custom-ubuntu-22.04-xl]
+
+paths:
+  .github/workflows/agentics-maintenance.yml:
+    ignore:
+      - 'string should not be empty'
+  .github/workflows/*.lock.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
+      - 'unknown permission scope "copilot-requests"'

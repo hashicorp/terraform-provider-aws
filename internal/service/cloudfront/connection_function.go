@@ -36,6 +36,9 @@ import (
 
 // @FrameworkResource("aws_cloudfront_connection_function", name="Connection Function")
 // @Tags(identifierAttribute="connection_function_arn")
+// @ArnFormat("connection-function/{id}", attribute="connection_function_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront;cloudfront.DescribeConnectionFunctionOutput")
+// @Testing(importIgnore="publish")
 func newResourceConnectionFunction(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionFunctionResource{}
 	return r, nil

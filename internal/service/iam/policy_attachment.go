@@ -29,6 +29,9 @@ import (
 )
 
 // @SDKResource("aws_iam_policy_attachment", name="Policy Attachment")
+// @ArnIdentity("policy_arn", duplicatesIdAttr=false)
+// @NoImport
+// @Testing(preIdentityVersion="v6.52.0")
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
@@ -36,37 +39,39 @@ func resourcePolicyAttachment() *schema.Resource {
 		UpdateWithoutTimeout: resourcePolicyAttachmentUpdate,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"groups": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"groups", "roles", "users"},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"roles": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"groups", "roles", "users"},
-			},
-			"users": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"groups", "roles", "users"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"groups": {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{"groups", "roles", "users"},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"roles": {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{"groups", "roles", "users"},
+				},
+				"users": {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{"groups", "roles", "users"},
+				},
+			}
 		},
 	}
 }

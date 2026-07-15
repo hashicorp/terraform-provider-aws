@@ -7,7 +7,13 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-
+    groups:
+      actions-cache:
+        patterns:
+          - "actions/cache"
+          - "actions/cache/*"
+    ignore:
+      - dependency-name: "github/gh-aw-actions/*" # Managed by "gh aw compile".
   - package-ecosystem: "gomod"
     directories:
       - "/"
@@ -52,7 +58,6 @@ updates:
       - "/.ci/providerlint"
       - "/.ci/tools"
       - "/skaff"
-      - "/tools/tfsdk2fw"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

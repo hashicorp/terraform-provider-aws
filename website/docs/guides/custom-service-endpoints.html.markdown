@@ -163,6 +163,7 @@ provider "aws" {
 |CodeDeploy|`deploy`(or `codedeploy`)|`AWS_ENDPOINT_URL_CODEDEPLOY`|`codedeploy`|
 |Detective|`detective`|`AWS_ENDPOINT_URL_DETECTIVE`|`detective`|
 |Device Farm|`devicefarm`|`AWS_ENDPOINT_URL_DEVICE_FARM`|`device_farm`|
+|DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
@@ -210,6 +211,7 @@ provider "aws" {
 |EC2 Image Builder|`imagebuilder`|`AWS_ENDPOINT_URL_IMAGEBUILDER`|`imagebuilder`|
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
+|Interconnect|`interconnect`|`AWS_ENDPOINT_URL_INTERCONNECT`|`interconnect`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
@@ -226,6 +228,7 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -267,7 +270,7 @@ provider "aws" {
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|
 |Parallel Computing Service|`pcs`|`AWS_ENDPOINT_URL_PCS`|`pcs`|
-|Pinpoint|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
+|End User Messaging|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
 |End User Messaging SMS|`pinpointsmsvoicev2`|`AWS_ENDPOINT_URL_PINPOINT_SMS_VOICE_V2`|`pinpoint_sms_voice_v2`|
 |EventBridge Pipes|`pipes`|`AWS_ENDPOINT_URL_PIPES`|`pipes`|
 |Polly|`polly`|`AWS_ENDPOINT_URL_POLLY`|`polly`|

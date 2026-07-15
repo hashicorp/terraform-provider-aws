@@ -55,94 +55,96 @@ func resourceRule() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-			"event_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateEventPatternValue(),
-				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-				StateFunc: func(v any) string {
-					json, _ := ruleEventPatternJSONDecoder(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_enabled": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "is_enabled is deprecated. Use state instead.",
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					rawPlan := d.GetRawPlan()
-					rawIsEnabled := rawPlan.GetAttr("is_enabled")
-					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
 				},
-				ConflictsWith: []string{
-					names.AttrState,
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusNameOrARN,
+					Default:      defaultEventBusName,
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validateRuleName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateRuleName,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrScheduleExpression: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.RuleState](),
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					if oldValue != "" && newValue == "" {
-						return true
-					}
-					return false
+				"event_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateEventPatternValue(),
+					AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+					StateFunc: func(v any) string {
+						json, _ := ruleEventPatternJSONDecoder(v.(string))
+						return json
+					},
 				},
-				ConflictsWith: []string{
-					"is_enabled",
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"is_enabled": {
+					Type:       schema.TypeBool,
+					Optional:   true,
+					Deprecated: "is_enabled is deprecated. Use state instead.",
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						rawPlan := d.GetRawPlan()
+						rawIsEnabled := rawPlan.GetAttr("is_enabled")
+						return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+					},
+					ConflictsWith: []string{
+						names.AttrState,
+					},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validateRuleName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validateRuleName,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrScheduleExpression: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+					AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
+				},
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.RuleState](),
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						if oldValue != "" && newValue == "" {
+							return true
+						}
+						return false
+					},
+					ConflictsWith: []string{
+						"is_enabled",
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -262,24 +264,21 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &eventbridge.DeleteRuleInput{
+	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
+	input := eventbridge.DeleteRuleInput{
 		Name: aws.String(ruleName),
 	}
-
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
 	}
-
 	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.Force = v.(bool)
 	}
-
 	const (
 		timeout = 5 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteRule(ctx, input)
+		return conn.DeleteRule(ctx, &input)
 	}, errCodeValidationException, "Rule can't be deleted since it has targets")
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -294,7 +293,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.PutRuleInput) (string, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*eventbridge.PutRuleOutput, error) {
 		return conn.PutRule(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
@@ -302,17 +301,21 @@ func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbri
 		return "", err
 	}
 
-	return aws.ToString(outputRaw.(*eventbridge.PutRuleOutput).RuleArn), nil
+	return aws.ToString(output.RuleArn), nil
 }
 
 func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBusName, ruleName string) (*eventbridge.DescribeRuleOutput, error) {
-	input := &eventbridge.DescribeRuleInput{
+	input := eventbridge.DescribeRuleInput{
 		Name: aws.String(ruleName),
 	}
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
 	}
 
+	return findRule(ctx, conn, &input)
+}
+
+func findRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeRuleInput) (*eventbridge.DescribeRuleOutput, error) {
 	output, err := conn.DescribeRule(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -340,7 +343,7 @@ var (
 const ruleResourceIDSeparator = "/"
 
 func ruleCreateResourceID(eventBusName, ruleName string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		return ruleName
 	}
 
@@ -354,7 +357,7 @@ func ruleParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ruleResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
+		return defaultEventBusName, parts[0], nil
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

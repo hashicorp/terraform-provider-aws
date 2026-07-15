@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_launch_template: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_launch_template
+```

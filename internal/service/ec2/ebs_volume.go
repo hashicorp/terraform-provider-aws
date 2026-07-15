@@ -30,17 +30,20 @@ import (
 
 // @SDKResource("aws_ebs_volume", name="EBS Volume")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Volume")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="final_snapshot")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(name="Volume")
+// @Testing(generator=false)
 func resourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,
 		ReadWithoutTimeout:   resourceEBSVolumeRead,
 		UpdateWithoutTimeout: resourceEBSVolumeUpdate,
 		DeleteWithoutTimeout: resourceEBSVolumeDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -50,85 +53,87 @@ func resourceEBSVolume() *schema.Resource {
 
 		CustomizeDiff: resourceEBSVolumeCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"multi_attach_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSize: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
-			},
-			names.AttrSnapshotID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrThroughput: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(125, 2000),
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"volume_initialization_rate": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(100, 300),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"final_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"multi_attach_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrOutpostARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSize: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
+				},
+				names.AttrSnapshotID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrThroughput: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(125, 2000),
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"volume_initialization_rate": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(100, 300),
+				},
+			}
 		},
 	}
 }
@@ -159,7 +164,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.MultiAttachEnabled = aws.Bool(value.(bool))
 	}
 
-	if value, ok := d.GetOk("outpost_arn"); ok {
+	if value, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(value.(string))
 	}
 
@@ -215,23 +220,57 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
-	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
-	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
-	d.Set(names.AttrEncrypted, volume.Encrypted)
-	d.Set(names.AttrIOPS, volume.Iops)
-	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set(names.AttrSize, volume.Size)
-	d.Set(names.AttrSnapshotID, volume.SnapshotId)
-	d.Set(names.AttrThroughput, volume.Throughput)
-	d.Set(names.AttrType, volume.VolumeType)
-	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
+	if err := resourceEBSVolumeFlatten(ctx, c, volume, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceEBSVolumeFlatten(ctx context.Context, awsClient *conns.AWSClient, volume *awstypes.Volume, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrARN, ebsVolumeARN(ctx, awsClient, aws.ToString(volume.VolumeId))); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrARN, err)
+	}
+	if err := d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrAvailabilityZone, err)
+	}
+	if err := d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrCreateTime, err)
+	}
+	if err := d.Set(names.AttrEncrypted, volume.Encrypted); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrEncrypted, err)
+	}
+	if err := d.Set(names.AttrIOPS, volume.Iops); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrIOPS, err)
+	}
+	if err := d.Set(names.AttrKMSKeyID, volume.KmsKeyId); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrKMSKeyID, err)
+	}
+	if err := d.Set("multi_attach_enabled", volume.MultiAttachEnabled); err != nil {
+		return fmt.Errorf("setting multi_attach_enabled: %w", err)
+	}
+	if err := d.Set(names.AttrOutpostARN, volume.OutpostArn); err != nil {
+		return fmt.Errorf("setting outpost_arn: %w", err)
+	}
+	if err := d.Set(names.AttrSize, volume.Size); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSize, err)
+	}
+	if err := d.Set(names.AttrSnapshotID, volume.SnapshotId); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrSnapshotID, err)
+	}
+	if err := d.Set(names.AttrThroughput, volume.Throughput); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrThroughput, err)
+	}
+	if err := d.Set(names.AttrType, volume.VolumeType); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrType, err)
+	}
+	if err := d.Set("volume_initialization_rate", volume.VolumeInitializationRate); err != nil {
+		return fmt.Errorf("setting volume_initialization_rate: %w", err)
+	}
 
 	setTagsOut(ctx, volume.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

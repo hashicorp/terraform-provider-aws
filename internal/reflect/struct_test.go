@@ -172,6 +172,143 @@ func TestStructFields(t *testing.T) {
 	}
 }
 
+func BenchmarkStructFields(b *testing.B) {
+	testCases := map[string]struct {
+		in       any
+		expected []reflect.StructField
+	}{
+		"empty struct": {
+			in:       struct{}{},
+			expected: nil,
+		},
+		"basic struct": {
+			in: ExampleStruct{},
+			expected: []reflect.StructField{
+				{
+					Name:      "Field1",
+					Index:     []int{0},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field2",
+					Index:     []int{1},
+					Anonymous: false,
+				},
+				{
+					Name:      "unexportedField",
+					Index:     []int{2},
+					Anonymous: false,
+				},
+			},
+		},
+		"embedded struct": {
+			in: struct {
+				ExampleStruct
+				Field3 bool
+			}{},
+			expected: []reflect.StructField{
+				{
+					Name:      "Field1",
+					Index:     []int{0, 0},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field2",
+					Index:     []int{0, 1},
+					Anonymous: false,
+				},
+				{
+					Name:      "unexportedField",
+					Index:     []int{0, 2},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field3",
+					Index:     []int{1},
+					Anonymous: false,
+				},
+			},
+		},
+		"unexported embedded struct": {
+			in: struct {
+				unexportedStruct
+				Field3 bool
+			}{},
+			expected: []reflect.StructField{
+				{
+					Name:      "Field1",
+					Index:     []int{0, 0},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field2",
+					Index:     []int{0, 1},
+					Anonymous: false,
+				},
+				{
+					Name:      "unexportedField",
+					Index:     []int{0, 2},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field3",
+					Index:     []int{1},
+					Anonymous: false,
+				},
+			},
+		},
+		"nested embedded struct": {
+			in: struct {
+				NestedEmbedStruct
+				Field5 bool
+			}{},
+			expected: []reflect.StructField{
+				{
+					Name:      "Field3",
+					Index:     []int{0, 0},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field1",
+					Index:     []int{0, 1, 0},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field2",
+					Index:     []int{0, 1, 1},
+					Anonymous: false,
+				},
+				{
+					Name:      "unexportedField",
+					Index:     []int{0, 1, 2},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field4",
+					Index:     []int{0, 2},
+					Anonymous: false,
+				},
+				{
+					Name:      "Field5",
+					Index:     []int{1},
+					Anonymous: false,
+				},
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		b.Run(name, func(b *testing.B) {
+			for b.Loop() {
+				var out []reflect.StructField
+				for v := range StructFields(reflect.TypeOf(testCase.in)) {
+					out = append(out, v)
+				}
+			}
+		})
+	}
+}
+
 func TestExportedStructFields(t *testing.T) {
 	t.Parallel()
 

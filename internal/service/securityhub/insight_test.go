@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -72,6 +73,14 @@ func testAccInsight_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securityhub_insight.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securityhub_insight.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -605,7 +614,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -628,7 +637,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -642,18 +651,18 @@ resource "aws_securityhub_account" "test" {}
 resource "aws_securityhub_insight" "test" {
   filters {
     created_at {
-      start = %q
-      end   = %q
+      start = %[2]q
+      end   = %[3]q
     }
   }
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
-`, startDate, endDate, rName)
+`, rName, startDate, endDate)
 }
 
 func testAccInsightConfig_ipFilters(rName string) string {
@@ -669,7 +678,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -763,17 +772,17 @@ resource "aws_securityhub_account" "test" {}
 resource "aws_securityhub_insight" "test" {
   filters {
     confidence {
-      %s
+      %[2]s
     }
   }
 
   group_by_attribute = "AwsAccountId"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
-`, value, rName)
+`, rName, value)
 }
 
 func testAccInsightConfig_updateGroupByAttribute(rName string) string {
@@ -790,7 +799,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "CompanyName"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
@@ -811,7 +820,7 @@ resource "aws_securityhub_insight" "test" {
 
   group_by_attribute = "WorkflowStatus"
 
-  name = %q
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }

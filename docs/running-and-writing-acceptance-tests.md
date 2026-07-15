@@ -226,7 +226,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 			{
 				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, "aws_cloudwatch_dashboard.foobar", &dashboard),
+					testAccCheckDashboardExists(ctx, t, "aws_cloudwatch_dashboard.foobar", &dashboard),
 					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -267,14 +267,14 @@ When executing the test, the following steps are taken for each `TestStep`:
    successfully, a test function like this is used:
 
     ```go
-    func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+    func testAccCheckDashboardExists(ctx context.Context, t *testing.T, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
+        conn := acctest.ProviderMeta(ctx, t).CloudWatchConn(ctx)
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
@@ -445,7 +445,7 @@ For example:
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   // ... omitted for brevity ...
 
   resource.ParallelTest(t, resource.TestCase{
@@ -504,7 +504,7 @@ func TestAccExampleThing_basic(t *testing.T) {
       {
         // ... omitted for brevity ...
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -541,19 +541,19 @@ For example:
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -588,7 +588,7 @@ Here is an example of the default PreCheck:
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -621,7 +621,7 @@ This is an example of using a standard PreCheck function. For an established ser
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -640,7 +640,7 @@ Below is an example of adding a custom PreCheck function. For a new or preview s
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -674,7 +674,7 @@ Here is an example of the common ErrorCheck:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -748,19 +748,19 @@ For example:
 ```go
 func TestAccExampleThing_disappears(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName, &job),
+          testAccCheckExampleThingExists(ctx, t, resourceName, &job),
           acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
@@ -796,7 +796,7 @@ For children resources that are encapsulated by a parent resource, it is also pr
 ```go
 func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   parentResourceName := "aws_example_parent_thing.test"
   resourceName := "aws_example_child_thing.test"
 
@@ -804,12 +804,12 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
@@ -834,19 +834,19 @@ For example:
 ```go
 func TestAccExampleThing_Description(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description1"),
         ),
       },
@@ -858,7 +858,7 @@ func TestAccExampleThing_Description(t *testing.T) {
       {
         Config: testAccExampleThingConfigDescription(rName, "description2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description2"),
         ),
       },
@@ -901,12 +901,12 @@ func TestAccExample_basic(t *testing.T) {
     },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-    CheckDestroy:             testAccCheckExampleDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(ctx, resourceName),
+          testAccCheckExampleExists(ctx, t, resourceName),
           // ... additional checks ...
         ),
       },
@@ -966,12 +966,12 @@ func TestAccExample_basic(t *testing.T) {
     },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-    CheckDestroy:             testAccCheckExampleDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(ctx, resourceName),
+          testAccCheckExampleExists(ctx, t, resourceName),
           // ... additional checks ...
         ),
       },
@@ -1058,7 +1058,7 @@ For example:
 ```go
 func TestAccExampleThingDataSource_Name(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   dataSourceName := "data.aws_example_thing.test"
   resourceName := "aws_example_thing.test"
 
@@ -1066,12 +1066,12 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
           resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
           resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -1286,13 +1286,13 @@ These are basic principles to help guide the creation of acceptance tests.
 Below are the required items that will be noted during the submission review and prevent immediate merging:
 
 - __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [SDKv2 TestCase documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/testcase#checkdestroy).
-- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
+- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
 - __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
 - __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when run outside an expected environment.
 - __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),`).
-- __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
+- __Uses acctest.ParallelTest__: Tests should use `acctest.ParallelTest` instead of `acctest.Test` except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
-- __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
+- __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
 - __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
 For resources that support import, the additional item below is required that will be noted during the submission review and prevent immediate merging:
@@ -1570,7 +1570,7 @@ Here's an example using `aws_key_pair`
 func TestAccKeyPair_basic(t *testing.T) {
   ...
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	publicKey, _, err := acctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("generating random SSH key: %s", err)
@@ -1609,7 +1609,7 @@ Here's an example using `acctest.DefaultEmailAddress`
 func TestAccSNSTopicSubscription_email(t *testing.T) {
 	...
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		...

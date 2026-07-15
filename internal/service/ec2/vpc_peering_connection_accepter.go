@@ -48,40 +48,42 @@ func resourceVPCPeeringConnectionAccepter() *schema.Resource {
 		//   - vpc_id is Computed-only
 		// and additions:
 		//   - vpc_peering_connection_id Required/ForceNew
-		Schema: map[string]*schema.Schema{
-			"accept_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"accepter": vpcPeeringConnectionOptionsSchema,
-			"auto_accept": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"peer_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"requester":       vpcPeeringConnectionOptionsSchema,
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_peering_connection_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"accepter": vpcPeeringConnectionOptionsSchema,
+				"auto_accept": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"peer_owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peer_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peer_vpc_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"requester":       vpcPeeringConnectionOptionsSchema,
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vpc_peering_connection_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

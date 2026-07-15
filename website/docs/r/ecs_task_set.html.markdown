@@ -72,7 +72,7 @@ The following arguments are optional:
 * `wait_until_stable` - (Optional) Whether `terraform` should wait until the task set has reached `STEADY_STATE`.
 * `wait_until_stable_timeout` - (Optional) Wait timeout for task set to reach `STEADY_STATE`. Valid time units include `ns`, `us` (or `µs`), `ms`, `s`, `m`, and `h`. Default `10m`.
 
-## capacity_provider_strategy
+### capacity_provider_strategy
 
 The `capacity_provider_strategy` configuration block supports the following:
 
@@ -80,7 +80,7 @@ The `capacity_provider_strategy` configuration block supports the following:
 * `weight` - (Required) The relative percentage of the total number of launched tasks that should use the specified capacity provider.
 * `base` - (Optional) The number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
 
-## load_balancer
+### load_balancer
 
 The `load_balancer` configuration block supports the following:
 
@@ -91,7 +91,7 @@ The `load_balancer` configuration block supports the following:
 
 ~> **Note:** Specifying multiple `load_balancer` configurations is still not supported by AWS for ECS task set.
 
-## network_configuration
+### network_configuration
 
 The `network_configuration` configuration block supports the following:
 
@@ -101,14 +101,14 @@ The `network_configuration` configuration block supports the following:
 
 For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html).
 
-## scale
+### scale
 
 The `scale` configuration block supports the following:
 
 * `unit` - (Optional) The unit of measure for the scale value. Default: `PERCENT`.
 * `value` - (Optional) The value, specified as a percent total of a service's `desiredCount`, to scale the task set. Defaults to `0` if not specified. Accepted values are numbers between 0.0 and 100.0.
 
-## service_registries
+### service_registries
 
 `service_registries` support the following:
 

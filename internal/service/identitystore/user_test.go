@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -92,6 +93,14 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfidentitystore.ResourceUser(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -196,8 +205,8 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
-	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
+	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

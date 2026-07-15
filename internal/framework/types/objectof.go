@@ -160,10 +160,9 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 			continue
 		}
 
-		attrValue, err := NullValueOf(ctx, fieldVal.Interface())
-
-		if err != nil {
-			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
+		attrValue, d := NullValueOf(ctx, fieldVal.Interface())
+		diags.Append(d...)
+		if diags.HasError() {
 			return diags
 		}
 

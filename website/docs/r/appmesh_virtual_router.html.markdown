@@ -10,15 +10,7 @@ description: |-
 
 Provides an AWS App Mesh virtual router resource.
 
-## Breaking Changes
-
-Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92) and [here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), `aws_appmesh_virtual_router` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
-
-* Remove service `service_names` from the `spec` argument. AWS has created a `aws_appmesh_virtual_service` resource for each service name. Import these resource using `terraform import`.
-
-* Add a `listener` configuration block to the `spec` argument.
-
-The Terraform state associated with existing resources will automatically be migrated.
+~> **Note:** Because of backward incompatible API changes ([see issue](https://github.com/awslabs/aws-app-mesh-examples/issues/92), [and here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), resource definitions created with provider versions earlier than v2.3.0 must be modified: remove `service_names` from the `spec` argument (AWS created `aws_appmesh_virtual_service` resources for each — import them with `terraform import`); add a `listener` configuration block to the `spec` argument. Existing Terraform state is automatically migrated.
 
 ## Example Usage
 
@@ -45,20 +37,19 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the virtual router. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual router. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `spec` - (Required) Virtual router specification to apply.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
+* `spec` - (Required) Virtual router specification to apply. See [`spec` Block](#spec-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `spec` object supports the following:
+### `spec` Block
 
-* `listener` - (Optional) Listeners that the virtual router is expected to receive inbound traffic from.
-Currently only one listener is supported per virtual router.
+* `listener` - (Optional) Listeners that the virtual router is expected to receive inbound traffic from. Currently only one listener is supported per virtual router. See [`listener` Block](#listener-block) for details.
 
-The `listener` object supports the following:
+### `listener` Block
 
-* `port_mapping` - (Required) Port mapping information for the listener.
+* `port_mapping` - (Required) Port mapping information for the listener. See [`port_mapping` Block](#port_mapping-block) for details.
 
-The `port_mapping` object supports the following:
+### `port_mapping` Block
 
 * `port` - (Required) Port used for the port mapping.
 * `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`,`http2`, `tcp` and `grpc`.
@@ -90,5 +81,3 @@ Using `terraform import`, import App Mesh virtual routers using `mesh_name` toge
 ```console
 % terraform import aws_appmesh_virtual_router.serviceb simpleapp/serviceB
 ```
-
-[1]: /docs/providers/aws/index.html

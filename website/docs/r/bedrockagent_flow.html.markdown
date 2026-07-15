@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Bedrock Agents Flow.
 
+## Example Usage
+
 ### Basic Usage
 
 ```terraform
@@ -19,9 +21,7 @@ resource "aws_bedrockagent_flow" "example" {
 }
 ```
 
-## Example Usage
-
-The default definition:
+### Default definition
 
 ```terraform
 resource "aws_bedrockagent_flow" "example" {

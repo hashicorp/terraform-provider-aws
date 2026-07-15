@@ -71,15 +71,19 @@ func (l *layerVersionListResource) List(ctx context.Context, request list.ListRe
 			rd.Set(names.AttrVersion, strconv.FormatInt(item.layerVersion.Version, 10))
 
 			if request.IncludeResource {
-				tflog.Info(ctx, "Reading Lambda Layer Version")
-				diags := resourceLayerVersionRead(ctx, rd, awsClient)
-				if diags.HasError() {
-					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": fmt.Sprintf("reading Lambda Layer Version (%s)", id)})
+				layerName, versionNumber, err := layerVersionParseResourceID(id)
+				if err != nil {
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err})
 					continue
 				}
-				if rd.Id() == "" {
+
+				output, err := findLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
+				if err != nil {
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err})
 					continue
 				}
+
+				flattenLayerVersion(rd, layerName, output)
 			}
 
 			result.DisplayName = id
