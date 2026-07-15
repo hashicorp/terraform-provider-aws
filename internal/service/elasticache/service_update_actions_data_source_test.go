@@ -171,7 +171,7 @@ data "aws_elasticache_service_update_actions" "test" {
 resource "time_sleep" "wait" {
   create_duration = "10m"
 
-  depends_on  = [aws_elasticache_replication_group.test]
+  depends_on = [aws_elasticache_replication_group.test]
 }
 `)
 }
@@ -189,7 +189,7 @@ data "aws_elasticache_service_update_actions" "test" {
 resource "time_sleep" "wait" {
   create_duration = "10m"
 
-  depends_on  = [aws_elasticache_cluster.test]
+  depends_on = [aws_elasticache_cluster.test]
 }
 `)
 }
@@ -209,7 +209,7 @@ data "aws_elasticache_service_update_actions" "test" {
 resource "time_sleep" "wait" {
   create_duration = "10m"
 
-  depends_on  = [aws_elasticache_replication_group.test]
+  depends_on = [aws_elasticache_replication_group.test]
 }
 `)
 }
