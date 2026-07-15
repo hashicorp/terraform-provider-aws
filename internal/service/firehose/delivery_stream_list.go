@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -45,18 +44,9 @@ func (l *deliveryStreamListResource) List(ctx context.Context, request list.List
 
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
 
-			// The ListDeliveryStreams API only returns delivery stream name, but ARN
-			// is required for resource identity.
-			s, err := findDeliveryStreamByName(ctx, conn, name)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading Kinesis Firehose Delivery Stream (%s): %w", name, err))
-				if !yield(result) {
-					return
-				}
-				continue
-			}
-
-			arn := aws.ToString(s.DeliveryStreamARN)
+			// Construct ARN from stream name to avoid per-result finder calls
+			// when IncludeResource is not set
+			arn := awsClient.RegionalARN(ctx, "firehose", fmt.Sprintf("deliverystream/%s", name))
 			ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			result := request.NewListResult(ctx)
@@ -66,6 +56,14 @@ func (l *deliveryStreamListResource) List(ctx context.Context, request list.List
 			rd.Set(names.AttrARN, arn)
 
 			if request.IncludeResource {
+				s, err := findDeliveryStreamByName(ctx, conn, name)
+				if err != nil {
+					tflog.Error(ctx, "Reading Kinesis Firehose Delivery Stream", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
+
 				if err := resourceDeliveryStreamFlatten(ctx, rd, s); err != nil {
 					tflog.Error(ctx, "Reading Kinesis Firehose Delivery Stream", map[string]any{
 						"error": err.Error(),
