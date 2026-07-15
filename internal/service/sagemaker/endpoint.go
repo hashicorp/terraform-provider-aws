@@ -464,10 +464,11 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
-		Target:  []string{},
-		Refresh: statusEndpoint(conn, name),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.EndpointStatusDeleting),
+		Target:                    []string{},
+		Refresh:                   statusEndpoint(conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
