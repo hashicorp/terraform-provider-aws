@@ -20,7 +20,7 @@ For information about applying service updates, see the [Service updates in Elas
 action "aws_elasticache_apply_service_update" "example" {
   config {
     replication_group_id = aws_elasticache_replication_group.replication_group_id
-    service_update_name  = <service update name>
+    service_update_name  = "example-service-update"
   }
 }
 
