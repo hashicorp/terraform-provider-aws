@@ -119,6 +119,7 @@ project {
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", ""))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+            password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
         }
     }
 
@@ -145,6 +146,10 @@ object PullRequest : BuildType({
         script {
             name = "Install Terraform Core"
             scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
+        }
+        script {
+            name = "Install Github CLI"
+            scriptContent = File("./scripts/pullrequest_tests/install_gh_cli.sh").readText()
         }
         script {
             name = "Run Tests"
