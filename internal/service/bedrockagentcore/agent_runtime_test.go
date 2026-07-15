@@ -29,46 +29,84 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TestCustomJWTAuthorizerPrivateEndpointRoundTrip proves that AutoFlex builds the
-// correct SDK payload for the private_endpoint / private_endpoint_overrides fields
-// (including the union nested inside an override list element) by round-tripping
-// SDK -> model -> SDK.
+// TestCustomJWTAuthorizerPrivateEndpointRoundTrip proves that AutoFlex round-trips
+// every combination of private_endpoint union arms.
 func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
-	in := awstypes.CustomJWTAuthorizerConfiguration{
-		DiscoveryUrl:    aws.String("https://example.com/.well-known/openid-configuration"),
-		AllowedAudience: []string{"aud"},
-		PrivateEndpoint: &awstypes.PrivateEndpointMemberManagedVpcResource{
-			Value: awstypes.ManagedVpcResource{
-				VpcIdentifier:         aws.String("vpc-12345678"),
-				SubnetIds:             []string{"subnet-12345678", "subnet-abcdef01"},
-				EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-				SecurityGroupIds:      []string{"sg-12345678"},
-				RoutingDomain:         aws.String("example.com"),
+	testCases := []struct {
+		name                    string
+		privateEndpoint         awstypes.PrivateEndpoint
+		privateEndpointOverride awstypes.PrivateEndpoint
+	}{
+		{
+			name: "managed_vpc/managed_vpc",
+			privateEndpoint: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-12345678"),
+					SubnetIds:             []string{"subnet-12345678", "subnet-abcdef01"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-12345678"},
+					RoutingDomain:         aws.String("example.com"),
+				},
 			},
-		},
-		PrivateEndpointOverrides: []awstypes.PrivateEndpointOverride{
-			{
-				Domain: aws.String("override.example.com"),
-				PrivateEndpoint: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
-					Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
-						Value: "rcfg-0123456789abcdef0",
-					},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-abcdef01"),
+					SubnetIds:             []string{"subnet-abcdef01", "subnet-12345678"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-abcdef01"},
+					RoutingDomain:         aws.String("override.example.com"),
 				},
 			},
 		},
-	}
-
-	var model tfbedrockagentcore.CustomJWTAuthorizerConfigurationModel
-	if diags := fwflex.Flatten(ctx, in, &model); diags.HasError() {
-		t.Fatalf("Flatten: %v", diags)
-	}
-
-	var out awstypes.CustomJWTAuthorizerConfiguration
-	if diags := fwflex.Expand(ctx, model, &out); diags.HasError() {
-		t.Fatalf("Expand: %v", diags)
+		{
+			name: "managed_vpc/self_managed_lattice",
+			privateEndpoint: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-12345678"),
+					SubnetIds:             []string{"subnet-12345678", "subnet-abcdef01"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-12345678"},
+					RoutingDomain:         aws.String("example.com"),
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-0123456789abcdef0",
+				},
+			},
+		},
+		{
+			name: "self_managed_lattice/managed_vpc",
+			privateEndpoint: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-0123456789abcdef0",
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-abcdef01"),
+					SubnetIds:             []string{"subnet-abcdef01", "subnet-12345678"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-abcdef01"},
+					RoutingDomain:         aws.String("override.example.com"),
+				},
+			},
+		},
+		{
+			name: "self_managed_lattice/self_managed_lattice",
+			privateEndpoint: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-0123456789abcdef0",
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-abcdef0123456789",
+				},
+			},
+		},
 	}
 
 	opts := cmp.Options{
@@ -82,8 +120,37 @@ func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
 		),
 		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
 	}
-	if diff := cmp.Diff(in, out, opts...); diff != "" {
-		t.Errorf("SDK -> model -> SDK round-trip mismatch (-in +out):\n%s", diff)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+			in := awstypes.CustomJWTAuthorizerConfiguration{
+				DiscoveryUrl:    aws.String("https://example.com/.well-known/openid-configuration"),
+				AllowedAudience: []string{"aud"},
+				PrivateEndpoint: tc.privateEndpoint,
+				PrivateEndpointOverrides: []awstypes.PrivateEndpointOverride{
+					{
+						Domain:          aws.String("override.example.com"),
+						PrivateEndpoint: tc.privateEndpointOverride,
+					},
+				},
+			}
+
+			var model tfbedrockagentcore.CustomJWTAuthorizerConfigurationModel
+			if diags := fwflex.Flatten(ctx, in, &model); diags.HasError() {
+				t.Fatalf("Flatten: %v", diags)
+			}
+
+			var out awstypes.CustomJWTAuthorizerConfiguration
+			if diags := fwflex.Expand(ctx, model, &out); diags.HasError() {
+				t.Fatalf("Expand: %v", diags)
+			}
+
+			if diff := cmp.Diff(in, out, opts...); diff != "" {
+				t.Errorf("SDK -> model -> SDK round-trip mismatch (-in +out):\n%s", diff)
+			}
+		})
 	}
 }
 
