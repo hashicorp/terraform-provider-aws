@@ -505,8 +505,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 					"weather", "sports",
 					"client-999", "client-888",
 					"openid", names.AttrEmail,
-					string(awstypes.InboundTokenClaimValueTypeString),
-					string(awstypes.ClaimMatchOperatorTypeEquals),
+					awstypes.InboundTokenClaimValueTypeString,
+					awstypes.ClaimMatchOperatorTypeEquals,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
@@ -533,6 +533,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
 									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
@@ -550,7 +551,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":           knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -573,8 +576,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 					"weather", "sports",
 					"client-999", "client-888",
 					"openid", names.AttrEmail,
-					string(awstypes.InboundTokenClaimValueTypeStringArray),
-					string(awstypes.ClaimMatchOperatorTypeContains),
+					awstypes.InboundTokenClaimValueTypeStringArray,
+					awstypes.ClaimMatchOperatorTypeContains,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
@@ -601,6 +604,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
 									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
@@ -618,7 +622,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":           knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -660,6 +666,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
 									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
@@ -680,7 +687,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":           knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1435,7 +1444,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
-func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string, inboundTokenClaimValueType awstypes.InboundTokenClaimValueType, claimMatchOperator awstypes.ClaimMatchOperatorType) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
