@@ -174,7 +174,7 @@ func (a *applyServiceUpdateAction) Invoke(ctx context.Context, req action.Invoke
 	tflog.Info(ctx, "ElastiCache service update applied successfully")
 }
 
-func (d *applyServiceUpdateAction) ConfigValidators(context.Context) []action.ConfigValidator {
+func (a *applyServiceUpdateAction) ConfigValidators(context.Context) []action.ConfigValidator {
 	return []action.ConfigValidator{
 		actionvalidator.Conflicting(
 			path.MatchRoot("cache_cluster_id"),

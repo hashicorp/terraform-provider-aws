@@ -43,7 +43,6 @@ func TestAccElastiCacheApplyServiceUpdateAction_replicationGroupID(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApplyServiceUpdateActionConfig_replicationGroupID(rName),
-				Check:       resource.ComposeAggregateTestCheckFunc(),
 				ExpectError: regexache.MustCompile(`The update action is not in a valid status\. Current status:\n\s*complete\.`),
 			},
 		},
@@ -74,7 +73,6 @@ func TestAccElastiCacheApplyServiceUpdateAction_cacheClusterID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApplyServiceUpdateActionConfig_cacheClusterID(rName),
-				Check:       resource.ComposeAggregateTestCheckFunc(),
 				ExpectError: regexache.MustCompile(`The update action is not in a valid status\. Current status:\n\s*complete\.`),
 			},
 		},
