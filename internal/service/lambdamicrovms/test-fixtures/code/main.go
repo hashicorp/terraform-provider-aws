@@ -11,7 +11,7 @@ import (
 func main() {
 	sleepDuration := time.Second * 5
 	for {
-		fmt.Println("hello")
+		fmt.Println("hello") // nosemgrep:ci.calling-fmt.Print-and-variants
 		time.Sleep(sleepDuration)
 	}
 }

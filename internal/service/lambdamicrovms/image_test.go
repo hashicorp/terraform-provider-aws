@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +30,7 @@ func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
 	}
 
 	var v lambdamicrovms.GetMicrovmImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_image.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -76,7 +75,7 @@ func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var v lambdamicrovms.GetMicrovmImageOutput
 	resourceName := "aws_lambdamicrovms_image.test"
 
@@ -116,7 +115,7 @@ func TestAccLambdaMicrovmsImage_update(t *testing.T) {
 	}
 
 	var v1, v2 lambdamicrovms.GetMicrovmImageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_image.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -212,9 +211,9 @@ func testAccCheckImageNotRecreated(before, after *lambdamicrovms.GetMicrovmImage
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
 
-	input := &lambdamicrovms.ListMicrovmImagesInput{}
+	input := lambdamicrovms.ListMicrovmImagesInput{}
 
-	_, err := conn.ListMicrovmImages(ctx, input)
+	_, err := conn.ListMicrovmImages(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

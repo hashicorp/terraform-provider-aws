@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -157,7 +157,7 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	var input lambdamicrovms.CreateMicrovmImageInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -241,7 +241,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		var input lambdamicrovms.UpdateMicrovmImageInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		input.ImageIdentifier = plan.ImageArn.ValueStringPointer()
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		// The service resolves base_image_version to a full version (e.g. "0.0")
 		// that UpdateMicrovmImage rejects as input, so only send it when changed.
@@ -294,7 +294,7 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	input := lambdamicrovms.DeleteMicrovmImageInput{
-		ImageIdentifier: aws.String(state.ImageArn.ValueString()),
+		ImageIdentifier: state.ImageArn.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteMicrovmImage(ctx, &input)
