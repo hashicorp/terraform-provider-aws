@@ -568,6 +568,8 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
 		}
+	} else if err := d.Set("shared_resources", nil); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
 	}
 
 	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
