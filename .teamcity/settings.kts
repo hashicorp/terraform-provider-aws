@@ -117,6 +117,8 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+            text("env.GOMODCACHE", "%teamcity.agent.work.dir%/go-cache/mod")
+            text("env.GOCACHE", "%teamcity.agent.work.dir%/go-cache/build")
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", ""))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
@@ -157,7 +159,7 @@ object PullRequest : BuildType({
         }
         script {
             name = "Fetch Test Results"
-            executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
+            // executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
         }
     }
@@ -165,6 +167,13 @@ object PullRequest : BuildType({
     features {
         golang {
             testFormat = "json"
+        }
+
+        buildCache {
+            name = "Go Module Cache"
+            use = true
+            store = true
+            rules = "%env.GOMODCACHE%"
         }
 
         feature {
