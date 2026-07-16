@@ -171,11 +171,11 @@ object PullRequest : BuildType({
 
         buildCache {
             name = "terraform-provider-aws-build-cache"
-            use = true
+            use = false
             publish = true
             rules = """
-                %env.GOMODCACHE%
-                %env.GOCACHE%
+                %system.agent.work.dir%/go-mod-cache
+                %system.agent.work.dir%/go-build-cache
             """.trimIndent()
         }
 
