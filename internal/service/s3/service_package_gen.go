@@ -436,6 +436,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newBucketNotificationResourceAsListResource,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
+		},
+		{
 			Factory:  newBucketOwnershipControlsResourceAsListResource,
 			TypeName: "aws_s3_bucket_ownership_controls",
 			Name:     "Bucket Ownership Controls",

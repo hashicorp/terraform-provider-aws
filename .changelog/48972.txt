@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_guardduty_detector_feature: Support `AI_PROTECTION` and `AI_ANALYST` feature names
+```
+```release-note:enhancement
+resource/aws_guardduty_organization_configuration_feature: Support `AI_PROTECTION` and `AI_ANALYST` feature names
+```

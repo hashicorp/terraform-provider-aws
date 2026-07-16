@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.1
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.47.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.16.1
@@ -78,7 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.42.1
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.55.1
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.67.1
 	github.com/aws/aws-sdk-go-v2/service/connect v1.183.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.43.1
@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.56.1
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.62.1
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.83.0
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.57.1
@@ -211,7 +211,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.118.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.120.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.121.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.41.1
