@@ -171,7 +171,7 @@ object PullRequest : BuildType({
 
         buildCache {
             name = "terraform-provider-aws-build-cache"
-            use = false
+            use = true
             publish = true
             rules = """
                 %env.GOMODCACHE%
