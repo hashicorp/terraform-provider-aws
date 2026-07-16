@@ -309,7 +309,7 @@ func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string) res
 	}
 }
 
-func testAccEndpointConfig_base(rName string) string {
+func testAccEndpointConfig_model_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "access" {
   statement {
@@ -382,7 +382,13 @@ resource "aws_sagemaker_model" "test" {
 
   depends_on = [aws_iam_role_policy.test]
 }
+`, rName)
+}
 
+func testAccEndpointConfig_endpointConfiguration_base(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_model_base(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
@@ -394,11 +400,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     variant_name           = "variant-1"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -407,7 +413,7 @@ resource "aws_sagemaker_endpoint" "test" {
 }
 
 func testAccEndpointConfig_endpointConfigNameUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test2" {
   name = "%[1]s-updated"
 
@@ -428,7 +434,7 @@ resource "aws_sagemaker_endpoint" "test" {
 }
 
 func testAccEndpointConfig_tags(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -441,7 +447,7 @@ resource "aws_sagemaker_endpoint" "test" {
 }
 
 func testAccEndpointConfig_tagsUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -454,7 +460,7 @@ resource "aws_sagemaker_endpoint" "test" {
 }
 
 func testAccEndpointConfig_deploymentBasic(rName, tType string, wait int) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -472,7 +478,7 @@ resource "aws_sagemaker_endpoint" "test" {
 }
 
 func testAccEndpointConfig_deploymentBlueGreen(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -518,7 +524,7 @@ resource "aws_sagemaker_endpoint" "test" {
 }
 
 func testAccEndpointConfig_deploymentRolling(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
