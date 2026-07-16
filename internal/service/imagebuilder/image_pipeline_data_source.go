@@ -24,128 +24,130 @@ func dataSourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImagePipelineRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"container_recipe_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_last_run": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_next_run": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_updated": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"distribution_configuration_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enhanced_image_metadata_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"image_recipe_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_scanning_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ecr_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_tags": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"container_recipe_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_last_run": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_next_run": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_updated": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"distribution_configuration_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enhanced_image_metadata_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"image_recipe_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_scanning_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ecr_configuration": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_tags": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									names.AttrRepositoryName: {
-										Type:     schema.TypeString,
-										Computed: true,
+										names.AttrRepositoryName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"image_tests_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"image_tests_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"timeout_minutes": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							"image_scanning_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"infrastructure_configuration_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pipeline_execution_start_condition": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrScheduleExpression: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"image_tests_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"image_tests_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"timeout_minutes": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"infrastructure_configuration_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"pipeline_execution_start_condition": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrScheduleExpression: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

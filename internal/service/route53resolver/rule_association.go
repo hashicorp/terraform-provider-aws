@@ -42,25 +42,27 @@ func resourceRuleAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validResolverName,
-			},
-			"resolver_rule_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			names.AttrVPCID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validResolverName,
+				},
+				"resolver_rule_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				names.AttrVPCID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
@@ -108,6 +110,12 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
+
+	return resourceRuleAssociationFlatten(d, ruleAssociation)
+}
+
+func resourceRuleAssociationFlatten(d *schema.ResourceData, ruleAssociation *awstypes.ResolverRuleAssociation) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set(names.AttrName, ruleAssociation.Name)
 	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)

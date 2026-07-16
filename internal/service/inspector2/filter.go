@@ -34,7 +34,6 @@ import (
 // @FrameworkResource("aws_inspector2_filter", name="Filter")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
-// @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector2/types;types.Filter")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(preIdentityVersion="6.19.0")

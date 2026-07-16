@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_dynamodb_table_item: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table_item: Add import support
+```
+
+```release-note:new-list-resource
+aws_dynamodb_table_item
+```

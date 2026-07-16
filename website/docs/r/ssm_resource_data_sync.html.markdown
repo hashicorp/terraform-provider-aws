@@ -13,11 +13,20 @@ Provides a SSM resource data sync.
 ## Example Usage
 
 ```terraform
-resource "aws_s3_bucket" "hoge" {
-  bucket = "tf-test-bucket-1234"
+resource "aws_ssm_resource_data_sync" "example" {
+  name = "example"
+
+  s3_destination {
+    bucket_name = aws_s3_bucket.example.bucket
+    region      = aws_s3_bucket.example.region
+  }
 }
 
-data "aws_iam_policy_document" "hoge" {
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+data "aws_iam_policy_document" "example" {
   statement {
     sid    = "SSMBucketPermissionsCheck"
     effect = "Allow"
@@ -28,7 +37,7 @@ data "aws_iam_policy_document" "hoge" {
     }
 
     actions   = ["s3:GetBucketAcl"]
-    resources = ["arn:aws:s3:::tf-test-bucket-1234"]
+    resources = [aws_s3_bucket.example.arn]
   }
 
   statement {
@@ -41,7 +50,7 @@ data "aws_iam_policy_document" "hoge" {
     }
 
     actions   = ["s3:PutObject"]
-    resources = ["arn:aws:s3:::tf-test-bucket-1234/*"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
 
     condition {
       test     = "StringEquals"
@@ -51,18 +60,9 @@ data "aws_iam_policy_document" "hoge" {
   }
 }
 
-resource "aws_s3_bucket_policy" "hoge" {
-  bucket = aws_s3_bucket.hoge.id
-  policy = data.aws_iam_policy_document.hoge.json
-}
-
-resource "aws_ssm_resource_data_sync" "foo" {
-  name = "foo"
-
-  s3_destination {
-    bucket_name = aws_s3_bucket.hoge.bucket
-    region      = aws_s3_bucket.hoge.region
-  }
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  policy = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -74,19 +74,30 @@ This resource supports the following arguments:
 * `name` - (Required) Name for the configuration.
 * `s3_destination` - (Required) Amazon S3 configuration details for the sync.
 
-## s3_destination
+### s3_destination
 
 `s3_destination` supports the following:
 
 * `bucket_name` - (Required) Name of S3 bucket where the aggregated data is stored.
+* `destination_data_sharing` - (Optional) Enables destination data sharing.
+  See [`destination_data_sharing` below](#destination_data_sharing).
 * `region` - (Required) Region with the bucket targeted by the Resource Data Sync.
 * `kms_key_arn` - (Optional) ARN of an encryption key for a destination in Amazon S3.
 * `prefix` - (Optional) Prefix for the bucket.
 * `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.
 
+### destination_data_sharing
+
+`destination_data_sharing` supports the following:
+
+* `destination_data_sharing_type` - (Optional) Data sharing type.
+  Only `Organization` is supported.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+**Note:** If `s3_destination.destination_data_sharing` is set, the imported resource will be replaced on the next `terrafrom apply`.
 
 ## Import
 

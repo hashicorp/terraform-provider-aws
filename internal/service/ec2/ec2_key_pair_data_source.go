@@ -31,42 +31,44 @@ func dataSourceKeyPair() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_public_key": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"key_pair_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"key_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_public_key": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"key_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"key_pair_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"key_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

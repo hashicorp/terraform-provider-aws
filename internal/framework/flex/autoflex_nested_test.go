@@ -90,7 +90,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandNestedComplex(t *testing.T) {
@@ -138,7 +138,7 @@ func TestExpandNestedComplex(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandComplexSingleNestedBlock(t *testing.T) {
@@ -195,7 +195,7 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandTopLevelListOfNestedObject(t *testing.T) {
@@ -286,7 +286,7 @@ func TestExpandTopLevelListOfNestedObject(t *testing.T) {
 			WantTarget: &awsSingleStringValue{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandSetOfNestedObject(t *testing.T) {
@@ -377,7 +377,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			WantTarget: &awsSingleStringValue{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
@@ -416,7 +416,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
@@ -470,7 +470,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandListOfNestedObjectField(t *testing.T) {
@@ -550,7 +550,7 @@ func TestExpandListOfNestedObjectField(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -615,7 +615,7 @@ func TestExpandSetOfNestedObjectField(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -654,7 +654,7 @@ func TestFlattenNestedComplex(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
@@ -693,7 +693,7 @@ func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
@@ -760,7 +760,7 @@ func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
@@ -824,7 +824,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenComplexSingleNestedBlock(t *testing.T) {
@@ -878,7 +878,48 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenNestedObjectOmitEmpty(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	type awsInner struct {
+		Field1 *string
+		Field2 *int64
+	}
+	type awsOuter struct {
+		Inner *awsInner
+	}
+
+	type tfInner struct {
+		Field1 types.String `tfsdk:"field1"`
+		Field2 types.Int64  `tfsdk:"field2"`
+	}
+	type tfOuter struct {
+		Inner fwtypes.ObjectValueOf[tfInner] `tfsdk:"inner" autoflex:",omitempty"`
+	}
+
+	testCases := autoFlexTestCases{
+		"all zero fields returns null": {
+			Source:     &awsOuter{Inner: &awsInner{}},
+			Target:     &tfOuter{},
+			WantTarget: &tfOuter{Inner: fwtypes.NewObjectValueOfNull[tfInner](ctx)},
+		},
+		"non-zero field returns value": {
+			Source:     &awsOuter{Inner: &awsInner{Field1: aws.String("hello")}},
+			Target:     &tfOuter{},
+			WantTarget: &tfOuter{Inner: fwtypes.NewObjectValueOfMust(ctx, &tfInner{Field1: types.StringValue("hello"), Field2: types.Int64Null()})},
+		},
+		"nil pointer returns null": {
+			Source:     &awsOuter{Inner: nil},
+			Target:     &tfOuter{},
+			WantTarget: &tfOuter{Inner: fwtypes.NewObjectValueOfNull[tfInner](ctx)},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
@@ -900,7 +941,7 @@ func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
@@ -943,7 +984,7 @@ func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
@@ -971,7 +1012,7 @@ func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
@@ -1008,7 +1049,7 @@ func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenObjectValueField(t *testing.T) {
@@ -1045,7 +1086,7 @@ func TestFlattenObjectValueField(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1243,7 +1284,7 @@ func TestFlattenListOfNestedObjectField(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }
@@ -1284,7 +1325,7 @@ func TestFlattenTopLevelListOfNestedObject(t *testing.T) {
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runTopLevelTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenSetOfNestedObjectField(t *testing.T) {
@@ -1455,7 +1496,7 @@ func TestFlattenSetOfNestedObjectField(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{})
 		})
 	}
 }

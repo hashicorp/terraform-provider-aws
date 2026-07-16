@@ -20,7 +20,7 @@ func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 	resourceNamePortfolio := "aws_servicecatalog_portfolio.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

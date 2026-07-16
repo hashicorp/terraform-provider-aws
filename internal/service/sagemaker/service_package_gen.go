@@ -36,9 +36,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("algorithm_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("algorithm_name", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newHubContentReferenceResource,
+			TypeName: "aws_sagemaker_hub_content_reference",
+			Name:     "Hub Content Reference",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "hub_content_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("hub_name", true),
+				inttypes.StringIdentityAttribute("hub_content_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      hubContentReferenceImportID{},
 			},
 		},
 		{
@@ -49,7 +66,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -99,7 +116,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("training_job_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("training_job_name", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -117,7 +134,20 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("algorithm_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("algorithm_name", true)),
+		},
+		{
+			Factory:  newHubContentReferenceResourceAsListResource,
+			TypeName: "aws_sagemaker_hub_content_reference",
+			Name:     "Hub Content Reference",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "hub_content_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("hub_name", true),
+				inttypes.StringIdentityAttribute("hub_content_name", true),
+			}),
 		},
 		{
 			Factory:  newHyperParameterTuningJobResourceAsListResource,
@@ -127,7 +157,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
 			Factory:  newTrainingJobResourceAsListResource,
@@ -137,7 +167,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity("training_job_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("training_job_name", true)),
 		},
 	})
 }
@@ -231,7 +261,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceFeatureGroup,
@@ -368,6 +402,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Servicecatalog Portfolio Status",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingletonIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
 			),
 			Import: inttypes.SDKv2Import{

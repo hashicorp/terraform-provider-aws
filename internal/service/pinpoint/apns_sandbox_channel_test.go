@@ -61,7 +61,7 @@ func testAccAPNSSandboxChannelCertConfigurationFromEnv(t *testing.T) *testAccAPN
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -94,7 +94,20 @@ func testAccAPNSSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testAccAP
 	return &conf
 }
 
-func TestAccPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSSandboxChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSSandboxChannel_basicCertificate,
+		"basicToken":       testAccAPNSSandboxChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSSandboxChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_sandbox_channel.test_channel"
@@ -129,7 +142,7 @@ func TestAccPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccPinpointAPNSSandboxChannel_basicToken(t *testing.T) {
+func testAccAPNSSandboxChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_sandbox_channel.test_channel"
@@ -172,7 +185,7 @@ func testAccCheckAPNSSandboxChannelExists(ctx context.Context, t *testing.T, n s
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNs Channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -208,7 +221,7 @@ func testAccCheckAPNSSandboxChannelDestroy(ctx context.Context, t *testing.T) re
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS Sandbox Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS Sandbox Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

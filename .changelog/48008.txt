@@ -1,0 +1,7 @@
+```release-note:bug
+provider: Fix `lifecycle.ignore_changes` for individual `tags` elements being bypassed when another tag in the same map is updated to an empty string, to avoid overwriting any out-of-band changes the lifecycle block was meant to preserve.
+```
+
+```release-note:bug
+resource/aws_instance: Fix `lifecycle.ignore_changes` for individual `tags` elements being bypassed when another tag in the same map is updated to an empty string, to avoid overwriting any out-of-band changes the lifecycle block was meant to preserve.
+```

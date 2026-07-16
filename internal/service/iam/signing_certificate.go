@@ -39,28 +39,30 @@ func resourceSigningCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"certificate_body": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressNormalizeCertRemoval,
-			},
-			"certificate_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.StatusTypeActive,
-				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"certificate_body": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressNormalizeCertRemoval,
+				},
+				"certificate_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.StatusTypeActive,
+					ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

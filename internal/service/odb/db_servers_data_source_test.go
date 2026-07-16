@@ -13,12 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -44,18 +41,18 @@ func TestAccODBDBServersListDataSource_basic(t *testing.T) {
 	var dbServersList odb.ListDbServersOutput
 	dataSourceName := "data.aws_odb_db_servers.test"
 	exaInfraResourceName := "aws_odb_cloud_exadata_infrastructure.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbServersListDataSourceTestEntity.testAccCheckDBServersDestroyed(ctx),
+		CheckDestroy:             dbServersListDataSourceTestEntity.testAccCheckDBServersDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: dbServersListDataSourceTestEntity.testAccDBServersListDataSourceConfigBasic(),
+				Config: dbServersListDataSourceTestEntity.testAccDBServersListDataSourceConfigBasic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbServersListDataSourceTestEntity.testAccCheckDBServersListExists(ctx, exaInfraResourceName, &dbServersList),
+					dbServersListDataSourceTestEntity.testAccCheckDBServersListExists(ctx, t, exaInfraResourceName, &dbServersList),
 					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_servers.db_servers.#", strconv.Itoa(len(dbServersList.DbServers))),
 				),
 			},
@@ -63,13 +60,13 @@ func TestAccODBDBServersListDataSource_basic(t *testing.T) {
 	})
 }
 
-func (testDbServersListDataSource) testAccCheckDBServersListExists(ctx context.Context, name string, output *odb.ListDbServersOutput) resource.TestCheckFunc {
+func (testDbServersListDataSource) testAccCheckDBServersListExists(ctx context.Context, t *testing.T, name string, output *odb.ListDbServersOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBServersList, name, errors.New("not found"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		var exaInfraId = &rs.Primary.ID
 
 		resp, err := dbServersListDataSourceTestEntity.findDBServersList(ctx, conn, exaInfraId)
@@ -81,9 +78,9 @@ func (testDbServersListDataSource) testAccCheckDBServersListExists(ctx context.C
 	}
 }
 
-func (testDbServersListDataSource) testAccCheckDBServersDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (testDbServersListDataSource) testAccCheckDBServersDestroyed(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
@@ -108,9 +105,8 @@ func (testDbServersListDataSource) findExaInfra(ctx context.Context, conn *odb.C
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err
@@ -132,8 +128,8 @@ func (testDbServersListDataSource) findDBServersList(ctx context.Context, conn *
 	return output, nil
 }
 
-func (testDbServersListDataSource) testAccDBServersListDataSourceConfigBasic() string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTestEntity.displayNamePrefix)
+func (testDbServersListDataSource) testAccDBServersListDataSourceConfigBasic(t *testing.T) string {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, dbServersListDataSourceTestEntity.displayNamePrefix)
 	exaInfra := dbServersListDataSourceTestEntity.exaInfra(exaInfraDisplayName)
 	return fmt.Sprintf(`
 %s

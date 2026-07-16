@@ -29,6 +29,7 @@ import (
 
 // @FrameworkDataSource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDistributionTenantDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &distributionTenantDataSource{}
 	return d, nil
@@ -147,12 +148,6 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	// Use AutoFlex to flatten the response
-	response.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	// Set computed fields that need special handling
 	data.ID = fwflex.StringToFramework(ctx, tenant.Id)
 	data.ETag = fwflex.StringToFramework(ctx, etag)
@@ -166,13 +161,13 @@ type distributionTenantDataSourceModel struct {
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
 	Domain                    types.String                                                    `tfsdk:"domain"`
-	Domains                   fwtypes.ListNestedObjectValueOf[domainResultModel]              `tfsdk:"domains" autoflex:",xmlwrapper=Items"`
+	Domains                   fwtypes.ListNestedObjectValueOf[domainResultModel]              `tfsdk:"domains"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                    `tfsdk:"name"`
-	Parameters                fwtypes.ListNestedObjectValueOf[parameterModel]                 `tfsdk:"parameters" autoflex:",xmlwrapper=Items"`
+	Parameters                fwtypes.ListNestedObjectValueOf[parameterModel]                 `tfsdk:"parameters"`
 	Status                    types.String                                                    `tfsdk:"status"`
 	Tags                      tftags.Map                                                      `tfsdk:"tags"`
 }
