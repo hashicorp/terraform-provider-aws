@@ -157,6 +157,7 @@ object PullRequest : BuildType({
         }
         script {
             name = "Fetch Test Results"
+            executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
         }
     }
