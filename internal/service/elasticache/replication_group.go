@@ -61,378 +61,402 @@ func resourceReplicationGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"at_rest_encryption_enabled": {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			"auth_token": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ValidateFunc:  validReplicationGroupAuthToken,
-				ConflictsWith: []string{"user_group_ids"},
-			},
-			"auth_token_update_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			"automatic_failover_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cluster_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"cluster_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ClusterMode](),
-			},
-			"configuration_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_tiering_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
-					// While the existing validator makes it technically possible to provide an
-					// uppercase engine value, the absence of a diff suppression function makes
-					// it impractical to do so (a persistent diff will be present). To be
-					// conservative we will still run the deprecation validator to notify
-					// practitioners that stricter validation will be enforced in v7.0.0.
-					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
-				),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validRedisVersionString,
-					validValkeyVersionString,
-				),
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFinalSnapshotIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"global_replication_group_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ConflictsWith: []string{
-					"num_node_groups",
-					names.AttrParameterGroupName,
-					names.AttrEngine,
-					names.AttrEngineVersion,
-					"node_type",
-					"security_group_names",
-					"transit_encryption_enabled",
-					"transit_encryption_mode",
-					"at_rest_encryption_enabled",
-					"snapshot_arns",
-					"snapshot_name",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			"ip_discovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"log_delivery_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
-						},
-						names.AttrDestination: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"log_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
-						},
-						"log_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
-						},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"at_rest_encryption_enabled": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ForceNew:     true,
+					Computed:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				"auth_token": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ValidateFunc:  validReplicationGroupAuthToken,
+					ConflictsWith: []string{"user_group_ids"},
+				},
+				"auth_token_update_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				"automatic_failover_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					DiffSuppressFunc: func(_, old, _ string, d *schema.ResourceData) bool {
+						// For members of a global replication group, automatic_failover_enabled
+						// is controlled by the global replication group. Suppress diffs on
+						// existing members to avoid persistent plan churn and apply errors.
+						//
+						// Detect "create" via old=="" rather than d.IsNewResource() because
+						// IsNewResource is only set during Apply (the CRUD lifecycle) and is
+						// always false here, including during plan expansion when a previously
+						// unknown global_replication_group_id reference resolves.
+						if old == "" {
+							return false
+						}
+						v, ok := d.GetOk("global_replication_group_id")
+						return ok && v.(string) != ""
 					},
 				},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					// ElastiCache always changes the maintenance to lowercase
-					return strings.ToLower(val.(string))
+				"cluster_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"member_clusters": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"multi_az_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"network_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
-			},
-			"node_group_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Set: func(v any) int {
-					var buf bytes.Buffer
-					m := v.(map[string]any)
-					if v, ok := m["node_group_id"]; ok {
-						fmt.Fprintf(&buf, "%s-", v.(string))
-					}
-					return create.StringHashcode(buf.String())
+				"cluster_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ClusterMode](),
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"node_group_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{1,4}$`), "must be 1-4 digits"),
-						},
-						"primary_availability_zone": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"primary_outpost_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"replica_availability_zones": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"replica_outpost_arns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"replica_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"slots": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\d,-]+$`), "must contain only digits, commas, and hyphens"),
-						},
-					},
+				"configuration_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ConflictsWith: []string{"preferred_cache_cluster_azs"},
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"notification_topic_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"num_cache_clusters": {
-				Type:          schema.TypeInt,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
-			},
-			"num_node_groups": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
-						return true
-					}
-					return false
+				"data_tiering_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
 				},
-			},
-			"preferred_cache_cluster_azs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"primary_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"reader_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replicas_per_node_group": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"num_cache_clusters"},
-				ValidateFunc:  validation.IntAtLeast(0),
-			},
-			"replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateReplicationGroupID,
-				StateFunc: func(val any) string {
-					return strings.ToLower(val.(string))
+				"durability": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Durability](),
 				},
-			},
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"snapshot_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				// Note: Unlike aws_elasticache_cluster, this does not have a limit of 1 item.
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						verify.ValidARN,
-						validation.StringDoesNotContainAny(","),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+						// While the existing validator makes it technically possible to provide an
+						// uppercase engine value, the absence of a diff suppression function makes
+						// it impractical to do so (a persistent diff will be present). To be
+						// conservative we will still run the deprecation validator to notify
+						// practitioners that stricter validation will be enforced in v7.0.0.
+						verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
 					),
 				},
-			},
-			"snapshot_retention_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-			"snapshot_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"transit_encryption_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TransitEncryptionMode](),
-			},
-			"user_group_ids": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"auth_token"},
-			},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						validRedisVersionString,
+						validValkeyVersionString,
+					),
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFinalSnapshotIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"global_replication_group_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					ConflictsWith: []string{
+						"num_node_groups",
+						names.AttrParameterGroupName,
+						names.AttrEngine,
+						names.AttrEngineVersion,
+						"node_type",
+						"security_group_names",
+						"transit_encryption_enabled",
+						"transit_encryption_mode",
+						"at_rest_encryption_enabled",
+						"snapshot_arns",
+						"snapshot_name",
+					},
+				},
+				"ip_discovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"log_delivery_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"destination_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
+							},
+							names.AttrDestination: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"log_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
+							},
+							"log_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+							},
+						},
+					},
+				},
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						// ElastiCache always changes the maintenance to lowercase
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"member_clusters": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"multi_az_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+				},
+				"node_group_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Set: func(v any) int {
+						var buf bytes.Buffer
+						m := v.(map[string]any)
+						if v, ok := m["node_group_id"]; ok {
+							fmt.Fprintf(&buf, "%s-", v.(string))
+						}
+						return create.StringHashcode(buf.String())
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"node_group_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{1,4}$`), "must be 1-4 digits"),
+							},
+							"primary_availability_zone": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"primary_outpost_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"replica_availability_zones": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"replica_outpost_arns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"replica_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"slots": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\d,-]+$`), "must contain only digits, commas, and hyphens"),
+							},
+						},
+					},
+					ConflictsWith: []string{"preferred_cache_cluster_azs"},
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"notification_topic_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"num_cache_clusters": {
+					Type:          schema.TypeInt,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
+				},
+				"num_node_groups": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress default Redis ports when not defined
+						if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
+							return true
+						}
+						return false
+					},
+				},
+				"preferred_cache_cluster_azs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"primary_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"reader_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replicas_per_node_group": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"num_cache_clusters"},
+					ValidateFunc:  validation.IntAtLeast(0),
+				},
+				"replication_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validateReplicationGroupID,
+					StateFunc: func(val any) string {
+						return strings.ToLower(val.(string))
+					},
+				},
+				"security_group_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"snapshot_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					// Note: Unlike aws_elasticache_cluster, this does not have a limit of 1 item.
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							verify.ValidARN,
+							validation.StringDoesNotContainAny(","),
+						),
+					},
+				},
+				"snapshot_retention_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtMost(35),
+				},
+				"snapshot_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"transit_encryption_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TransitEncryptionMode](),
+				},
+				"user_group_ids": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"auth_token"},
+				},
+			}
 		},
 
 		SchemaVersion: 3,
@@ -545,6 +569,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("data_tiering_enabled"); ok {
 		input.DataTieringEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("durability"); ok {
+		input.Durability = awstypes.Durability(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -804,6 +832,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("cluster_mode", rgp.ClusterMode)
+	d.Set("durability", rgp.Durability)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set(names.AttrARN, rgp.ARN)
 	d.Set("data_tiering_enabled", rgp.DataTiering == awstypes.DataTieringStatusEnabled)
@@ -936,8 +965,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("automatic_failover_enabled") {
-			input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
-			requestUpdate = true
+			if _, isMember := d.GetOk("global_replication_group_id"); !isMember {
+				input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -968,7 +999,40 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 					input.Engine = aws.String(engineRedis)
 				}
 			}
-			requestUpdate = true
+			if d.HasChange("log_delivery_configuration") {
+				_, n := d.GetChange("log_delivery_configuration")
+				nSet, ok := n.(*schema.Set)
+				if ok && checkIfLogTypeSlowLog(nSet.List()) &&
+					checkIfEngineSupportsSlowLog(input.Engine, input.EngineVersion) {
+					// log_type slow-log is supported in redis >= 6.0 and valkey >= 7.x .
+					// Apply the engine/engine_version change in a separate ModifyReplicationGroup
+					// call so that it completes before the subsequent update that adds the
+					// slow-log log_delivery_configuration. ApplyImmediately must be true here
+					// regardless of the user's apply_immediately setting; otherwise the engine
+					// upgrade is deferred to the next maintenance window and the immediately
+					// following log_delivery_configuration modification would fail because the
+					// running engine still does not support slow-log delivery.
+					engineVersionInput := elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						Engine:             input.Engine,
+						EngineVersion:      input.EngineVersion,
+						ReplicationGroupId: aws.String(d.Id()),
+					}
+					updateFuncs = append(updateFuncs, func() error {
+						_, err := conn.ModifyReplicationGroup(ctx, &engineVersionInput)
+						if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+							return nil
+						}
+
+						if err != nil {
+							return fmt.Errorf("modifying ElastiCache Replication Group (%s) engine version: %w", d.Id(), err)
+						}
+						return nil
+					})
+				}
+			} else {
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange("ip_discovery") {
@@ -1669,6 +1733,30 @@ func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *sche
 		}
 	}
 	return nil
+}
+
+func checkIfEngineSupportsSlowLog(engine, engineVersion *string) bool {
+	versionStr := aws.ToString(engineVersion)
+	major, _, _ := strings.Cut(versionStr, ".")
+	majorVersion, err := strconv.Atoi(major)
+	if err != nil {
+		return false
+	}
+	return (majorVersion >= 6 && aws.ToString(engine) == engineRedis) ||
+		(majorVersion >= 7 && aws.ToString(engine) == engineValkey)
+}
+
+func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
+	logTypeSlowLogExists := false
+
+	for _, current := range currentLogDeliveryConfig {
+		logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
+		if logDeliveryConfigurationRequest.LogType == awstypes.LogTypeSlowLog {
+			logTypeSlowLogExists = true
+			break
+		}
+	}
+	return logTypeSlowLogExists
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {

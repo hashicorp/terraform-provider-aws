@@ -38,76 +38,78 @@ func resourceSamplingRule() *schema.Resource {
 		UpdateWithoutTimeout: resourceSamplingRuleUpdate,
 		DeleteWithoutTimeout: resourceSamplingRuleDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAttributes: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAttributes: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 32),
+					},
+				},
+				"fixed_rate": {
+					Type:     schema.TypeFloat,
+					Required: true,
+				},
+				"host": {
 					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"http_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 10),
+				},
+				names.AttrPriority: {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 9999),
+				},
+				"reservoir_size": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"rule_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 32),
 				},
-			},
-			"fixed_rate": {
-				Type:     schema.TypeFloat,
-				Required: true,
-			},
-			"host": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			"http_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10),
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 9999),
-			},
-			"reservoir_size": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"rule_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			names.AttrServiceName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			"service_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url_path": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
+				names.AttrServiceName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"service_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"url_path": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+			}
 		},
 	}
 }

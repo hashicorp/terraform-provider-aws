@@ -47,48 +47,50 @@ func resourceTransitGatewayPeering() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"edge_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peering_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"transit_gateway_peering_attachment_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"edge_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"peering_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"transit_gateway_peering_attachment_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

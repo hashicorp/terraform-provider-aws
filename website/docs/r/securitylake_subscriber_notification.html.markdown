@@ -68,11 +68,3 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `endpoint_id` - (**Deprecated**) The subscriber endpoint to which exception messages are posted.
 * `subscriber_endpoint` - The subscriber endpoint to which exception messages are posted.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)

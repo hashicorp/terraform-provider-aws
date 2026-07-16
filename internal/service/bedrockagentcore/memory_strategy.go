@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -91,6 +92,16 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+					),
+					tfstringvalidator.ConflictsWithWhenNotEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -107,6 +118,12 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 						names.AttrType: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.OverrideType](),
+							Validators: []validator.String{
+								tfstringvalidator.ConflictsWithWhenEquals(
+									awstypes.OverrideTypeSummaryOverride,
+									path.MatchRelative().AtParent().AtName("extraction"),
+								),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -267,17 +284,11 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 	}
 
 	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
-		if data.Configuration.IsNull() || data.Configuration.IsUnknown() {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the configuration block is required."))
-			return
-		} else {
+		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
 			c, diags := data.Configuration.ToPtr(ctx)
 			smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 			if response.Diagnostics.HasError() {
 				return
-			}
-			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
-				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
 			}
 			if c.Type.ValueEnum() != awstypes.OverrideTypeEpisodicOverride && !(c.Reflection.IsNull() || c.Reflection.IsUnknown()) {
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection block inside configuration is only valid when configuration type is `EPISODIC_OVERRIDE`."))
@@ -286,13 +297,8 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 		if !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
 			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection_configuration block is only valid when type is `EPISODIC`."))
 		}
-	} else {
-		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
-		}
-		if data.Type.ValueEnum() != awstypes.MemoryStrategyTypeEpisodic && !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection_configuration block is only valid when type is `EPISODIC`."))
-		}
+	} else if data.Type.ValueEnum() != awstypes.MemoryStrategyTypeEpisodic && !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection_configuration block is only valid when type is `EPISODIC`."))
 	}
 }
 
@@ -359,6 +365,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 
 		_, err = waitMemoryStrategyCreated(ctx, conn, memoryID, fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID), createTimeout)
 		if err != nil {
+			// Taint the resource.
 			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
 			return

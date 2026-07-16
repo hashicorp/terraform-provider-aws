@@ -38,8 +38,6 @@ This resource supports the following arguments:
 * `properties` - (Required) Content map of API-specific key-value pairs describing the targeted API entity. The map must be encoded as a JSON string, e.g., "{ \"description\": \"The API does ...\" }". Only Swagger-compliant key-value pairs can be exported and, hence, published.
 * `rest_api_id` - (Required) ID of the associated Rest API
 
-### Nested fields
-
 #### `location`
 
 See supported entity types for each field in the [official docs](https://docs.aws.amazon.com/apigateway/api-reference/resource/documentation-part/).

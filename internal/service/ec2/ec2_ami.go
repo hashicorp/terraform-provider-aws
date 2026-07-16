@@ -62,244 +62,246 @@ func resourceAMI() *schema.Resource {
 		},
 
 		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
-		Schema: map[string]*schema.Schema{
-			"architecture": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ArchitectureValuesX8664,
-				ValidateDiagFunc: enum.Validate[awstypes.ArchitectureValues](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"boot_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.BootModeValues](),
-			},
-			"deprecation_time": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.IsRFC3339Time,
-				DiffSuppressFunc:      sdkv2.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
-				DiffSuppressOnRefresh: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			// The following block device attributes intentionally mimick the
-			// corresponding attributes on aws_instance, since they have the
-			// same meaning.
-			// However, we don't use root_block_device here because the constraint
-			// on which root device attributes can be overridden for an instance to
-			// not apply when registering an AMI.
-			"ebs_block_device": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						"outpost_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrSnapshotID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.VolumeTypeStandard,
-							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"architecture": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ArchitectureValuesX8664,
+					ValidateDiagFunc: enum.Validate[awstypes.ArchitectureValues](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"boot_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BootModeValues](),
+				},
+				"deprecation_time": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ValidateFunc:          validation.IsRFC3339Time,
+					DiffSuppressFunc:      sdkv2.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
+					DiffSuppressOnRefresh: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				// The following block device attributes intentionally mimick the
+				// corresponding attributes on aws_instance, since they have the
+				// same meaning.
+				// However, we don't use root_block_device here because the constraint
+				// on which root device attributes can be overridden for an instance to
+				// not apply when registering an AMI.
+				"ebs_block_device": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrOutpostARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrSnapshotID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVolumeType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.VolumeTypeStandard,
+								ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+							},
 						},
 					},
-				},
-				Set: func(v any) int {
-					var buf bytes.Buffer
-					m := v.(map[string]any)
-					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
-					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
-					return create.StringHashcode(buf.String())
-				},
-			},
-			"ena_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"ephemeral_block_device": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
+					Set: func(v any) int {
+						var buf bytes.Buffer
+						m := v.(map[string]any)
+						fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+						fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
+						return create.StringHashcode(buf.String())
 					},
 				},
-				Set: func(v any) int {
-					var buf bytes.Buffer
-					m := v.(map[string]any)
-					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
-					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
-					return create.StringHashcode(buf.String())
+				"ena_support": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
 				},
-			},
-			"hypervisor": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_location": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"image_owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"imds_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true, // this attribute can only be set at registration time
-				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
-			},
-			"kernel_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"last_launched_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// Not a public attribute; used to let the aws_ami_copy and aws_ami_from_instance
-			// resources record that they implicitly created new EBS snapshots that we should
-			// now manage. Not set by aws_ami, since the snapshots used there are presumed to
-			// be independently managed.
-			"manage_ebs_snapshots": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_details": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ramdisk_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"root_device_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"root_snapshot_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sriov_net_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  sriovNetSupportSimple,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tpm_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TpmSupportValues](),
-			},
-			"uefi_data": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"usage_operation": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"virtualization_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.VirtualizationTypeParavirtual,
-				ValidateDiagFunc: enum.Validate[awstypes.VirtualizationType](),
-			},
+				"ephemeral_block_device": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+					Set: func(v any) int {
+						var buf bytes.Buffer
+						m := v.(map[string]any)
+						fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+						fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
+						return create.StringHashcode(buf.String())
+					},
+				},
+				"hypervisor": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_location": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"image_owner_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"imds_support": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true, // this attribute can only be set at registration time
+					ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
+				},
+				"kernel_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"last_launched_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// Not a public attribute; used to let the aws_ami_copy and aws_ami_from_instance
+				// resources record that they implicitly created new EBS snapshots that we should
+				// now manage. Not set by aws_ami, since the snapshots used there are presumed to
+				// be independently managed.
+				"manage_ebs_snapshots": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_details": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ramdisk_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"root_device_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"root_snapshot_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sriov_net_support": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  sriovNetSupportSimple,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tpm_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TpmSupportValues](),
+				},
+				"uefi_data": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"usage_operation": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"virtualization_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.VirtualizationTypeParavirtual,
+					ValidateDiagFunc: enum.Validate[awstypes.VirtualizationType](),
+				},
+			}
 		},
 	}
 }
@@ -659,7 +661,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]any) awstypes
 		apiObject.Ebs.VolumeType = awstypes.VolumeType(v)
 	}
 
-	if v, ok := tfMap["outpost_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOutpostARN].(string); ok && v != "" {
 		apiObject.Ebs.OutpostArn = aws.String(v)
 	}
 
@@ -724,7 +726,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject awstypes.BlockDevic
 	}
 
 	if v := apiObject.Ebs.OutpostArn; v != nil {
-		tfMap["outpost_arn"] = aws.ToString(v)
+		tfMap[names.AttrOutpostARN] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -6,9 +6,11 @@ on:
   workflow_dispatch: {}
   schedule:
     - cron: '0 9 * * WED'
+
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write       # required to push commits
+  pull-requests: write  # required to create or update the automation pull request
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -21,7 +23,7 @@ jobs:
           installation_retrieval_mode: id
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{secrets.APP_PEM }}
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}

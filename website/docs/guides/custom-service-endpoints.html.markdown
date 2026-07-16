@@ -211,6 +211,7 @@ provider "aws" {
 |EC2 Image Builder|`imagebuilder`|`AWS_ENDPOINT_URL_IMAGEBUILDER`|`imagebuilder`|
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
+|Interconnect|`interconnect`|`AWS_ENDPOINT_URL_INTERCONNECT`|`interconnect`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
@@ -227,6 +228,7 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|

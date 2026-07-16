@@ -112,6 +112,7 @@ This resource supports the following arguments:
 ### consumer_group_replication Argument Reference
 
 * `consumer_groups_to_replicate` - (Required) List of regular expression patterns indicating the consumer groups to copy.
+* `consumer_group_offset_sync_mode` - (Optional) Consumer group offset synchronization mode. Valid values are `LEGACY` and `ENHANCED`. With `LEGACY`, offsets are synchronized when producers write to the source cluster. With `ENHANCED`, consumer offsets are synchronized regardless of producer location. `ENHANCED` requires a corresponding replicator that replicates data from the target cluster to the source cluster and requires `topic_name_configuration.type` to be set to `IDENTICAL`. Defaults to `LEGACY`. Changing this value will force a new resource.
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
@@ -167,17 +168,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using the replicator ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_msk_replicator.example
-  id = "arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+  identity = {
+    arn = "arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b"
+  }
+}
+
+resource "aws_msk_replicator" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import MSK replicators using the replicator ARN. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the MSK replicator.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using `arn`. For example:
+
+```terraform
+import {
+  to = aws_msk_replicator.example
+  id = "arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b"
+}
+```
+
+Using `terraform import`, import MSK replicators using `arn`. For example:
 
 ```console
-% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b
 ```

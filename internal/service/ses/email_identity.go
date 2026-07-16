@@ -7,12 +7,10 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -35,19 +33,21 @@ func resourceEmailIdentity() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					return strings.TrimSuffix(v.(string), ".")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						return strings.TrimSuffix(v.(string), ".")
+					},
+				},
+			}
 		},
 	}
 }
@@ -57,11 +57,11 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	email := strings.TrimSuffix(d.Get(names.AttrEmail).(string), ".")
-	input := &ses.VerifyEmailIdentityInput{
+	input := ses.VerifyEmailIdentityInput{
 		EmailAddress: aws.String(email),
 	}
 
-	_, err := conn.VerifyEmailIdentity(ctx, input)
+	_, err := conn.VerifyEmailIdentity(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting SES Email Identity (%s) verification: %s", email, err)
@@ -74,7 +74,8 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	_, err := findIdentityVerificationAttributesByIdentity(ctx, conn, d.Id())
 
@@ -88,14 +89,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SES Email Identity (%s) verification: %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("identity/%s", d.Id()),
-		Service:   "ses",
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, identityARN(ctx, c, d.Id()))
 	d.Set(names.AttrEmail, d.Id())
 
 	return diags
@@ -106,9 +100,10 @@ func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Email Identity: %s", d.Id())
-	_, err := conn.DeleteIdentity(ctx, &ses.DeleteIdentityInput{
+	input := ses.DeleteIdentityInput{
 		Identity: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIdentity(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Email Identity (%s): %s", d.Id(), err)
@@ -118,10 +113,10 @@ func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findIdentityVerificationAttributesByIdentity(ctx context.Context, conn *ses.Client, identity string) (*awstypes.IdentityVerificationAttributes, error) {
-	input := &ses.GetIdentityVerificationAttributesInput{
+	input := ses.GetIdentityVerificationAttributesInput{
 		Identities: []string{identity},
 	}
-	output, err := findIdentityVerificationAttributes(ctx, conn, input)
+	output, err := findIdentityVerificationAttributes(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -146,4 +141,8 @@ func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, i
 	}
 
 	return output.VerificationAttributes, nil
+}
+
+func identityARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, "ses", "identity/"+id)
 }

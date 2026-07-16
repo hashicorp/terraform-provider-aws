@@ -65,6 +65,7 @@ var (
 	ResourceFeatureGroup                           = resourceFeatureGroup
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
+	ResourceHubContentReference                    = newHubContentReferenceResource
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceImage                                  = resourceImage
@@ -101,6 +102,7 @@ var (
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
 	FindHubByName                             = findHubByName
+	FindHubContentByName                      = findHubContentByName
 	FindHyperParameterTuningJobByName         = findHyperParameterTuningJobByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
@@ -151,4 +153,6 @@ var (
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
+
+	StripARNVersion = stripARNVersion
 )

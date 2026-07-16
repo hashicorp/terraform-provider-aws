@@ -44,70 +44,72 @@ func resourceLocationObjectStorage() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationObjectStorageUpdate,
 		DeleteWithoutTimeout: resourceLocationObjectStorageDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccessKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(8, 200),
-			},
-			"agent_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccessKey: {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(8, 200),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucketName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			names.AttrSecretKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 200),
-			},
-			"server_certificate": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"server_hostname": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"server_port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      443,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			"server_protocol": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ObjectStorageServerProtocolHttps,
-				ValidateDiagFunc: enum.Validate[awstypes.ObjectStorageServerProtocol](),
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"agent_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucketName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				names.AttrSecretKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 200),
+				},
+				"server_certificate": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"server_hostname": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"server_port": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      443,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				"server_protocol": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ObjectStorageServerProtocolHttps,
+					ValidateDiagFunc: enum.Validate[awstypes.ObjectStorageServerProtocol](),
+				},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.ForceNewIfChange("agent_arns", func(_ context.Context, old, new, meta any) bool {

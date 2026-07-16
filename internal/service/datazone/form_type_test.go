@@ -64,7 +64,6 @@ func TestAccDataZoneFormType_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateIdFunc:                    testAccAuthorizerImportStateUserProfileFunc(resourceName),
-				ImportStateVerifyIgnore:              []string{"model"},
 			},
 		},
 	})

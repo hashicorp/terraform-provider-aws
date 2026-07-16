@@ -499,7 +499,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs: tests.InitCommonArgs(),
 	}
 	tagged := false
-	skip := false
+	generateTests := common.TriBooleanUnset
 	tlsKey := false
 	var tlsKeyCN string
 	hasIdentifierAttribute := false
@@ -580,11 +580,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					switch attr {
 					case "true":
 						// Add tagging tests for non-transparent tagging resources
-						tagged = true
+						generateTests = common.TriBooleanTrue
 
 					case "false":
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
-						skip = true
+						generateTests = common.TriBooleanFalse
 
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -677,13 +677,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	if tagged {
-		if !skip {
+		if generateTests == common.TriBooleanTrue {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=true) specified, but resource type supports transparent tagging", v.packageName, v.functionName))
+			return
+		} else if generateTests != common.TriBooleanFalse {
 			if err := tests.Configure(&d.CommonArgs); err != nil {
 				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
-				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: @Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
 				return
 			}
 			if d.HasInherentRegionIdentity() {
@@ -698,6 +701,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			v.taggedResources = append(v.taggedResources, d)
+		}
+	} else {
+		if generateTests == common.TriBooleanFalse {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: @Testing(tagsTest=false) specified, but resource type doesn't support tags", v.packageName, v.functionName))
+			return
 		}
 	}
 

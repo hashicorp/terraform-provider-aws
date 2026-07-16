@@ -23,14 +23,16 @@ func dataSourcePublicIPv4Pools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			"pool_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customFiltersSchema(),
+				"pool_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

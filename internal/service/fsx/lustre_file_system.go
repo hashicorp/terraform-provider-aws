@@ -61,284 +61,286 @@ func resourceLustreFileSystem() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_import_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoImportPolicyType](),
-			},
-			"automatic_backup_retention_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 90),
-			},
-			"backup_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"copy_tags_to_backups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
-				),
-			},
-			"data_compression_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DataCompressionType](),
-				Default:          awstypes.DataCompressionTypeNone,
-			},
-			"data_read_cache_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"sizing_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LustreReadCacheSizingMode](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"deployment_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.LustreDeploymentTypeScratch1,
-				ValidateDiagFunc: enum.Validate[awstypes.LustreDeploymentType](),
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"drive_cache_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DriveCacheType](),
-			},
-			"efa_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"export_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
-				),
-			},
-			"file_system_type_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
-				),
-			},
-			"final_backup_tags": tftags.TagsSchema(),
-			"import_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
-				),
-			},
-			"imported_file_chunk_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 512000),
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"log_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestination: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-							StateFunc:    logStateFunc,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
+				"auto_import_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoImportPolicyType](),
+				},
+				"automatic_backup_retention_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 90),
+				},
+				"backup_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"copy_tags_to_backups": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"daily_automatic_backup_start_time": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(5, 5),
+						validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+					),
+				},
+				"data_compression_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataCompressionType](),
+					Default:          awstypes.DataCompressionTypeNone,
+				},
+				"data_read_cache_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSize: {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"sizing_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LustreReadCacheSizingMode](),
 							},
 						},
-						"level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LustreAccessAuditLogLevel](),
-						},
 					},
 				},
-			},
-			"metadata_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MetadataConfigurationMode](),
-						},
-						names.AttrIOPS: {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntInSlice([]int{1500, 3000, 6000, 12000, 24000, 36000, 48000, 60000, 72000, 84000, 96000, 108000, 120000, 132000, 144000, 156000, 168000, 180000, 192000})),
-						},
-					},
+				"deployment_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.LustreDeploymentTypeScratch1,
+					ValidateDiagFunc: enum.Validate[awstypes.LustreDeploymentType](),
 				},
-			},
-			"mount_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_ids": {
-				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
-				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"per_unit_storage_throughput": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ValidateFunc: validation.IntInSlice([]int{
-					12,
-					40,
-					50,
-					100,
-					125,
-					200,
-					250,
-					500,
-					1000,
-				}),
-			},
-			"root_squash_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"no_squash_nids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"drive_cache_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DriveCacheType](),
+				},
+				"efa_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"export_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 900),
+						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+					),
+				},
+				"file_system_type_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 20),
+						validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
+					),
+				},
+				"final_backup_tags": tftags.TagsSchema(),
+				"import_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 900),
+						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+					),
+				},
+				"imported_file_chunk_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 512000),
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"log_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestination: {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9\[\]\-]*\.){3}([0-9\[\]\-]*)@tcp$`), "must be in the standard Lustre NID foramt"),
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+								StateFunc:    logStateFunc,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
+								},
 							},
-						},
-						"root_squash": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9]{1,10}):([0-9]{1,10})$`), "must be in the format UID:GID"),
+							"level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LustreAccessAuditLogLevel](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"skip_final_backup": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"storage_capacity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1200),
-			},
-			names.AttrStorageType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StorageTypeSsd,
-				ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput_capacity": {
-				Type:             schema.TypeInt,
-				Optional:         true,
-				ValidateDiagFunc: validateLustreFileSystemThroughputCapacity,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
-				),
-			},
+				"metadata_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MetadataConfigurationMode](),
+							},
+							names.AttrIOPS: {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntInSlice([]int{1500, 3000, 6000, 12000, 24000, 36000, 48000, 60000, 72000, 84000, 96000, 108000, 120000, 132000, 144000, 156000, 168000, 180000, 192000})),
+							},
+						},
+					},
+				},
+				"mount_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_interface_ids": {
+					// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
+					// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"per_unit_storage_throughput": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ValidateFunc: validation.IntInSlice([]int{
+						12,
+						40,
+						50,
+						100,
+						125,
+						200,
+						250,
+						500,
+						1000,
+					}),
+				},
+				"root_squash_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"no_squash_nids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9\[\]\-]*\.){3}([0-9\[\]\-]*)@tcp$`), "must be in the standard Lustre NID foramt"),
+								},
+							},
+							"root_squash": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9]{1,10}):([0-9]{1,10})$`), "must be in the format UID:GID"),
+							},
+						},
+					},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"skip_final_backup": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"storage_capacity": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1200),
+				},
+				names.AttrStorageType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StorageTypeSsd,
+					ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"throughput_capacity": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					ValidateDiagFunc: validateLustreFileSystemThroughputCapacity,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"weekly_maintenance_start_time": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(7, 7),
+						validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

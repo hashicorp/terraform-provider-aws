@@ -42,38 +42,40 @@ func resourcePublishingDestination() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"destination_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"destination_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DestinationTypeS3,
-				ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestinationARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"destination_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"destination_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DestinationTypeS3,
+					ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
+				},
+				"detector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchemaForceNew(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -126,6 +126,7 @@ resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "example" 
 
 #### Optional
 
+* `account_id` (String) Account ID where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Customer Managed Policy Attachments Exclusive using the `instance_arn` and `permission_set_arn` arguments, separated by a comma (`,`). For example:
