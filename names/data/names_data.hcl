@@ -9166,6 +9166,7 @@ service "webfunctions" {
 
   sdk {
     id             = "Lambda Web"
+    arn_namespace  = "lambda"
     client_version = 2
   }
 

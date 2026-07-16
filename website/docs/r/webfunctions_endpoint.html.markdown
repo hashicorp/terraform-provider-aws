@@ -1,5 +1,5 @@
 ---
-subcategory: "Web Functions"
+subcategory: "Lambda Web Functions"
 layout: "aws"
 page_title: "AWS: aws_webfunctions_endpoint"
 description: |-
@@ -53,19 +53,20 @@ resource "aws_webfunctions_endpoint" "example" {
 
 The following arguments are required:
 
-* `function_name` - (Required) Name of the function this endpoint belongs to. Changing this forces a new resource.
+* `auth_type` - (Required) Authentication mode. Valid values are `ApplicationManaged` and `IamAuth`. (`AWS_SERVICE_AUTH` was removed in V2.) This attribute is mutable and can be updated in place.
 * `endpoint_name` - (Required) Name of the endpoint. Changing this forces a new resource.
 * `endpoint_type` - (Required) Endpoint type. Valid values are `HomeRegion`, `MultiRegion`, and `PerRegion`. Changing this forces a new resource.
-* `auth_type` - (Required) Authentication mode. Valid values are `ApplicationManaged` and `IamAuth`. (`AWS_SERVICE_AUTH` was removed in V2.) This attribute is mutable and can be updated in place.
+* `function_name` - (Required) Name of the function this endpoint belongs to. Changing this forces a new resource.
 
 The following arguments are optional:
 
 * `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weights`. `MultiRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
 * `description` - (Optional) Description of the endpoint.
+* `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `regions` - (Optional) Regions the endpoint spans (maximum 17). Changing this forces a new resource.
-* `revision_weights` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. See [`revision_weights`](#revision_weights) below.
+* `revision_weights` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weights-block).
 
-### revision_weights
+### `revision_weights` Block
 
 * `revision_id` - (Required) ID of the revision to route traffic to.
 * `weight` - (Required) Percentage of traffic for this revision (1-100). With one entry the weight must be 100; with two entries the weights must sum to 100.
@@ -100,6 +101,18 @@ import {
   }
 }
 ```
+
+### Identity Schema
+
+#### Required
+
+* `endpoint_name` (String) Name of the endpoint.
+* `function_name` (String) Name of the function.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Web Functions Endpoint using the `function_name` and `endpoint_name` separated by a comma (`,`). For example:
 
