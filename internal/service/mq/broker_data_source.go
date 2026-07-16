@@ -298,7 +298,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &mq.ListBrokersInput{}
-	broker, err := findBroker(ctx, conn, input, func(b *types.BrokerSummary) bool {
+	broker, err := findBrokerSummary(ctx, conn, input, func(b *types.BrokerSummary) bool {
 		if v, ok := d.GetOk("broker_id"); ok && v.(string) != aws.ToString(b.BrokerId) {
 			return false
 		}
@@ -393,8 +393,8 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func findBroker(ctx context.Context, conn *mq.Client, input *mq.ListBrokersInput, filter tfslices.Predicate[*types.BrokerSummary]) (*types.BrokerSummary, error) {
-	output, err := findBrokers(ctx, conn, input, filter)
+func findBrokerSummary(ctx context.Context, conn *mq.Client, input *mq.ListBrokersInput, filter tfslices.Predicate[*types.BrokerSummary]) (*types.BrokerSummary, error) {
+	output, err := findBrokerSummaries(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -403,7 +403,7 @@ func findBroker(ctx context.Context, conn *mq.Client, input *mq.ListBrokersInput
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findBrokers(ctx context.Context, conn *mq.Client, input *mq.ListBrokersInput, filter tfslices.Predicate[*types.BrokerSummary]) ([]types.BrokerSummary, error) {
+func findBrokerSummaries(ctx context.Context, conn *mq.Client, input *mq.ListBrokersInput, filter tfslices.Predicate[*types.BrokerSummary]) ([]types.BrokerSummary, error) {
 	var output []types.BrokerSummary
 
 	pages := mq.NewListBrokersPaginator(conn, input)
