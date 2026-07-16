@@ -10,17 +10,25 @@ description: |-
 
 Provides a SageMaker AI Endpoint resource.
 
+~> **Note:** `aws_sagemaker_endpoint` resources cannot recognize changes to an `aws_sagemaker_endpoint_configuration` resource unless the Endpoint Configuration's `name` attribute, changes. Endpoint Configuration names should be randomized by either specifying `name_prefix` or specifying no name. This will automatically change the name when the Endpoint Configuration is modified. The Endpoint Configuration's lifecycle meta-argument `lifecycle.create_before_destroy` should also be set to `true` to prevent conflicts.
+
 ## Example Usage
 
 Basic usage:
 
 ```terraform
-resource "aws_sagemaker_endpoint" "e" {
-  name                 = "my-endpoint"
-  endpoint_config_name = aws_sagemaker_endpoint_configuration.ec.name
+resource "aws_sagemaker_endpoint" "example" {
+  name                 = "example-endpoint"
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.example.name
+}
 
-  tags = {
-    Name = "foo"
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  name_prefix = "example-endpoint-config"
+
+  # Endpoint Configuration parameters
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 ```

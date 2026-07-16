@@ -10,23 +10,25 @@ description: |-
 
 Provides a SageMaker AI endpoint configuration resource.
 
+~> **Note:** `aws_sagemaker_endpoint` resources cannot recognize changes to an `aws_sagemaker_endpoint_configuration` resource unless the Endpoint Configuration's `name` attribute, changes. Endpoint Configuration names should be randomized by either specifying `name_prefix` or specifying no name. This will automatically change the name when the Endpoint Configuration is modified. The Endpoint Configuration's lifecycle meta-argument `lifecycle.create_before_destroy` should also be set to `true` to prevent conflicts.
+
 ## Example Usage
 
 Basic usage:
 
 ```terraform
-resource "aws_sagemaker_endpoint_configuration" "ec" {
-  name = "my-endpoint-config"
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  name_prefix = "example-endpoint-config"
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.m.name
+    model_name             = aws_sagemaker_model.example.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
   }
 
-  tags = {
-    Name = "foo"
+  lifecycle {
+    create_before_destroy = true
   }
 }
 ```
@@ -40,7 +42,7 @@ This resource supports the following arguments:
 * `execution_role_arn` - (Optional) ARN of an IAM role that SageMaker AI can assume to perform actions on your behalf. Required when `model_name` is not specified in `production_variants` to support Inference Components.
 * `kms_key_arn` - (Optional) ARN of a AWS KMS key that SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name_prefix` - (Optional) Unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
-* `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`. If `name_prefix` is specified, `name` is populated with the full name.
 * `production_variants` - (Required) List each model that you want to host at this endpoint. [See below](#production_variants).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shadow_production_variants` - (Optional) Models that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on `production_variants`. If you use this field, you can only specify one variant for `production_variants` and one variant for `shadow_production_variants`. [See below](#production_variants) (same arguments as `production_variants`).
