@@ -4,87 +4,59 @@
 package mq
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_mq_configuration", &resource.Sweeper{
-		Name: "aws_mq_configuration",
-		F:    sweepConfigurations,
-	})
-
-	resource.AddTestSweepers("aws_mq_broker", &resource.Sweeper{
-		Name: "aws_mq_broker",
-		F:    sweepBrokers,
-	})
+	awsv2.Register("aws_mq_configuration", sweepConfigurations, "aws_mq_broker")
+	awsv2.Register("aws_mq_broker", sweepBrokers)
 }
 
-func sweepConfigurations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	input := &mq.ListConfigurationsInput{}
+func sweepConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.MQClient(ctx)
+	var input mq.ListConfigurationsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.ListConfigurations(ctx, input)
+	err := listConfigurationsPages(ctx, conn, &input, func(page *mq.ListConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MQ Configuration sweep for %s: %s", region, err)
-		return nil
-	}
+		for _, v := range page.Configurations {
+			r := resourceConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
 
-	if err != nil {
-		return fmt.Errorf("error listing MQ Configurations (%s): %w", region, err)
-	}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 
-	for _, v := range output.Configurations {
-		r := resourceConfiguration()
-		d := r.Data(nil)
-		d.SetId(aws.ToString(v.Id))
-
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+		return !lastPage
+	})
 
 	if err != nil {
-		return fmt.Errorf("error sweeping MQ Configurations (%s): %w", region, err)
+		return nil, err
 	}
 
-	return nil
+	return sweepResources, nil
 }
 
-func sweepBrokers(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	input := &mq.ListBrokersInput{MaxResults: aws.Int32(100)}
+func sweepBrokers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.MQClient(ctx)
+	input := mq.ListBrokersInput{MaxResults: aws.Int32(100)}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := mq.NewListBrokersPaginator(conn, input)
+	pages := mq.NewListBrokersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing MQ Brokers (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.BrokerSummaries {
@@ -96,11 +68,5 @@ func sweepBrokers(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping MQ Brokers (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
