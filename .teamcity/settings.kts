@@ -117,8 +117,8 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            text("env.GOMODCACHE", "%teamcity.agent.work.dir%/go-mod-cache")
-            text("env.GOCACHE", "%teamcity.agent.work.dir%/go-build-cache")
+            text("env.GOMODCACHE", "%system.agent.work.dir%/go-mod-cache")
+            text("env.GOCACHE", "%system.agent.work.dir%/go-build-cache")
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", ""))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
