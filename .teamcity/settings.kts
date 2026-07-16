@@ -117,8 +117,8 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            text("env.GOMODCACHE", "%system.agent.work.dir%/go-mod-cache")
-            text("env.GOCACHE", "%system.agent.work.dir%/go-build-cache")
+        //     text("env.GOMODCACHE", "%system.agent.work.dir%/go-mod-cache")
+        //     text("env.GOCACHE", "%system.agent.work.dir%/go-build-cache")
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", ""))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
@@ -169,15 +169,15 @@ object PullRequest : BuildType({
             testFormat = "json"
         }
 
-        buildCache {
-            name = "terraform-provider-aws-build-cache"
-            use = false
-            publish = true
-            rules = """
-                %system.agent.work.dir%/go-mod-cache
-                %system.agent.work.dir%/go-build-cache
-            """.trimIndent()
-        }
+        // buildCache {
+        //     name = "terraform-provider-aws-build-cache"
+        //     use = true
+        //     publish = true
+        //     rules = """
+        //         %system.agent.work.dir%/go-mod-cache
+        //         %system.agent.work.dir%/go-build-cache
+        //     """.trimIndent()
+        // }
 
         feature {
             type = "JetBrains.SharedResources"
