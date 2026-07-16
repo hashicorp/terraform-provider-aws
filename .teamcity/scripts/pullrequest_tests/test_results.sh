@@ -8,15 +8,14 @@ fetch_results() {
         "%teamcity.serverUrl%/app/rest/testOccurrences?locator=build:(id:%teamcity.build.id%),count:100000&fields=testOccurrence(name,status,duration)"
 }
 
-# Poll until the result count stabilises across two consecutive checks
-prev_count=-1
+# Poll until the TeamCity index contains all tests recorded by the test runner
+expected_count=$(cat /tmp/test_count.txt)
 while true; do
     response=$(fetch_results)
     curr_count=$(echo "${response}" | jq '.testOccurrence | length')
-    if [[ "${curr_count}" -eq "${prev_count}" ]]; then
+    if [[ "${curr_count}" -eq "${expected_count}" ]]; then
         break
     fi
-    prev_count="${curr_count}"
     sleep 5
 done
 
