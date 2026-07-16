@@ -835,16 +835,27 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 		r.Configuration = nil
 	}
 	// For built-in EPISODIC, propagate reflection_configuration changes via
-	// ModifyStrategyConfiguration.Reflection.
-	if m.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic && !m.ReflectionConfiguration.IsNull() && !m.ReflectionConfiguration.IsUnknown() {
-		rc, d := m.ReflectionConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
+	// ModifyStrategyConfiguration.Reflection. When the block is absent, reset
+	// the reflection namespaces to match the episodic namespaces so the API
+	// stops returning divergent namespaces (otherwise the block can never be
+	// removed once set: the API keeps the old namespaces and Read/Update
+	// re-surface the block every time).
+	if m.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic {
 		reflInput := awstypes.EpisodicReflectionConfigurationInput{}
-		if !rc.NamespaceTemplates.IsNull() && !rc.NamespaceTemplates.IsUnknown() {
-			smerr.AddEnrich(ctx, &diags, rc.NamespaceTemplates.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+		if !m.ReflectionConfiguration.IsNull() && !m.ReflectionConfiguration.IsUnknown() {
+			rc, d := m.ReflectionConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if !rc.NamespaceTemplates.IsNull() && !rc.NamespaceTemplates.IsUnknown() {
+				smerr.AddEnrich(ctx, &diags, rc.NamespaceTemplates.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+				if diags.HasError() {
+					return nil, diags
+				}
+			}
+		} else {
+			smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -1175,7 +1186,7 @@ var (
 
 func (m *episodicOverrideReflectionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
-	case awstypes.ReflectionConfigurationMemberCustomReflectionConfiguration:
+	case *awstypes.ReflectionConfigurationMemberCustomReflectionConfiguration:
 		return m.Flatten(ctx, t.Value)
 
 	case *awstypes.CustomReflectionConfigurationMemberEpisodicReflectionOverride:
