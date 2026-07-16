@@ -669,11 +669,20 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	// Set values for unknowns.
+	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
+	// private_endpoint_overrides can be restored after Flatten.
+	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -699,10 +708,18 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	priorAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -780,6 +797,13 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if v := harness.Memory; v != nil {
+		switch v.(type) {
+		case *awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration:
+		default:
+			harness.Memory = nil
+		}
+	}
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
 	return diags
 }

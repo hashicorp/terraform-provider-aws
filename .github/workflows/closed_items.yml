@@ -49,6 +49,13 @@ jobs:
         id: checkout
         if: github.event.pull_request.merged
         with:
+          # Explicitly check out the trusted base branch (not the fork PR head/merge
+          # commit). On a merged pull_request_target closed event, the default checkout
+          # ref resolves to github.sha, which equals pull_request.merge_commit_sha. Since
+          # checkout v7 (2026), that match on a fork PR is refused as a "pwn request".
+          # This workflow only needs the base repository's .ci scripts, so pin to the
+          # base ref, which is a branch name rather than a SHA and is always trusted.
+          ref: ${{ github.event.pull_request.base.ref }}
           sparse-checkout: .ci
 
       - name: Get Current Milestone Name
