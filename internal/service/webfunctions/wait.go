@@ -5,6 +5,7 @@ package webfunctions
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -256,7 +257,9 @@ func waitEndpointActive(ctx context.Context, conn *webfunctions.Client, function
 
 func waitEndpointUpdated(ctx context.Context, conn *webfunctions.Client, functionName, endpointName string, timeout time.Duration) (*webfunctions.GetWebFunctionEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.EndpointUpdateStatusInProgress),
+		// An empty updateStatus can be observed if the endpoint has never been
+		// updated before and the PATCH has not propagated to the Get yet.
+		Pending:                   append(enum.Slice(awstypes.EndpointUpdateStatusInProgress), ""),
 		Target:                    enum.Slice(awstypes.EndpointUpdateStatusSuccessful),
 		Refresh:                   statusEndpointUpdate(conn, functionName, endpointName),
 		Timeout:                   timeout,
@@ -266,6 +269,9 @@ func waitEndpointUpdated(ctx context.Context, conn *webfunctions.Client, functio
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*webfunctions.GetWebFunctionEndpointOutput); ok {
+		if reason := aws.ToString(out.UpdateStatusReason); reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
 		return out, smarterr.NewError(err)
 	}
 

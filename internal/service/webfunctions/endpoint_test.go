@@ -202,9 +202,9 @@ resource "aws_webfunctions_endpoint" "test" {
 }
 
 func testAccEndpointConfig_multiRegion(rName string) string {
-	// Pre-GA: the service is only available in us-east-1, eu-west-1 and us-west-2
-	// (see PreCheckRegion above). Pick a supported second region distinct from the
-	// test region.
+	// Pick a second region distinct from the test region. Regions with the
+	// service active as of July 2026: us-east-1 and eu-west-1 (us-west-2
+	// rollout pending; PreCheckRegion admits it for when it lands).
 	secondRegion := endpoints.EuWest1RegionID
 	if acctest.Region() == endpoints.EuWest1RegionID {
 		secondRegion = endpoints.UsEast1RegionID
