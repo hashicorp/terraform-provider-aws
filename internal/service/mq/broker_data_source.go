@@ -24,6 +24,7 @@ import (
 )
 
 // @SDKDataSource("aws_mq_broker", name="Broker")
+// @Tags
 func dataSourceBroker() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerRead,
@@ -293,9 +294,7 @@ func dataSourceBroker() *schema.Resource {
 
 func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &mq.ListBrokersInput{}
 	broker, err := findBrokerSummary(ctx, conn, input, func(b *types.BrokerSummary) bool {
@@ -327,16 +326,34 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
 	d.Set("broker_id", brokerID)
 	d.Set("broker_name", output.BrokerName)
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
+	}
 	d.Set("deployment_mode", output.DeploymentMode)
+	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
+	}
 	d.Set("engine_type", output.EngineType)
 	d.Set(names.AttrEngineVersion, output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType))
+	if err := d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
+	}
+	var password string
+	if v, ok := d.GetOk("ldap_server_metadata.0.service_account_password"); ok {
+		password = v.(string)
+	}
+	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
+	}
+	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
+	}
+	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
+	}
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
-	d.Set(names.AttrStorageType, output.StorageType)
-	d.Set(names.AttrSubnetIDs, output.SubnetIds)
-
 	if strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) {
 		sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, brokerID)
 
@@ -350,31 +367,8 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
 		}
 	}
-
-	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
-	}
-
-	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
-	}
-
-	var password string
-	if v, ok := d.GetOk("ldap_server_metadata.0.service_account_password"); ok {
-		password = v.(string)
-	}
-
-	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
-	}
-
-	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
-	}
-
-	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
-	}
+	d.Set(names.AttrStorageType, output.StorageType)
+	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	rawUsers, err := expandUsersForBroker(ctx, conn, brokerID, output.Users)
 
@@ -386,9 +380,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
