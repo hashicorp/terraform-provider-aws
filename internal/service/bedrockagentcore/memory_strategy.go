@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -85,9 +86,23 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
+			"namespace_templates": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 1),
+				},
+			},
 			"namespaces": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
+				Validators: []validator.Set{
+					setvalidator.ExactlyOneOf(
+						path.MatchRelative().AtParent().AtName("namespace_templates"),
+					),
+				},
 			},
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
@@ -175,6 +190,36 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *resourceMemoryStrategy) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// Skip create or destroy.
+	if request.State.Raw.IsNull() || request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var config, plan, state memoryStrategyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// The API mirrors namespaces <-> namespace_templates in its responses. When the
+	// user-configured attribute changes (or the computed counterpart has no state
+	// value yet), the counterpart's planned value is stale; mark it unknown so the
+	// post-apply value returned by the API is accepted.
+	if config.NamespaceTemplates.IsNull() {
+		if !plan.Namespaces.Equal(state.Namespaces) || state.NamespaceTemplates.IsNull() {
+			response.Plan.SetAttribute(ctx, path.Root("namespace_templates"), fwtypes.NewSetValueOfUnknown[types.String](ctx))
+		}
+	}
+	if config.Namespaces.IsNull() {
+		if !plan.NamespaceTemplates.Equal(state.NamespaceTemplates) || state.Namespaces.IsNull() {
+			response.Plan.SetAttribute(ctx, path.Root("namespaces"), fwtypes.NewSetValueOfUnknown[types.String](ctx))
+		}
 	}
 }
 
@@ -354,7 +399,8 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan, state memoryStrategyResourceModel
+	var config, plan, state memoryStrategyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
@@ -372,6 +418,15 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &strategyInput))
 		if response.Diagnostics.HasError() {
 			return
+		}
+
+		// The API mirrors namespaces <-> namespace_templates, so after Read both
+		// model fields are populated. Send only the field present in configuration.
+		if config.Namespaces.IsNull() {
+			strategyInput.Namespaces = nil
+		}
+		if config.NamespaceTemplates.IsNull() {
+			strategyInput.NamespaceTemplates = nil
 		}
 
 		memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryID), fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
@@ -601,6 +656,7 @@ type memoryStrategyResourceModel struct {
 	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
 	MemoryID               types.String                                              `tfsdk:"memory_id"`
 	Name                   types.String                                              `tfsdk:"name"`
+	NamespaceTemplates     fwtypes.SetOfString                                       `tfsdk:"namespace_templates"`
 	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
 	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
 	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
@@ -675,15 +731,24 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		var r awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy
 		r.Value.Name = m.Name.ValueStringPointer()
 		r.Value.Description = m.Description.ValueStringPointer()
-		smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &r.Value.Namespaces, false))
-		if diags.HasError() {
-			return nil, diags
-		}
 		// The API requires the reflection namespace to be the same as or a prefix
 		// of the episodic namespace. Set it to match the episodic namespaces.
-		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
-			Namespaces: r.Value.Namespaces,
+		reflection := &awstypes.EpisodicReflectionConfigurationInput{}
+		if !m.Namespaces.IsNull() && !m.Namespaces.IsUnknown() {
+			smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &r.Value.Namespaces, false))
+			if diags.HasError() {
+				return nil, diags
+			}
+			reflection.Namespaces = r.Value.Namespaces
 		}
+		if !m.NamespaceTemplates.IsNull() && !m.NamespaceTemplates.IsUnknown() {
+			smerr.AddEnrich(ctx, &diags, m.NamespaceTemplates.ElementsAs(ctx, &r.Value.NamespaceTemplates, false))
+			if diags.HasError() {
+				return nil, diags
+			}
+			reflection.NamespaceTemplates = r.Value.NamespaceTemplates
+		}
+		r.Value.ReflectionConfiguration = reflection
 		return &r, diags
 	default:
 		diags.AddError(
