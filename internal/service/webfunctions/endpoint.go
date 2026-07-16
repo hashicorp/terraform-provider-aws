@@ -327,7 +327,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	out, err := waitEndpointActive(ctx, conn, functionName, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+	out, err := waitEndpointUpdated(ctx, conn, functionName, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return

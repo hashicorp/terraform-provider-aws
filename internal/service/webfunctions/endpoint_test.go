@@ -54,6 +54,13 @@ func TestAccWebFunctionsEndpoint_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
 			},
+			{
+				Config: testAccEndpointConfig_authType(rName, string(awstypes.AuthTypeIamAuth)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),
+				),
+			},
 		},
 	})
 }
@@ -180,14 +187,18 @@ func testAccEndpointImportStateIDFunc(n string) resource.ImportStateIdFunc {
 }
 
 func testAccEndpointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), `
+	return testAccEndpointConfig_authType(rName, "ApplicationManaged")
+}
+
+func testAccEndpointConfig_authType(rName, authType string) string {
+	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
 resource "aws_webfunctions_endpoint" "test" {
   function_name = aws_webfunctions_function.test.function_name
   endpoint_name = "extra"
   endpoint_type = "HomeRegion"
-  auth_type     = "ApplicationManaged"
+  auth_type     = %[1]q
 }
-`)
+`, authType))
 }
 
 func testAccEndpointConfig_multiRegion(rName string) string {

@@ -138,6 +138,20 @@ func statusEndpoint(conn *webfunctions.Client, functionName, endpointName string
 	}
 }
 
+func statusEndpointUpdate(conn *webfunctions.Client, functionName, endpointName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findEndpointByName(ctx, conn, functionName, endpointName)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.UpdateStatus), nil
+	}
+}
+
 func statusRevision(conn *webfunctions.Client, functionName, revisionID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findRevisionByID(ctx, conn, functionName, revisionID)
@@ -227,6 +241,24 @@ func waitEndpointActive(ctx context.Context, conn *webfunctions.Client, function
 		Pending:                   enum.Slice(awstypes.EndpointStatePending),
 		Target:                    enum.Slice(awstypes.EndpointStateActive),
 		Refresh:                   statusEndpoint(conn, functionName, endpointName),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*webfunctions.GetWebFunctionEndpointOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitEndpointUpdated(ctx context.Context, conn *webfunctions.Client, functionName, endpointName string, timeout time.Duration) (*webfunctions.GetWebFunctionEndpointOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.EndpointUpdateStatusInProgress),
+		Target:                    enum.Slice(awstypes.EndpointUpdateStatusSuccessful),
+		Refresh:                   statusEndpointUpdate(conn, functionName, endpointName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
