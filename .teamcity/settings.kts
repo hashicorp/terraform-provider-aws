@@ -117,8 +117,8 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            text("env.GOMODCACHE", "%teamcity.agent.work.dir%/go-cache/mod")
-            text("env.GOCACHE", "%teamcity.agent.work.dir%/go-cache/build")
+            text("env.GOMODCACHE", "%teamcity.agent.work.dir%/go-mod-cache")
+            text("env.GOCACHE", "%teamcity.agent.work.dir%/go-build-cache")
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", ""))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
@@ -146,14 +146,6 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
-            name = "Prepare Go Cache Directories"
-            scriptContent = """
-                mkdir -p %env.GOMODCACHE%
-                mkdir -p %env.GOCACHE%
-                go test -c -o test-binary
-            """.trimIndent()
-        }
-        script {
             name = "Install Terraform Core"
             scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
         }
@@ -179,7 +171,7 @@ object PullRequest : BuildType({
 
         buildCache {
             name = "terraform-provider-aws-build-cache"
-            use = true
+            use = false
             publish = true
             rules = """
                 %env.GOMODCACHE%
