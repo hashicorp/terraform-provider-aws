@@ -146,6 +146,13 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
+            name = "Prepare Go Cache Directories"
+            scriptContent = """
+                mkdir -p %env.GOMODCACHE%
+                mkdir -p %env.GOCACHE%
+            """.trimIndent()
+        }
+        script {
             name = "Install Terraform Core"
             scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
         }
@@ -170,10 +177,13 @@ object PullRequest : BuildType({
         }
 
         buildCache {
-            name = "Go Module Cache"
-            use = true
+            name = "terraform-provider-aws-build-cache"
+            use = false
             publish = true
-            rules = "%env.GOMODCACHE%"
+            rules = """
+                %env.GOMODCACHE%
+                %env.GOCACHE%
+            """.trimIndent()
         }
 
         feature {
