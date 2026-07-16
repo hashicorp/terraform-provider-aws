@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
@@ -39,11 +38,11 @@ type bucketsDataSource struct {
 func (d *bucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"bucket_summaries": framework.DataSourceComputedListOfObjectAttribute[bucketSummaryModel](ctx),
-			names.AttrNamePrefix: schema.StringAttribute{
+			"buckets": framework.DataSourceComputedListOfObjectAttribute[bucketsModel](ctx),
+			"max_buckets": schema.Int32Attribute{
 				Optional: true,
 			},
-			"max_buckets": schema.Int32Attribute{
+			"prefix": schema.StringAttribute{
 				Optional: true,
 			},
 		},
@@ -59,21 +58,21 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	// BucketRegion must match the provider region to avoid cross-region errors.
-	// Prefix is an AWS-side filter; NamePrefix maps to it directly.
-	input := s3.ListBucketsInput{
-		BucketRegion: aws.String(d.Meta().Region(ctx)),
-		Prefix:       flex.StringFromFramework(ctx, data.NamePrefix),
-		MaxBuckets:   flex.Int32FromFramework(ctx, data.MaxBuckets),
+	var input s3.ListBucketsInput
+	if !data.Prefix.IsNull() {
+		input.Prefix = aws.String(data.Prefix.ValueString())
+	}
+	if !data.MaxBuckets.IsNull() {
+		input.MaxBuckets = aws.Int32(data.MaxBuckets.ValueInt32())
 	}
 
-	out, err := findBucketSummaries(ctx, conn, &input)
+	out, err := findBuckets(ctx, conn, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.BucketSummaries))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.Buckets))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -84,7 +83,7 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 // findBucketSummaries collects all buckets matching the given input by iterating
 // over the listBuckets iterator. The caller can extend this function with
 // Terraform-side filtering before the return if needed in the future.
-func findBucketSummaries(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInput) ([]awstypes.Bucket, error) {
+func findBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInput) ([]awstypes.Bucket, error) {
 	var output []awstypes.Bucket
 
 	for item, err := range listBuckets(ctx, conn, input) {
@@ -99,12 +98,12 @@ func findBucketSummaries(ctx context.Context, conn *s3.Client, input *s3.ListBuc
 
 type bucketsDataSourceModel struct {
 	framework.WithRegionModel
-	BucketSummaries fwtypes.ListNestedObjectValueOf[bucketSummaryModel] `tfsdk:"bucket_summaries"`
-	NamePrefix      types.String                                        `tfsdk:"name_prefix"`
-	MaxBuckets      types.Int32                                         `tfsdk:"max_buckets"`
+	Buckets    fwtypes.ListNestedObjectValueOf[bucketsModel] `tfsdk:"buckets"`
+	MaxBuckets types.Int32                                   `tfsdk:"max_buckets"`
+	Prefix     types.String                                  `tfsdk:"prefix"`
 }
 
-type bucketSummaryModel struct {
+type bucketsModel struct {
 	BucketArn    types.String      `tfsdk:"bucket_arn"`
 	BucketRegion types.String      `tfsdk:"bucket_region"`
 	CreationDate timetypes.RFC3339 `tfsdk:"creation_date"`

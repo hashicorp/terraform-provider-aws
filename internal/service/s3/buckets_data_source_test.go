@@ -17,8 +17,8 @@ func TestAccS3BucketsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	// region := acctest.Region()
-	// resourceName := "aws_s3_bucket.test"
-	// dataSourceName := "data.aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket.test"
+	dataSourceName := "data.aws_s3_buckets.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -27,7 +27,12 @@ func TestAccS3BucketsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketsDataSourceConfig_basic(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "buckets.#", 1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "buckets.0.bucket_arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "buckets.0.bucket_region", resourceName, "bucket_region"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "buckets.0.name", resourceName, names.AttrBucket),
+				),
 			},
 		},
 	})
@@ -40,7 +45,9 @@ resource "aws_s3_bucket" "test" {
 }
 
 data "aws_s3_buckets" "test" {
-  name_prefix = %[1]q
+  prefix = %[1]q
+
+  depends_on = [aws_s3_bucket.test]
 }
 `, rName)
 }
