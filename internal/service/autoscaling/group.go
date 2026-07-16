@@ -252,6 +252,29 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
+				"instance_lifecycle_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"retention_triggers": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"terminate_hook_abandon": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RetentionAction](),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"instance_maintenance_policy": {
 					Type:             schema.TypeList,
 					MaxItems:         1,
@@ -1169,6 +1192,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		inputCASG.HealthCheckGracePeriod = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("instance_lifecycle_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputCASG.InstanceLifecyclePolicy = expandInstanceLifecyclePolicy(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("instance_maintenance_policy"); ok {
 		inputCASG.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]any))
 	}
@@ -1367,6 +1394,9 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
+	if err := d.Set("instance_lifecycle_policy", flattenInstanceLifecyclePolicy(g.InstanceLifecyclePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_lifecycle_policy: %s", err)
+	}
 	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(g.InstanceMaintenancePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
 	}
@@ -1510,6 +1540,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		if d.HasChange("health_check_type") {
 			input.HealthCheckGracePeriod = aws.Int32(int32(d.Get("health_check_grace_period").(int)))
 			input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
+		}
+
+		if d.HasChange("instance_lifecycle_policy") {
+			if v, ok := d.GetOk("instance_lifecycle_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.InstanceLifecyclePolicy = expandInstanceLifecyclePolicy(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange("instance_maintenance_policy") {
@@ -3555,6 +3591,60 @@ func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *awstypes.Instan
 	}
 
 	return []any{m}
+}
+
+func expandInstanceLifecyclePolicy(tfMap map[string]any) *awstypes.InstanceLifecyclePolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.InstanceLifecyclePolicy{}
+
+	if v, ok := tfMap["retention_triggers"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RetentionTriggers = expandRetentionTriggers(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandRetentionTriggers(tfMap map[string]any) *awstypes.RetentionTriggers {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.RetentionTriggers{}
+
+	if v, ok := tfMap["terminate_hook_abandon"].(string); ok && v != "" {
+		apiObject.TerminateHookAbandon = awstypes.RetentionAction(v)
+	}
+
+	return apiObject
+}
+
+func flattenInstanceLifecyclePolicy(apiObject *awstypes.InstanceLifecyclePolicy) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.RetentionTriggers != nil {
+		tfMap["retention_triggers"] = flattenRetentionTriggers(apiObject.RetentionTriggers)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenRetentionTriggers(apiObject *awstypes.RetentionTriggers) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"terminate_hook_abandon": string(apiObject.TerminateHookAbandon),
+	}
+
+	return []any{tfMap}
 }
 
 func flattenLaunchTemplate(apiObject *awstypes.LaunchTemplate) map[string]any {

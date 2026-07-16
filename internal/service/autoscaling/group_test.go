@@ -643,6 +643,43 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyNegativeValues(t *test
 	})
 }
 
+func TestAccAutoScalingGroup_instanceLifecyclePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_instanceLifecyclePolicy(rName, "retain"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.0.terminate_hook_abandon", "retain"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			// To validate updating the terminate_hook_abandon argument
+			{
+				Config: testAccGroupConfig_instanceLifecyclePolicy(rName, "terminate"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.0.terminate_hook_abandon", "terminate"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.AutoScalingGroup
@@ -4471,6 +4508,23 @@ resource "aws_autoscaling_group" "test" {
   launch_configuration = aws_launch_configuration.test.name
 }
 `, rName, min_percentage, max_percentage))
+}
+
+func testAccGroupConfig_instanceLifecyclePolicy(rName, terminateHookAbandon string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+  instance_lifecycle_policy {
+    retention_triggers {
+      terminate_hook_abandon = %[2]q
+    }
+  }
+  launch_configuration = aws_launch_configuration.test.name
+}
+`, rName, terminateHookAbandon))
 }
 
 func testAccGroupConfig_nameGenerated(rName string) string {
