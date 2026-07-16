@@ -128,12 +128,6 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"zip_file": schema.StringAttribute{
-													Optional:  true,
-													Sensitive: true,
-												},
-											},
 											Blocks: map[string]schema.Block{
 												"s3_object": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ObjectModel](ctx),
@@ -591,7 +585,6 @@ type buildConfigModel struct {
 
 type codeConfigModel struct {
 	S3Object fwtypes.ListNestedObjectValueOf[s3ObjectModel] `tfsdk:"s3_object"`
-	ZipFile  types.String                                   `tfsdk:"zip_file"`
 }
 
 type s3ObjectModel struct {

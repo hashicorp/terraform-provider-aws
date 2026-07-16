@@ -71,13 +71,12 @@ The following arguments are optional:
 
 #### `build_config` Block
 
-* `code_config` - (Required) Function code source. Exactly one of `s3_object` or `zip_file`. [See below](#code_config-block).
+* `code_config` - (Required) Function code source. [See below](#code_config-block).
 * `runtime_config` - (Required) Runtime configuration. [See below](#runtime_config-block).
 
 ##### `code_config` Block
 
-* `s3_object` - (Optional) S3 location of the function's deployment package. [See below](#s3_object-block).
-* `zip_file` - (Optional) Base64-encoded inline deployment package.
+* `s3_object` - (Required) S3 location of the function's deployment package. [See below](#s3_object-block).
 
 ###### `s3_object` Block
 
