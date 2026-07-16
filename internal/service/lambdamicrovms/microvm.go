@@ -80,10 +80,10 @@ func (r *microvmResource) Schema(ctx context.Context, req resource.SchemaRequest
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 			},
-			"execution_role_arn": schema.StringAttribute{
+			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{

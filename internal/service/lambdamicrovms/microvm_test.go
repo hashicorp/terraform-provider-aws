@@ -46,7 +46,7 @@ func TestAccLambdaMicrovmsMicrovm_basic(t *testing.T) {
 					testAccCheckMicrovmExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.MicrovmStateRunning)),
 					resource.TestCheckResourceAttrSet(resourceName, "microvm_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "image_arn", "lambda", regexache.MustCompile(`microvm-image:.+$`)),
 				),
 			},
@@ -57,7 +57,7 @@ func TestAccLambdaMicrovmsMicrovm_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "microvm_id"),
 				ImportStateVerifyIdentifierAttribute: "microvm_id",
 				ImportStateVerifyIgnore: []string{
-					"execution_role_arn",
+					names.AttrExecutionRoleARN,
 					"image_identifier",
 					"logging",
 					"run_hook_payload",
