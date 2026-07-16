@@ -1,10 +1,10 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// DONOTCOPY: This is a GA-readiness skeleton. It targets the (not-yet-public)
-// aws-sdk-go-v2 "webfunctions" service client and will not compile until that
-// module exists. Use skaff to scaffold the real resource at GA. See
-// CONTRIBUTION.md.
+// Pre-GA: this resource targets the not-yet-public aws-sdk-go-v2
+// "webfunctions" service client, currently satisfied by the hand-written
+// shim in .pre-ga-sdk/ (see the replace directive in go.mod). Swap to the
+// real SDK module when it ships at GA.
 
 package webfunctions
 
