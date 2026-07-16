@@ -209,7 +209,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket_versioning.test.bucket
   key    = "function.zip"
   source = "test-fixtures/function.zip"
 }
