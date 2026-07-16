@@ -627,16 +627,16 @@ func TestNormalizeEngineVersion(t *testing.T) {
 }
 
 const (
-	testAccActiveMQVersionNormalized5_19 = "5.19"
-	testAccActiveMQVersionNormalized5_18 = "5.18"
-	testAccRabbitMQVersionNormalized3_13 = "3.13"
-	testAccRabbitMQVersionNormalized4_2  = "4.2"
+	testAccActiveMQVersionNormalized5_19 = "5.19" // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
+	testAccActiveMQVersionNormalized5_18 = "5.18" // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
+	testAccRabbitMQVersionNormalized3_13 = "3.13" // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
+	testAccRabbitMQVersionNormalized4_2  = "4.2"  // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
 	// testAccNoAutoMinorVersionUpgrade   = acctest.CtFalse
 	testAccAutoMinorVersionUpgrade   = acctest.CtTrue
-	testAccActiveMQHostInstanceType1 = "mq.t3.micro"
-	testAccActiveMQHostInstanceType2 = "mq.m5.large"
-	testAccRabbitMQHostInstanceType1 = "mq.m7g.medium"
-	testAccRabbitMQHostInstanceType2 = "mq.m7g.large"
+	testAccActiveMQHostInstanceType1 = "mq.t3.micro"   // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
+	testAccActiveMQHostInstanceType2 = "mq.m5.large"   // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
+	testAccRabbitMQHostInstanceType1 = "mq.m7g.medium" // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
+	testAccRabbitMQHostInstanceType2 = "mq.m7g.large"  // nosemgrep:ci.mq-in-var-name,ci.mq-in-const-name
 )
 
 // ActiveMQ.
