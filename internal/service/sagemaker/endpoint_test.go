@@ -48,7 +48,7 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
+func TestAccSageMakerEndpoint_endpointConfigName(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
@@ -69,7 +69,7 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEndpointConfig_nameUpdate(rName),
+				Config: testAccEndpointConfig_endpointConfigNameUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName2, names.AttrName),
@@ -401,10 +401,10 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_nameUpdate(rName string) string {
+func testAccEndpointConfig_endpointConfigNameUpdate(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test2" {
-  name = "%[1]s2"
+  name = "%[1]s-updated"
 
   production_variants {
     initial_instance_count = 1
