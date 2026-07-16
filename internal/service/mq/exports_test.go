@@ -8,6 +8,7 @@ var (
 	ResourceBroker        = resourceBroker
 	ResourceConfiguration = resourceConfiguration
 
+	CanonicalXML                = canonicalXML
 	DiffBrokerUsers             = diffBrokerUsers
 	FindBrokerByID              = findBrokerByID
 	FindConfigurationByID       = findConfigurationByID
