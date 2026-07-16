@@ -89,6 +89,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newEvaluationJobResource,
+			TypeName: "aws_bedrock_evaluation_job",
+			Name:     "Evaluation Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "job_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newFoundationModelAgreementResource,
 			TypeName: "aws_bedrock_foundation_model_agreement",
 			Name:     "Foundation Model Agreement",
