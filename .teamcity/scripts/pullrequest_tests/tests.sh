@@ -69,6 +69,9 @@ fi
 #build_test_binary "${PKG%/...}"
 #binary="$(basename "${PKG%/...}").test"
 
+echo "Downloading Go module dependencies"
+go mod download
+
 echo "Running acceptance tests for ${PKG} with pattern %TEST_PREFIX%"
 
 TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false \
