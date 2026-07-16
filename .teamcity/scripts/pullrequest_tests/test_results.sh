@@ -26,9 +26,23 @@ results=$(echo "${response}" |
 
 echo "${results}"
 
-"%BRANCH_NAME%" is in the format "refs/pull/48516/merge"
+# "%BRANCH_NAME%" is in the format "refs/pull/48516/merge"
 pr_number="$(echo "%BRANCH_NAME%" | sed -E 's#refs/pull/([0-9]+)/merge#\1#')"
 
-body="$(printf '```console\n%s\n```' "${results}")"
+gh="%system.teamcity.build.checkoutDir%/tools/gh"
+marker="<!-- tc-test-results -->"
+repo="$("${gh}" repo view --json nameWithOwner --jq '.nameWithOwner')"
 
-"%system.teamcity.build.checkoutDir%/tools/gh" pr comment "${pr_number}" --body "${body}"
+body="$(printf '%s\n```console\n%s\n```' "${marker}" "${results}")"
+
+# Update existing comment if one was previously posted, otherwise create a new one
+comment_id="$("${gh}" api "repos/${repo}/issues/${pr_number}/comments" \
+    --jq ".[] | select(.body | contains(\"${marker}\")) | .id")"
+
+if [[ -n "${comment_id}" ]]; then
+    "${gh}" api "repos/${repo}/issues/comments/${comment_id}" \
+        --method PATCH \
+        --field body="${body}"
+else
+    "${gh}" pr comment "${pr_number}" --body "${body}"
+fi
