@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	signertypes "github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -57,7 +56,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
@@ -124,6 +123,14 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -601,7 +608,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
-					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs20x)),
+					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs24x)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -850,7 +857,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_fileSystem(t *testing.T) {
+func TestAccLambdaFunction_efsFileSystem(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -868,7 +875,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
-				Config: testAccFunctionConfig_fileSystem(rName),
+				Config: testAccFunctionConfig_efsFileSystem(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
@@ -887,7 +894,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 			},
 			// Ensure lambda file system configuration can be updated
 			{
-				Config: testAccFunctionConfig_fileSystemUpdate(rName),
+				Config: testAccFunctionConfig_efsFileSystemUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
@@ -902,6 +909,51 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_s3FileSystem(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			// Ensure a function with lambda file system configuration can be created
+			{
+				Config: testAccFunctionConfig_s3FileSystem(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_s3files_access_point.for_lambda", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/s3files"),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -1550,6 +1602,58 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_useResourceTimeoutForPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(t, 8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -3214,7 +3318,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, funcName))
 }
@@ -3261,7 +3365,7 @@ resource "aws_lambda_function" "test" {
   publish       = false
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, fileName, rName))
 }
@@ -3344,7 +3448,7 @@ resource "aws_lambda_function" "test" {
   function_name           = %[1]q
   role                    = aws_iam_role.iam_for_lambda.arn
   handler                 = "exports.example"
-  runtime                 = "nodejs20.x"
+  runtime                 = "nodejs24.x"
   code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_1.arn
 }
 `, rName))
@@ -3359,7 +3463,7 @@ resource "aws_lambda_function" "test" {
   function_name           = %[1]q
   role                    = aws_iam_role.iam_for_lambda.arn
   handler                 = "exports.example"
-  runtime                 = "nodejs20.x"
+  runtime                 = "nodejs24.x"
   code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_2.arn
 }
 `, rName))
@@ -3374,7 +3478,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -3388,7 +3492,7 @@ resource "aws_lambda_function" "test" {
   function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
-  runtime                        = "nodejs20.x"
+  runtime                        = "nodejs24.x"
   reserved_concurrent_executions = 111
 }
 `, rName))
@@ -3403,7 +3507,7 @@ resource "aws_lambda_function" "test" {
   function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
-  runtime                        = "nodejs20.x"
+  runtime                        = "nodejs24.x"
   reserved_concurrent_executions = 222
 }
 `, rName))
@@ -3419,7 +3523,7 @@ resource "aws_lambda_function" "test" {
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
   publish                        = true
-  runtime                        = "nodejs20.x"
+  runtime                        = "nodejs24.x"
   reserved_concurrent_executions = 222
 }
 `, rName))
@@ -3433,7 +3537,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -3447,7 +3551,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -3467,7 +3571,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -3488,7 +3592,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -3502,7 +3606,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -3571,7 +3675,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   kms_key_arn   = aws_kms_key.test1.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -3618,7 +3722,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   kms_key_arn   = aws_kms_key.test2.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   environment {
     variables = {
@@ -3639,7 +3743,7 @@ resource "aws_lambda_function" "test" {
   publish       = %[3]t
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, fileName, rName, publish))
 }
@@ -3668,7 +3772,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   dead_letter_config {
     target_arn = aws_sns_topic.test[0].arn
@@ -3692,7 +3796,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   dead_letter_config {
     target_arn = aws_sns_topic.test[1].arn
@@ -3716,7 +3820,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   dead_letter_config {
     target_arn = ""
@@ -3725,7 +3829,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_fileSystem(rName string) string {
+func testAccFunctionConfig_efsFileSystem(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -3765,7 +3869,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -3782,7 +3886,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_fileSystemUpdate(rName string) string {
+func testAccFunctionConfig_efsFileSystemUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -3822,7 +3926,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
@@ -3835,6 +3939,271 @@ resource "aws_lambda_function" "test" {
   }
 
   depends_on = [aws_efs_mount_target.test]
+}
+`, rName))
+}
+
+func testAccFunctionConfig_s3FileSystem(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "lambda_file_system" {
+  bucket           = "%[1]s-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-an"
+  bucket_namespace = "account-regional"
+  force_destroy    = true
+}
+
+resource "aws_s3_bucket_versioning" "lambda_file_system" {
+  bucket = aws_s3_bucket.lambda_file_system.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+data "aws_iam_policy_document" "s3files_policy" {
+  statement {
+    actions = [
+      "s3:ListBucket",
+      "s3:ListBucketVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      aws_s3_bucket.lambda_file_system.arn
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+  statement {
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject*",
+      "s3:GetObject*",
+      "s3:List*",
+      "s3:PutObject*"
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.lambda_file_system.arn}/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+  statement {
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncryptFrom",
+      "kms:ReEncryptTo"
+    ]
+    effect    = "Allow"
+    resources = ["arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
+    condition {
+      test     = "StringLike"
+      variable = "kms:ViaService"
+      values   = ["s3.${data.aws_region.current.region}.amazonaws.com"]
+    }
+    condition {
+      test     = "StringLike"
+      variable = "kms:EncryptionContext:aws:s3:arn"
+      values = [
+        aws_s3_bucket.lambda_file_system.arn,
+        "${aws_s3_bucket.lambda_file_system.arn}/*"
+      ]
+    }
+  }
+  statement {
+    actions = [
+      "events:DeleteRule",
+      "events:DisableRule",
+      "events:EnableRule",
+      "events:PutRule",
+      "events:PutTargets",
+      "events:RemoveTargets"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:${data.aws_partition.current.partition}:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "events:ManagedBy"
+      values   = ["elasticfilesystem.amazonaws.com"]
+    }
+  }
+  statement {
+    actions = [
+      "events:DescribeRule",
+      "events:ListRuleNamesByTarget",
+      "events:ListRules",
+      "events:ListTargetsByRule"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "assume_role_s3files" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["elasticfilesystem.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:file-system/*"]
+    }
+  }
+}
+
+resource "aws_iam_role" "s3files" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_s3files.json
+  name               = "%[1]s-s3files-lambda-role"
+}
+
+resource "aws_iam_role_policy" "s3files" {
+  policy = data.aws_iam_policy_document.s3files_policy.json
+  role   = aws_iam_role.s3files.name
+}
+
+resource "aws_s3files_file_system" "for_lambda" {
+  bucket   = aws_s3_bucket.lambda_file_system.arn
+  role_arn = aws_iam_role.s3files.arn
+
+  depends_on = [
+    aws_s3_bucket_versioning.lambda_file_system
+  ]
+}
+
+resource "aws_s3files_access_point" "for_lambda" {
+  file_system_id = aws_s3files_file_system.for_lambda.id
+
+  root_directory {
+    path = "/lambda"
+    creation_permissions {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "755"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+}
+
+resource "aws_security_group" "s3files_mount_targets" {
+  name   = "%[1]s-s3files-mount-targets-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "s3files_mount_targets_nfs" {
+  ip_protocol                  = "tcp"
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.lambda_s3files.id
+  security_group_id            = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_s3files_mount_target" "for_lambda" {
+  file_system_id  = aws_s3files_file_system.for_lambda.id
+  subnet_id       = aws_subnet.subnet_for_lambda_az2.id
+  security_groups = [aws_security_group.s3files_mount_targets.id]
+}
+
+data "aws_iam_policy_document" "lambda_s3files" {
+  statement {
+    actions = [
+      "s3files:ClientMount",
+      "s3files:ClientWrite",
+      "s3files:ListFileSystems",
+      "s3files:ListAccessPoints",
+      "s3files:GetFileSystem",
+      "s3files:GetAccessPoint",
+      "s3files:CreateAccessPoint"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion"
+    ]
+    effect    = "Allow"
+    resources = ["${aws_s3_bucket.lambda_file_system.arn}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_s3files" {
+  policy = data.aws_iam_policy_document.lambda_s3files.json
+  role   = aws_iam_role.iam_for_lambda.name
+}
+
+# Use more restricted security groups than that provided by acctest.ConfigLambdaBase
+resource "aws_security_group" "lambda_s3files" {
+  name   = "%[1]s-lambda-s3files-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "lambda_s3files_nfs" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.lambda_s3files.id
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.lambda_s3files.id]
+  }
+
+  file_system_config {
+    arn              = aws_s3files_access_point.for_lambda.arn
+    local_mount_path = "/mnt/s3files"
+  }
+  depends_on = [aws_s3files_mount_target.for_lambda]
+}
+
+# Wait for the Security Group attached to the Lambda Function
+# to eventually take effect before invoking it
+resource "time_sleep" "wait_for_sg_ready" {
+  create_duration = "10s"
+  depends_on      = [aws_lambda_function.test]
+}
+
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+  input         = jsonencode({})
+  depends_on    = [time_sleep.wait_for_sg_ready]
 }
 `, rName))
 }
@@ -3914,7 +4283,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   architectures = ["arm64"]
 }
 `, rName))
@@ -3929,7 +4298,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   architectures = ["x86_64"]
 }
 `, rName))
@@ -3942,7 +4311,7 @@ func testAccFunctionConfig_architecturesARM64Layer(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs20.x"]
+  compatible_runtimes      = ["nodejs24.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
@@ -3951,7 +4320,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   architectures = ["arm64"]
   layers        = [aws_lambda_layer_version.test.arn]
 }
@@ -3965,7 +4334,7 @@ func testAccFunctionConfig_architecturesUpdateLayer(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs20.x"]
+  compatible_runtimes      = ["nodejs24.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
@@ -3974,7 +4343,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   architectures = ["x86_64"]
   layers        = [aws_lambda_layer_version.test.arn]
 }
@@ -3990,7 +4359,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   ephemeral_storage {
     size = 1024
@@ -4008,7 +4377,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   ephemeral_storage {
     size = 2048
@@ -4026,7 +4395,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   logging_config {
     log_format = "Text"
@@ -4045,7 +4414,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   logging_config {
     application_log_level = "TRACE"
@@ -4065,7 +4434,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   logging_config {
     log_format = "JSON"
@@ -4083,7 +4452,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   logging_config {
@@ -4102,7 +4471,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   logging_config {
@@ -4122,7 +4491,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
 
   logging_config {
@@ -4142,7 +4511,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   tracing_config {
     mode = "Active"
@@ -4160,7 +4529,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   tracing_config {
     mode = "PassThrough"
@@ -4203,7 +4572,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   kms_key_arn   = aws_kms_key.test.arn
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -4217,7 +4586,7 @@ resource "aws_lambda_layer_version" "test" {
 
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = "%[1]s-${count.index}"
-  compatible_runtimes = ["nodejs20.x"]
+  compatible_runtimes = ["nodejs24.x"]
 }
 
 resource "aws_lambda_function" "test" {
@@ -4225,7 +4594,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   layers        = [aws_lambda_layer_version.test[0].arn]
 }
 `, rName))
@@ -4240,7 +4609,7 @@ resource "aws_lambda_layer_version" "test" {
 
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = "%[1]s-${count.index}"
-  compatible_runtimes = ["nodejs20.x"]
+  compatible_runtimes = ["nodejs24.x"]
 }
 
 resource "aws_lambda_function" "test" {
@@ -4248,10 +4617,25 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   layers        = aws_lambda_layer_version.test[*].arn
 }
 `, rName))
+}
+
+func testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName string, useResourceTimeoutForPropagation bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(policyName, roleName, sgName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                             = "test-fixtures/lambdatest.zip"
+  function_name                        = "%s"
+  role                                 = aws_iam_role.iam_for_lambda.arn
+  handler                              = "exports.example"
+  runtime                              = "nodejs24.x"
+  use_resource_timeout_for_propagation = %t
+}
+`, funcName, useResourceTimeoutForPropagation))
 }
 
 func testAccFunctionConfig_vpc(rName string) string {
@@ -4263,7 +4647,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -4282,7 +4666,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id, aws_subnet.subnet_for_lambda_az2.id]
@@ -4321,7 +4705,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -4340,7 +4724,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   publish       = true
   vpc_config {
     security_group_ids = []
@@ -4359,7 +4743,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.test.id]
@@ -4380,7 +4764,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   replace_security_groups_on_destroy = true
 
@@ -4410,7 +4794,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   replace_security_groups_on_destroy = true
   replacement_security_group_ids     = [aws_security_group.test_replacement.id]
@@ -4432,7 +4816,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = []
@@ -4486,7 +4870,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -4501,7 +4885,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[2]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
 }
 `, filePath, rName))
 }
@@ -4515,7 +4899,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, filePath, rName))
 }
@@ -4550,7 +4934,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, filePath, rName))
 }
@@ -4588,7 +4972,7 @@ resource "aws_lambda_function" "test" {
   function_name     = %[3]q
   role              = aws_iam_role.iam_for_lambda.arn
   handler           = "exports.example"
-  runtime           = "nodejs20.x"
+  runtime           = "nodejs24.x"
 }
 `, key, path, rName))
 }
@@ -4615,7 +4999,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName, key, path))
 }
@@ -4642,7 +5026,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName))
 }
@@ -4669,7 +5053,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     subnet_ids         = [aws_subnet.subnet_for_lambda.id]
@@ -4688,7 +5072,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   vpc_config {
     ipv6_allowed_for_dual_stack = true
@@ -4756,7 +5140,7 @@ resource "aws_lambda_function" "test" {
   function_name      = %[1]q
   role               = aws_iam_role.iam_for_lambda.arn
   handler            = "exports.example"
-  runtime            = "nodejs20.x"
+  runtime            = "nodejs24.x"
   source_kms_key_arn = aws_kms_key.%[2]s.arn
 }
 `, rName, kmsIdentifier))
@@ -4771,7 +5155,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   tenancy_config {
     tenant_isolation_mode = "PER_TENANT"
@@ -4789,7 +5173,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
   skip_destroy  = true
 }
 `, rName))
@@ -4838,7 +5222,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   s3_bucket        = aws_s3_bucket.test.bucket
   s3_key           = %[3]q
   source_code_hash = aws_s3_object.test.checksum_sha256
@@ -4860,7 +5244,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
 %[2]s
   durable_config {
     execution_timeout = %[3]d

@@ -38,13 +38,13 @@ func TestAccSecretsManagerSecret_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy: testAccCheckSecretDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		CheckDestroy:             testAccCheckSecretDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Secret/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Secret/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -60,19 +60,18 @@ func TestAccSecretsManagerSecret_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Secret/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Secret/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_secretsmanager_secret.test", map[string]knownvalue.Check{
-						names.AttrARN: arn1.Value(),
+						names.AttrARN: arn1.ValueCheck(),
 					}),
 					querycheck.ExpectIdentity("aws_secretsmanager_secret.test", map[string]knownvalue.Check{
-						names.AttrARN: arn2.Value(),
+						names.AttrARN: arn2.ValueCheck(),
 					}),
 				},
 			},

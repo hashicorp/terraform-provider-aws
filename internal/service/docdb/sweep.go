@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,25 +47,20 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 				continue
 			}
 
-			arn := aws.ToString(v.DBClusterArn)
 			id := aws.ToString(v.DBClusterIdentifier)
-
 			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set(names.AttrARN, arn)
-			d.Set("skip_final_snapshot", true)
 
-			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
-
-			if err != nil && !retry.NotFound(err) {
-				log.Printf("[WARN] Reading DocumentDB Cluster %s Global Cluster information: %s", id, err)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping DocumentDB Cluster %s: %s", id, err)
 				continue
 			}
 
-			if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
-				d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-			}
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set(names.AttrDeletionProtection, false)
+			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -157,9 +152,18 @@ func sweepGlobalClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.
 				continue
 			}
 
+			id := aws.ToString(v.GlobalClusterIdentifier)
 			r := resourceGlobalCluster()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
+			d.SetId(id)
+
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping DocumentDB Global Cluster %s: %s", id, err)
+				continue
+			}
+
+			d.Set(names.AttrDeletionProtection, false)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

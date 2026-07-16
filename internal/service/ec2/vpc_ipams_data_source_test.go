@@ -16,7 +16,7 @@ func TestAccIPAMsDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-na
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipams.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -44,7 +44,7 @@ func TestAccIPAMsDataSource_filter(t *testing.T) { // nosemgrep:ci.vpc-in-test-n
 	dataSourceNameAdvanced := "data.aws_vpc_ipams.advanced"
 	dataSourceNameFree := "data.aws_vpc_ipams.free"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)

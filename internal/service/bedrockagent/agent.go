@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -126,7 +126,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					int64planmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Int64{
-					int64validator.Between(60, 3600),
+					int64validator.Between(60, 5400),
 				},
 			},
 			"instruction": schema.StringAttribute{
@@ -189,7 +189,7 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgent(ctx, &input)

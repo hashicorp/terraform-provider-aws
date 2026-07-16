@@ -83,7 +83,7 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
 }
 ```
 
-### Pinpoint Destination
+### End User Messaging Destination
 
 ```terraform
 resource "aws_sesv2_configuration_set" "example" {
@@ -133,8 +133,8 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_set_name` - (Required) The name of the configuration set.
-* `event_destination` - (Required) A name that identifies the event destination within the configuration set.
-* `event_destination_name` - (Required) An object that defines the event destination. See [`event_destination` Block](#event_destination-block) for details.
+* `event_destination` - (Required) An object that defines the event destination. See [`event_destination` Block](#event_destination-block) for details.
+* `event_destination_name` - (Required) A name that identifies the event destination within the configuration set.
 
 ### `event_destination` Block
 
@@ -145,7 +145,7 @@ The `event_destination` configuration block supports the following arguments:
 * `enabled` - (Optional) When the event destination is enabled, the specified event types are sent to the destinations. Default: `false`.
 * `event_bridge_destination` - (Optional) An object that defines an Amazon EventBridge destination for email events. You can use Amazon EventBridge to send notifications when certain email events occur. See [`event_bridge_destination` Block](#event_bridge_destination-block) for details.
 * `kinesis_firehose_destination` - (Optional) An object that defines an Amazon Kinesis Data Firehose destination for email events. See [`kinesis_firehose_destination` Block](#kinesis_firehose_destination-block) for details.
-* `pinpoint_destination` - (Optional) An object that defines an Amazon Pinpoint project destination for email events. See [`pinpoint_destination` Block](#pinpoint_destination-block) for details.
+* `pinpoint_destination` - (Optional) An object that defines an AWS End User Messaging project destination for email events. See [`pinpoint_destination` Block](#pinpoint_destination-block) for details.
 * `sns_destination` - (Optional) An object that defines an Amazon SNS destination for email events. See [`sns_destination` Block](#sns_destination-block) for details.
 
 ### `cloud_watch_destination` Block
@@ -179,7 +179,7 @@ The `kinesis_firehose_destination` configuration block supports the following ar
 
 The `pinpoint_destination` configuration block supports the following arguments:
 
-* `pinpoint_application_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Pinpoint project to send email events to.
+* `pinpoint_application_arn` - (Required) The Amazon Resource Name (ARN) of the AWS End User Messaging project to send email events to.
 
 ### `sns_destination` Block
 

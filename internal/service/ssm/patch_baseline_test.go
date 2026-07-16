@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -28,7 +27,7 @@ import (
 func TestAccSSMPatchBaseline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +104,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identity ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -121,6 +120,14 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourcePatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_patch_baseline.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_patch_baseline.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -129,7 +136,7 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -173,7 +180,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -223,7 +230,7 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 func TestAccSSMPatchBaseline_approveAfterDays(t *testing.T) {
 	ctx := acctest.Context(t)
 	var baseline ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -248,7 +255,7 @@ func TestAccSSMPatchBaseline_approveAfterDays(t *testing.T) {
 func TestAccSSMPatchBaseline_sources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -302,7 +309,7 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmPatch ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -332,7 +339,7 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -379,7 +386,7 @@ func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
 func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmPatch ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -407,7 +414,7 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 func TestAccSSMPatchBaseline_availableSecurityUpdatesComplianceStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -450,7 +457,7 @@ func TestAccSSMPatchBaseline_availableSecurityUpdatesComplianceStatus(t *testing
 func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmPatch ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	acctest.Test(ctx, t, resource.TestCase{

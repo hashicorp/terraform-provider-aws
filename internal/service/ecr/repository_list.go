@@ -68,7 +68,7 @@ func (l *repositoryListResource) List(ctx context.Context, request list.ListRequ
 
 			result.DisplayName = name
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

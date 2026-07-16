@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,23 +36,33 @@ type startBuildAction struct {
 
 type startBuildActionModel struct {
 	framework.WithRegionModel
+	BuildID                      types.String                                              `tfsdk:"build_id"`
+	EnvironmentVariablesOverride fwtypes.ListNestedObjectValueOf[environmentVariableModel] `tfsdk:"environment_variables_override"`
+	HostKernelOverride           fwtypes.StringEnum[awstypes.HostKernel]                   `tfsdk:"host_kernel_override"`
 	ProjectName                  types.String                                              `tfsdk:"project_name"`
 	SourceVersion                types.String                                              `tfsdk:"source_version"`
 	Timeout                      types.Int64                                               `tfsdk:"timeout"`
-	EnvironmentVariablesOverride fwtypes.ListNestedObjectValueOf[environmentVariableModel] `tfsdk:"environment_variables_override"`
-	BuildID                      types.String                                              `tfsdk:"build_id"`
 }
 
 type environmentVariableModel struct {
 	Name  types.String `tfsdk:"name"`
-	Value types.String `tfsdk:"value"`
 	Type  types.String `tfsdk:"type"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Starts a CodeBuild project build. This action is synchronous and waits for the build to complete. When using with action_trigger lifecycle events, use before_create to ensure dependent resources wait for build artifacts.",
 		Attributes: map[string]schema.Attribute{
+			"build_id": schema.StringAttribute{
+				Description: "ID of the started build",
+				Optional:    true,
+			},
+			"host_kernel_override": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.HostKernel](),
+				Description: "Overrides the host operating system kernel for this build. Valid values: LINUX_KERNEL_4, LINUX_KERNEL_6, LINUX_KERNEL_LATEST.",
+				Optional:    true,
+			},
 			"project_name": schema.StringAttribute{
 				Description: "Name of the CodeBuild project",
 				Required:    true,
@@ -62,10 +73,6 @@ func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest,
 			},
 			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds for the build operation",
-				Optional:    true,
-			},
-			"build_id": schema.StringAttribute{
-				Description: "ID of the started build",
 				Optional:    true,
 			},
 		},
@@ -79,13 +86,13 @@ func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest,
 							Description: "Environment variable name",
 							Required:    true,
 						},
-						names.AttrValue: schema.StringAttribute{
-							Description: "Environment variable value",
-							Required:    true,
-						},
 						names.AttrType: schema.StringAttribute{
 							Description: "Environment variable type",
 							Optional:    true,
+						},
+						names.AttrValue: schema.StringAttribute{
+							Description: "Environment variable value",
+							Required:    true,
 						},
 					},
 				},
@@ -103,18 +110,14 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 
 	conn := a.Meta().CodeBuildClient(ctx)
 
-	timeout := 30 * time.Minute
-	if !model.Timeout.IsNull() {
-		timeout = time.Duration(model.Timeout.ValueInt64()) * time.Second
-	}
+	timeout := fwactions.TimeoutOr(model.Timeout, 30*time.Minute)
 
 	tflog.Info(ctx, "Starting CodeBuild project build", map[string]any{
 		"project_name": model.ProjectName.ValueString(),
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Starting CodeBuild project build...",
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting CodeBuild project build...")
 
 	var input codebuild.StartBuildInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, model, &input)...)
@@ -131,9 +134,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 	buildID := aws.ToString(output.Build.Id)
 	model.BuildID = types.StringValue(buildID)
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Build started, waiting for completion...",
-	})
+	cb(ctx, "Build started, waiting for completion...")
 
 	// Poll for build completion using actionwait with backoff strategy
 	// Use backoff since builds can take a long time and status changes less frequently
@@ -164,7 +165,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 			actionwait.Status(awstypes.StatusTypeTimedOut),
 		},
 		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
-			resp.SendProgress(action.InvokeProgressEvent{Message: "Build currently in state: " + string(fr.Status)})
+			cb(ctx, "Build currently in state: %s", fr.Status)
 		},
 	})
 	if err != nil {
@@ -183,5 +184,5 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		return
 	}
 
-	resp.SendProgress(action.InvokeProgressEvent{Message: "Build completed successfully"})
+	cb(ctx, "Build completed successfully")
 }

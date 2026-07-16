@@ -75,8 +75,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the secret.
-* `id` - A pipe delimited combination of secret ID and version ID.
+* `arn` - (**Deprecated**) The ARN of the secret.
+  Use `secret_arn` instead.
+* `secret_arn` - The ARN of the secret.
 * `version_id` - The unique identifier of the version of the secret.
 
 ## Import

@@ -43,28 +43,15 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
-* `most_recent` - (Optional) If more than one result is returned, use the most
-recent AMI.
-* `executable_users` - (Optional) Limit search to users with *explicit* launch permission on
- the image. Valid items are the numeric account ID or `self`.
+* `most_recent` - (Optional) If more than one result is returned, use the most recent AMI.
+* `executable_users` - (Optional) Limit search to users with *explicit* launch permission on the image. Valid items are the numeric account ID or `self`.
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is false.
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are
-several valid keys, for a full reference, check out
-[describe-images in the AWS CLI reference][1].
-* `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe
-filters and `most_recent` set to `true`, a third party may introduce a new image which
-will be returned by this data source. Consider filtering by owner or image ID rather
-than setting this argument.
-* `name_regex` - (Optional) Regex string to apply to the AMI list returned
-by AWS. This allows more advanced filtering not supported from the AWS API. This
-filtering is done locally on what AWS returns, and could have a performance
-impact if the result is large. Combine this with other
-options to narrow down the list AWS returns.
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-images in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html). See [`filter`](#filter) below.
+* `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe filters and `most_recent` set to `true`, a third party may introduce a new image which will be returned by this data source. Consider filtering by owner or image ID rather than setting this argument.
+* `name_regex` - (Optional) Regex string to apply to the AMI list returned by AWS. This allows more advanced filtering not supported from the AWS API. This filtering is done locally on what AWS returns, and could have a performance impact if the result is large. Combine this with other options to narrow down the list AWS returns.
+* `uefi_data` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 
-~> **NOTE:** If more or less than a single match is returned by the search,
-Terraform will fail. Ensure that your search is specific enough to return
-a single AMI ID only, or use `most_recent` to choose the most recent one. If
-you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
+~> **NOTE:** If more or less than a single match is returned by the search, Terraform will fail. Ensure that your search is specific enough to return a single AMI ID only, or use `most_recent` to choose the most recent one. If you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
 ## Attribute Reference
 
@@ -74,70 +61,74 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the AMI.
 * `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `boot_mode` - Boot mode of the image.
-* `block_device_mappings` - Set of objects with block device mappings of the AMI.
-    * `device_name` - Physical name of the device.
-    * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`).
-        * `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
-        * `encrypted` - `true` if the EBS volume is encrypted.
-        * `iops` - `0` if the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
-        * `snapshot_id` - The ID of the snapshot.
-        * `volume_size` - The size of the volume, in GiB.
-        * `throughput` - The throughput that the EBS volume supports, in MiB/s.
-        * `volume_type` - The volume type.
-        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
-    * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
-    * `virtual_name` - Virtual device name (for instance stores).
+* `block_device_mappings` - Set of objects with block device mappings of the AMI. See [`block_device_mappings`](#block_device_mappings) below.
 * `creation_date` - Date and time the image was created.
 * `deprecation_time` - Date and time when the image will be deprecated.
-* `description` - Description of the AMI that was provided during image
-  creation.
+* `description` - Description of the AMI that was provided during image creation.
+* `ena_support` - Whether enhanced networking with ENA is enabled.
 * `hypervisor` - Hypervisor type of the image.
 * `image_id` - ID of the AMI. Should be the same as the resource `id`.
 * `image_location` - Location of the AMI.
-* `image_owner_alias` - AWS account alias (for example, `amazon`, `self`) or
-  the AWS account ID of the AMI owner.
+* `image_owner_alias` - AWS account alias (for example, `amazon`, `self`) or the AWS account ID of the AMI owner.
 * `image_type` - Type of image.
 * `imds_support` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
-* `kernel_id` - Kernel associated with the image, if any. Only applicable
-  for machine images.
-* `last_launched_time` - Date and time, in ISO 8601 date-time format , when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
+* `kernel_id` - Kernel associated with the image, if any. Only applicable for machine images.
+* `last_launched_time` - Date and time, in ISO 8601 date-time format, when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
 * `name` - Name of the AMI that was provided during image creation.
 * `owner_id` - AWS account ID of the image owner.
 * `platform` - Value is Windows for `Windows` AMIs; otherwise blank.
-* `product_codes` - Any product codes associated with the AMI.
-    * `product_codes.#.product_code_id` - The product code.
-    * `product_codes.#.product_code_type` - The type of product code.
+* `platform_details` - Platform details associated with the billing code of the AMI.
+* `product_codes` - Any product codes associated with the AMI. See [`product_codes`](#product_codes) below.
 * `public` - `true` if the image has public launch permissions.
-* `ramdisk_id` - RAM disk associated with the image, if any. Only applicable
-  for machine images.
+* `ramdisk_id` - RAM disk associated with the image, if any. Only applicable for machine images.
 * `root_device_name` - Device name of the root device.
 * `root_device_type` - Type of root device (ie: `ebs` or `instance-store`).
-* `root_snapshot_id` - Snapshot id associated with the root device, if any
-  (only applies to `ebs` root devices).
+* `root_snapshot_id` - Snapshot id associated with the root device, if any (only applies to `ebs` root devices).
 * `sriov_net_support` - Whether enhanced networking is enabled.
-* `state` - Current state of the AMI. If the state is `available`, the image
-  is successfully registered and can be used to launch an instance.
-* `state_reason` - Describes a state change. Fields are `UNSET` if not available.
-    * `state_reason.code` - The reason code for the state change.
-    * `state_reason.message` - The message for the state change.
+* `state` - Current state of the AMI. If the state is `available`, the image is successfully registered and can be used to launch an instance.
+* `state_reason` - Describes a state change. Fields are `UNSET` if not available. See [`state_reason`](#state_reason) below.
 * `tags` - Any tags assigned to the image.
-    * `tags.#.key` - Key name of the tag.
-    * `tags.#.value` - Value of the tag.
 * `tpm_support` - If the image is configured for NitroTPM support, the value is `v2.0`.
-* `virtualization_type` - Type of virtualization of the AMI (ie: `hvm` or
-  `paravirtual`).
-* `uefi_data` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 * `usage_operation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
-* `platform_details` - Platform details associated with the billing code of the AMI.
-* `ena_support` - Whether enhanced networking with ENA is enabled.
+* `virtualization_type` - Type of virtualization of the AMI (ie: `hvm` or `paravirtual`).
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
+~> **NOTE:** Some values are not always set and may not be available for interpolation.
+
+### `filter` Block
+
+* `name` - Name of the filter. For a full reference, check out [describe-images in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
+* `values` - Set of values that are accepted for the given filter.
+
+### `block_device_mappings`
+
+* `device_name` - Physical name of the device.
+* `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`). See [`ebs`](#ebs) below.
+* `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
+* `virtual_name` - Virtual device name (for instance stores).
+
+### `ebs`
+
+* `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
+* `encrypted` - `true` if the EBS volume is encrypted.
+* `iops` - `0` if the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
+* `snapshot_id` - The ID of the snapshot.
+* `throughput` - The throughput that the EBS volume supports, in MiB/s.
+* `volume_initialization_rate` - The volume initialization rate, in MiB/s.
+* `volume_size` - The size of the volume, in GiB.
+* `volume_type` - The volume type.
+
+### `product_codes`
+
+* `product_code_id` - The product code.
+* `product_code_type` - The type of product code.
+
+### `state_reason`
+
+* `code` - The reason code for the state change.
+* `message` - The message for the state change.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
-
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html

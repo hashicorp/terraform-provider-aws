@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -92,6 +92,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			names.AttrCertificate: certificateSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -114,7 +115,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 					},
 					Blocks: map[string]schema.Block{
 						names.AttrVPCConfig: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigNoS3EndpointModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -167,7 +168,7 @@ func (r *codeInterpreterResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -196,6 +197,8 @@ func (r *codeInterpreterResource) Create(ctx context.Context, request resource.C
 	codeInterpreterID := aws.ToString(out.CodeInterpreterId)
 
 	if _, err := waitCodeInterpreterCreated(ctx, conn, codeInterpreterID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("code_interpreter_id"), codeInterpreterID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
@@ -349,6 +352,7 @@ func findCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 
 type codeInterpreterResourceModel struct {
 	framework.WithRegionModel
+	Certificates         fwtypes.ListNestedObjectValueOf[certificateModel]                         `tfsdk:"certificate"`
 	CodeInterpreterARN   types.String                                                              `tfsdk:"code_interpreter_arn"`
 	CodeInterpreterID    types.String                                                              `tfsdk:"code_interpreter_id"`
 	Description          types.String                                                              `tfsdk:"description"`
@@ -361,6 +365,6 @@ type codeInterpreterResourceModel struct {
 }
 
 type codeInterpreterNetworkConfigurationModel struct {
-	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode] `tfsdk:"network_mode"`
-	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel]         `tfsdk:"vpc_config"`
+	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode]     `tfsdk:"network_mode"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigNoS3EndpointModel] `tfsdk:"vpc_config"`
 }

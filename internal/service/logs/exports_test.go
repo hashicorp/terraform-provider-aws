@@ -5,23 +5,24 @@ package logs
 
 // Exports for use in tests only.
 var (
-	ResourceAccountPolicy             = resourceAccountPolicy
-	ResourceAnomalyDetector           = newAnomalyDetectorResource
-	ResourceDataProtectionPolicy      = resourceDataProtectionPolicy
-	ResourceDelivery                  = newDeliveryResource
-	ResourceDeliveryDestination       = newDeliveryDestinationResource
-	ResourceDeliveryDestinationPolicy = newDeliveryDestinationPolicyResource
-	ResourceDeliverySource            = newDeliverySourceResource
-	ResourceDestination               = resourceDestination
-	ResourceDestinationPolicy         = resourceDestinationPolicy
-	ResourceGroup                     = resourceGroup
-	ResourceIndexPolicy               = newIndexPolicyResource
-	ResourceMetricFilter              = resourceMetricFilter
-	ResourceQueryDefinition           = resourceQueryDefinition
-	ResourceResourcePolicy            = resourceResourcePolicy
-	ResourceStream                    = resourceStream
-	ResourceSubscriptionFilter        = resourceSubscriptionFilter
-	ResourceTransformer               = newTransformerResource
+	ResourceAccountPolicy                    = resourceAccountPolicy
+	ResourceAnomalyDetector                  = newAnomalyDetectorResource
+	ResourceDataProtectionPolicy             = resourceDataProtectionPolicy
+	ResourceDelivery                         = newDeliveryResource
+	ResourceDeliveryDestination              = newDeliveryDestinationResource
+	ResourceDeliveryDestinationPolicy        = newDeliveryDestinationPolicyResource
+	ResourceDeliverySource                   = newDeliverySourceResource
+	ResourceDestination                      = resourceDestination
+	ResourceDestinationPolicy                = resourceDestinationPolicy
+	ResourceGroup                            = resourceGroup
+	ResourceIndexPolicy                      = newIndexPolicyResource
+	ResourceMetricFilter                     = resourceMetricFilter
+	ResourceQueryDefinition                  = resourceQueryDefinition
+	ResourceResourcePolicy                   = resourceResourcePolicy
+	ResourceStream                           = resourceStream
+	ResourceSubscriptionFilter               = resourceSubscriptionFilter
+	ResourceS3TableIntegrationSourceResource = newS3TableIntegrationSourceResource
+	ResourceTransformer                      = newTransformerResource
 
 	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName                 = findDataProtectionPolicyByLogGroupName
@@ -38,6 +39,8 @@ var (
 	FindMetricFilterByTwoPartKey                           = findMetricFilterByTwoPartKey
 	FindQueryDefinitionByTwoPartKey                        = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName                               = findResourcePolicyByName
+	FindResourcePolicyByResourceARN                        = findResourcePolicyByResourceARN
+	FindS3TableIntegrationSourceByTwoPartKey               = findS3TableIntegrationSourceByTwoPartKey
 	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
 	FindTransformerByLogGroupIdentifier                    = findTransformerByLogGroupIdentifier
 

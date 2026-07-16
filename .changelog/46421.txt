@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_multitenant_distribution: Add `origin.custom_origin_config.origin_mtls_config` argument
+```

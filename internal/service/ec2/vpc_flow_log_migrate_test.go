@@ -4,10 +4,13 @@
 package ec2_test
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,6 +44,8 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 				names.AttrSubnetID:     "sn-12345678",
 			},
 			expected: map[string]any{
+				//lintignore:AWSAT003,AWSAT005
+				"log_destination":  "arn:aws:logs:us-east-1:123456789012:log-group:log-group-name",
 				names.AttrSubnetID: "sn-12345678",
 			},
 		},
@@ -50,7 +55,12 @@ func TestFlowLogStateUpgradeV0(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), tt.rawState, nil)
+			client := mockClient{
+				region:    "us-east-1", //lintignore:AWSAT003
+				accountID: acctest.Ct12Digit,
+			}
+
+			result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), tt.rawState, client)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -92,7 +102,12 @@ func TestFlowLogStateUpgradeV0_complexState(t *testing.T) {
 		t.Fatalf("failed to unmarshal state JSON: %v", err)
 	}
 
-	result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), rawState, nil)
+	client := mockClient{
+		region:    "us-east-1", //lintignore:AWSAT003
+		accountID: acctest.Ct12Digit,
+	}
+
+	result, err := tfec2.FlowLogStateUpgradeV0(t.Context(), rawState, client)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -104,4 +119,19 @@ func TestFlowLogStateUpgradeV0_complexState(t *testing.T) {
 	if result["log_destination"] != "arn:aws:logs:us-east-1:123456789012:log-group:/my/log-group" {
 		t.Errorf("expected log_destination to be preserved, got: %v", result["log_destination"])
 	}
+}
+
+type mockClient struct {
+	region    string
+	accountID string
+}
+
+func (m mockClient) RegionalARN(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: names.PartitionForRegion(m.region).ID(),
+		Service:   service,
+		Region:    m.region,
+		AccountID: m.accountID,
+		Resource:  resource,
+	}.String()
 }

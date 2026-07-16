@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -99,6 +100,14 @@ func TestAccSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permission_set_inline_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permission_set_inline_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -123,6 +132,14 @@ func TestAccSSOAdminPermissionSetInlinePolicy_Disappears_permissionSet(t *testin
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permission_set_inline_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permission_set_inline_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

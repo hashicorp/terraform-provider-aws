@@ -15,6 +15,7 @@ on:
       - .github/workflows/website.yml
       - .ci/.markdownlinkcheck.json
       - .ci/.tflint.hcl
+      - .ci/opa-policies/**
       - .ci/tools/go.mod
       - .markdownlint.yml
       - website/docs/**
@@ -25,11 +26,17 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
@@ -45,7 +52,7 @@ jobs:
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
@@ -61,7 +68,7 @@ jobs:
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/*.md
         with:
@@ -69,7 +76,6 @@ jobs:
           verbose: "yes"
           config: ".ci/.markdownlinkcheck.json"
           directory: "website/docs"
-          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.markdown.
           depth: 2
           extension: ".md"
           # Checking only modified files in the PR does not respect 'mex-depth'.
@@ -79,21 +85,19 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
-          # Ignore CDKTF translated guides.
-          ignore: "website/docs/cdktf/*/guides/*"
 
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -105,11 +109,11 @@ jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -119,15 +123,16 @@ jobs:
       - run: terrafmt diff ./website --check --pattern '*.markdown'
 
   tflint:
+    needs: tflint-opa-policy-tests
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -137,7 +142,7 @@ jobs:
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -153,6 +158,7 @@ jobs:
 
             # Configure the rules for tflint.
             shared_rules=(
+                "--disable-rule=opa_deny_acmpca_deletion_time"
                 "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
                 "--disable-rule=aws_db_instance_default_parameter_group"
                 "--disable-rule=aws_elasticache_cluster_default_parameter_group"
@@ -194,6 +200,8 @@ jobs:
           }
           export -f validate_file
 
-          find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | \
+          find ./website/docs -type f -name '*.markdown' | \
             sort -u | \
             parallel -j 16 --halt soon,fail=1 validate_file {}
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies

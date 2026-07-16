@@ -14,10 +14,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,50 +38,52 @@ func resourceTrafficMirrorSession() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"packet_length": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"session_number": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 32766),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"traffic_mirror_filter_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"traffic_mirror_target_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"virtual_network_id": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 16777216),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"packet_length": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"session_number": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 32766),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_mirror_filter_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"traffic_mirror_target_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"virtual_network_id": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 16777216),
+				},
+			}
 		},
 	}
 }
@@ -91,7 +93,7 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
-		ClientToken:           aws.String(sdkid.UniqueId()),
+		ClientToken:           aws.String(create.UniqueId(ctx)),
 		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),

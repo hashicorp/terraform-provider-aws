@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_mq_broker: Known endpoints in `instances.0.endpoints` are now returned in a deterministic order based on protocol prefix and port, including the new `https://...:16001` Prometheus metrics endpoint introduced in RabbitMQ 4.2 and later; any unrecognized endpoint types are appended afterward in API order
+```

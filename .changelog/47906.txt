@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `AGUI` as a valid value for `protocol_configuration.server_protocol`
+```

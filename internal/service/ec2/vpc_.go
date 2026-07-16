@@ -17,12 +17,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -80,114 +82,116 @@ func resourceVPC() *schema.Resource {
 
 		// Keep in sync with aws_default_vpc's schema.
 		// See notes in default_vpc.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_generated_ipv6_cidr_block": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"ipv6_ipam_pool_id"},
-			},
-			names.AttrCIDRBlock: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{"ipv4_netmask_length"},
-			},
-			"default_network_acl_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_dns_hostnames": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_network_address_usage_metrics": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_tenancy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.TenancyDefault,
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.TenancyDefault, awstypes.TenancyDedicated), false),
-			},
-			"ipv4_ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"ipv4_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{names.AttrCIDRBlock},
-				RequiredWith:  []string{"ipv4_ipam_pool_id"},
-			},
-			"ipv6_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-				ValidateFunc:  validVPCIPv6CIDRBlock,
-			},
-			"ipv6_cidr_block_network_border_group": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-			},
-			"main_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_generated_ipv6_cidr_block": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"ipv6_ipam_pool_id"},
+				},
+				names.AttrCIDRBlock: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{"ipv4_netmask_length"},
+				},
+				"default_network_acl_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_dns_hostnames": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns_support": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"enable_network_address_usage_metrics": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_tenancy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      awstypes.TenancyDefault,
+					ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.TenancyDefault, awstypes.TenancyDedicated), false),
+				},
+				"ipv4_ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"ipv4_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{names.AttrCIDRBlock},
+					RequiredWith:  []string{"ipv4_ipam_pool_id"},
+				},
+				"ipv6_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+					ValidateFunc:  validVPCIPv6CIDRBlock,
+				},
+				"ipv6_cidr_block_network_border_group": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_ipam_pool_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+					ConflictsWith: []string{"ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"main_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -292,6 +296,33 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		diags = sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+	} else {
+		d.Set("default_network_acl_id", v.NetworkAclId)
+	}
+
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("default_route_table_id", nil)
+		d.Set("main_route_table_id", nil)
+	} else {
+		d.Set("default_route_table_id", v.RouteTableId)
+		d.Set("main_route_table_id", v.RouteTableId)
+	}
+
+	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
+		d.Set("default_security_group_id", nil)
+	} else {
+		d.Set("default_security_group_id", v.GroupId)
+	}
+
+	setTagsOut(ctx, vpc.Tags)
+
 	return diags
 }
 
@@ -362,13 +393,15 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+	tflog.Info(ctx, "Deleting EC2 VPC")
+
 	input := ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteVpc(ctx, &input)
-	}, errCodeDependencyViolation)
+
+	// First attempt at deletion.
+	_, err := conn.DeleteVpc(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
@@ -378,6 +411,52 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
 	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
 		return diags
+	}
+
+	// Defers checking for GuardDuty-managed resources until we get a DependencyViolation error so that no new permissions,
+	// such as ec2:DescribeVpcEndpoints, are required for users who do not have GuardDuty monitoring enabled for their VPCs.
+	var guardDutyDiags diag.Diagnostics
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		tflog.Debug(ctx, "VPC deletion failed with DependencyViolation, checking for GuardDuty resources", map[string]any{
+			"error": err,
+		})
+
+		endpointsErr := detectAndDeleteGuardDutyVPCEndpoints(ctx, conn, d.Id())
+		if endpointsErr != nil {
+			if isUnauthorizedError(endpointsErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), endpointsErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC endpoints for EC2 VPC %q: %s", d.Id(), endpointsErr)
+			}
+		}
+
+		sgErr := detectAndDeleteGuardDutySecurityGroups(ctx, conn, d.Id())
+		if sgErr != nil {
+			if isUnauthorizedError(sgErr) {
+				guardDutyDiags = sdkdiag.AppendWarningf(guardDutyDiags,
+					"While deleting EC2 VPC %q, the provider was unable to do check for or dissociate GuardDuty-managed resources.\n"+
+						"If GuardDuty monitoring is enabled for this VPC, the missing permissions will prevent deletion of the Subnet\n\n"+
+						"Error: %s", d.Id(), sgErr.Error(),
+				)
+			} else {
+				return sdkdiag.AppendErrorf(diags, "deleting GuardDuty VPC security groups for EC2 VPC %q: %s", d.Id(), sgErr)
+			}
+		}
+
+		// Retry the deletion now that GuardDuty resources have been cleaned up.
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+			return conn.DeleteVpc(ctx, &input)
+		}, errCodeDependencyViolation)
+	}
+
+	// Only append GuardDuty-related warnings if we're still seeing a DependencyViolation:
+	// If there's no longer a DependencyViolation, any GuardDuty-related warings are not relevant.
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		diags = append(diags, guardDutyDiags...)
 	}
 
 	if err != nil {
@@ -527,7 +606,9 @@ func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, 
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
@@ -546,7 +627,9 @@ func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v 
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
@@ -565,7 +648,9 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
@@ -678,31 +763,6 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		d.Set("enable_network_address_usage_metrics", v)
 	}
 
-	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
-	} else {
-		d.Set("default_network_acl_id", v.NetworkAclId)
-	}
-
-	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
-		d.Set("default_route_table_id", nil)
-		d.Set("main_route_table_id", nil)
-	} else {
-		d.Set("default_route_table_id", v.RouteTableId)
-		d.Set("main_route_table_id", v.RouteTableId)
-	}
-
-	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
-		d.Set("default_security_group_id", nil)
-	} else {
-		d.Set("default_security_group_id", v.GroupId)
-	}
-
 	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
 		d.Set("assign_generated_ipv6_cidr_block", nil)
 		d.Set("ipv6_association_id", nil)
@@ -742,11 +802,122 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		}
 	}
 
-	setTagsOut(ctx, vpc.Tags)
-
 	return nil
 }
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
+}
+
+func detectAndDeleteGuardDutySecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string) error {
+	tflog.Debug(ctx, "Detecting GuardDuty security groups in VPC")
+
+	sgs, err := findGuardDutySecurityGroupsForVPC(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
+		}
+		return fmt.Errorf("listing GuardDuty security groups for VPC %q: %w", vpcID, err)
+	}
+
+	if len(sgs) == 0 {
+		tflog.Debug(ctx, "No GuardDuty security groups found in VPC")
+		return nil
+	}
+
+	tflog.Debug(ctx, "Found GuardDuty security group(s) in VPC", map[string]any{
+		"count": len(sgs),
+	})
+
+	for _, sg := range sgs {
+		groupID := aws.ToString(sg.GroupId)
+		ctx := tflog.SetField(ctx, "group_id", groupID)
+
+		tflog.Debug(ctx, "Deleting GuardDuty security group")
+
+		deleteInput := ec2.DeleteSecurityGroupInput{
+			GroupId: aws.String(groupID),
+		}
+		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			return fmt.Errorf("deleting GuardDuty security group %q: %w", groupID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully deleted GuardDuty security group")
+	}
+
+	return nil
+}
+
+func detectAndDeleteGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) error {
+	tflog.Debug(ctx, "Checking for GuardDuty VPC endpoints for deletion")
+
+	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
+	if err != nil {
+		if isUnauthorizedError(err) {
+			return err
+		}
+		return fmt.Errorf("listing GuardDuty VPC endpoints for VPC %q: %w", vpcID, err)
+	}
+
+	if len(endpoints) == 0 {
+		tflog.Debug(ctx, "No GuardDuty VPC endpoints found")
+		return nil
+	}
+
+	tflog.Debug(ctx, "Found GuardDuty VPC endpoints", map[string]any{
+		"count": len(endpoints),
+	})
+
+	for _, endpoint := range endpoints {
+		endpointID := aws.ToString(endpoint.VpcEndpointId)
+		ctx := tflog.SetField(ctx, "endpoint_id", endpointID)
+
+		tflog.Debug(ctx, "Deleting GuardDuty VPC endpoint")
+
+		deleteInput := ec2.DeleteVpcEndpointsInput{
+			VpcEndpointIds: []string{endpointID},
+		}
+		_, err := conn.DeleteVpcEndpoints(ctx, &deleteInput)
+		if err != nil {
+			if isUnauthorizedError(err) {
+				return err
+			}
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found during deletion")
+				continue
+			}
+			return fmt.Errorf("deleting GuardDuty VPC endpoint %q in VPC %q: %w", endpointID, vpcID, err)
+		}
+
+		if err := waitVPCEndpointDeleted(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				tflog.Debug(ctx, "GuardDuty VPC endpoint not found while waiting for deleted state")
+				continue
+			}
+			return fmt.Errorf("waiting for GuardDuty VPC endpoint %q to reach deleted state in VPC %q: %w", endpointID, vpcID, err)
+		}
+
+		tflog.Debug(ctx, "Successfully deleted GuardDuty VPC endpoint")
+	}
+
+	return nil
+}
+
+func guardDutySecurityGroupNameForVPC(vpcID string) string {
+	return guardDutySecurityGroupPrefix + vpcID
+}
+
+func findGuardDutySecurityGroupsForVPC(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.SecurityGroup, error) {
+	groupName := guardDutySecurityGroupNameForVPC(vpcID)
+	return findSecurityGroups(ctx, conn, &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"vpc-id":                        vpcID,
+			"group-name":                    groupName,
+			"tag:" + guardDutyManagedTagKey: guardDutyManagedTagValue,
+		}),
+	})
 }

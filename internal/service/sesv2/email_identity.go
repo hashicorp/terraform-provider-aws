@@ -41,89 +41,91 @@ func resourceEmailIdentity() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configuration_set_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"dkim_signing_attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"current_signing_key_length": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"domain_signing_private_key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 20480),
-								verify.ValidBase64String,
-							),
-						},
-						"domain_signing_selector": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
-							ValidateFunc: validation.StringLenBetween(1, 63),
-						},
-						"last_key_generation_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"next_signing_key_length": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
-						},
-						"signing_attributes_origin": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tokens": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"configuration_set_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"dkim_signing_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"current_signing_key_length": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"domain_signing_private_key": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 20480),
+									verify.ValidBase64String,
+								),
+							},
+							"domain_signing_selector": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
+								ValidateFunc: validation.StringLenBetween(1, 63),
+							},
+							"last_key_generation_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"next_signing_key_length": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
+								ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
+							},
+							"signing_attributes_origin": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"tokens": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"identity_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"verification_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"verified_for_sending_status": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"email_identity": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"identity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"verification_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"verified_for_sending_status": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

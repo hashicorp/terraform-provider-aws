@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -18,8 +19,8 @@ import (
 
 func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := testAccRandomDomainName()
-	pkgName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package_association.test"
 	packageResourceName := "aws_opensearch_package.test"
 	domainResourceName := "aws_opensearch_domain.test"
@@ -50,8 +51,8 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 
 func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := testAccRandomDomainName()
-	pkgName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -67,6 +68,14 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackageAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

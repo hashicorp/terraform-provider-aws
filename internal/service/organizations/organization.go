@@ -8,6 +8,7 @@ package organizations
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,168 +57,170 @@ func resourceOrganization() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "status is deprecated. Use state instead.",
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accounts": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:       schema.TypeString,
+								Computed:   true,
+								Deprecated: "status is deprecated. Use state instead.",
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_service_access_principals": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"enabled_policy_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_service_access_principals": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"enabled_policy_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+					},
+				},
+				"feature_set": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+					Optional:         true,
+					Default:          awstypes.OrganizationFeatureSetAll,
+					ValidateDiagFunc: enum.Validate[awstypes.OrganizationFeatureSet](),
 				},
-			},
-			"feature_set": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.OrganizationFeatureSetAll,
-				ValidateDiagFunc: enum.Validate[awstypes.OrganizationFeatureSet](),
-			},
-			"master_account_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_email": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"non_master_accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "status is deprecated. Use state instead.",
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"master_account_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_email": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"non_master_accounts": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:       schema.TypeString,
+								Computed:   true,
+								Deprecated: "status is deprecated. Use state instead.",
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"return_organization_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"roots": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"policy_types": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+				"return_organization_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"roots": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"policy_types": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatus: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -559,20 +563,26 @@ func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.C
 }
 
 func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput) ([]awstypes.EnabledServicePrincipal, error) {
-	var output []awstypes.EnabledServicePrincipal
+	return tfslices.CollectWithError(listEnabledServicePrincipals(ctx, conn, input))
+}
 
-	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func listEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput, optFns ...func(*organizations.Options)) iter.Seq2[awstypes.EnabledServicePrincipal, error] {
+	return func(yield func(awstypes.EnabledServicePrincipal, error) bool) {
+		pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.EnabledServicePrincipal](), fmt.Errorf("listing Organizations Service Principals: %w", err))
+				return
+			}
 
-		if err != nil {
-			return nil, err
+			for _, v := range page.EnabledServicePrincipals {
+				if !yield(v, nil) {
+					return
+				}
+			}
 		}
-
-		output = append(output, page.EnabledServicePrincipals...)
 	}
-
-	return output, nil
 }
 
 func findRoots(ctx context.Context, conn *organizations.Client, input *organizations.ListRootsInput) ([]awstypes.Root, error) {

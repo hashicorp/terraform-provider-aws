@@ -1,0 +1,200 @@
+---
+subcategory: "CloudWatch Observability Admin"
+layout: "aws"
+page_title: "AWS: aws_observabilityadmin_telemetry_pipeline"
+description: |-
+  Manages an AWS CloudWatch Observability Admin Telemetry Pipeline.
+---
+
+# Resource: aws_observabilityadmin_telemetry_pipeline
+
+Manages an AWS CloudWatch Observability Admin Telemetry Pipeline.
+
+Telemetry pipelines allow you to collect, transform, and route telemetry data from AWS services. Each pipeline defines a source, optional processors, and one or more sinks for the telemetry data.
+
+For more information, see the [AWS CloudWatch Observability Admin Telemetry Pipelines documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/what-is-observabilityadmin.html).
+
+~> **NOTE:** Only one telemetry pipeline per data source type is allowed per account. For example, you can have one pipeline for `amazon_api_gateway/access` and another for `amazon_vpc/flow`, but not two pipelines for the same data source type.
+
+## Example Usage
+
+### Basic Pipeline
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "example" {
+  name = "example-telemetry-pipeline"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "observabilityadmin.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "example" {
+  role = aws_iam_role.example.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+      ]
+      Resource = "arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:*"
+    }]
+  })
+}
+
+resource "aws_observabilityadmin_telemetry_pipeline" "example" {
+  name = "example-pipeline"
+
+  configuration {
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.example.arn
+            }
+            log_event_metadata = {
+              data_source_name = "amazon_api_gateway"
+              data_source_type = "access"
+            }
+          }
+        }
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
+  }
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
+### Pipeline with Processor
+
+```terraform
+resource "aws_observabilityadmin_telemetry_pipeline" "example" {
+  name = "example-vpc-pipeline"
+
+  configuration {
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.example.arn
+            }
+            log_event_metadata = {
+              data_source_name = "amazon_vpc"
+              data_source_type = "flow"
+            }
+          }
+        }
+        processor = [{
+          ocsf = {
+            schema = {
+              vpc_flow = null
+            }
+            version         = "1.5"
+            mapping_version = "1.5.0"
+          }
+        }]
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
+  }
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `name` - (Required, Forces new resource) Name of the telemetry pipeline. Must be between 3 and 28 characters, start with a lowercase letter, and contain only lowercase letters, digits, and hyphens.
+* `configuration` - (Required) Configuration block for the telemetry pipeline. See [`configuration`](#configuration) below.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### configuration
+
+* `body` - (Required) The pipeline configuration body. This is a YAML-encoded string defining the pipeline source, optional processors, and sinks.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the telemetry pipeline.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_observabilityadmin_telemetry_pipeline.example
+  identity = {
+    "arn" = "arn:aws:observabilityadmin:us-west-2:1234567890:telemetry-pipeline/id"
+  }
+}
+
+resource "aws_observabilityadmin_telemetry_pipeline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the telemetry pipeline.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Pipelines using the `arn`. For example:
+
+```terraform
+import {
+  to = aws_observabilityadmin_telemetry_pipeline.example
+  id = "arn:aws:observabilityadmin:us-west-2:1234567890:telemetry-pipeline/id"
+}
+```
+
+Using `terraform import`, import CloudWatch Observability Admin Telemetry Pipelines using the `arn`. For example:
+
+```console
+% terraform import aws_observabilityadmin_telemetry_pipeline.example arn:aws:observabilityadmin:us-west-2:1234567890:telemetry-pipeline/id
+```

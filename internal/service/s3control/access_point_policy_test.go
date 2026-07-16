@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -64,6 +65,14 @@ func TestAccS3ControlAccessPointPolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceAccessPointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3control_access_point_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3control_access_point_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -88,6 +97,14 @@ func TestAccS3ControlAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceAccessPoint(), accessPointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3control_access_point_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3control_access_point_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

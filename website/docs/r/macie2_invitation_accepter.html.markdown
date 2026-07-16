@@ -48,6 +48,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The unique identifier (ID) of the macie invitation accepter.
 * `invitation_id` - The unique identifier for the invitation.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_invitation_accepter` using the admin account ID. For example:

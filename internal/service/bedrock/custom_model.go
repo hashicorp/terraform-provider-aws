@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -51,6 +51,9 @@ import (
 // @Testing(serialize=true)
 // @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(preCheckRegion="us-east-1")
+// Model availability is region-specific
+// @Testing(identityRegionOverrideTest=false)
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -283,7 +286,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 

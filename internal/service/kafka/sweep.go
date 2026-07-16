@@ -4,56 +4,34 @@
 package kafka
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_msk_cluster", &resource.Sweeper{
-		Name: "aws_msk_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_mskconnect_connector",
-		},
-	})
-
-	resource.AddTestSweepers("aws_msk_configuration", &resource.Sweeper{
-		Name: "aws_msk_configuration",
-		F:    sweepConfigurations,
-		Dependencies: []string{
-			"aws_msk_cluster",
-		},
-	})
+	awsv2.Register("aws_msk_cluster", sweepClusters, "aws_mskconnect_connector", "aws_msk_replicator")
+	awsv2.Register("aws_msk_configuration", sweepConfigurations, "aws_msk_cluster")
+	awsv2.Register("aws_msk_replicator", sweepReplicators)
 }
 
-func sweepClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	input := &kafka.ListClustersV2Input{}
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.KafkaClient(ctx)
+	var input kafka.ListClustersV2Input
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := kafka.NewListClustersV2Paginator(conn, input)
+	pages := kafka.NewListClustersV2Paginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping MSK Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ClusterInfoList {
@@ -72,36 +50,20 @@ func sweepClusters(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepConfigurations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.KafkaClient(ctx)
-	input := &kafka.ListConfigurationsInput{}
+	var input kafka.ListConfigurationsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := kafka.NewListConfigurationsPaginator(conn, input)
+	pages := kafka.NewListConfigurationsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping MSK Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing MSK Configurations (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Configurations {
@@ -120,11 +82,37 @@ func sweepConfigurations(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	return sweepResources, nil
+}
 
-	if err != nil {
-		return fmt.Errorf("error sweeping MSK Configurations (%s): %w", region, err)
+func sweepReplicators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.KafkaClient(ctx)
+	var input kafka.ListReplicatorsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := kafka.NewListReplicatorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Replicators {
+			arn := aws.ToString(v.ReplicatorArn)
+
+			if state := v.ReplicatorState; state == types.ReplicatorStateDeleting {
+				log.Printf("[INFO] Skipping MSK Replicator %s: State=%s", arn, state)
+				continue
+			}
+
+			r := resourceReplicator()
+			d := r.Data(nil)
+			d.SetId(arn)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return nil
+	return sweepResources, nil
 }

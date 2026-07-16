@@ -50,8 +50,6 @@ This resource supports the following arguments:
 * `predicate` - (Optional) The objects to include in a rule (documented below).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Blocks
-
 ### `predicate`
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.

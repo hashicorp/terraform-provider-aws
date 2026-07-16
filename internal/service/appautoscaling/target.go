@@ -23,14 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appautoscaling_target", name="Target")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("service_namespace")
+// @IdentityAttribute("resource_id")
+// @IdentityAttribute("scalable_dimension")
+// @ImportIDHandler("targetImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types;awstypes;awstypes.ScalableTarget")
 // @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
 // @Testing(skipEmptyTags=true)
+// @Testing(preIdentityVersion="v6.50.0")
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
@@ -38,70 +44,68 @@ func resourceTarget() *schema.Resource {
 		UpdateWithoutTimeout: resourceTargetUpdate,
 		DeleteWithoutTimeout: resourceTargetDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceTargetImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"min_capacity": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"scalable_dimension": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_namespace": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"suspended_state": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dynamic_scaling_in_suspended": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"dynamic_scaling_out_suspended": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"scheduled_scaling_suspended": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"min_capacity": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"scalable_dimension": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"service_namespace": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"suspended_state": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dynamic_scaling_in_suspended": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"dynamic_scaling_out_suspended": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"scheduled_scaling_suspended": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -160,15 +164,8 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, t.ScalableTargetARN)
-	d.Set(names.AttrMaxCapacity, t.MaxCapacity)
-	d.Set("min_capacity", t.MinCapacity)
-	d.Set(names.AttrResourceID, t.ResourceId)
-	d.Set(names.AttrRoleARN, t.RoleARN)
-	d.Set("scalable_dimension", t.ScalableDimension)
-	d.Set("service_namespace", t.ServiceNamespace)
-	if err := d.Set("suspended_state", flattenSuspendedState(t.SuspendedState)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting suspended_state: %s", err)
+	if err := resourceTargetFlatten(t, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -269,27 +266,63 @@ func findTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 	return target, nil
 }
 
-func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
+func resourceTargetFlatten(target *awstypes.ScalableTarget, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, target.ScalableTargetARN)
+	d.Set(names.AttrMaxCapacity, target.MaxCapacity)
+	d.Set("min_capacity", target.MinCapacity)
+	d.Set(names.AttrResourceID, target.ResourceId)
+	d.Set(names.AttrRoleARN, target.RoleARN)
+	d.Set("scalable_dimension", target.ScalableDimension)
+	d.Set("service_namespace", target.ServiceNamespace)
+	if err := d.Set("suspended_state", flattenSuspendedState(target.SuspendedState)); err != nil {
+		return fmt.Errorf("setting suspended_state: %w", err)
+	}
+
+	return nil
+}
+
+func targetParseImportID(id string) ([]string, error) {
+	const (
+		importIDSeparator = "/"
+	)
+	idParts := strings.Split(id, importIDSeparator)
 
 	if len(idParts) < 3 {
-		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>", d.Id())
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected <service-namespace>%[2]s<resource-id>%[2]s<scalable-dimension>", id, importIDSeparator)
 	}
 
 	serviceNamespace := idParts[0]
-	resourceId := strings.Join(idParts[1:len(idParts)-1], "/")
+	resourceID := strings.Join(idParts[1:len(idParts)-1], importIDSeparator)
 	scalableDimension := idParts[len(idParts)-1]
 
-	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>", d.Id())
+	if serviceNamespace == "" || resourceID == "" || scalableDimension == "" {
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected <service-namespace>%[2]s<resource-id>%[2]s<scalable-dimension>", id, importIDSeparator)
 	}
 
-	d.Set("service_namespace", serviceNamespace)
-	d.Set(names.AttrResourceID, resourceId)
-	d.Set("scalable_dimension", scalableDimension)
-	d.SetId(resourceId)
+	return []string{serviceNamespace, resourceID, scalableDimension}, nil
+}
 
-	return []*schema.ResourceData{d}, nil
+var _ inttypes.SDKv2ImportID = targetImportID{}
+
+type targetImportID struct{}
+
+func (targetImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := targetParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"service_namespace":  parts[0],
+		names.AttrResourceID: parts[1],
+		"scalable_dimension": parts[2],
+	}
+
+	return parts[1], result, nil
+}
+
+func (targetImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrResourceID).(string)
 }
 
 func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.Client, input *applicationautoscaling.RegisterScalableTargetInput) error {

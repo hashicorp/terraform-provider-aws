@@ -38,278 +38,280 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrRole: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1000,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_marker_replication": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.DeleteMarkerReplicationStatus](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				names.AttrRole: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1000,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delete_marker_replication": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.DeleteMarkerReplicationStatus](),
+										},
 									},
 								},
 							},
-						},
-						names.AttrDestination: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"access_control_translation": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrOwner: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
-												},
-											},
-										},
-									},
-									"account": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									names.AttrBucket: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrEncryptionConfiguration: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"replica_kms_key_id": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-									"metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"event_threshold": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:     schema.TypeInt,
-																Required: true,
-																// Currently, the S3 API only supports 15 minutes;
-																// however, to account for future changes, validation
-																// is left at positive integers.
-																ValidateFunc: validation.IntAtLeast(0),
-															},
-														},
-													},
-												},
-												names.AttrStatus: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
-												},
-											},
-										},
-									},
-									"replication_time": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrStatus: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
-												},
-												"time": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:     schema.TypeInt,
-																Required: true,
-																// Currently, the S3 API only supports 15 minutes;
-																// however, to account for future changes, validation
-																// is left at positive integers.
-																ValidateFunc: validation.IntAtLeast(0),
-															},
-														},
+							names.AttrDestination: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_control_translation": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrOwner: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
 													},
 												},
 											},
 										},
-									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.StorageClass](),
-									},
-								},
-							},
-						},
-						"existing_object_replication": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ExistingObjectReplicationStatus](),
-									},
-								},
-							},
-						},
-						names.AttrFilter: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"and": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrPrefix: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
-												},
-												names.AttrTags: tftags.TagsSchema(),
-											},
+										"account": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidAccountID,
 										},
-									},
-									names.AttrPrefix: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									"tag": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
+										names.AttrBucket: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrEncryptionConfiguration: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"replica_kms_key_id": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-								},
-							},
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						names.AttrPrefix: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-							Deprecated:   "prefix is deprecated. Use filter instead.",
-						},
-						names.AttrPriority: {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"source_selection_criteria": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"replica_modifications": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrStatus: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ReplicaModificationsStatus](),
+										"metrics": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"event_threshold": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"minutes": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																	// Currently, the S3 API only supports 15 minutes;
+																	// however, to account for future changes, validation
+																	// is left at positive integers.
+																	ValidateFunc: validation.IntAtLeast(0),
+																},
+															},
+														},
+													},
+													names.AttrStatus: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
+													},
 												},
 											},
 										},
-									},
-									"sse_kms_encrypted_objects": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrStatus: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.SseKmsEncryptedObjectsStatus](),
+										"replication_time": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrStatus: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
+													},
+													"time": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"minutes": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																	// Currently, the S3 API only supports 15 minutes;
+																	// however, to account for future changes, validation
+																	// is left at positive integers.
+																	ValidateFunc: validation.IntAtLeast(0),
+																},
+															},
+														},
+													},
 												},
 											},
+										},
+										names.AttrStorageClass: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.StorageClass](),
 										},
 									},
 								},
 							},
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
+							"existing_object_replication": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ExistingObjectReplicationStatus](),
+										},
+									},
+								},
+							},
+							names.AttrFilter: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"and": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrPrefix: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(0, 1024),
+													},
+													names.AttrTags: tftags.TagsSchema(),
+												},
+											},
+										},
+										names.AttrPrefix: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										"tag": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							names.AttrPrefix: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+								Deprecated:   "prefix is deprecated. Use filter instead.",
+							},
+							names.AttrPriority: {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"source_selection_criteria": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"replica_modifications": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrStatus: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ReplicaModificationsStatus](),
+													},
+												},
+											},
+										},
+										"sse_kms_encrypted_objects": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrStatus: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.SseKmsEncryptedObjectsStatus](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
+							},
 						},
 					},
 				},
-			},
-			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
+				"token": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }
@@ -347,10 +349,6 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 		return nil
 	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Replication Configuration: %s", bucket, err)
-	}
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ReplicationConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)

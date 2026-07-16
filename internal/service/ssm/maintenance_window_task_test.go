@@ -11,8 +11,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -267,7 +267,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationLambdaParameters(t *testing.T
 	ctx := acctest.Context(t)
 	var task ssm.GetMaintenanceWindowTaskOutput
 	resourceName := "aws_ssm_maintenance_window_task.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	rInt := acctest.RandInt(t)
 
 	funcName := fmt.Sprintf("tf_acc_lambda_func_tags_%s", rString)
@@ -347,7 +347,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParametersCloudWatc
 	serviceRoleResourceName := "aws_iam_role.test"
 	cwResourceName := "aws_cloudwatch_log_group.test"
 
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
@@ -397,7 +397,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationStepFunctionParameters(t *tes
 	ctx := acctest.Context(t)
 	var task ssm.GetMaintenanceWindowTaskOutput
 	resourceName := "aws_ssm_maintenance_window_task.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -449,7 +449,7 @@ func TestAccSSMMaintenanceWindowTask_disappears(t *testing.T) {
 	var before ssm.GetMaintenanceWindowTaskOutput
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
@@ -463,6 +463,14 @@ func TestAccSSMMaintenanceWindowTask_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindowTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_maintenance_window_task.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssm_maintenance_window_task.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1115,7 +1123,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, funcName))
 }

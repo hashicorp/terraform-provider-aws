@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Fix ` MissingParameter: When specifying CpuOptions you must specify both CoreCount and ThreadsPerCore` errors when updating `cpu_options.core_count` or `cpu_options.threads_per_core`
+```

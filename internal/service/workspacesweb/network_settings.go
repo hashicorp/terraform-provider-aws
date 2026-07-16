@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -35,7 +35,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_network_settings", name="Network Settings")
 // @Tags(identifierAttribute="network_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.NetworkSettings")
 // @Testing(importStateIdAttribute="network_settings_arn")
@@ -105,7 +104,7 @@ func (r *networkSettingsResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateNetworkSettings(ctx, &input)
@@ -184,7 +183,7 @@ func (r *networkSettingsResource) Update(ctx context.Context, request resource.U
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		_, err := conn.UpdateNetworkSettings(ctx, &input)
 

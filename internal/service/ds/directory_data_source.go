@@ -24,152 +24,154 @@ func dataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDirectoryRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connect_settings": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"connect_ips": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"customer_dns_ips": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"customer_username": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connect_settings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"connect_ips": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"customer_dns_ips": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"customer_username": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"edition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_sso": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"radius_settings": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_protocol": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"display_label": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"radius_port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"radius_retries": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"radius_servers": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"radius_timeout": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"use_same_username": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"dns_ip_addresses": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"edition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_sso": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"radius_settings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_protocol": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"display_label": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"radius_port": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"radius_retries": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"radius_servers": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"radius_timeout": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"use_same_username": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"short_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSize: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_settings": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"short_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSize: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vpc_settings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZones: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

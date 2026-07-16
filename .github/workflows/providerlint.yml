@@ -22,19 +22,22 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
   providerlint:
     runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -42,7 +45,7 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
           restore-keys: |
             ${{ runner.os }}-go-build-
-      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:

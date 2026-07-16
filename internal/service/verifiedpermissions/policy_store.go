@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -113,7 +112,7 @@ func (r *policyStoreResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	clientToken := sdkid.UniqueId()
+	clientToken := create.UniqueId(ctx)
 	input.ClientToken = aws.String(clientToken)
 	input.Tags = getTagsIn(ctx)
 
