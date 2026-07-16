@@ -53,7 +53,6 @@ const (
 // @Testing(preCheck="testAccPreCheckKeyword")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.KeywordInformation")
 // @Testing(importStateIdAttributes="origination_identity;keyword", importStateIdAttributesSep="flex.ResourceIdSeparator")
-// @Testing(tagsTest=false)
 // @Testing(generator="randomKeywordName(t)")
 func newKeywordResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &keywordResource{}, nil
