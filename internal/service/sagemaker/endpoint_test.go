@@ -74,6 +74,11 @@ func TestAccSageMakerEndpoint_endpointConfigName(t *testing.T) {
 					testAccCheckEndpointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName2, names.AttrName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
