@@ -378,6 +378,38 @@ func resourceNodeGroup() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"warm_pool": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_group_prepared_capacity": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntAtLeast(-1),
+							},
+							"min_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"pool_state": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.WarmPoolState](),
+							},
+							"reuse_on_scale_in": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -450,6 +482,10 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("warm_pool"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateNodegroup(ctx, &input)
@@ -536,6 +572,13 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("update_config", nil)
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
+	if nodeGroup.WarmPoolConfig != nil {
+		if err := d.Set("warm_pool", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
+		}
+	} else {
+		d.Set("warm_pool", nil)
+	}
 
 	setTagsOut(ctx, nodeGroup.Tags)
 
@@ -602,7 +645,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config") {
+	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config", "warm_pool") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
@@ -629,6 +672,14 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		if d.HasChange("update_config") {
 			if v, ok := d.GetOk("update_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.UpdateConfig = expandNodegroupUpdateConfig(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("warm_pool") {
+			if v, ok := d.GetOk("warm_pool"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
+			} else {
+				input.WarmPoolConfig = &types.WarmPoolConfig{Enabled: aws.Bool(false)}
 			}
 		}
 
@@ -1005,6 +1056,34 @@ func expandNodegroupUpdateConfig(tfMap map[string]any) *types.NodegroupUpdateCon
 	return apiObject
 }
 
+func expandWarmPoolConfig(tfMap map[string]any) *types.WarmPoolConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.WarmPoolConfig{
+		Enabled: aws.Bool(true),
+	}
+
+	if v, ok := tfMap["max_group_prepared_capacity"].(int); ok {
+		apiObject.MaxGroupPreparedCapacity = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["min_size"].(int); ok {
+		apiObject.MinSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["pool_state"].(string); ok && v != "" {
+		apiObject.PoolState = types.WarmPoolState(v)
+	}
+
+	if v, ok := tfMap["reuse_on_scale_in"].(bool); ok {
+		apiObject.ReuseOnScaleIn = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func expandNodeRepairConfig(tfMap map[string]any) *types.NodeRepairConfig {
 	if tfMap == nil {
 		return nil
@@ -1257,6 +1336,30 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 
 	if apiObject.UpdateStrategy != "" {
 		tfMap["update_strategy"] = string(apiObject.UpdateStrategy)
+	}
+
+	return tfMap
+}
+
+func flattenWarmPoolConfig(apiObject *types.WarmPoolConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"pool_state": string(apiObject.PoolState),
+	}
+
+	if v := apiObject.MaxGroupPreparedCapacity; v != nil {
+		tfMap["max_group_prepared_capacity"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MinSize; v != nil {
+		tfMap["min_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.ReuseOnScaleIn; v != nil {
+		tfMap["reuse_on_scale_in"] = aws.ToBool(v)
 	}
 
 	return tfMap

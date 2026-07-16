@@ -158,6 +158,7 @@ The following arguments are optional:
 * `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. See [taint](#taint-configuration-block) below for details.
 * `update_config` - (Optional) Configuration block with update settings. See [`update_config`](#update_config-configuration-block) below for details.
 * `version` - (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
+* `warm_pool` - (Optional) Configuration block with EC2 Auto Scaling warm pool settings. Including this block enables the warm pool; removing it disables and removes the warm pool. See [`warm_pool`](#warm_pool-configuration-block) below for details.
 
 ### launch_template Configuration Block
 
@@ -207,6 +208,15 @@ The following arguments are mutually exclusive.
 * `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
 * `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
 * `update_strategy` - (Optional) Strategy to use for updating the node group. Valid values: `MINIMAL` and `DEFAULT`.
+
+### warm_pool Configuration Block
+
+Including a `warm_pool` block enables the warm pool for the node group. To disable and remove the warm pool, remove the `warm_pool` block.
+
+* `max_group_prepared_capacity` - (Optional) Maximum number of instances that are allowed to be in the warm pool combined with the Auto Scaling Group. Use `-1` to specify an unlimited capacity.
+* `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. Defaults to `0`.
+* `pool_state` - (Optional) Instance state to transition warm pool instances to. Valid values: `STOPPED`, `RUNNING`, `HIBERNATED`. Defaults to `STOPPED`.
+* `reuse_on_scale_in` - (Optional) Whether instances in the Auto Scaling Group are returned to the warm pool on scale in. Not supported on Bottlerocket. Defaults to `false`.
 
 ## Attribute Reference
 

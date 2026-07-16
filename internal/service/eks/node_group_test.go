@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1247,6 +1248,68 @@ func TestAccEKSNodeGroup_updateStrategy(t *testing.T) {
 	})
 }
 
+func TestAccEKSNodeGroup_warmPool(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1, nodeGroup2, nodeGroup3 types.Nodegroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_warmPool(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "STOPPED"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.reuse_on_scale_in", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNodeGroupConfig_warmPoolUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "STOPPED"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.reuse_on_scale_in", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNodeGroupConfig_warmPoolDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup3),
+					testAccCheckNodeGroupNotRecreated(&nodeGroup2, &nodeGroup3),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEKSNodeGroup_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
@@ -1339,6 +1402,16 @@ func testAccCheckNodeGroupDestroy(ctx context.Context, t *testing.T) resource.Te
 			}
 
 			return fmt.Errorf("EKS Node Group %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckNodeGroupNotRecreated(i, j *types.Nodegroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
+			return fmt.Errorf("EKS Node Group (%s) recreated", aws.ToString(i.NodegroupName))
 		}
 
 		return nil
@@ -2587,6 +2660,92 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName, updateStrategy))
+}
+
+func testAccNodeGroupConfig_warmPool(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  warm_pool {
+    max_group_prepared_capacity = 2
+    min_size                    = 1
+    pool_state                  = "STOPPED"
+    reuse_on_scale_in           = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_warmPoolUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  warm_pool {
+    max_group_prepared_capacity = 3
+    min_size                    = 2
+    pool_state                  = "STOPPED"
+    reuse_on_scale_in           = false
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_warmPoolDisabled(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
 }
 
 func testAccNodeGroupConfig_version(rName, version string) string {
