@@ -172,7 +172,7 @@ object PullRequest : BuildType({
         buildCache {
             name = "Go Module Cache"
             use = true
-            store = true
+            publish = true
             rules = "%env.GOMODCACHE%"
         }
 
