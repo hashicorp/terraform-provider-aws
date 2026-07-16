@@ -150,6 +150,7 @@ object PullRequest : BuildType({
             scriptContent = """
                 mkdir -p %env.GOMODCACHE%
                 mkdir -p %env.GOCACHE%
+                go test -c -o test-binary
             """.trimIndent()
         }
         script {
