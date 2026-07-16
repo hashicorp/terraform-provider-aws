@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_odb_autonomous_database
+```
+
+```release-note:new-data-source
+aws_odb_autonomous_database
+```
