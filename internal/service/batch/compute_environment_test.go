@@ -178,7 +178,6 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 		}
 	}
 }
-
 func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
@@ -327,7 +326,7 @@ func TestAccBatchComputeEnvironment_upgradeV0ToV1(t *testing.T) {
 					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", ""),
 				),
 			},
 			{
@@ -2284,7 +2283,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_upgradeV0ToV1Legacy(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -2598,9 +2597,6 @@ resource "aws_batch_compute_environment" "test" {
 
     instance_type = ["m5.large"]
 
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = aws_subnet.test[*].id
 
     instance_role = aws_iam_instance_profile.node.arn
@@ -2627,9 +2623,6 @@ resource "aws_batch_compute_environment" "test" {
       "c4.large",
     ]
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2654,9 +2647,6 @@ resource "aws_batch_compute_environment" "test" {
     instance_type       = ["optimal"]
     max_vcpus           = 4
     min_vcpus           = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2684,9 +2674,6 @@ resource "aws_batch_compute_environment" "test" {
     instance_type       = ["optimal"]
     max_vcpus           = 4
     min_vcpus           = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2711,9 +2698,6 @@ resource "aws_batch_compute_environment" "test" {
     max_vcpus     = 16
     min_vcpus     = 4
     desired_vcpus = 8
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2746,9 +2730,6 @@ resource "aws_batch_compute_environment" "test" {
 
   compute_resources {
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2769,9 +2750,6 @@ resource "aws_batch_compute_environment" "test" {
 
   compute_resources {
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2790,9 +2768,6 @@ resource "aws_batch_compute_environment" "test" {
 
   compute_resources {
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2835,9 +2810,6 @@ resource "aws_batch_compute_environment" "test" {
 
   compute_resources {
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2863,9 +2835,6 @@ resource "aws_batch_compute_environment" "test" {
     ]
     max_vcpus = 16
     min_vcpus = 2
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -2894,9 +2863,6 @@ resource "aws_batch_compute_environment" "test" {
     ]
     max_vcpus = 16
     min_vcpus = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -2934,9 +2900,6 @@ resource "aws_batch_compute_environment" "test" {
     instance_type = ["optimal"]
     max_vcpus     = %[2]d
     min_vcpus     = %[3]d
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -2957,10 +2920,6 @@ resource "aws_batch_compute_environment" "test" {
 
   compute_resources {
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test_2.id,
-      aws_security_group.test_3.id,
-    ]
     subnets = [
       aws_subnet.test_2.id
     ]
@@ -3025,9 +2984,6 @@ resource "aws_batch_compute_environment" "test" {
     ]
     max_vcpus = 16
     min_vcpus = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     subnets = [
       aws_subnet.test.id
     ]
@@ -3046,9 +3002,6 @@ func testAccComputeEnvironmentConfig_launchTemplate(rName string) string {
 resource "aws_launch_template" "test" {
   name = %[1]q
 
-  vpc_security_group_ids = [
-    aws_security_group.test.id
-  ]
 }
 
 resource "aws_batch_compute_environment" "test" {
@@ -3102,9 +3055,6 @@ resource "aws_batch_compute_environment" "test" {
 
     max_vcpus = 16
     min_vcpus = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -3161,9 +3111,6 @@ resource "aws_batch_compute_environment" "test" {
 
     max_vcpus = 16
     min_vcpus = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -3201,9 +3148,6 @@ resource "aws_batch_compute_environment" "test" {
     max_vcpus = 16
     min_vcpus = 0
 
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -3247,9 +3191,6 @@ resource "aws_batch_compute_environment" "test" {
 
     placement_group = aws_placement_group.test.name
 
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -3337,9 +3278,6 @@ resource "aws_batch_compute_environment" "test" {
       "optimal",
     ]
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -3379,9 +3317,6 @@ resource "aws_batch_compute_environment" "test" {
       "c4.large",
     ]
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test_2.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test_2.id
@@ -3423,9 +3358,6 @@ resource "aws_batch_compute_environment" "test" {
       %[2]q,
     ]
     max_vcpus = 16
-    security_group_ids = [
-      aws_security_group.test_2.id
-    ]
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test_2.id
@@ -3436,4 +3368,73 @@ resource "aws_batch_compute_environment" "test" {
   type = "MANAGED"
 }
 `, rName, instanceType))
+}
+func TestAccBatchComputeEnvironment_launchTemplateUserdataType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_launchTemplateUserdataType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.userdata_type", "EKS_NODEADM"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "EKS_AL2023"),
+				),
+			},
+		},
+	})
+}
+func testAccComputeEnvironmentConfig_launchTemplateUserdataType(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name_prefix = %[1]q
+
+  image_id = "ami-0c02fb55956c7d316"
+  key_name = "test-batch"
+
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups             = ["sg-037850016f118f906", "sg-0a724e7ab6b472a2a"]
+  }
+}
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  eks_configuration {
+    eks_cluster_arn      = "arn:aws:eks:eu-north-1:009887377961:cluster/batch-eks-today"
+    kubernetes_namespace = "my-aws-batch-namespace"
+  }
+
+  compute_resources {
+    type                = "EC2"
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    min_vcpus           = 0
+    max_vcpus           = 128
+    instance_type       = ["m5"]
+    subnets             = ["subnet-0610290e9f05a429f", "subnet-0af87ddfe49bfad7c", "subnet-07ffc3bf816a73899"]
+    instance_role       = "arn:aws:iam::009887377961:instance-profile/eks-a8ccb345-6bda-6dcd-1f98-8759d9f38494"
+
+    ec2_configuration {
+      image_type        = "EKS_AL2023"
+      image_id_override = "ami-0c02fb55956c7d316"
+    }
+    launch_template {
+      launch_template_name = aws_launch_template.test.name
+      version              = aws_launch_template.test.latest_version
+      userdata_type        = "EKS_NODEADM"
+    }
+  }
+
+  service_role = "arn:aws:iam::009887377961:role/aws-service-role/batch.amazonaws.com/AWSServiceRoleForBatch"
+  type         = "MANAGED"
+}
+`, rName)
 }
