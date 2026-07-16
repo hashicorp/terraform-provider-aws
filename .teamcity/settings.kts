@@ -178,7 +178,7 @@ object PullRequest : BuildType({
 
         buildCache {
             name = "terraform-provider-aws-build-cache"
-            use = true
+            use = false
             publish = true
             rules = """
                 %env.GOMODCACHE%
@@ -224,6 +224,12 @@ object PullRequest : BuildType({
                 firstBuildErrorOccurs = true
                 buildProbablyHanging = false
             }
+        }
+    }
+    
+    cleanup {
+        baseRule {
+            artifacts(days = 7, artifactPatterns = "+:**/*")
         }
     }
 })
