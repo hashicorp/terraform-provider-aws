@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -262,6 +263,150 @@ func TestAccSageMakerEndpoint_disappears(t *testing.T) {
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("aws_sagemaker_endpoint.test", plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccSageMakerEndpoint_changeEndpointConfig_sameName tests for an Endpoint Configuration being replaced due to a change,
+// but since the Endpoint Configuration name doesn't change, the Endpoint does not pick up the change.
+// NOTE: This is *not* what users want to happen!
+func TestAccSageMakerEndpoint_changeEndpointConfig_sameName(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_sagemaker_endpoint.test"
+	sagemakerEndpointConfigurationResourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	variantName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	variantName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_changeEndpointConfig_variantName(rName, variantName1, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", variantName1),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.initial_instance_count", "2"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_changeEndpointConfig_variantName(rName, variantName2, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", variantName2),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.initial_instance_count", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(sagemakerEndpointConfigurationResourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccSageMakerEndpoint_changeEndpointConfig_namePrefix_createBeforeDestroy tests for an Endpoint Configuration being
+// replaced due to a change and creating the replacement remote resource before destroying the original.
+// This is the correct configuration.
+func TestAccSageMakerEndpoint_changeEndpointConfig_namePrefix_createBeforeDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_sagemaker_endpoint.test"
+	sagemakerEndpointConfigurationResourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_changeEndpointConfig_namePrefix_createBeforeDestroy(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					acctest.CheckResourceAttrHasPrefix(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.initial_instance_count", "2"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_changeEndpointConfig_namePrefix_createBeforeDestroy(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					acctest.CheckResourceAttrHasPrefix(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.initial_instance_count", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(sagemakerEndpointConfigurationResourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccSageMakerEndpoint_changeEndpointConfig_namePrefix_noCreateBeforeDestroy tests for an Endpoint Configuration being
+// replaced due to a change, but not creating the replacement remote resource before destroying the original.
+// NOTE: This results in an error
+func TestAccSageMakerEndpoint_changeEndpointConfig_namePrefix_noCreateBeforeDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_sagemaker_endpoint.test"
+	sagemakerEndpointConfigurationResourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_changeEndpointConfig_namePrefix_noCreateBeforeDestroy(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					acctest.CheckResourceAttrHasPrefix(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.initial_instance_count", "2"),
+				),
+			},
+			{
+				Config:      testAccEndpointConfig_changeEndpointConfig_namePrefix_noCreateBeforeDestroy(rName, 1),
+				ExpectError: regexache.MustCompile(`Could not find endpoint configuration`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(sagemakerEndpointConfigurationResourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -564,4 +709,74 @@ resource "aws_sagemaker_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccEndpointConfig_changeEndpointConfig_variantName(rName, variantName string, instanceCount int) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_model_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    initial_instance_count = %[3]d
+    initial_variant_weight = 1
+    instance_type          = "ml.t2.medium"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = %[2]q
+  }
+}
+`, rName, variantName, instanceCount))
+}
+
+func testAccEndpointConfig_changeEndpointConfig_namePrefix_createBeforeDestroy(rName string, instanceCount int) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_model_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name_prefix = "%[1]s-"
+
+  production_variants {
+    initial_instance_count = %[2]d
+    initial_variant_weight = 1
+    instance_type          = "ml.t2.medium"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = %[1]q
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+`, rName, instanceCount))
+}
+
+func testAccEndpointConfig_changeEndpointConfig_namePrefix_noCreateBeforeDestroy(rName string, instanceCount int) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_model_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name_prefix = "%[1]s-"
+
+  production_variants {
+    initial_instance_count = %[2]d
+    initial_variant_weight = 1
+    instance_type          = "ml.t2.medium"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = %[1]q
+  }
+}
+`, rName, instanceCount))
 }
