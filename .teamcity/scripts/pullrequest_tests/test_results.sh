@@ -2,6 +2,11 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+# shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
+if [[ "%POST_GITHUB_COMMENT%" != "true" ]]; then
+    exit 0
+fi
+
 fetch_results() {
     curl -s -u "%system.teamcity.auth.userId%:%system.teamcity.auth.password%" \
         -H "Accept: application/json" \
