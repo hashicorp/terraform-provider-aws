@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Lambda Web Functions function, including an optional initial revision (code + runtime + execution configuration) and an optional endpoint.
 
-~> **Note:** Lambda Web Functions (V2, `aws lambda-web` CLI) reached general availability in select regions. The V1 API (`aws lite` / `aws lambda-lite`, `LiteFunction` operations) was revoked in July 2026. This resource targets the V2 contract. Regions with V2 active as of July 2026: `us-east-1`, `eu-west-1`. The `us-west-2` rollout is pending.
+~> **Note:** Lambda Web Functions is available in select regions. Regions active as of July 2026: `us-east-1`, `eu-west-1`. The `us-west-2` rollout is pending.
 
 ~> **Note:** Tags are not currently supported: the pre-GA Lambda Web Functions API only accepts tags at creation time and provides no APIs to read or update them, so Terraform cannot manage them without permanent drift. Tag support will be added when the GA API ships tag CRUD operations.
 

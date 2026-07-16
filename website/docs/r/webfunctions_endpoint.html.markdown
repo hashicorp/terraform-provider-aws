@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Lambda Web Functions endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 20 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_webfunctions_function`](webfunctions_function.html.markdown) and additional endpoints with this resource.
 
-~> **Note:** Lambda Web Functions (V2, `aws lambda-web` CLI) reached general availability in select regions. The V1 API (`aws lite` / `aws lambda-lite`, `LiteFunction` operations) was revoked in July 2026. This resource targets the V2 contract. Regions with V2 active as of July 2026: `us-east-1`, `eu-west-1`. The `us-west-2` rollout is pending.
+~> **Note:** Lambda Web Functions is available in select regions. Regions active as of July 2026: `us-east-1`, `eu-west-1`. The `us-west-2` rollout is pending.
 
 ## Example Usage
 
