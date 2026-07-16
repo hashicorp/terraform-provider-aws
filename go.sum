@@ -101,8 +101,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1 h1:eOYu92kIPQHfmYmYzKjZ6z8V
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1/go.mod h1:pYNYOEFQKBsKwkNQZjVwEuPFTkmSLvAsbSd0HZUwiDw=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.1 h1:jbGzMILRlgFTwyakqJMM2Rt2rUK9luO0/n7yxU9vj1c=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.1/go.mod h1:j5vRo6juGy8a/N7npknIfpAdRKXjpZoo50nkacwi5ws=
-github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.47.1 h1:w/Yv8V0LRSWplvXOf7PSYeaYR1O1XctMkskDX8VwCBY=
-github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.47.1/go.mod h1:wDJyBNCe3bGYS8NwpM0ZA4e9AYKw69ALOSJfSqv8Hqk=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.48.0 h1:cvFpQzIImKgIc3C/PZgVFZwd10run3tQuN8Hb9TGvfo=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.48.0/go.mod h1:wDJyBNCe3bGYS8NwpM0ZA4e9AYKw69ALOSJfSqv8Hqk=
 github.com/aws/aws-sdk-go-v2/service/billing v1.12.1 h1:2XsTtkM9iBDSMtUVUYR3/5fDiDfLnx4UYBNbQE6f4Mg=
 github.com/aws/aws-sdk-go-v2/service/billing v1.12.1/go.mod h1:rWyfSBoTesbdxd7MrMb0LmXzHPEGntboJClVS6NlVyk=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.45.1 h1:ahtLyn2hW5twbrA6VLaFTFoVsoxsC1bQvSYtzWe7S3Q=
@@ -165,8 +165,8 @@ github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.64.1 h1:wit+fADA
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.64.1/go.mod h1:a5X5qds6BTk0qIdRdN7iQVk6NdcMMF60OSyQzO/bjao=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.42.1 h1:snc/GSvbqxY5HHK0D5mdKKDJc2y2pXdD+30igIYDAa0=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.42.1/go.mod h1:UdCyczPML2P8GIITackjWHDzs7/Y8CNtg+vTjeDEpYA=
-github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.55.1 h1:2jA+modYD9eSYUDIJbfn7a4wk1lM9zfnVq9456A/OlU=
-github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.55.1/go.mod h1:WNzMJnhdR8UEBJDLO32Ob/a5kJYhbalzkCTm0IbPlSM=
+github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.56.0 h1:P8Y7MuEGsWAgLBuP5FaYKr0LBOHu15UmnvsdUg6ETYM=
+github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.56.0/go.mod h1:WNzMJnhdR8UEBJDLO32Ob/a5kJYhbalzkCTm0IbPlSM=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.67.1 h1:ezQdIhoXelYqFcOmi6sEcpySonMwWES+uEEAnA8AdAE=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.67.1/go.mod h1:uLtMQIAG1/lzhORRBDFT44lFL2QuGh9rWO3oMru+OW0=
 github.com/aws/aws-sdk-go-v2/service/connect v1.183.0 h1:2zm+j5dWx5RrS9DGHh2uxbWS8zaBx5anZ9Ny9nEUxJU=
@@ -239,8 +239,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.36.1 h1:CVIunk7KMMqukVQ
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.36.1/go.mod h1:7H1I3ocX8Q1eJX+MScKM1fi7tkqaAn2U7J/lPJop8cQ=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.35.1 h1:DkOnhZVJS3ijYFhSYSoo9UxYLc3j9h+fAyYjH7UUY0Q=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.35.1/go.mod h1:nMgHPApep9bFTGVr3IWN3dTKn8Y/44e/Hcseb2TrDZU=
-github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.56.1 h1:ZxXNco/WHTRkiai8xXo7hvoaWlqoMc4hmhfM/o6qFaQ=
-github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.56.1/go.mod h1:qNnJkZTDHDL2sO8hyVH2yILcfSEkjP/pIns2JsF1g1o=
+github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.57.0 h1:Qq9WDWJ6jKchg3U1Uwy511vdmYldeo8RZrg0+nRHjfI=
+github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.57.0/go.mod h1:qNnJkZTDHDL2sO8hyVH2yILcfSEkjP/pIns2JsF1g1o=
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.44.0 h1:+Ols/yFSbDV52X0TbxcP+0Uj9OQvGyzaPUffqvdePQA=
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.44.0/go.mod h1:L64SJrmyHrXALCRnTUOopLmJIhQL5MPW1RQhzA3GeEQ=
 github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 h1:ZD8Iw3WQlZYoCJtK3VBAUVO0DZFLSfHCKbze1xfYRdc=
@@ -283,8 +283,8 @@ github.com/aws/aws-sdk-go-v2/service/groundstation v1.44.1 h1:tqIeKhT+g3Ds/mIoKL
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.44.1/go.mod h1:OA2ZOYluPvmP9mjoR4P++1ZtQ57wc3up3GYxPthMF0g=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.83.0 h1:wN1QaNY0KMd6B3f/9LHXc7MHoZUMynTtfiKvfXBd/Ro=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.83.0/go.mod h1:5ALcyuLJ7PWhKGfymTQuzcnElk/7CDiTjIv/Hp6YyGc=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.40.1 h1:AA7QUO4+dPemjhMio79JZyNaRM6fdWepQg3mbmSRzkU=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.40.1/go.mod h1:McgWXtP8nS8gbmY+AYAjlg+dlnbjoKH1+r6hGAYBRVM=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.41.0 h1:8KJZgt10r2i87IvbDK0wSLnLmD/H9G1sy3pel2JDsoQ=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.41.0/go.mod h1:McgWXtP8nS8gbmY+AYAjlg+dlnbjoKH1+r6hGAYBRVM=
 github.com/aws/aws-sdk-go-v2/service/iam v1.55.1 h1:4Jil4gopE1JjXR5ns70AoF+CYLAHllTDOaFs6sCg08A=
 github.com/aws/aws-sdk-go-v2/service/iam v1.55.1/go.mod h1:5H/UUroHvcKm6l2qaqh3CMM6R9K91ls8Y8rVX6cG3ts=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.38.1 h1:C+zUvX58ytZy+M+akfh7rBCTfUuhkEut7B/a73EzJbc=
@@ -441,8 +441,8 @@ github.com/aws/aws-sdk-go-v2/service/ram v1.38.1 h1:5/ZpVot41QqvEAaHr+rao4PMyVnV
 github.com/aws/aws-sdk-go-v2/service/ram v1.38.1/go.mod h1:aB4kUwB+6oHNxZWrmnal4DFYcOW+4Yo+ePVdrb/M7sk=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.29.1 h1:IZp46pMp8XxqlnYT7UR5WhcgNF15wY80lYfEaG91bg8=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.29.1/go.mod h1:HZF3B0DNxG6uZw/DFS201Ncb6STEfoJy/5IFNXdsvgk=
-github.com/aws/aws-sdk-go-v2/service/rds v1.120.1 h1:5wsyc5K9vvSegxdkzsLAFo9WF1Jd2PF8c3TUoBhaLlc=
-github.com/aws/aws-sdk-go-v2/service/rds v1.120.1/go.mod h1:Ve7qHa8jBmStKNz/oaxs2yBuFnwyvN0k/8PpPZVxkEY=
+github.com/aws/aws-sdk-go-v2/service/rds v1.121.0 h1:DKOTtGQS43asDjB6Fs7lGPmN2bhUGoTTgZ2Ef2jdV5s=
+github.com/aws/aws-sdk-go-v2/service/rds v1.121.0/go.mod h1:Ve7qHa8jBmStKNz/oaxs2yBuFnwyvN0k/8PpPZVxkEY=
 github.com/aws/aws-sdk-go-v2/service/rdsdata v1.34.1 h1:NPmfFH/iabTI/8gWEd37oU8HVxcIwI4yyli14q+sEbY=
 github.com/aws/aws-sdk-go-v2/service/rdsdata v1.34.1/go.mod h1:qGkT6N15drkIlTLOWaSR66nVa2c3jRAh5n43UqQmcHU=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.64.1 h1:7I13hCLoHVOQPlTzl/qyRWvz32oLtxkbPxMueG0aRec=
