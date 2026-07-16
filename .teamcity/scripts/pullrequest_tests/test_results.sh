@@ -36,12 +36,15 @@ body="$(printf '%s\n```console\n%s\n```' "${marker}" "${results}")"
 
 # Update existing comment if one was previously posted, otherwise create a new one
 comment_id="$("${gh}" api "repos/${repo}/issues/${pr_number}/comments" \
-    --jq ".[] | select(.body | contains(\"${marker}\")) | .id")"
+    --jq "[.[] | select(.body | contains(\"${marker}\")) | .id] | first")"
 
 if [[ -n "${comment_id}" ]]; then
-    "${gh}" api "repos/${repo}/issues/comments/${comment_id}" \
-        --method PATCH \
-        --field body="${body}"
+    existing_body="$("${gh}" api "repos/${repo}/issues/comments/${comment_id}" --jq '.body')"
+    if [[ "${existing_body}" != "${body}" ]]; then
+        "${gh}" api "repos/${repo}/issues/comments/${comment_id}" \
+            --method PATCH \
+            --field body="${body}"
+    fi
 else
     "${gh}" pr comment "${pr_number}" --body "${body}"
 fi
