@@ -198,6 +198,10 @@ func dataSourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"customer_action_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"kafka_version": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -257,6 +261,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrClusterName, cluster.ClusterName)
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
+	d.Set("customer_action_status", cluster.CustomerActionStatus)
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))

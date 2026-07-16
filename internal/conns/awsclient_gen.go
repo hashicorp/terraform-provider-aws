@@ -151,6 +151,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -846,6 +847,10 @@ func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation.Clie
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
+}
+
+func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
+	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicrovms, make(map[string]any)))
 }
 
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {

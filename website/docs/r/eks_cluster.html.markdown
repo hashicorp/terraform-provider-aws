@@ -418,6 +418,7 @@ The `remote_pod_networks` configuration block supports the following arguments:
 ### vpc_config Arguments
 
 * `cluster_security_group_id` - (Computed) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
+* `control_plane_egress_mode` - (Optional, Computed) Egress mode for the EKS control plane. Valid values are `AWS_MANAGED` and `CUSTOMER_ROUTED`. Defaults to `AWS_MANAGED`. Changing from `CUSTOMER_ROUTED` back to `AWS_MANAGED` forces a new resource.
 * `endpoint_private_access` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpoint_public_access` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `public_access_cidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.

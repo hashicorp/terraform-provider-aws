@@ -65,6 +65,10 @@ func resourceCluster() *schema.Resource {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
 				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
+			customdiff.ForceNewIfChange("vpc_config.0.control_plane_egress_mode", func(_ context.Context, old, new, meta any) bool {
+				// Changing from CUSTOMER_ROUTED back to AWS_MANAGED is not supported in-place.
+				return old.(string) == string(types.ControlPlaneEgressModeTypeCustomerRouted) && new.(string) == string(types.ControlPlaneEgressModeTypeAwsManaged)
+			}),
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -502,6 +506,12 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"control_plane_egress_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.ControlPlaneEgressModeType](),
+							},
 							"endpoint_private_access": {
 								Type:     schema.TypeBool,
 								Optional: true,
@@ -852,6 +862,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) upgrade policy update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("vpc_config.0.control_plane_egress_mode") {
+		config := types.VpcConfigRequest{
+			ControlPlaneEgressMode: types.ControlPlaneEgressModeType(d.Get("vpc_config.0.control_plane_egress_mode").(string)),
+		}
+
+		if err := updateClusterVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -1507,6 +1527,10 @@ func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest { // nosemgrep
 		SubnetIds:             flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 	}
 
+	if v, ok := tfMap["control_plane_egress_mode"].(string); ok && v != "" {
+		apiObject.ControlPlaneEgressMode = types.ControlPlaneEgressModeType(v)
+	}
+
 	if v, ok := tfMap["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.PublicAccessCidrs = flex.ExpandStringValueSet(v)
 	}
@@ -1841,6 +1865,7 @@ func flattenVPCConfigResponse(apiObject *types.VpcConfigResponse) []map[string]a
 
 	tfMap := map[string]any{
 		"cluster_security_group_id": aws.ToString(apiObject.ClusterSecurityGroupId),
+		"control_plane_egress_mode": string(apiObject.ControlPlaneEgressMode),
 		"endpoint_private_access":   apiObject.EndpointPrivateAccess,
 		"endpoint_public_access":    apiObject.EndpointPublicAccess,
 		names.AttrSecurityGroupIDs:  securityGroupIds,

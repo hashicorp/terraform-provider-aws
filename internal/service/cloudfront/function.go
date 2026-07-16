@@ -28,7 +28,8 @@ import (
 
 // @SDKResource("aws_cloudfront_function", name="Function")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront;cloudfront;cloudfront.DescribeFunctionOutput")
+// @Testing(importIgnore="publish")
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,

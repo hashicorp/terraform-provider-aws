@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +32,10 @@ func TestAccLogsDeliveryDestinationPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestinationPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationPolicyExists(ctx, t, resourceName),
 				),
@@ -42,12 +46,18 @@ func TestAccLogsDeliveryDestinationPolicy_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestinationPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "delivery_destination_name"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationPolicyImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "delivery_destination_name",
-				ImportStateVerifyIgnore:              []string{"delivery_destination_policy"},
+				ImportStateVerifyIgnore: []string{
+					"delivery_destination_policy",
+				},
 			},
 		},
 	})
@@ -67,7 +77,10 @@ func TestAccLogsDeliveryDestinationPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryDestinationPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestinationPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDeliveryDestinationPolicy, resourceName),
@@ -125,58 +138,4 @@ func testAccCheckDeliveryDestinationPolicyExists(ctx context.Context, t *testing
 
 		return err
 	}
-}
-
-func testAccDeliveryDestinationPolicyImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes["delivery_destination_name"], nil
-	}
-}
-
-func testAccLogDeliveryDestinationPolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_log_delivery_destination" "test" {
-  name = %[1]q
-
-  delivery_destination_configuration {
-    destination_resource_arn = aws_cloudwatch_log_group.test.arn
-  }
-}
-
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_cloudwatch_log_delivery_destination_policy" "test" {
-  delivery_destination_name   = aws_cloudwatch_log_delivery_destination.test.name
-  delivery_destination_policy = <<EOF
-{
-  "Version":"2012-10-17",
-  "Statement":[
-    {
-      "Effect":"Allow",
-      "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:delivery-source:*",
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:delivery:*",
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:delivery-destination:*"
-      ],
-      "Principal":{
-        "AWS":"arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action":"logs:CreateDelivery"
-    }
-  ]
-}
-EOF
-}
-`, rName)
 }

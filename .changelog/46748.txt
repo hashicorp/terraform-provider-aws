@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_serverlessapplicationrepository_cloudformation_stack: Fix `change set: unexpected state 'FAILED', wanted target 'CREATE_COMPLETE'. last error: No updates are to be performed` errors on subsequent applies. Previously, `parameters` whose value matched the application's default were pruned from state, and `NoEcho` parameter values were stored as `****`, both of which produced false drift
+```
+
+```release-note:enhancement
+resource/aws_serverlessapplicationrepository_cloudformation_stack: Change `capabilities` from `Required` to `Optional`/`Computed`. Applications without required capabilities can now omit the argument and the value applied by AWS will be tracked in state
+```
+
+```release-note:note
+resource/aws_serverlessapplicationrepository_cloudformation_stack: `NoEcho` parameter values are now persisted in Terraform state in plaintext rather than as `****`. This is consistent with how Terraform stores other sensitive inputs (for example, `aws_db_instance.password`). Ensure your state backend is appropriately secured
+```
+
+```release-note:note
+resource/aws_serverlessapplicationrepository_cloudformation_stack: Existing affected resources whose state still contains `****` for `NoEcho` parameters or is missing default-matching `parameters` keys require a one-time manual reconciliation after upgrading. To recover: (1) add `lifecycle { ignore_changes = [parameters] }` temporarily, (2) pull state with `terraform state pull`, (3) correct the affected `parameters` values and increment `serial`, (4) push state back with `terraform state push`, (5) remove the `ignore_changes` block, and (6) confirm with `terraform plan`. For non-sensitive parameters you can instead temporarily set the parameter to a non-default value, apply, revert, and apply again
+```

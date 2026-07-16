@@ -79,8 +79,9 @@ func ResourceKeyPair() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrPrivateKey: {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
 				},
 				names.AttrPublicKey: {
 					Type:     schema.TypeString,

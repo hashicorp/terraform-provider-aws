@@ -34,6 +34,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Serverless Cache",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newServiceUpdateActionsDataSource,
+			TypeName: "aws_elasticache_service_update_actions",
+			Name:     "Service Update Actions",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newServiceUpdatesDataSource,
+			TypeName: "aws_elasticache_service_updates",
+			Name:     "Service Updates",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 

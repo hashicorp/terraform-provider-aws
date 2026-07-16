@@ -140,7 +140,7 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -318,7 +318,7 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
-fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
+fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -458,7 +458,7 @@ modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
-	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment|changelog-agent).yml' || true); \
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
 	if [ -n "$$disallowed_files" ]; then \
 		echo "Error: 'pull_request_target' found in disallowed files:"; \
 		echo "$$disallowed_files"; \
@@ -607,7 +607,7 @@ schema-validate: ## Validate schemas
 	@$(GO_VER) test -vet=off -buildvcs=false \
 		./internal/provider/framework -run=TestProviderInit
 
-semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
+semgrep: semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
 semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
@@ -649,8 +649,6 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
-		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/semgrep/ \
 		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
@@ -672,7 +670,15 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config 'r/dgryski.semgrep-go.writestring' \
 		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
-semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
+semgrep-constants: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Constants Check
+	@echo "make: Semgrep Checks / Constants Check..."
+	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml
+
+semgrep-fix-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -1241,6 +1247,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
+	semgrep-fix-constants \
 	semgrep-fix-core \
 	semgrep-naming \
 	semgrep-naming-cae \

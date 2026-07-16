@@ -3,9 +3,9 @@
 
 # Do Not Implement Import Support for Exclusive Resource Types
 
-**Summary:** Exclusive resource types should not support import because import can give the wrong impression about what the resource manages and can lead users into choosing exclusive behavior by accident.
-**Created**: 2026-05-04
-**Author**: [@taruntej-a](https://github.com/taruntej-a)
+**Summary:** Exclusive resource types should not support import because import can give the wrong impression about what the resource manages and can lead users into choosing exclusive behavior by accident.  
+**Created**: 2026-05-04  
+**Author**: [@taruntej-a](https://github.com/taruntej-a)  
 
 ---
 

@@ -25,6 +25,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newBucketNotificationDataSource,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newBucketObjectLockConfigurationDataSource,
 			TypeName: "aws_s3_bucket_object_lock_configuration",
 			Name:     "Bucket Object Lock Configuration",
@@ -428,6 +434,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
+		},
+		{
+			Factory:  newBucketNotificationResourceAsListResource,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketOwnershipControlsResourceAsListResource,
