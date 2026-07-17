@@ -58,7 +58,10 @@ func resourceBroker() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
+			// Updates that reboot a CLUSTER_MULTI_AZ broker, such as a storage size
+			// change, exceed 30 minutes. Reducing storage takes longer still, as
+			// it replaces nodes in a rolling manner.
+			Update: schema.DefaultTimeout(90 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -355,9 +358,8 @@ func resourceBroker() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-						// Suppress differences when the configured storage size matches a
-						// pending storage size. This scenario can exist when the size has
-						// been set, but the broker has not yet been rebooted.
+						// A configured size that matches the pending size has been set
+						// but not yet applied by a reboot, so it is not a difference.
 						if pending := d.Get("pending_storage_size").(int); pending != 0 && n == strconv.Itoa(pending) {
 							return true
 						}

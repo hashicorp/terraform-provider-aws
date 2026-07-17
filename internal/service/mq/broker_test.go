@@ -2084,6 +2084,7 @@ func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
 	var broker mq.DescribeBrokerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
+	dataSourceName := "data.aws_mq_broker.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -2104,6 +2105,7 @@ func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "CLUSTER_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.m7g.medium"),
 					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
+					resource.TestCheckResourceAttr(dataSourceName, "storage_size", "10"),
 				),
 			},
 			{
@@ -2114,6 +2116,15 @@ func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
 				),
 			},
 			{
+				// Reducing storage exercises a different path, as Amazon MQ replaces
+				// nodes rather than resizing them in place.
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitVersionNormalized4_2, 10, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -2121,12 +2132,16 @@ func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
 			},
 			{
 				// Without apply_immediately the broker is not rebooted, so the new
-				// size remains pending. The plan must still be empty, which verifies
-				// the configured size is suppressed against pending_storage_size.
+				// size is reported as pending rather than applied.
 				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitVersionNormalized4_2, 20, acctest.CtFalse),
+				Check:  testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+			},
+			{
+				// Amazon MQ reports the pending size shortly after the update is
+				// accepted, so the broker is re-read before it is asserted.
+				RefreshState: true,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "storage_size", "15"),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "pending_storage_size", "20"),
 				),
 			},
@@ -3219,6 +3234,10 @@ resource "aws_mq_broker" "test" {
     username = "Test"
     password = "TestTest1234"
   }
+}
+
+data "aws_mq_broker" "test" {
+  broker_id = aws_mq_broker.test.id
 }
 `, rName, version, storageSize, applyImmediately)
 }
