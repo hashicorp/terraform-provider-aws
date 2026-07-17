@@ -11,11 +11,12 @@ description: |-
 Provides details about AWS S3 (Simple Storage) buckets with optional filters.
 
 ## Example Usage
+
 ```terraform
 data "aws_s3_buckets" "example" {
   max_buckets = 3
-  prefix = "tf-"
-  region = "us-west-2"
+  prefix      = "tf-"
+  region      = "us-west-2"
 }
 ```
 
@@ -29,10 +30,11 @@ data "aws_s3_buckets" "example" {
 ## Argument Reference
 
 The following arguments are optional:
- * `max_buckets` - (Optional) Maximum number of buckets to return.
-    * Valid Range: Minimum value of 1. Maximum value of 10000.
- * `prefix` - (Optional) Limits the response to bucket names that begin with the specified bucket name prefix.
- * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+* `max_buckets` - (Optional) Maximum number of buckets to return.
+  * Valid Range: Minimum value of 1. Maximum value of 10000.
+* `prefix` - (Optional) Limits the response to bucket names that begin with the specified bucket name prefix.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

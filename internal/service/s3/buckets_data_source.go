@@ -8,7 +8,6 @@ package s3
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -43,10 +42,7 @@ func (d *bucketsDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			"max_buckets": schema.Int32Attribute{
 				Optional: true,
 			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
-			},
-			"prefix": schema.StringAttribute{
+			names.AttrPrefix: schema.StringAttribute{
 				Optional: true,
 			},
 		},
@@ -64,13 +60,13 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	var input s3.ListBucketsInput
 	if !data.Region.IsNull() {
-		input.BucketRegion = aws.String(data.Region.ValueString())
+		input.BucketRegion = data.Region.ValueStringPointer()
 	}
 	if !data.Prefix.IsNull() {
-		input.Prefix = aws.String(data.Prefix.ValueString())
+		input.Prefix = data.Prefix.ValueStringPointer()
 	}
 	if !data.MaxBuckets.IsNull() {
-		input.MaxBuckets = aws.Int32(data.MaxBuckets.ValueInt32())
+		input.MaxBuckets = data.MaxBuckets.ValueInt32Pointer()
 	}
 
 	out, err := findBuckets(ctx, conn, &input)
