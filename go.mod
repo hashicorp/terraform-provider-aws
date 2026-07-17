@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.30
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.29
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.33
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.34
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.42.1
@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/chime v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.30.1
+	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.31.1
@@ -118,7 +118,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/emr v1.62.1
+	github.com/aws/aws-sdk-go-v2/service/emr v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.47.1
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.121.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.64.1
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.64.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.53.1
@@ -229,13 +229,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.72.1
 	github.com/aws/aws-sdk-go-v2/service/s3files v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.9.1
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.258.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.259.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.36.1
@@ -261,7 +261,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/sso v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.45.1
+	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/swf v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.46.1

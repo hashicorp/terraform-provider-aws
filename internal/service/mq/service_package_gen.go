@@ -34,6 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceBroker,
 			TypeName: "aws_mq_broker",
 			Name:     "Broker",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
