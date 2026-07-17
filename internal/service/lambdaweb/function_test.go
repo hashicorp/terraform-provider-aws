@@ -5,6 +5,7 @@ package lambdaweb_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -55,6 +56,60 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 					"revision_config",
 					"endpoint_config",
 				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunction_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var function lambdaweb.GetWebFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function.test"
+	var initialRevisionID string
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					resource.TestCheckResourceAttrWith(resourceName, "latest_revision_id", func(v string) error {
+						if v == "" {
+							return errors.New("latest_revision_id is empty")
+						}
+						initialRevisionID = v
+						return nil
+					}),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FunctionStateActive)),
+					// A revision_config change must roll a new immutable revision.
+					resource.TestCheckResourceAttrWith(resourceName, "latest_revision_id", func(v string) error {
+						if v == "" {
+							return errors.New("latest_revision_id is empty")
+						}
+						if v == initialRevisionID {
+							return fmt.Errorf("expected a new revision, still %s", v)
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "revision_config.0.description", "updated by acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "revision_config.0.service_config.0.timeout_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "revision_config.0.service_config.0.max_concurrency_per_environment", "10"),
+					resource.TestCheckResourceAttr(resourceName, "revision_config.0.service_config.0.environment_variables.APP_ENV", "acctest"),
+				),
 			},
 		},
 	})
@@ -159,6 +214,50 @@ resource "aws_lambdaweb_function" "test" {
 
     service_config {
       execution_role_arn = aws_iam_role.test.arn
+    }
+  }
+
+  endpoint_config {
+    endpoint_name = "default"
+    endpoint_type = "HomeRegion"
+    auth_type     = "ApplicationManaged"
+    regions       = [data.aws_region.current.region]
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambdaweb_function" "test" {
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = %[1]q
+
+  revision_config {
+    description = "updated by acceptance test"
+
+    build_config {
+      runtime_config {
+        runtime = "nodejs24.x"
+      }
+
+      code_config {
+        s3_object {
+          bucket = aws_s3_object.test.bucket
+          key    = aws_s3_object.test.key
+        }
+      }
+    }
+
+    service_config {
+      execution_role_arn              = aws_iam_role.test.arn
+      timeout_seconds                 = 60
+      max_concurrency_per_environment = 10
+
+      environment_variables = {
+        APP_ENV = "acctest"
+      }
     }
   }
 

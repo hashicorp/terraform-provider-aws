@@ -64,7 +64,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the endpoint.
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `regions` - (Optional) Regions the endpoint spans (maximum 17). Changing this forces a new resource.
-* `revision_weights` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weights-block).
+* `revision_weights` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weights-block). When a new revision is rolled on the function, update these weights to shift traffic to it — with `auto_deployment_mode = "Disabled"` traffic never moves automatically.
 
 ### `revision_weights` Block
 

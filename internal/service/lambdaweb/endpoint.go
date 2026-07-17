@@ -99,6 +99,9 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 				CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
 				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,

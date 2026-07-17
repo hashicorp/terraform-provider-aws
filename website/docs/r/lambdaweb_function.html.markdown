@@ -18,8 +18,44 @@ Manages an AWS Lambda Web function, including an optional initial revision (code
 
 ### Basic Usage
 
+The function's deployment package must live in an S3 bucket that meets two hard service requirements: the bucket **must have versioning enabled**, and its bucket policy **must grant `s3:GetObject` and `s3:GetObjectVersion` to the `lambda.amazonaws.com` service principal**. Function creation fails with a `ValidationException` if either is missing.
+
 ```terraform
+resource "aws_s3_bucket" "code" {
+  bucket = "example-lambdaweb-code"
+}
+
+# REQUIRED: the service only accepts versioned buckets (REFERENCE storage mode).
+resource "aws_s3_bucket_versioning" "code" {
+  bucket = aws_s3_bucket.code.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# REQUIRED: the Lambda service principal must be able to read the package.
+resource "aws_s3_bucket_policy" "code" {
+  bucket = aws_s3_bucket.code.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource  = "${aws_s3_bucket.code.arn}/*"
+    }]
+  })
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket_versioning.code.bucket
+  key    = "function.zip"
+  source = "function.zip"
+}
+
 resource "aws_lambdaweb_function" "example" {
+  depends_on = [aws_s3_bucket_policy.code]
+
   function_name = "example"
 
   revision_config {
@@ -49,6 +85,12 @@ resource "aws_lambdaweb_function" "example" {
   }
 }
 ```
+
+### Updating code
+
+Revisions are immutable: any change to `revision_config` (new package, runtime, environment variables, timeouts, ...) rolls a new revision and waits until it is `Active`. `latest_revision_id` always tracks the newest revision.
+
+~> **Note:** Traffic only follows new revisions automatically on endpoints with `auto_deployment_mode = "LatestRevision"`. On endpoints with `auto_deployment_mode = "Disabled"` (required for `MultiRegion`), creating a new revision does **not** shift traffic: update `revision_weights` on the corresponding [`aws_lambdaweb_endpoint`](lambdaweb_endpoint.html.markdown) to route requests to it.
 
 ## Argument Reference
 
@@ -133,6 +175,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `15m`)
 
 ## Import
+
+~> **Note:** `revision_config` and `endpoint_config` cannot be read back from the API, so import does not populate them. After importing, write these blocks to match the deployed function (or leave them out) — otherwise the first plan after import will propose a new revision.
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 

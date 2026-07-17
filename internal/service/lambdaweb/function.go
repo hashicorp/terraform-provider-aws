@@ -250,6 +250,9 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
 							Optional:   true,
 							Computed:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
@@ -434,8 +437,17 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 	name := plan.FunctionName.ValueString()
 
 	if !plan.RevisionConfig.Equal(state.RevisionConfig) {
+		// CreateWebFunctionRevision takes description/kmsKeyArn/buildConfig/
+		// serviceConfig at the top level (only CreateWebFunction nests them
+		// under revisionConfig), so expand the block, not the resource model.
+		revisionConfig, diags := plan.RevisionConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		var input lambdaweb.CreateWebFunctionRevisionInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, revisionConfig, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -478,7 +490,7 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		ep, err := waitEndpointActive(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+		ep, err := waitEndpointUpdated(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
