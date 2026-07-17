@@ -486,7 +486,7 @@ This resource supports the following arguments:
   a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 - `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
-- `instance_lifecycle_policy` - (Optional) If this block is configured, add an instance lifecycle policy to the specified Auto Scaling group. Defined [below](#instance_lifecycle_policy).
+- `instance_lifecycle_policy` - (Optional) If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined [below](#instance_lifecycle_policy).
 - `instance_maintenance_policy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy).
 - `desired_capacity` - (Optional) Number of Amazon EC2 instances that
   should be running in the group. (See also [Waiting for
