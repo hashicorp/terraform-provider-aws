@@ -17,6 +17,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_bedrockagent_data_source: Short-circuit waiting for creation if the resource reaches a `FAILED` state ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
+* resource/aws_datazone_domain: Fixed `AccessDeniedException` error when deleting ([#48516](https://github.com/hashicorp/terraform-provider-aws/issues/48516))
 * resource/aws_sagemaker_endpoint: Prevents `Cannot create already existing endpoint` error when retrying creation. ([#48966](https://github.com/hashicorp/terraform-provider-aws/issues/48966))
 
 ## 6.55.0 (July 15, 2026)
