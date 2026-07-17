@@ -23,6 +23,7 @@ func TestAccS3BucketsDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketsDataSourceConfig_basic(rName),
