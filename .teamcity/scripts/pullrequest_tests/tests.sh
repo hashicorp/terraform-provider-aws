@@ -66,9 +66,6 @@ EOF
 	fi
 fi
 
-#build_test_binary "${PKG%/...}"
-#binary="$(basename "${PKG%/...}").test"
-
 echo "Downloading Go module dependencies"
 go mod download
 
