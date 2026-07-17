@@ -12,18 +12,20 @@ Provides details about AWS S3 (Simple Storage) buckets with optional filters.
 
 ## Example Usage
 
+### Basic Usage
+
+```terraform
+data "aws_s3_buckets" "example" {
+}
+```
+
+### Full Usage
+
 ```terraform
 data "aws_s3_buckets" "example" {
   max_buckets = 3
   prefix      = "tf-"
   region      = "us-west-2"
-}
-```
-
-### Basic Usage
-
-```terraform
-data "aws_s3_buckets" "example" {
 }
 ```
 
