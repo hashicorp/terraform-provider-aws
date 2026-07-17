@@ -5116,6 +5116,32 @@ service "lambdamicrovms" {
   brand      = "AWS"
 }
 
+service "lambdaweb" {
+
+  sdk {
+    id             = "Lambda Web"
+    arn_namespace  = "lambda"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "LambdaWeb"
+    human_friendly      = "Lambda Web"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWebFunctions"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdaweb_"
+  }
+
+  provider_package_correct = "lambdaweb"
+  doc_prefix               = ["lambdaweb_"]
+  brand                    = "AWS"
+}
+
 service "launchwizard" {
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"
@@ -9160,32 +9186,6 @@ service "budgets" {
   brand                    = "AWS"
 
   is_global = true
-}
-
-service "webfunctions" {
-
-  sdk {
-    id             = "Lambda Web"
-    arn_namespace  = "lambda"
-    client_version = 2
-  }
-
-  names {
-    provider_name_upper = "WebFunctions"
-    human_friendly      = "Lambda Web Functions"
-  }
-
-  endpoint_info {
-    endpoint_api_call = "ListWebFunctions"
-  }
-
-  resource_prefix {
-    correct = "aws_webfunctions_"
-  }
-
-  provider_package_correct = "webfunctions"
-  doc_prefix               = ["webfunctions_"]
-  brand                    = "AWS"
 }
 
 service "wellarchitected" {

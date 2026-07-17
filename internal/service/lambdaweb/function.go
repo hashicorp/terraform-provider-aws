@@ -1,0 +1,625 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+// Pre-GA: this resource targets the not-yet-public aws-sdk-go-v2
+// "lambdaweb" service client, currently satisfied by the hand-written
+// shim in .pre-ga-sdk/ (see the replace directive in go.mod). Swap to the
+// real SDK module when it ships at GA.
+
+package lambdaweb
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource("aws_lambdaweb_function", name="Function")
+// @IdentityAttribute("function_name")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionOutput")
+// @Testing(importStateIdAttribute="function_name")
+// @Testing(importIgnore="revision_config;endpoint_config")
+func newFunctionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &functionResource{}
+
+	r.SetDefaultCreateTimeout(15 * time.Minute)
+	r.SetDefaultUpdateTimeout(15 * time.Minute)
+	r.SetDefaultDeleteTimeout(15 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameFunction = "Function"
+
+	iamPropagationTimeout = 5 * time.Minute
+)
+
+type functionResource struct {
+	framework.ResourceWithModel[functionResourceModel]
+	framework.WithTimeouts
+	framework.WithImportByIdentity
+}
+
+func (r *functionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			"function_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrState: schema.StringAttribute{
+				Computed: true,
+			},
+			"latest_revision_id": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDomainName: schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"revision_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[revisionConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrDescription: schema.StringAttribute{
+							Optional: true,
+						},
+						names.AttrKMSKeyARN: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"build_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[buildConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"runtime_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"runtime": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+									"code_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"s3_object": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ObjectModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrBucket: schema.StringAttribute{
+																Required: true,
+															},
+															names.AttrKey: schema.StringAttribute{
+																Required: true,
+															},
+															"version_id": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"service_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[serviceConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrExecutionRoleARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"timeout_seconds": schema.Int64Attribute{
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(3, 900),
+										},
+									},
+									"max_concurrency_per_environment": schema.Int64Attribute{
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1, 128),
+										},
+									},
+									"environment_variables": schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										Sensitive:   true,
+										ElementType: types.StringType,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"telemetry_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[telemetryConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"logging_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[loggingConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"log_group": schema.StringAttribute{
+																Optional: true,
+															},
+															"application_log_level": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ApplicationLogLevel](),
+																Optional:   true,
+															},
+															"system_log_level": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.SystemLogLevel](),
+																Optional:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"endpoint_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"endpoint_name": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						names.AttrEndpointType: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"auth_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
+							Required:   true,
+						},
+						"auto_deployment_mode": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
+							Optional:   true,
+							Computed:   true,
+						},
+						names.AttrDescription: schema.StringAttribute{
+							Optional: true,
+						},
+						"regions": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							Optional:    true,
+							ElementType: types.StringType,
+						},
+					},
+				},
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *functionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	var plan functionResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var input lambdaweb.CreateWebFunctionInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := plan.FunctionName.ValueString()
+
+	// IAM/S3-policy eventual consistency: a freshly created execution role or
+	// bucket policy can take tens of seconds to become visible to the service.
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.CreateWebFunction(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be assumed") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not have s3:GetObject") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "S3 versioning enabled") {
+				return true, err
+			}
+			return false, err
+		})
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+	createOut := outputRaw.(*lambdaweb.CreateWebFunctionOutput)
+
+	out, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.ID = fwflex.StringToFramework(ctx, out.FunctionName)
+	plan.ARN = fwflex.StringToFramework(ctx, out.FunctionArn)
+
+	plan.LatestRevisionID = types.StringNull()
+	if createOut.Revision != nil {
+		plan.LatestRevisionID = fwflex.StringToFramework(ctx, createOut.Revision.RevisionId)
+	}
+
+	plan.DomainName = types.StringNull()
+	if !plan.EndpointConfig.IsNull() {
+		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		ep, err := waitEndpointActive(ctx, conn, name, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+
+		var epModel endpointConfigModel
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	var state functionResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := state.FunctionName.ValueString()
+
+	out, err := findFunctionByName(ctx, conn, name)
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state.ID = fwflex.StringToFramework(ctx, out.FunctionName)
+	state.ARN = fwflex.StringToFramework(ctx, out.FunctionArn)
+
+	revisionID, err := findLatestRevisionID(ctx, conn, name)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+	state.LatestRevisionID = fwflex.StringToFramework(ctx, revisionID)
+
+	state.DomainName = types.StringNull()
+	switch endpointName, err := readEndpointName(ctx, conn, name, state.EndpointConfig); {
+	case err != nil:
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	case endpointName != "":
+		ep, err := findEndpointByName(ctx, conn, name, endpointName)
+		switch {
+		case retry.NotFound(err):
+		case err != nil:
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		default:
+			state.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+
+			var epModel endpointConfigModel
+			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			state.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *functionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	var plan, state functionResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := plan.FunctionName.ValueString()
+
+	if !plan.RevisionConfig.Equal(state.RevisionConfig) {
+		var input lambdaweb.CreateWebFunctionRevisionInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		input.FunctionName = aws.String(name)
+
+		revOut, err := conn.CreateWebFunctionRevision(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		revisionID := aws.ToString(revOut.RevisionId)
+		if _, err := waitRevisionActive(ctx, conn, name, revisionID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+		plan.LatestRevisionID = fwflex.StringToFramework(ctx, revOut.RevisionId)
+	} else {
+		plan.LatestRevisionID = state.LatestRevisionID
+	}
+
+	plan.DomainName = state.DomainName
+	if !plan.EndpointConfig.Equal(state.EndpointConfig) && !plan.EndpointConfig.IsNull() {
+		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		var input lambdaweb.UpdateWebFunctionEndpointInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		input.FunctionName = aws.String(name)
+		input.EndpointName = aws.String(endpointName)
+
+		if _, err := conn.UpdateWebFunctionEndpoint(ctx, &input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		ep, err := waitEndpointActive(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+	}
+
+	out, err := waitFunctionUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *functionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	var state functionResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := state.FunctionName.ValueString()
+
+	input := lambdaweb.DeleteWebFunctionInput{
+		FunctionName: aws.String(name),
+	}
+	_, err := conn.DeleteWebFunction(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	if _, err := waitFunctionDeleted(ctx, conn, name, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+}
+
+func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName string, cfg fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
+	if !cfg.IsNull() {
+		return endpointNameFromConfig(ctx, cfg)
+	}
+
+	input := lambdaweb.ListWebFunctionEndpointsInput{
+		FunctionName: aws.String(functionName),
+	}
+	out, err := conn.ListWebFunctionEndpoints(ctx, &input)
+	if err != nil {
+		return "", err
+	}
+	if len(out.Endpoints) == 1 {
+		return aws.ToString(out.Endpoints[0].EndpointName), nil
+	}
+	return "", nil
+}
+
+func endpointNameFromConfig(ctx context.Context, l fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
+	models, d := l.ToSlice(ctx)
+	if d.HasError() {
+		return "", errors.New("reading endpoint_config")
+	}
+	if len(models) == 0 {
+		return "", errors.New("empty endpoint_config")
+	}
+	return models[0].EndpointName.ValueString(), nil
+}
+
+type functionResourceModel struct {
+	framework.WithRegionModel
+	ARN              types.String                                         `tfsdk:"arn"`
+	DomainName       types.String                                         `tfsdk:"domain_name"`
+	EndpointConfig   fwtypes.ListNestedObjectValueOf[endpointConfigModel] `tfsdk:"endpoint_config"`
+	FunctionName     types.String                                         `tfsdk:"function_name"`
+	ID               types.String                                         `tfsdk:"id"`
+	LatestRevisionID types.String                                         `tfsdk:"latest_revision_id"`
+	RevisionConfig   fwtypes.ListNestedObjectValueOf[revisionConfigModel] `tfsdk:"revision_config"`
+	State            types.String                                         `tfsdk:"state"`
+	Timeouts         timeouts.Value                                       `tfsdk:"timeouts"`
+}
+
+type revisionConfigModel struct {
+	Description   types.String                                        `tfsdk:"description"`
+	KMSKeyARN     fwtypes.ARN                                         `tfsdk:"kms_key_arn"`
+	BuildConfig   fwtypes.ListNestedObjectValueOf[buildConfigModel]   `tfsdk:"build_config"`
+	ServiceConfig fwtypes.ListNestedObjectValueOf[serviceConfigModel] `tfsdk:"service_config"`
+}
+
+type buildConfigModel struct {
+	CodeConfig    fwtypes.ListNestedObjectValueOf[codeConfigModel]    `tfsdk:"code_config"`
+	RuntimeConfig fwtypes.ListNestedObjectValueOf[runtimeConfigModel] `tfsdk:"runtime_config"`
+}
+
+type codeConfigModel struct {
+	S3Object fwtypes.ListNestedObjectValueOf[s3ObjectModel] `tfsdk:"s3_object"`
+}
+
+type s3ObjectModel struct {
+	Bucket    types.String `tfsdk:"bucket"`
+	Key       types.String `tfsdk:"key"`
+	VersionID types.String `tfsdk:"version_id"`
+}
+
+type runtimeConfigModel struct {
+	Runtime types.String `tfsdk:"runtime"`
+}
+
+type serviceConfigModel struct {
+	ExecutionRoleARN             fwtypes.ARN                                           `tfsdk:"execution_role_arn"`
+	TimeoutSeconds               types.Int64                                           `tfsdk:"timeout_seconds"`
+	MaxConcurrencyPerEnvironment types.Int64                                           `tfsdk:"max_concurrency_per_environment"`
+	EnvironmentVariables         fwtypes.MapOfString                                   `tfsdk:"environment_variables"`
+	TelemetryConfig              fwtypes.ListNestedObjectValueOf[telemetryConfigModel] `tfsdk:"telemetry_config"`
+}
+
+type telemetryConfigModel struct {
+	LoggingConfig fwtypes.ListNestedObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
+}
+
+type loggingConfigModel struct {
+	ApplicationLogLevel fwtypes.StringEnum[awstypes.ApplicationLogLevel] `tfsdk:"application_log_level"`
+	LogGroup            types.String                                     `tfsdk:"log_group"`
+	SystemLogLevel      fwtypes.StringEnum[awstypes.SystemLogLevel]      `tfsdk:"system_log_level"`
+}
+
+type endpointConfigModel struct {
+	EndpointName       types.String                                    `tfsdk:"endpoint_name"`
+	Description        types.String                                    `tfsdk:"description"`
+	EndpointType       fwtypes.StringEnum[awstypes.EndpointType]       `tfsdk:"endpoint_type"`
+	AuthType           fwtypes.StringEnum[awstypes.AuthType]           `tfsdk:"auth_type"`
+	AutoDeploymentMode fwtypes.StringEnum[awstypes.AutoDeploymentMode] `tfsdk:"auto_deployment_mode"`
+	Regions            fwtypes.ListOfString                            `tfsdk:"regions"`
+}

@@ -420,6 +420,8 @@ service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
 service/lambdamicrovms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
+service/lambdaweb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdaweb_'
 service/launchwizard:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
@@ -764,8 +766,6 @@ service/wafv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_wafv2_'
 service/wavelength:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_carrier_gateway'
-service/webfunctions:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_webfunctions_'
 service/wellarchitected:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_wellarchitected_'
 service/wisdom:

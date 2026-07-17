@@ -1341,6 +1341,12 @@ service/lambdamicrovms:
           - any-glob-to-any-file:
               - 'internal/service/lambdamicrovms/**/*'
               - 'website/**/lambdamicrovms_*'
+service/lambdaweb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/lambdaweb/**/*'
+              - 'website/**/lambdaweb_*'
 service/launchwizard:
   - any:
       - changed-files:
@@ -2427,12 +2433,6 @@ service/wavelength:
           - any-glob-to-any-file:
               - 'internal/service/ec2/**/wavelength_*'
               - 'website/**/ec2_carrier_*'
-service/webfunctions:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/webfunctions/**/*'
-              - 'website/**/webfunctions_*'
 service/wellarchitected:
   - any:
       - changed-files:

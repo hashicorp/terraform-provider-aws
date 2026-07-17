@@ -1,8 +1,7 @@
 ```release-note:new-resource
-aws_webfunctions_function
+aws_lambdaweb_function
 ```
 
 ```release-note:new-resource
-aws_webfunctions_endpoint
+aws_lambdaweb_endpoint
 ```
-
