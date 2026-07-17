@@ -71,6 +71,8 @@ go mod download
 
 echo "Running acceptance tests for ${PKG} with pattern %TEST_PREFIX%"
 
+echo "% TF_ACC=1 go test ${PKG} -count=1 -json -v -run=\"%TEST_PREFIX%\" -parallel \"%ACCTEST_PARALLELISM%\" -timeout=0 -vet=off -buildvcs=false" > /tmp/test_command.txt
+
 TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false \
     | tee /tmp/test_output.json
 

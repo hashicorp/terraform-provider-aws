@@ -26,7 +26,7 @@ done
 
 # Authenticate internally using TeamCity's system-provided tokens
 results=$(echo "${response}" |
-	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status)] \(.duration/1000)s\(if .status == "FAILURE" and .details != null then "\n\(.details)" else "" end)"')
+	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status | if . == "SUCCESS" then "PASS" elif . == "FAILURE" then "FAIL" else . end)] \(.duration/1000)s\(if .status == "FAILURE" and .details != null then "\n\(.details)" else "" end)"')
 
 echo "${results}"
 
@@ -42,7 +42,8 @@ marker="<!-- tc-test-results -->"
 marker_encoded="&lt;!-- tc-test-results --&gt;"
 repo="$("${gh}" repo view --json nameWithOwner --jq '.nameWithOwner')"
 
-body="$(printf '%s\n```console\n%s\n```' "${marker}" "${results}")"
+go_cmd="$(cat /tmp/test_command.txt)"
+body="$(printf '%s\n```console\n%s\n\n%s\n```' "${marker}" "${go_cmd}" "${results}")"
 
 # Update existing comment if one was previously posted, otherwise create a new one
 comment_id="$("${gh}" api "repos/${repo}/issues/${pr_number}/comments" \
