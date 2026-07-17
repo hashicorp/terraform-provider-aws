@@ -713,7 +713,8 @@ resource "aws_sagemaker_endpoint" "test" {
 
 func testAccEndpointConfig_changeEndpointConfig_variantName(rName, variantName string, instanceCount int) string {
 	return acctest.ConfigCompose(
-		testAccEndpointConfig_model_base(rName), fmt.Sprintf(`
+		testAccEndpointConfig_model_base(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -735,7 +736,8 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
 func testAccEndpointConfig_changeEndpointConfig_namePrefix_createBeforeDestroy(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(
-		testAccEndpointConfig_model_base(rName), fmt.Sprintf(`
+		testAccEndpointConfig_model_base(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -761,7 +763,8 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
 func testAccEndpointConfig_changeEndpointConfig_namePrefix_noCreateBeforeDestroy(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(
-		testAccEndpointConfig_model_base(rName), fmt.Sprintf(`
+		testAccEndpointConfig_model_base(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
