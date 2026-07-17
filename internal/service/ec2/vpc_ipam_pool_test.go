@@ -465,7 +465,7 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossRegion(t *testing.T) { // nosemgre
 // * Organizations management account
 // Authenticate with member account as target account and management account as alternate.
 // Required this way since an IPAM admin account has to be a member account and
-// not the management account
+// not the management account.
 func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -483,6 +483,7 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgr
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
