@@ -19,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -261,6 +263,11 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Set{
+								// Regions are immutable on an endpoint and
+								// UpdateWebFunctionEndpoint does not accept them.
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -314,6 +321,13 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	createOut := outputRaw.(*lambdaweb.CreateWebFunctionOutput)
+
+	// Set partial state so a failed wait below does not orphan the function.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), name)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	out, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
@@ -477,8 +491,17 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
+		// UpdateWebFunctionEndpoint takes description/authType/
+		// autoDeploymentMode at the top level; expand the endpoint_config
+		// block, not the resource model.
+		endpointConfig, diags := plan.EndpointConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		var input lambdaweb.UpdateWebFunctionEndpointInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, endpointConfig, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}

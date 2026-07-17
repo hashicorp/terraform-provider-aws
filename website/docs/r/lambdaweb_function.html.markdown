@@ -109,6 +109,8 @@ The following arguments are optional:
 * `build_config` - (Required) Code source and runtime. [See below](#build_config-block).
 * `description` - (Optional) Description of the revision.
 * `kms_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the function's code and environment variables.
+
+~> **Note:** A revision encrypted with a customer managed key cannot be replicated to other Regions: `MultiRegion` and `PerRegion` endpoints fail to deploy in every Region other than the key's. Only combine `kms_key_arn` with `HomeRegion` endpoints.
 * `service_config` - (Required) Execution environment configuration. [See below](#service_config-block).
 
 #### `build_config` Block

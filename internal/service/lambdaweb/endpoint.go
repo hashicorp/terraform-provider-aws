@@ -261,6 +261,15 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// Set partial state so a failed wait below does not orphan the endpoint
+	// (for example when a region cannot host the revision).
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), endpointCreateResourceID(functionName, endpointName))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), functionName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("endpoint_name"), endpointName)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	out, err := waitEndpointActive(ctx, conn, functionName, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
