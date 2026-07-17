@@ -23,6 +23,7 @@ BUG FIXES:
 * resource/aws_mq_broker: Fix perpetual `shared_resources` diffs for ActiveMQ brokers ([#48962](https://github.com/hashicorp/terraform-provider-aws/issues/48962))
 * resource/aws_mq_configuration: Retry `ConflictException: Configuration ID [...] is in use` errors on delete ([#48962](https://github.com/hashicorp/terraform-provider-aws/issues/48962))
 * resource/aws_sagemaker_endpoint: Prevents `Cannot create already existing endpoint` error when retrying creation. ([#48966](https://github.com/hashicorp/terraform-provider-aws/issues/48966))
+* resource/aws_vpc_ipam_pool: Fix "Error: reading EC2 VPC" when creating an IPAM VPC resource planning pool for a VPC in another account. ([#46483](https://github.com/hashicorp/terraform-provider-aws/issues/46483))
 
 ## 6.55.0 (July 15, 2026)
 
