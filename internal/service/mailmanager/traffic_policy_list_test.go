@@ -36,7 +36,6 @@ func TestAccMailManagerTrafficPolicy_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
@@ -92,7 +91,6 @@ func TestAccMailManagerTrafficPolicy_List_includeResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
@@ -168,7 +166,6 @@ func TestAccMailManagerTrafficPolicy_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
