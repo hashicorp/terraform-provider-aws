@@ -32,7 +32,7 @@ data "aws_s3_buckets" "example" {
 The following arguments are optional:
 
 * `max_buckets` - (Optional) Maximum number of buckets to return.
-  * Valid Range: Minimum value of 1. Maximum value of 10000.
+    * Valid Range: Minimum value of 1. Maximum value of 10000.
 * `prefix` - (Optional) Limits the response to bucket names that begin with the specified bucket name prefix.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
@@ -41,7 +41,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `buckets` - List of bucket objects:
-   * `bucket_arn` - Bucket ARN.
-   * `bucket_region` - Bucket region.
-   * `creation_date` - Bucket creation date.
-   * `name` - Bucket name.
+    * `bucket_arn` - Bucket ARN.
+    * `bucket_region` - Bucket region.
+    * `creation_date` - Bucket creation date.
+    * `name` - Bucket name.
