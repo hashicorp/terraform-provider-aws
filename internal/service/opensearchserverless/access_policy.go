@@ -119,7 +119,6 @@ func (r *accessPolicyResource) Create(ctx context.Context, request resource.Crea
 
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-
 		return
 	}
 
@@ -151,7 +150,6 @@ func (r *accessPolicyResource) Read(ctx context.Context, request resource.ReadRe
 
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-
 		return
 	}
 
@@ -190,7 +188,6 @@ func (r *accessPolicyResource) Update(ctx context.Context, request resource.Upda
 
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-
 			return
 		}
 
@@ -224,7 +221,6 @@ func (r *accessPolicyResource) Delete(ctx context.Context, request resource.Dele
 
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-
 		return
 	}
 }
