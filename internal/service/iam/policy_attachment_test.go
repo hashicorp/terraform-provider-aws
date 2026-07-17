@@ -41,6 +41,7 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 					testAccCheckPolicyAttachmentCounts(ctx, t, resourceName, 0, 2, 1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 				),
 			},
 			{

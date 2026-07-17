@@ -9,13 +9,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/lambda/layer_version_list.go"
-        - "/internal/service/route53/record_list.go"
-        - "/internal/service/route53resolver/rule_association_list.go"
-        - "/internal/service/s3/bucket_acl_list.go"
-        - "/internal/service/s3/bucket_public_access_block_list.go"
-        - "/internal/service/s3/object_list.go"
-        - "/internal/service/secretsmanager/secret_list.go"
         - "/internal/service/secretsmanager/secret_version_list.go"
         - "/internal/service/sqs/queue_list.go"
         - "/internal/service/ssm/parameter_list.go"
@@ -38,7 +31,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/dynamodb/table_list.go"
         - "/internal/service/ecs/task_definition_list.go"
         - "/internal/service/kms/alias_list.go"
         - "/internal/service/kms/key_list.go"

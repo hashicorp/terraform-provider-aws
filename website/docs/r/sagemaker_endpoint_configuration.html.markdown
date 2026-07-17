@@ -49,6 +49,7 @@ This resource supports the following arguments:
 ### production_variants
 
 * `accelerator_type` - (Optional) Size of the Elastic Inference (EI) instance to use for the production variant.
+* `capacity_reservation_config` - (Optional) Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint. See [capacity_reservation_config](#capacity_reservation_config) below.
 * `container_startup_health_check_timeout_in_seconds` - (Optional) Timeout value, in seconds, for your inference container to pass health check by SageMaker AI Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `core_dump_config` - (Optional) Core dump configuration from the model container when the process crashes. Fields are documented below.
 * `enable_ssm_access` - (Optional) Whether to turn on native AWS SSM access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind endpoints. Ignored if `model_name` is not set (Inference Components endpoint).
@@ -63,6 +64,11 @@ This resource supports the following arguments:
 * `serverless_config` - (Optional) How an endpoint performs asynchronous inference.
 * `variant_name` - (Optional) Name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) Size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
+
+#### capacity_reservation_config
+
+* `capacity_reservation_preference` - (Optional) Capacity reservation preference. Valid value is `capacity-reservations-only`. When set to `capacity-reservations-only`, SageMaker AI launches instances only into an ML capacity reservation; if no capacity is available, the instances fail to launch.
+* `ml_reservation_arn` - (Optional) The Amazon Resource Name (ARN) that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
 
 #### core_dump_config
 
@@ -135,17 +141,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
-  id = "endpoint-config-foo"
+  to = aws_sagemaker_endpoint_configuration.example
+  identity = {
+    name = "example-endpoint-config"
+  }
+}
+
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import endpoint configurations using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the endpoint configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Endpoint Configurations using `name`. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.example
+  id = "example-endpoint-config"
+}
+```
+
+Using `terraform import`, import Endpoint Configurations using `name`. For example:
 
 ```console
-% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+% terraform import aws_sagemaker_endpoint_configuration.example example-endpoint-config
 ```
