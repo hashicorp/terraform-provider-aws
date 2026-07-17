@@ -52,6 +52,11 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "create-complete"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -78,6 +83,11 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "modify-complete"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -378,7 +388,7 @@ func TestAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) { //
 	}
 
 	ctx := acctest.Context(t)
-	var pool1, pool2 awstypes.IpamPool
+	var pool awstypes.IpamPool
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
@@ -393,25 +403,34 @@ func TestAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) { //
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool1),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool2),
-					testAccCheckIPAMPoolRecreated(&pool1, &pool2),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName2, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -598,16 +617,6 @@ func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, t *testing.T, ipampool 
 		_, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 		return err
-	}
-}
-
-func testAccCheckIPAMPoolRecreated(before, after *awstypes.IpamPool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.IpamPoolId), aws.ToString(after.IpamPoolId); before == after {
-			return fmt.Errorf("IPAM Pool (%s) was not recreated", before)
-		}
-
-		return nil
 	}
 }
 
