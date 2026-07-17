@@ -256,17 +256,20 @@ func resourceGroup() *schema.Resource {
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"retention_triggers": {
 								Type:     schema.TypeList,
 								MaxItems: 1,
 								Optional: true,
+								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"terminate_hook_abandon": {
 											Type:             schema.TypeString,
 											Optional:         true,
+											Computed:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.RetentionAction](),
 										},
 									},
@@ -3641,7 +3644,7 @@ func flattenRetentionTriggers(apiObject *awstypes.RetentionTriggers) []any {
 	}
 
 	tfMap := map[string]any{
-		"terminate_hook_abandon": string(apiObject.TerminateHookAbandon),
+		"terminate_hook_abandon": apiObject.TerminateHookAbandon,
 	}
 
 	return []any{tfMap}

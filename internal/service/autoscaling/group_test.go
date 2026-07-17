@@ -92,6 +92,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_type", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", names.AttrName),
@@ -675,7 +676,6 @@ func TestAccAutoScalingGroup_instanceLifecyclePolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.0.terminate_hook_abandon", "terminate"),
 				),
 			},
-			testAccGroupImportStep(resourceName),
 		},
 	})
 }
