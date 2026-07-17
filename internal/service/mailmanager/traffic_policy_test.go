@@ -31,7 +31,6 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
@@ -47,7 +46,7 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action", "ALLOW"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "max_message_size_bytes"),
+					resource.TestCheckNoResourceAttr(resourceName, "max_message_size_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.action", "DENY"),
@@ -77,7 +76,6 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
@@ -124,7 +122,6 @@ func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
@@ -155,7 +152,6 @@ func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MailManager)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
