@@ -210,6 +210,8 @@ func TestAccMailManagerTrafficPolicy_tags(t *testing.T) {
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_null(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support null tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
@@ -1642,6 +1644,8 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *te
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support null tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
@@ -1718,6 +1722,8 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullOverlappingResourceTag
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support null tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
