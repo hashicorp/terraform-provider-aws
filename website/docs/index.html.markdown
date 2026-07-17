@@ -68,18 +68,18 @@ which are applied in the following order:
 1. Instance profile credentials and Region
 
 This order matches the precedence used by the
-[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence)
-and the [AWS SDKs](https://aws.amazon.com/tools/).
+[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#configure-precedence)
+and the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/configure-gosdk.html).
 
 The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
-or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
+or in [a named profile](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html#file-format-profile).
 If configuring the role in the provider configuration, the provider supports IAM Role Chaining by specifying a list of roles to assume.
 
-The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
+The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html#webidentity).
 This can be configured either using environment variables or in a named profile.
 
-When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
+When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html).
 
 ### Provider Configuration
 
@@ -131,7 +131,7 @@ Other environment variables related to authorization are:
 
 ### Shared Configuration and Credentials Files
 
-The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html).
 By default, these files are located at `$HOME/.aws/config` and `$HOME/.aws/credentials` on Linux and macOS,
 and `"%USERPROFILE%\.aws\config"` and `"%USERPROFILE%\.aws\credentials"` on Windows.
 
@@ -217,7 +217,7 @@ provider "aws" {
 
 ### Using an External Credentials Process
 
-To use an [external process to source credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html),
+To use an [external process to source credentials](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html),
 the process must be configured in a named profile, including the `default` profile.
 The profile is configured in a shared configuration file.
 
@@ -258,8 +258,8 @@ credential_process = custom-process --username jdoe
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+[envvars]: https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings
+[config]: https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#ConfigFileSettings
 
 ### Assume Role Configuration Reference
 
@@ -268,7 +268,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 
 Note that environment variables are not supported for assuming IAM roles.
 
-See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
+See the [assume role documentation](https://docs.aws.amazon.com/sdkref/latest/guide/feature-assume-role-credentials.html) for more information.
 
 |Setting|Provider|[Shared Config][config]|
 |-------|--------|-----------------------|
@@ -284,15 +284,15 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 
 ### Assume Role with Web Identity Configuration Reference
 
-Configuration for assuming an IAM role using web identify federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
+Configuration for assuming an IAM role using web identity federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role_with_web_identity` block.
 
-See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
+See the assume role documentation [section on web identities](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
 |-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Web Identity Token|`web_identity_token`|N/A|N/A|
+|Web Identity Token|`web_identity_token`|`TF_AWS_WEB_IDENTITY_TOKEN`|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
 |Duration|`duration`|N/A|`duration_seconds`|
 |Policy|`policy`|N/A|`policy`|
@@ -592,9 +592,10 @@ The `assume_role_with_web_identity` configuration block supports the following a
 * `session_name` - (Optional) Session name to use when assuming the role.
   Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
 * `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token` or `web_identity_token_file` is required.
+  Either `web_identity_token` or `web_identity_token_file` must be provided.
+  Can also be set with the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token_file` or `web_identity_token` is required.
+  Either `web_identity_token_file` or `web_identity_token` must be provided.
   Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block
