@@ -21,6 +21,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -752,7 +753,7 @@ func listLoadBalancerPages(ctx context.Context, conn *elasticloadbalancing.Clien
 	return func(yield func([]awstypes.LoadBalancerDescription, error) bool) {
 		pages := elasticloadbalancing.NewDescribeLoadBalancersPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
 				yield(nil, fmt.Errorf("listing ELB Classic Load Balancers: %w", err))
 				return
@@ -784,7 +785,19 @@ func findLoadBalancer(ctx context.Context, conn *elasticloadbalancing.Client, in
 }
 
 func findLoadBalancers(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeLoadBalancersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LoadBalancerDescription]) ([]awstypes.LoadBalancerDescription, error) {
-	return tfslices.CollectAndConcatWithError(listLoadBalancerPages(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listLoadBalancerPages(ctx, conn, input), optFns...)
+
+	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbalancing.Client, name string) (*awstypes.LoadBalancerAttributes, error) {
@@ -813,6 +826,34 @@ func findLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancing.
 	}
 
 	return output.LoadBalancerAttributes, nil
+}
+
+func findInstanceStatesByName(ctx context.Context, conn *elasticloadbalancing.Client, name string) ([]awstypes.InstanceState, error) {
+	input := elasticloadbalancing.DescribeInstanceHealthInput{
+		LoadBalancerName: aws.String(name),
+	}
+
+	return findInstanceStates(ctx, conn, &input)
+}
+
+func findInstanceStates(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeInstanceHealthInput) ([]awstypes.InstanceState, error) {
+	output, err := conn.DescribeInstanceHealth(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.InstanceStates, nil
 }
 
 func listenerHash(v any) int {
