@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
-	tfelasticloadbalancingv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -4404,7 +4404,7 @@ func testAccCheckLBTargetGroupExists(ctx context.Context, t *testing.T, n string
 
 		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
-		output, err := tfelasticloadbalancingv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -4425,13 +4425,13 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, t *testing.T, v *ela
 		input := elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: v.TargetGroupArn,
 		}
-		output, err := conn.DescribeTargetHealth(ctx, &input)
+		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptions(ctx, conn, &input)
 
 		if err != nil {
 			return err
 		}
 
-		for _, v := range output.TargetHealthDescriptions {
+		for _, v := range targetHealthDescriptions {
 			if v.TargetHealth == nil || v.TargetHealth.State != elasticloadbalancingv2types.TargetHealthStateEnumHealthy {
 				return errors.New("Not all instances in target group are healthy yet, but should be")
 			}
