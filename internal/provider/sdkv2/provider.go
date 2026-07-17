@@ -428,13 +428,13 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		c := expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
-		if (c.WebIdentityToken != "") == (c.WebIdentityTokenFile != "") {
+		c, err := expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
+		if err != nil {
 			path := cty.GetAttrPath("assume_role_with_web_identity")
 			diags = append(diags,
 				errs.NewInvalidValueAttributeCombinationError(
 					path.IndexInt(0),
-					"Exactly one of web_identity_token or web_identity_token_file is required",
+					err.Error(),
 				),
 			)
 			return nil, diags
@@ -1012,9 +1012,9 @@ const (
 	tfWebIdentityTokenEnvVar = "TF_AWS_WEB_IDENTITY_TOKEN"
 )
 
-func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) (*awsbase.AssumeRoleWithWebIdentity, error) {
 	if tfMap == nil {
-		return nil
+		return nil, nil
 	}
 
 	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
@@ -1052,7 +1052,11 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *a
 		assumeRole.WebIdentityTokenFile = v
 	}
 
-	return &assumeRole
+	if (assumeRole.WebIdentityToken != "") == (assumeRole.WebIdentityTokenFile != "") {
+		return nil, errors.New("Exactly one of web_identity_token or web_identity_token_file is required")
+	}
+
+	return &assumeRole, nil
 }
 
 func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {

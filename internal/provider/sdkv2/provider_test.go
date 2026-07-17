@@ -446,6 +446,7 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 		tfMap          map[string]any
 		envvars        map[string]string
 		expectedConfig *awsbase.AssumeRoleWithWebIdentity
+		expectErr      bool
 	}{
 		"nil": {
 			tfMap:          nil,
@@ -548,6 +549,62 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				WebIdentityTokenFile: "token-file2",
 			},
 		},
+		"no token or token_file": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars:   map[string]string{},
+			expectErr: true,
+		},
+		"token config token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token":      "my-token",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars:   map[string]string{},
+			expectErr: true,
+		},
+		"token envvar token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "my-token",
+			},
+			expectErr: true,
+		},
+		"token config token_file envvar": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "my-token",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectErr: true,
+		},
+		"token envvar token_file envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar:      "my-token",
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectErr: true,
+		},
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest
@@ -559,14 +616,19 @@ func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
 				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
-			results := expandAssumeRoleWithWebIdentity(ctx, testcase.tfMap)
+			results, err := expandAssumeRoleWithWebIdentity(ctx, testcase.tfMap)
 
-			if results == nil && testcase.expectedConfig != nil {
-				t.Errorf("Expected assume_role_with_web_identity config to be %v, got nil", testcase.expectedConfig)
+			if got, want := err != nil, testcase.expectErr; !cmp.Equal(got, want) {
+				t.Errorf("expandAssumeRoleWithWebIdentity() err %t, want %t", got, want)
 			}
+			if err == nil {
+				if results == nil && testcase.expectedConfig != nil {
+					t.Errorf("Expected assume_role_with_web_identity config to be %v, got nil", testcase.expectedConfig)
+				}
 
-			if diff := cmp.Diff(testcase.expectedConfig, results); diff != "" {
-				t.Errorf("Unexpected assume_role_with_web_identity diff: %s", diff)
+				if diff := cmp.Diff(testcase.expectedConfig, results); diff != "" {
+					t.Errorf("Unexpected assume_role_with_web_identity diff: %s", diff)
+				}
 			}
 		})
 	}
