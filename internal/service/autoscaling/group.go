@@ -37,6 +37,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -2097,11 +2099,7 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 	instanceStates := make(map[string]map[string]string)
 
 	for _, lbName := range g.LoadBalancerNames {
-		input := elasticloadbalancing.DescribeInstanceHealthInput{
-			LoadBalancerName: aws.String(lbName),
-		}
-
-		output, err := conn.DescribeInstanceHealth(ctx, &input)
+		elbInstanceStates, err := tfelb.FindInstanceStatesByName(ctx, conn, lbName)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading load balancer (%s) instance health: %w", lbName, err)
@@ -2109,7 +2107,7 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 
 		instanceStates[lbName] = make(map[string]string)
 
-		for _, v := range output.InstanceStates {
+		for _, v := range elbInstanceStates {
 			instanceID := aws.ToString(v.InstanceId)
 			if instanceID == "" {
 				continue
@@ -2134,7 +2132,7 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 			TargetGroupArn: aws.String(targetGroupARN),
 		}
 
-		output, err := conn.DescribeTargetHealth(ctx, &input)
+		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptions(ctx, conn, &input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)
@@ -2142,7 +2140,7 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 
 		instanceStates[targetGroupARN] = make(map[string]string)
 
-		for _, v := range output.TargetHealthDescriptions {
+		for _, v := range targetHealthDescriptions {
 			if v.Target == nil || v.TargetHealth == nil {
 				continue
 			}
@@ -3644,7 +3642,7 @@ func flattenRetentionTriggers(apiObject *awstypes.RetentionTriggers) []any {
 	}
 
 	tfMap := map[string]any{
-		"terminate_hook_abandon": string(apiObject.TerminateHookAbandon),
+		"terminate_hook_abandon": apiObject.TerminateHookAbandon,
 	}
 
 	return []any{tfMap}

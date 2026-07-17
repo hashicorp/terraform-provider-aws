@@ -9,7 +9,6 @@ rules:
       include:
         - "/internal/service"
       exclude:
-        - "/internal/service/secretsmanager/secret_list.go"
         - "/internal/service/secretsmanager/secret_version_list.go"
         - "/internal/service/sqs/queue_list.go"
         - "/internal/service/ssm/parameter_list.go"

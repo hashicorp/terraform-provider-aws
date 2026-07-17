@@ -8,6 +8,7 @@ package elbv2
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strconv"
 	"strings"
@@ -144,7 +145,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 		input.Targets[0].QuicServerId = aws.String(v.(string))
 	}
 
-	target, err := findTargetHealthDescription(ctx, conn, &input)
+	target, err := findTargetGroupAttachment(ctx, conn, &input)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
@@ -217,8 +218,8 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findTargetHealthDescription(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput) (*awstypes.TargetHealthDescription, error) {
-	output, err := findTargetHealthDescriptions(ctx, conn, input, func(v *awstypes.TargetHealthDescription) bool {
+func findTargetGroupAttachment(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput) (*awstypes.TargetHealthDescription, error) {
+	return findTargetHealthDescription(ctx, conn, input, tfslices.WithFilter(func(v awstypes.TargetHealthDescription) bool {
 		// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while
 		// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
 		// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
@@ -232,7 +233,11 @@ func findTargetHealthDescription(ctx context.Context, conn *elasticloadbalancing
 		}
 
 		return false
-	})
+	}))
+}
+
+func findTargetHealthDescription(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput, optFns ...tfslices.FinderOptionsFunc[awstypes.TargetHealthDescription]) (*awstypes.TargetHealthDescription, error) {
+	output, err := findTargetHealthDescriptions(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -241,10 +246,8 @@ func findTargetHealthDescription(ctx context.Context, conn *elasticloadbalancing
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput, filter tfslices.Predicate[*awstypes.TargetHealthDescription]) ([]awstypes.TargetHealthDescription, error) {
-	var targetHealthDescriptions []awstypes.TargetHealthDescription
-
-	output, err := conn.DescribeTargetHealth(ctx, input)
+func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput, optFns ...tfslices.FinderOptionsFunc[awstypes.TargetHealthDescription]) ([]awstypes.TargetHealthDescription, error) {
+	output, err := tfslices.CollectAndConcatWithError(listTargetHealthDescriptionPages(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.InvalidTargetException](err) || errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -256,17 +259,19 @@ func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancin
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
+	return output, nil
+}
 
-	for _, v := range output.TargetHealthDescriptions {
-		if filter(&v) {
-			targetHealthDescriptions = append(targetHealthDescriptions, v)
+func listTargetHealthDescriptionPages(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput, optFns ...func(*elasticloadbalancingv2.Options)) iter.Seq2[[]awstypes.TargetHealthDescription, error] {
+	return func(yield func([]awstypes.TargetHealthDescription, error) bool) {
+		output, err := conn.DescribeTargetHealth(ctx, input, optFns...)
+		if err != nil {
+			yield(nil, fmt.Errorf("listing ELBv2 Target Group Attachments: %w", err))
+			return
 		}
-	}
 
-	return targetHealthDescriptions, nil
+		yield(output.TargetHealthDescriptions, nil)
+	}
 }
 
 const targetGroupAttachmentResourceIDSeparator = ","

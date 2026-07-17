@@ -530,7 +530,7 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, t *testing.T, 
 			input.Targets[0].Port = flex.StringValueToInt32(v)
 		}
 
-		_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
+		_, err := tfelbv2.FindTargetGroupAttachment(ctx, conn, input)
 
 		return err
 	}
@@ -562,7 +562,7 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context, t *testing.T)
 				input.Targets[0].Port = flex.StringValueToInt32(v)
 			}
 
-			_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
+			_, err := tfelbv2.FindTargetGroupAttachment(ctx, conn, input)
 
 			if retry.NotFound(err) {
 				continue
