@@ -90,14 +90,14 @@ See [`geolocation`](#geolocation) below.
 * `geoproximity_location` - (Optional) Geoproximity location block.
 See [`geoproximity_location`](#geoproximity_location) below.
 * `health_check_id` - (Optional) Health check the record should be associated with.
-* `multivalue_answer` - (Optional) Set to `true` to indicate this record is a multivalue answer record and traffic should be routed approximately randomly to multiple resources.
+* `multi_value_answer` - (Optional) Set to `true` to indicate this record is a multivalue answer record and traffic should be routed approximately randomly to multiple resources.
 * `region` - (Optional) AWS region of the resource this record set refers to.
 Must be a valid AWS region name.
 See the [AWS documentation](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-latency) on latency based routing for additional details.
 * `resource_records` - (Optional, Required for non-alias records) Information about the resource records to act upon.
 See [`resource_records`](#resource_records) below.
 * `set_identifier` - (Optional) An identifier that differentiates among multiple resource record sets that have the same combination of name and type.
-Required if using `cidr_routing_config`, `failover`, `geolocation`,`geoproximity_location`, `multivalue_answer`, `region`, or `weight`.
+Required if using `cidr_routing_config`, `failover`, `geolocation`,`geoproximity_location`, `multi_value_answer`, `region`, or `weight`.
 * `traffic_policy_instance_id` - (Optional) ID of the traffic policy instance that Route 53 created this resource record set for.
 To delete the resource record set that is associated with a traffic policy instance, use the `DeleteTrafficPolicyInstance` API.
 Route 53 will delete the resource record set automatically.
@@ -122,13 +122,13 @@ A `location_name` with an asterisk `"*"` can be used to create a default CIDR re
 
 ### `geolocation`
 
-~> One of `continent` or `country` must be specified.
+~> One of `continent_code` or `country_code` must be specified.
 
-* `continent` - (Optional) Two-letter continent code.
+* `continent_code` - (Optional) Two-letter continent code.
 See the [AWS documentation](http://docs.aws.amazon.com/Route53/latest/APIReference/API_GetGeoLocation.html) for valid values.
-* `country` - (Optional) Two-letter country code.
+* `country_code` - (Optional) Two-letter country code.
 See the ISO standard linked from the [AWS documentation](http://docs.aws.amazon.com/Route53/latest/APIReference/API_GetGeoLocation.html) for valid values.
-* `subdivision` - (Optional) Subdivision code.
+* `subdivision_code` - (Optional) Subdivision code.
 
 ### `geoproximity_location`
 

@@ -7,7 +7,6 @@ package computeoptimizer
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
@@ -30,13 +29,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newEnrollmentStatusResource,
 			TypeName: "aws_computeoptimizer_enrollment_status",
 			Name:     "Enrollment Status",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newRecommendationPreferencesResource,
 			TypeName: "aws_computeoptimizer_recommendation_preferences",
 			Name:     "Recommendation Preferences",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

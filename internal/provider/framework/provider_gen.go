@@ -619,6 +619,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// devopsagent
+
+				"devopsagent": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// devopsguru
 
 				"devopsguru": schema.StringAttribute{
@@ -1018,6 +1025,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// interconnect
+
+				"interconnect": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// internetmonitor
 
 				"internetmonitor": schema.StringAttribute{
@@ -1131,6 +1145,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// lambda
 
 				"lambda": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// lambdamicrovms
+
+				"lambdamicrovms": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -1708,6 +1729,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// s3control
 
 				"s3control": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// s3files
+
+				"s3files": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

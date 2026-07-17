@@ -24,71 +24,73 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomRoutingAcceleratorRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrAttributes: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_logs_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"flow_logs_s3_bucket": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"flow_logs_s3_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrAttributes: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"flow_logs_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"flow_logs_s3_bucket": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"flow_logs_s3_prefix": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ip_sets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddresses: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ip_family": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ip_sets": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddresses: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ip_family": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -4,9 +4,9 @@
 name: Auto Triage
 
 permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+  contents: read        # required for checkout
+  issues: write         # required to apply labels to issues
+  pull-requests: write  # required to apply labels to pull requests
 
 on:
   pull_request_target:
@@ -28,7 +28,7 @@ jobs:
     name: Labelers
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           sparse-checkout: .github
 
@@ -53,14 +53,14 @@ jobs:
 
       - name: Apply Pull Request Service Labels
         if: github.event_name == 'pull_request_target'
-        uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6.0.1
+        uses: actions/labeler@b8dd2d9be0f68b860e7dae5dae7d772984eacd6d # v6.2.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply Pull Request Size Labels
         if: github.event_name == 'pull_request_target'
-        uses: codelytv/pr-size-labeler@4ec67706cd878fbc1c8db0a5dcd28b6bb412e85a # v1.10.3
+        uses: codelytv/pr-size-labeler@095a41fca88b8764fd9e008ad269bcdb82bb38b9 # v1.10.4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: "size/XS"
@@ -83,7 +83,7 @@ jobs:
           enable-versioned-regex: 0
           include-title: 1
 
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: token
         if: github.event_name == 'issues'
         with:

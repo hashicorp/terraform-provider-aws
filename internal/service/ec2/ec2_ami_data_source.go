@@ -35,208 +35,210 @@ func dataSourceAMI() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allow_unsafe_filter": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"architecture": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"block_device_mappings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ebs": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_unsafe_filter": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"architecture": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"block_device_mappings": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ebs": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"no_device": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"boot_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deprecation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ena_support": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"executable_users": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"hypervisor": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"imds_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_deprecated": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"kernel_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_launched_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
+				"boot_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deprecation_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ena_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"executable_users": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"hypervisor": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_owner_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"imds_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_deprecated": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"kernel_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_launched_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name_regex": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.NoZeroValues,
+					Optional:     true,
+					ValidateFunc: validation.StringIsValidRegExp,
 				},
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_details": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"product_codes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_code_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_code_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owners": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.NoZeroValues,
+					},
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_details": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"product_codes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"product_code_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"product_code_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"public": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ramdisk_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_device_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_device_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_snapshot_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sriov_net_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state_reason": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"tpm_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"uefi_data": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"usage_operation": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"virtualization_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"public": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ramdisk_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_device_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_device_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_snapshot_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sriov_net_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_reason": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"tpm_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"uefi_data": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"usage_operation": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"virtualization_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

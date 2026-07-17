@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_route: Fix perpetual drift on `gateway_id` when `odb_network_arn` is configured  
+```
+
+```release-note:bug
+resource/aws_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured  
+```
+
+```release-note:bug
+resource/aws_default_route_table: Fix perpetual drift on `route.gateway_id` when `route.odb_network_arn` is configured  
+```

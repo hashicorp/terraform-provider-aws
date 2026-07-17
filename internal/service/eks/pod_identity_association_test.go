@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -46,7 +47,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -87,7 +88,7 @@ func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -118,6 +119,14 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfeks.ResourcePodIdentityAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -149,7 +158,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -199,7 +208,7 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -240,7 +249,7 @@ func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -302,15 +311,8 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, t *testing.T,
 	}
 }
 
-func testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes[names.AttrAssociationID]), nil
-	}
+func testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, names.AttrAssociationID)
 }
 
 func testAccPodIdentityAssociationConfig_clusterBase(rName string) string {

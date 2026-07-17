@@ -121,7 +121,7 @@ This resource supports the following arguments:
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both.
 Including both will **not** return an error from the AWS API, but will have undefined behavior.
-See the relevant [AssociateAddress API Call][1] for more information.
+See the relevant [AssociateAddress API Call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html) for more information.
 
 ~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error, however, only `address` will be used if both options are defined as the API only requires one of the two.
 
@@ -153,11 +153,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_eip.example
+  identity = {
+    id = "eipalloc-00a10e96"
+  }
+}
+
+resource "aws_eip" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Allocation ID that identifies the Elastic IP.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIPs in a VPC using their Allocation ID. For example:
 
 ```terraform
 import {
-  to = aws_eip.bar
+  to = aws_eip.example
   id = "eipalloc-00a10e96"
 }
 ```
@@ -165,7 +191,5 @@ import {
 Using `terraform import`, import EIPs in a VPC using their Allocation ID. For example:
 
 ```console
-% terraform import aws_eip.bar eipalloc-00a10e96
+% terraform import aws_eip.example eipalloc-00a10e96
 ```
-
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html

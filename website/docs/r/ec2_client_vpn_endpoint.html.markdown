@@ -37,28 +37,29 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
+* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients. See [`authentication_options` Block Reference](#authentication_options-block-reference) below for details.
 * `client_cidr_block` - (Optional) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater. When `traffic_ip_address_type` is set to `ipv6`, it must not be specified. Otherwise, it is required.
-* `client_connect_options` - (Optional) The options for managing connection authorization for new client connections.
-* `client_login_banner_options` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
-* `client_route_enforcement_options` - (Optional) Options for enforce administrator defined routes on devices connected through the VPN.
-* `connection_log_options` - (Required) Information about the client connection logging options.
+* `client_connect_options` - (Optional) The options for managing connection authorization for new client connections. See [`client_connect_options` Block Reference](#client_connect_options-block-reference) below for details.
+* `client_login_banner_options` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. See [`client_login_banner_options` Block Reference](#client_login_banner_options-block-reference) below for details.
+* `client_route_enforcement_options` - (Optional) Options for enforce administrator defined routes on devices connected through the VPN. See [`client_route_enforcement_options` Block Reference](#client_route_enforcement_options-block-reference) below for details.
+* `connection_log_options` - (Required) Information about the client connection logging options. See [`connection_log_options` Block Reference](#connection_log_options-block-reference) below for details.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
 * `disconnect_on_session_timeout` - (Optional) Indicates whether the client VPN session is disconnected after the maximum `session_timeout_hours` is reached. If `true`, users are prompted to reconnect client VPN. If `false`, client VPN attempts to reconnect automatically. The default value is `false`.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
 * `endpoint_ip_address_type` - (Optional) IP address type for the Client VPN endpoint. Valid values are `ipv4`, `ipv6`, or `dual-stack`. Defaults to `ipv4`.
-* `security_group_ids` - (Optional) The IDs of one or more security groups to apply to the target network. You must also specify the ID of the VPC that contains the security groups.
+* `security_group_ids` - (Optional) The IDs of one or more security groups to apply to the target network. You must also specify the ID of the VPC that contains the security groups. Conflicts with `transit_gateway_configuration`.
 * `self_service_portal` - (Optional) Specify whether to enable the self-service portal for the Client VPN endpoint. Values can be `enabled` or `disabled`. Default value is `disabled`.
 * `server_certificate_arn` - (Required) The ARN of the ACM server certificate.
 * `session_timeout_hours` - (Optional) The maximum session duration is a trigger by which end-users are required to re-authenticate prior to establishing a VPN session. Default value is `24` - Valid values: `8 | 10 | 12 | 24`
 * `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `traffic_ip_address_type` - (Optional) IP address type for traffic within the Client VPN tunnel. Valid values are `ipv4`, `ipv6`, or `dual-stack`. Defaults to `ipv4`. When it is set to `ipv6`, `client_cidr_block` must not be specified.
+* `transit_gateway_configuration` - (Optional) Configuration block for associating the Client VPN endpoint with a Transit Gateway. Conflicts with `vpc_id` and `security_group_ids`. See [`transit_gateway_configuration` Block Reference](#transit_gateway_configuration-block-reference) below for details.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
-* `vpc_id` - (Optional) The ID of the VPC to associate with the Client VPN endpoint. If no security group IDs are specified in the request, the default security group for the VPC is applied.
+* `vpc_id` - (Optional) The ID of the VPC to associate with the Client VPN endpoint. If no security group IDs are specified in the request, the default security group for the VPC is applied. Conflicts with `transit_gateway_configuration`.
 * `vpn_port` - (Optional) The port number for the Client VPN endpoint. Valid values are `443` and `1194`. Default value is `443`.
 
-### `authentication_options` Argument Reference
+### `authentication_options` Block Reference
 
 One of the following arguments must be supplied:
 
@@ -68,27 +69,35 @@ One of the following arguments must be supplied:
 * `self_service_saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federated-authentication`.
 * `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
 
-### `client_connect_options` Argument reference
+### `client_connect_options` Block Reference
 
 * `enabled` - (Optional) Indicates whether client connect options are enabled. The default is `false` (not enabled).
 * `lambda_function_arn` - (Optional) The Amazon Resource Name (ARN) of the Lambda function used for connection authorization.
 
-### `client_login_banner_options` Argument reference
+### `client_login_banner_options` Block Reference
 
 * `banner_text` - (Optional) Customizable text that will be displayed in a banner on AWS provided clients when a VPN session is established. UTF-8 encoded characters only. Maximum of 1400 characters.
 * `enabled` - (Optional) Enable or disable a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. The default is `false` (not enabled).
 
-### `client_route_enforcement_options` Argument reference
+### `client_route_enforcement_options` Block Reference
 
 * `enforced` - (Optional) Enable or disable Client Route Enforcement. The default is `false` (not enabled).
 
-### `connection_log_options` Argument Reference
+### `connection_log_options` Block Reference
 
 One of the following arguments must be supplied:
 
 * `cloudwatch_log_group` - (Optional) The name of the CloudWatch Logs log group.
 * `cloudwatch_log_stream` - (Optional) The name of the CloudWatch Logs log stream to which the connection data is published.
 * `enabled` - (Required) Indicates whether connection logging is enabled.
+
+### `transit_gateway_configuration` Block Reference
+
+~> **NOTE:** When using this configuration block, a Transit Gateway attachment is created and associated with the Client VPN endpoint. Although the attachment is automatically deleted when the Client VPN endpoint is deleted, the deletion is not immediate and can take a significant amount of time (sometimes several hours). The Terraform AWS Provider does not wait for the attachment to be deleted. This delay may prevent the Transit Gateway itself from being deleted.
+
+* `availability_zones` - (Optional) List of availability zones in which the transit gateway is present. Conflicts with `availability_zone_ids`.
+* `availability_zone_ids` - (Optional) List of availability zone IDs in which the transit gateway is present. Conflicts with `availability_zones`.
+* `transit_gateway_id` - (Optional) ID of the Transit Gateway to which the Client VPN endpoint is associated.
 
 ## Attribute Reference
 
@@ -99,6 +108,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the Client VPN endpoint.
 * `self_service_portal_url` - The URL of the self-service portal.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `transit_gateway_configuration`
+    * `transit_gateway_attachment_id` - ID of the Transit Gateway attachment.
 
 ## Import
 

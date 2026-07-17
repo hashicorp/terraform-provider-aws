@@ -1,0 +1,38 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Makefile Linting
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - .github/workflows/makefile-lint.yml
+      - GNUmakefile
+      - docs/continuous-integration.md
+      - docs/makefile-cheat-sheet.md
+      - tools/makelign/**
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+permissions:
+  contents: read
+
+jobs:
+  makefile-lint:
+    name: alignment check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Run alignment check
+        run: GO_VER=go make makefile-lint

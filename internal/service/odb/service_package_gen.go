@@ -29,13 +29,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudAutonomousVmClustersList,
 			TypeName: "aws_odb_cloud_autonomous_vm_clusters",
 			Name:     "Cloud Autonomous Vm Clusters",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudExadataInfrastructure,
@@ -44,13 +44,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudExadataInfrastructuresList,
 			TypeName: "aws_odb_cloud_exadata_infrastructures",
 			Name:     "Cloud Exadata Infrastructures",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudVmCluster,
@@ -59,49 +59,49 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceCloudVmClustersList,
 			TypeName: "aws_odb_cloud_vm_clusters",
 			Name:     "Cloud Vm Clusters",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceDBNode,
 			TypeName: "aws_odb_db_node",
 			Name:     "Db Node",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceDBNodes,
 			TypeName: "aws_odb_db_nodes",
 			Name:     "Db Nodes",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceDBServer,
 			TypeName: "aws_odb_db_server",
 			Name:     "Db Server",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceDBServers,
 			TypeName: "aws_odb_db_servers",
 			Name:     "Db Servers",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceDBSystemShapes,
 			TypeName: "aws_odb_db_system_shapes",
 			Name:     "Db System Shapes",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceGiVersions,
 			TypeName: "aws_odb_gi_versions",
 			Name:     "Gi Versions",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceNetwork,
@@ -110,25 +110,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceNetworkPeeringConnection,
 			TypeName: "aws_odb_network_peering_connection",
 			Name:     "Network Peering Connection",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceNetworkPeeringConnectionsList,
 			TypeName: "aws_odb_network_peering_connections",
 			Name:     "Network Peering Connections",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataSourceNetworksList,
 			TypeName: "aws_odb_networks",
 			Name:     "Networks",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -142,7 +142,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceCloudExadataInfrastructure,
@@ -151,7 +151,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceCloudVmCluster,
@@ -160,7 +160,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceNetwork,
@@ -169,7 +169,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceNetworkPeeringConnection,
@@ -178,7 +178,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
 }

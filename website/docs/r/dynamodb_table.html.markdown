@@ -16,16 +16,7 @@ Provides a DynamoDB table resource.
 
 ~> **Note:** If autoscaling creates drift for your `global_secondary_index` blocks and/or more granular `lifecycle` management for GSIs, we recommend using the new **experimental** resource [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index).
 
-## DynamoDB Table attributes
-
-Only define attributes on the table object that are going to be used as:
-
-* Table hash key or range key
-* LSI or GSI hash key or range key
-
-The DynamoDB API expects attribute structure (name and type) to be passed along when creating or updating GSI/LSIs or creating the initial table. In these cases it expects the Hash / Range keys to be provided. Because these get re-used in numerous places (i.e the table's range key could be a part of one or more GSIs), they are stored on the table object to prevent duplication and increase consistency. If you add attributes here that are not used in these scenarios it can cause an infinite loop in planning.
-
-~> **Note:** When using the [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index) resource, you do not need to define the attributes for externally managed GSIs in the `aws_dynamodb_table` resource.
+~> **Note:** Only define attributes on the table object that are going to be used as a hash key or range key for the table itself, or for LSI/GSI keys. Adding attributes not used in these scenarios causes an infinite plan loop. When using [`aws_dynamodb_global_secondary_index`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_secondary_index), you do not need to define attributes for externally managed GSIs in the `aws_dynamodb_table` resource.
 
 ## Example Usage
 
@@ -320,11 +311,11 @@ resource "aws_dynamodb_table" "example" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name    = data.aws_region.third.name
+    region_name    = data.aws_region.third.region
     propagate_tags = true
   }
 
@@ -335,7 +326,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "example" {
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.region)
   key          = "Architect"
   value        = "Gigi"
 }
@@ -509,6 +500,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_table.example
+  identity = {
+    name = "GameScores"
+  }
+}
+
+resource "aws_dynamodb_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the DynamoDB Table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB tables using the `name`. For example:
 

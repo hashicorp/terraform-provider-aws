@@ -88,6 +88,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -135,6 +136,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/interconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -151,6 +153,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -223,6 +226,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
@@ -355,6 +359,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		deploy.ServicePackage(ctx),
 		detective.ServicePackage(ctx),
 		devicefarm.ServicePackage(ctx),
+		devopsagent.ServicePackage(ctx),
 		devopsguru.ServicePackage(ctx),
 		directconnect.ServicePackage(ctx),
 		dlm.ServicePackage(ctx),
@@ -402,6 +407,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		imagebuilder.ServicePackage(ctx),
 		inspector.ServicePackage(ctx),
 		inspector2.ServicePackage(ctx),
+		interconnect.ServicePackage(ctx),
 		internetmonitor.ServicePackage(ctx),
 		invoicing.ServicePackage(ctx),
 		iot.ServicePackage(ctx),
@@ -418,6 +424,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		kms.ServicePackage(ctx),
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
+		lambdamicrovms.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
 		lexv2models.ServicePackage(ctx),
@@ -490,6 +497,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		rum.ServicePackage(ctx),
 		s3.ServicePackage(ctx),
 		s3control.ServicePackage(ctx),
+		s3files.ServicePackage(ctx),
 		s3outposts.ServicePackage(ctx),
 		s3tables.ServicePackage(ctx),
 		s3vectors.ServicePackage(ctx),

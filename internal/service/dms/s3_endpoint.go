@@ -48,276 +48,284 @@ func resourceS3Endpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"endpoint_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validEndpointID,
-			},
-			names.AttrEndpointType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ReplicationEndpointTypeValue](),
-			},
-			"engine_display_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrExternalID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"ssl_mode": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DmsSslModeValue](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"endpoint_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validEndpointID,
+				},
+				names.AttrEndpointType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ReplicationEndpointTypeValue](),
+				},
+				"engine_display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrExternalID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Deprecated:   "kms_key_arn is deprecated. Use server_side_encryption_kms_key_id instead.",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// This attribute is not used when S3 engine is specified.
+						// When it is set in config we can ignore the diff because it will not be returned by the API for this engine type.
+						return old == "" && new != ""
+					},
+				},
+				"ssl_mode": {
+					Type:             schema.TypeString,
+					Computed:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DmsSslModeValue](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
-			/////// S3-Specific Settings
-			"add_column_name": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"add_trailing_padding_character": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"bucket_folder": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrBucketName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"canned_acl_for_objects": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
-				StateFunc: func(v any) string {
-					return strings.ToLower(v.(string))
+				/////// S3-Specific Settings
+				"add_column_name": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			"cdc_inserts_and_updates": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cdc_inserts_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cdc_max_batch_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"cdc_min_file_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"cdc_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"compression_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CompressionTypeValue](),
-				Default:          strings.ToUpper(string(awstypes.CompressionTypeValueNone)),
-				StateFunc: func(v any) string {
-					return strings.ToUpper(v.(string))
+				"add_trailing_padding_character": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-			},
-			"csv_delimiter": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ",",
-			},
-			"csv_no_sup_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"csv_null_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"csv_row_delimiter": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "\\n",
-			},
-			"data_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DataFormatValue](),
-			},
-			"data_page_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"date_partition_delimiter": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
-				StateFunc: func(v any) string {
-					return strings.ToUpper(v.(string))
+				"bucket_folder": {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-			},
-			"date_partition_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"date_partition_sequence": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
-				StateFunc: func(v any) string {
-					return strings.ToLower(v.(string))
+				names.AttrBucketName: {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			"date_partition_timezone": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"detach_target_on_lob_lookup_failure_parquet": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"dict_page_size_limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"enable_statistics": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"encoding_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EncodingTypeValue](),
-			},
-			"encryption_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"external_table_definition": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"canned_acl_for_objects": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
+					StateFunc: func(v any) string {
+						return strings.ToLower(v.(string))
+					},
 				},
-			},
-			"glue_catalog_generation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ignore_header_rows": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{0, 1}),
-			},
-			"include_op_for_full_load": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"max_file_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 1048576),
-			},
-			"parquet_timestamp_in_millisecond": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"parquet_version": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ParquetVersionValue](),
-			},
-			"preserve_transactions": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"rfc_4180": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"row_group_length": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"server_side_encryption_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"service_access_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"timestamp_column_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"use_csv_no_sup_value": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"use_task_start_time_for_full_load_timestamp": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+				"cdc_inserts_and_updates": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"cdc_inserts_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"cdc_max_batch_interval": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"cdc_min_file_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"cdc_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"compression_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CompressionTypeValue](),
+					Default:          strings.ToUpper(string(awstypes.CompressionTypeValueNone)),
+					StateFunc: func(v any) string {
+						return strings.ToUpper(v.(string))
+					},
+				},
+				"csv_delimiter": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  ",",
+				},
+				"csv_no_sup_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"csv_null_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"csv_row_delimiter": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "\\n",
+				},
+				"data_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataFormatValue](),
+				},
+				"data_page_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"date_partition_delimiter": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
+					StateFunc: func(v any) string {
+						return strings.ToUpper(v.(string))
+					},
+				},
+				"date_partition_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"date_partition_sequence": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
+					StateFunc: func(v any) string {
+						return strings.ToLower(v.(string))
+					},
+				},
+				"date_partition_timezone": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"detach_target_on_lob_lookup_failure_parquet": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"dict_page_size_limit": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"enable_statistics": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"encoding_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncodingTypeValue](),
+				},
+				"encryption_mode": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
+				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"external_table_definition": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsJSON,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"glue_catalog_generation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ignore_header_rows": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntInSlice([]int{0, 1}),
+				},
+				"include_op_for_full_load": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"max_file_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 1048576),
+				},
+				"parquet_timestamp_in_millisecond": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"parquet_version": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ParquetVersionValue](),
+				},
+				"preserve_transactions": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"rfc_4180": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"row_group_length": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"server_side_encryption_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"service_access_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"timestamp_column_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"use_csv_no_sup_value": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"use_task_start_time_for_full_load_timestamp": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }

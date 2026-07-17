@@ -1239,6 +1239,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)S3Control"
     severity: WARNING
+  - id: s3files-in-func-name
+    languages:
+      - go
+    message: Do not use "S3Files" in func name inside s3files package
+    paths:
+      include:
+        - "/internal/service/s3files"
+      exclude:
+        - "/internal/service/s3files/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Files"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: s3files-in-test-name
+    languages:
+      - go
+    message: Include "S3Files" in test name
+    paths:
+      include:
+        - "/internal/service/s3files/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccS3Files"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: s3files-in-const-name
+    languages:
+      - go
+    message: Do not use "S3Files" in const name inside s3files package
+    paths:
+      include:
+        - "/internal/service/s3files"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Files"
+    severity: WARNING
+  - id: s3files-in-var-name
+    languages:
+      - go
+    message: Do not use "S3Files" in var name inside s3files package
+    paths:
+      include:
+        - "/internal/service/s3files"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Files"
+    severity: WARNING
   - id: s3outposts-in-func-name
     languages:
       - go

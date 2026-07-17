@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_capacity_provider: Return the underlying error immediately instead of timing out after 20 minutes when deleting a capacity provider that is still associated with a cluster
+```
+
+```release-note:note
+resource/aws_ecs_capacity_provider: When a change forces replacement of a capacity provider that is associated with a cluster via `aws_ecs_cluster_capacity_providers`, add a `replace_triggered_by` lifecycle rule to the association so the old capacity provider is detached before it is deleted
+```

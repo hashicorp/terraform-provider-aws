@@ -47,108 +47,110 @@ func resourceSecret() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecretUpdate,
 		DeleteWithoutTimeout: resourceSecretDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"force_overwrite_replica_secret": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validSecretName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validSecretNamePrefix,
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"recovery_window_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  30,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(7, 30),
-					validation.IntInSlice([]int{0}),
-				),
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Set: func(v any) int {
-					var buf bytes.Buffer
-
-					m := v.(map[string]any)
-
-					if v, ok := m[names.AttrKMSKeyID].(string); ok {
-						fmt.Fprintf(&buf, "%s-", v)
-					}
-
-					if v, ok := m[names.AttrRegion].(string); ok {
-						fmt.Fprintf(&buf, "%s-", v)
-					}
-
-					return create.StringHashcode(buf.String())
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"last_accessed_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"force_overwrite_replica_secret": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validSecretName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validSecretNamePrefix,
+				},
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					Computed:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"recovery_window_in_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  30,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(7, 30),
+						validation.IntInSlice([]int{0}),
+					),
+				},
+				"replica": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Set: func(v any) int {
+						var buf bytes.Buffer
+
+						m := v.(map[string]any)
+
+						if v, ok := m[names.AttrKMSKeyID].(string); ok {
+							fmt.Fprintf(&buf, "%s-", v)
+						}
+
+						if v, ok := m[names.AttrRegion].(string); ok {
+							fmt.Fprintf(&buf, "%s-", v)
+						}
+
+						return create.StringHashcode(buf.String())
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"last_accessed_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -239,6 +241,12 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
 	}
 
+	return resourceSecretFlatten(ctx, conn, d, output)
+}
+
+func resourceSecretFlatten(ctx context.Context, conn *secretsmanager.Client, d *schema.ResourceData, output *secretsmanager.DescribeSecretOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, output.ARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
@@ -249,7 +257,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	var policy *secretsmanager.GetResourcePolicyOutput
-	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {

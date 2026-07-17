@@ -28,8 +28,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_basic(t *testing.
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	common_name := acctest.RandomDomain()
-	certificate_domain := common_name.RandomSubdomain()
+	common_name := acctest.RandomDomain(t)
+	certificate_domain := common_name.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -127,8 +127,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_regionOverride(t 
 
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	common_name := acctest.RandomDomain()
-	certificate_domain := common_name.RandomSubdomain()
+	common_name := acctest.RandomDomain(t)
+	certificate_domain := common_name.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -269,8 +269,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	common_name := acctest.RandomDomain()
-	certificate_domain := common_name.RandomSubdomain()
+	common_name := acctest.RandomDomain(t)
+	certificate_domain := common_name.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -357,8 +357,8 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	common_name := acctest.RandomDomain()
-	certificate_domain := common_name.RandomSubdomain()
+	common_name := acctest.RandomDomain(t)
+	certificate_domain := common_name.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

@@ -21,11 +21,29 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newServicesDataSource,
+			TypeName: "aws_uxc_services",
+			Name:     "Services",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newAccountCustomizationsResource,
+			TypeName: "aws_uxc_account_customizations",
+			Name:     "Account Customizations",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

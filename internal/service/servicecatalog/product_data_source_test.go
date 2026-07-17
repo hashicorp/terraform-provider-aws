@@ -21,7 +21,7 @@ func TestAccServiceCatalogProductDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -59,7 +59,7 @@ func TestAccServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

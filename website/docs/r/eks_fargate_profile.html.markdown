@@ -93,17 +93,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_eks_fargate_profile.my_fargate_profile
-  id = "my_cluster:my_fargate_profile"
+  to = aws_eks_fargate_profile.example
+  identity = {
+    cluster_name         = "example-cluster"
+    fargate_profile_name = "example-profile"
+  }
+}
+
+resource "aws_eks_fargate_profile" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `fargate_profile_name` (String) Name of the Fargate profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Fargate Profiles using `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_eks_fargate_profile.example
+  id = "example-cluster:example-profile"
+}
+```
+
+Using `terraform import`, import Fargate Profiles using `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
+% terraform import aws_eks_fargate_profile.example example-cluster:example-profile
 ```

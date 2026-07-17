@@ -27,6 +27,10 @@ import (
 )
 
 // @SDKResource("aws_config_delivery_channel", name="Delivery Channel")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.DeliveryChannel")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryChannelPut,
@@ -34,50 +38,48 @@ func resourceDeliveryChannel() *schema.Resource {
 		UpdateWithoutTimeout: resourceDeliveryChannelPut,
 		DeleteWithoutTimeout: resourceDeliveryChannelDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      defaultDeliveryChannelName,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			names.AttrS3BucketName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrS3KeyPrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"s3_kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"snapshot_delivery_properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delivery_frequency": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      defaultDeliveryChannelName,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				names.AttrS3BucketName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrS3KeyPrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"s3_kms_key_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"snapshot_delivery_properties": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delivery_frequency": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrSNSTopicARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				names.AttrSNSTopicARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -87,7 +89,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &configservice.PutDeliveryChannelInput{
+	input := configservice.PutDeliveryChannelInput{
 		DeliveryChannel: &types.DeliveryChannel{
 			Name:         aws.String(name),
 			S3BucketName: aws.String(d.Get(names.AttrS3BucketName).(string)),
@@ -117,7 +119,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.InsufficientDeliveryPolicyException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutDeliveryChannel(ctx, input)
+		return conn.PutDeliveryChannel(ctx, &input)
 	})
 
 	if err != nil {
@@ -163,14 +165,15 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Delivery Channel: %s", d.Id())
 	const (
 		timeout = 30 * time.Second
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Delivery Channel: %s", d.Id())
+	input := configservice.DeleteDeliveryChannelInput{
+		DeliveryChannelName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.LastDeliveryChannelDeleteFailedException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteDeliveryChannel(ctx, &configservice.DeleteDeliveryChannelInput{
-			DeliveryChannelName: aws.String(d.Id()),
-		})
+		return conn.DeleteDeliveryChannel(ctx, &input)
 	}, "there is a running configuration recorder")
 
 	if errs.IsA[*types.NoSuchDeliveryChannelException](err) {
@@ -185,11 +188,11 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findDeliveryChannelByName(ctx context.Context, conn *configservice.Client, name string) (*types.DeliveryChannel, error) {
-	input := &configservice.DescribeDeliveryChannelsInput{
+	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []string{name},
 	}
 
-	return findDeliveryChannel(ctx, conn, input)
+	return findDeliveryChannel(ctx, conn, &input)
 }
 
 func findDeliveryChannel(ctx context.Context, conn *configservice.Client, input *configservice.DescribeDeliveryChannelsInput) (*types.DeliveryChannel, error) {

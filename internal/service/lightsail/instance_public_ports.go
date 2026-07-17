@@ -34,66 +34,68 @@ func ResourceInstancePublicPorts() *schema.Resource {
 		ReadWithoutTimeout:   resourceInstancePublicPortsRead,
 		DeleteWithoutTimeout: resourceInstancePublicPortsDelete,
 
-		Schema: map[string]*schema.Schema{
-			"instance_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"port_info": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"port_info": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cidrs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidCIDRNetworkAddress,
+								},
+							},
+							"cidr_list_aliases": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"from_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(-1, 65535),
+							},
+							"ipv6_cidrs": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidCIDRNetworkAddress,
+								},
+							},
+							names.AttrProtocol: {
 								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice(flattenNetworkProtocolValues(types.NetworkProtocol("").Values()), false),
 							},
-						},
-						"cidr_list_aliases": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"to_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(-1, 65535),
 							},
-						},
-						"from_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(-1, 65535),
-						},
-						"ipv6_cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-						names.AttrProtocol: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(flattenNetworkProtocolValues(types.NetworkProtocol("").Values()), false),
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(-1, 65535),
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

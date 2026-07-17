@@ -25,7 +25,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   vpc_config {
     subnet_ids = [
@@ -81,7 +81,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   bootstrap_self_managed_addons = false
 
@@ -208,7 +208,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   remote_network_config {
     remote_node_networks {
@@ -276,7 +276,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.31"
+  version  = "1.35"
 
   vpc_config {
     endpoint_private_access = true
@@ -418,6 +418,7 @@ The `remote_pod_networks` configuration block supports the following arguments:
 ### vpc_config Arguments
 
 * `cluster_security_group_id` - (Computed) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
+* `control_plane_egress_mode` - (Optional, Computed) Egress mode for the EKS control plane. Valid values are `AWS_MANAGED` and `CUSTOMER_ROUTED`. Defaults to `AWS_MANAGED`. Changing from `CUSTOMER_ROUTED` back to `AWS_MANAGED` forces a new resource.
 * `endpoint_private_access` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpoint_public_access` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `public_access_cidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
@@ -464,7 +465,14 @@ The `outpost_config` configuration block supports the following arguments:
 * `control_plane_placement` - (Optional) An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
 The `control_plane_placement` configuration block supports the following arguments:
 
-    * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
+    * `group_name` - (Optional) Name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
+    * `spread_level` - (Optional) Placement group spread level for control plane instances. Valid values: `host`, `rack`.
+
+* `etcd_instance_type` - (Optional) Amazon EC2 instance type for etcd instances of your local Amazon EKS cluster on AWS Outposts.
+* `etcd_placement` - (Optional) Placement configuration for the etcd instances of your local Amazon EKS cluster on an AWS Outpost.
+The `etcd_placement` configuration block supports the following arguments:
+
+    * `spread_level` - (Optional) Placement group spread level for etcd instances. Valid values: `host`, `rack`.
 
 * `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
@@ -530,17 +538,43 @@ Note that the `update` timeout is used separately for both `version` and `vpc_co
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_eks_cluster.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_eks_cluster" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Clusters using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_eks_cluster.my_cluster
-  id = "my_cluster"
+  to = aws_eks_cluster.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import EKS Clusters using the `name`. For example:
 
 ```console
-% terraform import aws_eks_cluster.my_cluster my_cluster
+% terraform import aws_eks_cluster.example example
 ```
