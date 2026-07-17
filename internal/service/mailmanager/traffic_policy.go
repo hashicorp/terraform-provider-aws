@@ -46,7 +46,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/mailmanager;mailmanager.GetTrafficPolicyOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(skipEmptyTags=true)
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newTrafficPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trafficPolicyResource{}, nil
 }
@@ -80,7 +80,6 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 			},
 			"max_message_size_bytes": schema.Int32Attribute{
 				Optional: true,
-				Computed: true,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
 				},
@@ -369,6 +368,7 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
+
 		out, err := findTrafficPolicyByID(ctx, conn, plan.ID.ValueString())
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
@@ -378,6 +378,14 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// Tag updates are handled by the provider's tagging interceptor. Preserve
+		// values that Terraform planned as unknown without making an unnecessary
+		// GetTrafficPolicy call.
+		plan.ARN = state.ARN
+		plan.CreatedTimestamp = state.CreatedTimestamp
+		plan.LastUpdatedTimestamp = state.LastUpdatedTimestamp
+		plan.MaxMessageSizeBytes = state.MaxMessageSizeBytes
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
