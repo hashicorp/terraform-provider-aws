@@ -20,7 +20,20 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newEndpointDataSource,
+			TypeName: "aws_lambdaweb_endpoint",
+			Name:     "Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newFunctionDataSource,
+			TypeName: "aws_lambdaweb_function",
+			Name:     "Function",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {

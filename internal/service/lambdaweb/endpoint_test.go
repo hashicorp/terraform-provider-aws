@@ -132,6 +132,40 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 	})
 }
 
+func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint lambdaweb.GetWebFunctionEndpointOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_typeWithRegions(rName, string(awstypes.EndpointTypePerRegion)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypePerRegion)),
+					// PerRegion endpoints expose one independent domain per region.
+					resource.TestCheckResourceAttr(resourceName, "regional_domain_names.%", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
@@ -202,6 +236,10 @@ resource "aws_lambdaweb_endpoint" "test" {
 }
 
 func testAccEndpointConfig_multiRegion(rName string) string {
+	return testAccEndpointConfig_typeWithRegions(rName, "MultiRegion")
+}
+
+func testAccEndpointConfig_typeWithRegions(rName, endpointType string) string {
 	// Pick a second region distinct from the test region. Regions with the
 	// service active as of July 2026: us-east-1 and eu-west-1 (us-west-2
 	// rollout pending; PreCheckRegion admits it for when it lands).
@@ -213,7 +251,7 @@ func testAccEndpointConfig_multiRegion(rName string) string {
 resource "aws_lambdaweb_endpoint" "test" {
   function_name        = aws_lambdaweb_function.test.function_name
   endpoint_name        = "multi"
-  endpoint_type        = "MultiRegion"
+  endpoint_type        = %[3]q
   regions              = [%[1]q, %[2]q]
   auth_type            = "ApplicationManaged"
   auto_deployment_mode = "Disabled"
@@ -223,5 +261,5 @@ resource "aws_lambdaweb_endpoint" "test" {
     weight      = 100
   }
 }
-`, secondRegion, acctest.Region()))
+`, secondRegion, acctest.Region(), endpointType))
 }

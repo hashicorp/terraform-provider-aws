@@ -20,10 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -123,6 +125,14 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"regional_domain_names": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrState: schema.StringAttribute{
@@ -261,6 +271,7 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	normalizeRevisionWeights(ctx, &plan)
+	flattenRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 
 	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
@@ -293,6 +304,7 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	normalizeRevisionWeights(ctx, &state)
+	flattenRegionalDomainNames(ctx, &state, out.RegionalEndpoints)
 
 	state.ID = types.StringValue(endpointCreateResourceID(state.FunctionName.ValueString(), state.EndpointName.ValueString()))
 	state.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
@@ -341,6 +353,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 	normalizeRevisionWeights(ctx, &plan)
+	flattenRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
@@ -439,19 +452,32 @@ func unchangedOrUnset(config, state types.String) bool {
 
 type endpointResourceModel struct {
 	framework.WithRegionModel
-	ARN                types.String                                         `tfsdk:"arn"`
-	AuthType           fwtypes.StringEnum[awstypes.AuthType]                `tfsdk:"auth_type"`
-	AutoDeploymentMode fwtypes.StringEnum[awstypes.AutoDeploymentMode]      `tfsdk:"auto_deployment_mode"`
-	Description        types.String                                         `tfsdk:"description"`
-	DomainName         types.String                                         `tfsdk:"domain_name"`
-	EndpointName       types.String                                         `tfsdk:"endpoint_name"`
-	EndpointType       fwtypes.StringEnum[awstypes.EndpointType]            `tfsdk:"endpoint_type"`
-	FunctionName       types.String                                         `tfsdk:"function_name"`
-	ID                 types.String                                         `tfsdk:"id"`
-	Regions            fwtypes.ListOfString                                 `tfsdk:"regions"`
-	RevisionWeights    fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
-	State              types.String                                         `tfsdk:"state"`
-	Timeouts           timeouts.Value                                       `tfsdk:"timeouts"`
+	ARN                 types.String                                         `tfsdk:"arn"`
+	AuthType            fwtypes.StringEnum[awstypes.AuthType]                `tfsdk:"auth_type"`
+	AutoDeploymentMode  fwtypes.StringEnum[awstypes.AutoDeploymentMode]      `tfsdk:"auto_deployment_mode"`
+	Description         types.String                                         `tfsdk:"description"`
+	DomainName          types.String                                         `tfsdk:"domain_name"`
+	EndpointName        types.String                                         `tfsdk:"endpoint_name"`
+	EndpointType        fwtypes.StringEnum[awstypes.EndpointType]            `tfsdk:"endpoint_type"`
+	FunctionName        types.String                                         `tfsdk:"function_name"`
+	ID                  types.String                                         `tfsdk:"id"`
+	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
+	Regions             fwtypes.ListOfString                                 `tfsdk:"regions"`
+	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
+	State               types.String                                         `tfsdk:"state"`
+	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
+}
+
+// flattenRegionalDomainNames maps the API's regionalEndpoints (region ->
+// RegionalEndpoint) to the flat region -> domain name map exposed in state.
+// PerRegion endpoints have no top-level domain name; this is how callers
+// discover the per-region domains.
+func flattenRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regionalEndpoints map[string]awstypes.RegionalEndpoint) {
+	elems := map[string]attr.Value{}
+	for region, ep := range regionalEndpoints {
+		elems[region] = fwflex.StringToFramework(ctx, ep.DomainName)
+	}
+	m.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, elems)
 }
 
 type revisionWeightModel struct {

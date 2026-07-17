@@ -76,7 +76,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the endpoint in the format `arn:aws:lambda:{region}:{account}:web-function/{function_name}|{endpoint_name}`.
-* `domain_name` - HTTPS domain name of the endpoint.
+* `domain_name` - HTTPS domain name of the endpoint. Empty for `PerRegion` endpoints, which only expose `regional_domain_names`.
+* `regional_domain_names` - Map of Region to that Region's independent domain name.
 * `state` - Current state of the endpoint.
 
 ## Timeouts

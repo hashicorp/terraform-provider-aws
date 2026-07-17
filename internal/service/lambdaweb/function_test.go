@@ -229,6 +229,39 @@ resource "aws_lambdaweb_function" "test" {
 
 func testAccFunctionConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccFunctionConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = "/aws/lambda/web/%[1]s-acctest"
+  retention_in_days = 1
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AccountRoot"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "LambdaWebService"
+        Effect    = "Allow"
+        Principal = { Service = "lambda.amazonaws.com" }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"]
+        Resource  = "*"
+      }
+    ]
+  })
+}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_lambdaweb_function" "test" {
   depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
 
@@ -236,6 +269,7 @@ resource "aws_lambdaweb_function" "test" {
 
   revision_config {
     description = "updated by acceptance test"
+    kms_key_arn = aws_kms_key.test.arn
 
     build_config {
       runtime_config {
@@ -257,6 +291,14 @@ resource "aws_lambdaweb_function" "test" {
 
       environment_variables = {
         APP_ENV = "acctest"
+      }
+
+      telemetry_config {
+        logging_config {
+          log_group             = aws_cloudwatch_log_group.test.name
+          application_log_level = "INFO"
+          system_log_level      = "WARN"
+        }
       }
     }
   }
