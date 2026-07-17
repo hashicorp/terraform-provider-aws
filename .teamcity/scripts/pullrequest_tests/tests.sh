@@ -74,9 +74,9 @@ echo "Running acceptance tests for ${PKG} with pattern %TEST_PREFIX%"
 TEST_PREFIX="%TEST_PREFIX%"
 TEST_PREFIX="${TEST_PREFIX#\(}"
 TEST_PREFIX="${TEST_PREFIX%\)}"
-echo "% make testacc PKG=%PKG% TESTARGS='-run=${TEST_PREFIX} -json' ACCTEST_PARALLELISM=%ACCTEST_PARALLELISM%" > /tmp/test_command.txt
+echo "% make testacc PKG=%PKG% TESTARGS='-run=${TEST_PREFIX} -json' P=%ACCTEST_PARALLELISM%" > /tmp/test_command.txt
 
-make testacc PKG="%PKG%" TESTARGS="-run=${TEST_PREFIX} -json" ACCTEST_PARALLELISM="%ACCTEST_PARALLELISM%" \
+make testacc PKG="%PKG%" TESTARGS="-run=${TEST_PREFIX} -json" P="%ACCTEST_PARALLELISM%" \
     | tee /tmp/test_output.json
 
 jq -s '[.[] | select(.Action == "pass" or .Action == "fail" or .Action == "skip") | select(.Test != null)] | length' \
