@@ -271,7 +271,7 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	normalizeRevisionWeights(ctx, &plan)
-	flattenRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
+	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 
 	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
@@ -304,7 +304,7 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	normalizeRevisionWeights(ctx, &state)
-	flattenRegionalDomainNames(ctx, &state, out.RegionalEndpoints)
+	setRegionalDomainNames(ctx, &state, out.RegionalEndpoints)
 
 	state.ID = types.StringValue(endpointCreateResourceID(state.FunctionName.ValueString(), state.EndpointName.ValueString()))
 	state.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
@@ -353,7 +353,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 	normalizeRevisionWeights(ctx, &plan)
-	flattenRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
+	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
@@ -468,11 +468,12 @@ type endpointResourceModel struct {
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
-// flattenRegionalDomainNames maps the API's regionalEndpoints (region ->
-// RegionalEndpoint) to the flat region -> domain name map exposed in state.
+// setRegionalDomainNames projects the API regionalEndpoints map (region ->
+// RegionalEndpoint) onto the flat region -> domain name map exposed in state;
+// AutoFlex cannot derive this field projection.
 // PerRegion endpoints have no top-level domain name; this is how callers
 // discover the per-region domains.
-func flattenRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regionalEndpoints map[string]awstypes.RegionalEndpoint) {
+func setRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regionalEndpoints map[string]awstypes.RegionalEndpoint) {
 	elems := map[string]attr.Value{}
 	for region, ep := range regionalEndpoints {
 		elems[region] = fwflex.StringToFramework(ctx, ep.DomainName)
