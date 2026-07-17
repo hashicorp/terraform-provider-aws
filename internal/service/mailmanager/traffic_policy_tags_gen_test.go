@@ -423,6 +423,8 @@ func TestAccMailManagerTrafficPolicy_Tags_addOnUpdate(t *testing.T) {
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
@@ -520,6 +522,8 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
@@ -666,6 +670,8 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
@@ -1494,6 +1500,8 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToResourceOnly(t *te
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
@@ -1567,6 +1575,8 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyResourceTag(t *testin
 }
 
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+	t.Skip("Resource TrafficPolicy does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v mailmanager.GetTrafficPolicyOutput
