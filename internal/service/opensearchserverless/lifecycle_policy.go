@@ -30,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,7 +98,7 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 
 func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data lifecyclePolicyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -106,7 +107,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input opensearchserverless.CreateLifecyclePolicyInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -117,7 +118,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	output, err := conn.CreateLifecyclePolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Serverless Lifecycle Policy (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
@@ -126,12 +127,12 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	data.ID = fwflex.StringValueToFramework(ctx, name)
 	data.PolicyVersion = fwflex.StringToFramework(ctx, output.LifecyclePolicyDetail.PolicyVersion)
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data lifecyclePolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -149,27 +150,24 @@ func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Serverless Lifecycle Policy (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old lifecyclePolicyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -179,7 +177,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 	if !new.Description.Equal(old.Description) || !new.Policy.Equal(old.Policy) {
 		name := fwflex.StringValueFromFramework(ctx, new.ID)
 		var input opensearchserverless.UpdateLifecyclePolicyInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -191,7 +189,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		output, err := conn.UpdateLifecyclePolicy(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Serverless Lifecycle Policy (%s)", name), err.Error())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 			return
 		}
@@ -200,12 +198,12 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		new.PolicyVersion = fwflex.StringToFramework(ctx, output.LifecyclePolicyDetail.PolicyVersion)
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data lifecyclePolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -225,7 +223,7 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Serverless Lifecycle Policy (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
