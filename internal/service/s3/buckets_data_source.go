@@ -83,7 +83,7 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-// findBucketSummaries collects all buckets matching the given input by iterating
+// findBuckets collects all buckets matching the given input by iterating
 // over the listBuckets iterator. The caller can extend this function with
 // Terraform-side filtering before the return if needed in the future.
 func findBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInput) ([]awstypes.Bucket, error) {
