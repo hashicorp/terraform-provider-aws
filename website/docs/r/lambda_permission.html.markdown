@@ -235,6 +235,14 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `read` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

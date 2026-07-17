@@ -5093,6 +5093,29 @@ service "lambda" {
   brand                    = "AWS"
 }
 
+service "lambdamicrovms" {
+  sdk {
+    id            = "Lambda Microvms"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaMicrovms"
+    human_friendly      = "Lambda MicroVMs"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMicrovms"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdamicrovms_"
+  }
+
+  doc_prefix = ["lambdamicrovms_"]
+  brand      = "AWS"
+}
+
 service "launchwizard" {
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"

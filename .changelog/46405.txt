@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `use_resource_timeout_for_propagation` argument
+```
+```release-note:enhancement
+resource/aws_lambda_permission: Add configurable resource timeouts. Defaults to `5m` for `create`, `read`, and `delete`.
+```
+```release-note:enhancement
+resource/aws_lambda_permission: Hard-coded timeouts to account for eventual consistency have been replaced with configurable resource timeouts
+```
+```release-note:enhancement
+resource/aws_lambda_event_source_mapping: Add configurable resource timeouts. Defaults to `10m` for `create` and `update`, `5m` for `delete`.
+```
+```release-note:enhancement
+resource/aws_lambda_event_source_mapping: Add `use_resource_timeout_for_propagation` argument
+```

@@ -27,14 +27,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -146,13 +145,13 @@ func (r *glossaryTermResource) Create(ctx context.Context, req resource.CreateRe
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan glossaryTermResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &datazone.CreateGlossaryTermInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &plan, in))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -160,22 +159,16 @@ func (r *glossaryTermResource) Create(ctx context.Context, req resource.CreateRe
 	out, err := conn.CreateGlossaryTerm(ctx, in)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameGlossary, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameGlossary, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -186,26 +179,23 @@ func (r *glossaryTermResource) Create(ctx context.Context, req resource.CreateRe
 	})
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameGlossaryTerm, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan))
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *glossaryTermResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 	var state glossaryTermResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -218,29 +208,26 @@ func (r *glossaryTermResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameProject, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	state.GlossaryIdentifier = flex.StringToFramework(ctx, out.GlossaryId)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *glossaryTermResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan, state glossaryTermResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -248,7 +235,7 @@ func (r *glossaryTermResource) Update(ctx context.Context, req resource.UpdateRe
 	if !plan.ShortDescription.Equal(state.ShortDescription) || !plan.LongDescription.Equal(state.LongDescription) || !plan.Name.Equal(state.Name) ||
 		!plan.Status.Equal(state.Status) || !plan.TermRelations.Equal(state.TermRelations) {
 		in := &datazone.UpdateGlossaryTermInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &plan, in))
 
 		if resp.Diagnostics.HasError() {
 			return
@@ -258,34 +245,28 @@ func (r *glossaryTermResource) Update(ctx context.Context, req resource.UpdateRe
 		out, err := conn.UpdateGlossaryTerm(ctx, in)
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
 		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
-				errors.New("empty output from glossary term update").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output from glossary term update"), smerr.ID, plan.ID.ValueString())
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *glossaryTermResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 	var state glossaryTermResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -293,7 +274,7 @@ func (r *glossaryTermResource) Delete(ctx context.Context, req resource.DeleteRe
 	if state.Status.ValueEnum() == awstypes.GlossaryTermStatusEnabled {
 		option := flex.WithIgnoredFieldNames([]string{"TermRelations"})
 		in := &datazone.UpdateGlossaryTermInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, &state, in, option)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &state, in, option))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -302,15 +283,12 @@ func (r *glossaryTermResource) Delete(ctx context.Context, req resource.DeleteRe
 		in.Identifier = state.ID.ValueStringPointer()
 
 		_, err := conn.UpdateGlossaryTerm(ctx, in)
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if isResourceMissing(err) {
 			return
 		}
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameGlossary, state.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 			return
 		}
 	}
@@ -322,15 +300,12 @@ func (r *glossaryTermResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	_, err := conn.DeleteGlossaryTerm(ctx, in)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if isResourceMissing(err) {
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameGlossary, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
@@ -343,7 +318,7 @@ func findGlossaryTermByID(ctx context.Context, conn *datazone.Client, id string,
 
 	out, err := conn.GetGlossaryTerm(ctx, in)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if isResourceMissing(err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

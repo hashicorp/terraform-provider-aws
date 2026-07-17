@@ -228,6 +228,7 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|

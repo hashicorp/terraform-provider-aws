@@ -202,6 +202,7 @@ This resource supports the following arguments:
 * `allocated_storage` - (Optional, Required for Multi-AZ DB cluster) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
 * `allow_major_version_upgrade` - (Optional) Enable to allow major engine version upgrades when changing engine versions. Defaults to `false`.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`. See [Amazon RDS Documentation for more information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
+* `auto_minor_version_upgrade` - (Optional) Whether to apply minor engine upgrades automatically to the DB cluster during the maintenance window. Defaults to `true`.
 * `availability_zones` - (Optional) List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created.
   RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
   We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
@@ -433,6 +434,32 @@ The `master_user_secret` block supports the following attributes:
 any cleanup task during the destroying process.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_cluster.aurora_cluster
+  identity = {
+    cluster_identifier = "aurora-prod-cluster"
+  }
+}
+
+resource "aws_rds_cluster" "aurora_cluster" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `cluster_identifier` (String) Cluster identifier of the RDS Cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters using the `cluster_identifier`. For example:
 

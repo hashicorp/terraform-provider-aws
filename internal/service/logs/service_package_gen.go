@@ -322,6 +322,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 		},
 		{
+			Factory:  newStreamResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_stream",
+			Name:     "Stream",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
+		{
 			Factory:  newSubscriptionFilterResourceAsListResource,
 			TypeName: "aws_cloudwatch_log_subscription_filter",
 			Name:     "Subscription Filter",
