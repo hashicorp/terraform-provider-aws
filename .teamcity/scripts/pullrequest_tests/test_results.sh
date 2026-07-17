@@ -38,24 +38,8 @@ if [[ ! "${pr_number}" =~ ^[0-9]+$ ]]; then
 fi
 
 gh="%system.teamcity.build.checkoutDir%/tools/gh"
-marker="<!-- tc-test-results -->"
-marker_encoded="&lt;!-- tc-test-results --&gt;"
-repo="$("${gh}" repo view --json nameWithOwner --jq '.nameWithOwner')"
 
 go_cmd="$(cat /tmp/test_command.txt)"
-body="$(printf '%s\n```console\n%s\n\n%s\n```' "${marker}" "${go_cmd}" "${results}")"
+body="$(printf '### Latest automated test results:\n\n```console\n%s\n\n%s\n```' "${go_cmd}" "${results}")"
 
-# Update existing comment if one was previously posted, otherwise create a new one
-comment_id="$("${gh}" api "repos/${repo}/issues/${pr_number}/comments" \
-    --jq "[.[] | select(.body | contains(\"${marker_encoded}\")) | .id] | first")"
-
-if [[ -n "${comment_id}" ]]; then
-    existing_body="$("${gh}" api "repos/${repo}/issues/comments/${comment_id}" --jq '.body')"
-    if [[ "${existing_body}" != "${body}" ]]; then
-        "${gh}" api "repos/${repo}/issues/comments/${comment_id}" \
-            --method PATCH \
-            --field body="${body}"
-    fi
-else
-    "${gh}" pr comment "${pr_number}" --body "${body}"
-fi
+"${gh}" pr comment "${pr_number}" --body "${body}"
