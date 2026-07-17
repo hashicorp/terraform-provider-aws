@@ -2529,6 +2529,7 @@ resource "aws_mq_configuration" "test" {
   name           = %[3]q
   engine_type    = "ActiveMQ"
   engine_version = %[2]q
+  skip_destroy   = true
 
   data = <<DATA
 %[4]s
@@ -2624,6 +2625,7 @@ resource "aws_mq_configuration" "test" {
   name           = %[3]q
   engine_type    = "ActiveMQ"
   engine_version = %[2]q
+  skip_destroy   = true
 
   data = <<DATA
 %[4]s
