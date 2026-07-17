@@ -51,10 +51,6 @@ func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, 
 	return &r, nil
 }
 
-const (
-	resNameVPCEndpoint = "VPC Endpoint"
-)
-
 type vpcEndpointResource struct {
 	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
