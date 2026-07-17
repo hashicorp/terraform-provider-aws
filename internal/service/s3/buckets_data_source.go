@@ -11,8 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -40,6 +42,9 @@ func (d *bucketsDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 			"max_buckets": schema.Int32Attribute{
 				Optional: true,
+				Validators: []validator.Int32{
+					int32validator.Between(1, 10000),
+				},
 			},
 			names.AttrPrefix: schema.StringAttribute{
 				Optional: true,
