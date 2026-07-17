@@ -301,6 +301,10 @@ func resourceBroker() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"pending_storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				names.AttrPubliclyAccessible: {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -344,6 +348,20 @@ func resourceBroker() *schema.Resource {
 								Computed: true,
 							},
 						},
+					},
+				},
+				"storage_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+						// Suppress differences when the configured storage size matches a
+						// pending storage size. This scenario can exist when the size has
+						// been set, but the broker has not yet been rebooted.
+						if pending := d.Get("pending_storage_size").(int); pending != 0 && n == strconv.Itoa(pending) {
+							return true
+						}
+						return false
 					},
 				},
 				names.AttrStorageType: {
@@ -417,6 +435,15 @@ func resourceBroker() *schema.Resource {
 					if v, ok := diff.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
 						return errors.New("resource_share_arns: Can only be configured when engine is RabbitMQ")
 					}
+
+					// storage_size is Computed, so the raw configuration is checked to
+					// detect only sizes set by the practitioner, not those returned by
+					// the API for an existing broker.
+					if rawConfig := diff.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+						if v := rawConfig.GetAttr("storage_size"); v.IsKnown() && !v.IsNull() {
+							return errors.New("storage_size: Can only be configured when engine is RabbitMQ")
+						}
+					}
 				}
 
 				return nil
@@ -473,6 +500,9 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+	if v, ok := d.GetOk("storage_size"); ok {
+		input.StorageSize = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
@@ -549,8 +579,10 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances, output.EngineType))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
+	d.Set("pending_storage_size", output.PendingStorageSize)
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
+	d.Set("storage_size", output.StorageSize)
 	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
@@ -733,6 +765,21 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("storage_size") {
+		input := &mq.UpdateBrokerInput{
+			BrokerId:    aws.String(d.Id()),
+			StorageSize: aws.Int32(int32(d.Get("storage_size").(int))),
+		}
+
+		_, err := conn.UpdateBroker(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) storage size: %s", d.Id(), err)
 		}
 
 		requiresReboot = true

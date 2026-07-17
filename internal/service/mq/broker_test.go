@@ -2075,6 +2075,65 @@ func TestAccMQBroker_RabbitMQ_resourceShareARNs(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitVersionNormalized4_2, 10, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitVersionNormalized4_2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "CLUSTER_MULTI_AZ"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.m7g.medium"),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
+				),
+			},
+			{
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitVersionNormalized4_2, 15, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "15"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+			{
+				// Without apply_immediately the broker is not rebooted, so the new
+				// size remains pending. The plan must still be empty, which verifies
+				// the configured size is suppressed against pending_storage_size.
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitVersionNormalized4_2, 20, acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "15"),
+					resource.TestCheckResourceAttr(resourceName, "pending_storage_size", "20"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBrokerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).MQClient(ctx)
@@ -3132,6 +3191,36 @@ data "aws_vpc" "default" {
   default = true
 }
 `, rName, version, autoMinorVersionUpgrade)
+}
+
+func testAccBrokerConfig_rabbitStorageSize(rName, version string, storageSize int, applyImmediately string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately          = %[4]s
+  auto_minor_version_upgrade = true
+  broker_name                = %[1]q
+  deployment_mode            = "CLUSTER_MULTI_AZ"
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m7g.medium"
+  security_groups            = [aws_security_group.test.id]
+  storage_size               = %[3]d
+  storage_type               = "ebs"
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, storageSize, applyImmediately)
 }
 
 func testAccBrokerConfig_ldapNoUserBlock(rName, version, ldapUsername, autoMinorVersionUpgrade string) string {
