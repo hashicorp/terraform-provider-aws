@@ -55,8 +55,8 @@ func (d *endpointDataSource) Schema(ctx context.Context, request datasource.Sche
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			"regions": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
+			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -92,7 +92,11 @@ func (d *endpointDataSource) Read(ctx context.Context, request datasource.ReadRe
 
 	regionalDomainNames := map[string]attr.Value{}
 	for region, ep := range out.RegionalEndpoints {
-		regionalDomainNames[region] = fwflex.StringToFramework(ctx, ep.DomainName)
+		// Only PerRegion endpoints carry per-region domains; MultiRegion
+		// regional entries have no domain (traffic uses the global domain).
+		if ep.DomainName != nil {
+			regionalDomainNames[region] = fwflex.StringToFramework(ctx, ep.DomainName)
+		}
 	}
 	data.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, regionalDomainNames)
 
@@ -101,14 +105,14 @@ func (d *endpointDataSource) Read(ctx context.Context, request datasource.ReadRe
 
 type endpointDataSourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String         `tfsdk:"arn"`
-	AuthType            types.String         `tfsdk:"auth_type"`
-	AutoDeploymentMode  types.String         `tfsdk:"auto_deployment_mode"`
-	DomainName          types.String         `tfsdk:"domain_name"`
-	EndpointName        types.String         `tfsdk:"endpoint_name"`
-	EndpointType        types.String         `tfsdk:"endpoint_type"`
-	FunctionName        types.String         `tfsdk:"function_name"`
-	RegionalDomainNames fwtypes.MapOfString  `tfsdk:"regional_domain_names"`
-	Regions             fwtypes.ListOfString `tfsdk:"regions"`
-	State               types.String         `tfsdk:"state"`
+	ARN                 types.String        `tfsdk:"arn"`
+	AuthType            types.String        `tfsdk:"auth_type"`
+	AutoDeploymentMode  types.String        `tfsdk:"auto_deployment_mode"`
+	DomainName          types.String        `tfsdk:"domain_name"`
+	EndpointName        types.String        `tfsdk:"endpoint_name"`
+	EndpointType        types.String        `tfsdk:"endpoint_type"`
+	FunctionName        types.String        `tfsdk:"function_name"`
+	RegionalDomainNames fwtypes.MapOfString `tfsdk:"regional_domain_names"`
+	Regions             fwtypes.SetOfString `tfsdk:"regions"`
+	State               types.String        `tfsdk:"state"`
 }

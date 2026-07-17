@@ -257,8 +257,8 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
-						"regions": schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
+						"regions": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 						},
@@ -633,5 +633,5 @@ type endpointConfigModel struct {
 	EndpointType       fwtypes.StringEnum[awstypes.EndpointType]       `tfsdk:"endpoint_type"`
 	AuthType           fwtypes.StringEnum[awstypes.AuthType]           `tfsdk:"auth_type"`
 	AutoDeploymentMode fwtypes.StringEnum[awstypes.AutoDeploymentMode] `tfsdk:"auto_deployment_mode"`
-	Regions            fwtypes.ListOfString                            `tfsdk:"regions"`
+	Regions            fwtypes.SetOfString                             `tfsdk:"regions"`
 }

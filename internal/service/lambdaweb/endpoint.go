@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -108,17 +109,17 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"regions": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
+			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-					listplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(5), // service replication quota (model ceiling is 100)
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(5), // service replication quota (model ceiling is 100)
 				},
 			},
 			names.AttrDomainName: schema.StringAttribute{
@@ -462,7 +463,7 @@ type endpointResourceModel struct {
 	FunctionName        types.String                                         `tfsdk:"function_name"`
 	ID                  types.String                                         `tfsdk:"id"`
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
-	Regions             fwtypes.ListOfString                                 `tfsdk:"regions"`
+	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
 	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
 	State               types.String                                         `tfsdk:"state"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
@@ -476,7 +477,11 @@ type endpointResourceModel struct {
 func setRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regionalEndpoints map[string]awstypes.RegionalEndpoint) {
 	elems := map[string]attr.Value{}
 	for region, ep := range regionalEndpoints {
-		elems[region] = fwflex.StringToFramework(ctx, ep.DomainName)
+		// Only PerRegion endpoints carry per-region domains; MultiRegion
+		// regional entries have no domain (traffic uses the global domain).
+		if ep.DomainName != nil {
+			elems[region] = fwflex.StringToFramework(ctx, ep.DomainName)
+		}
 	}
 	m.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, elems)
 }
