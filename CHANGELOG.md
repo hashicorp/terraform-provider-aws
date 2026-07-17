@@ -3,6 +3,27 @@
 FEATURES:
 
 * **New Data Source:** `aws_elasticache_service_update_actions` ([#48958](https://github.com/hashicorp/terraform-provider-aws/issues/48958))
+* **New List Resource:** `aws_s3_bucket_notification` ([#48974](https://github.com/hashicorp/terraform-provider-aws/issues/48974))
+
+ENHANCEMENTS:
+
+* provider: Web identity tokens can be configured via the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable. Any value configured via `assume_role_with_web_identity.web_identity_token` takes precedence ([#48736](https://github.com/hashicorp/terraform-provider-aws/issues/48736))
+* resource/aws_bedrockagent_data_source: Add `data_source_configuration.managed_knowledge_base_connector_configuration` block ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
+* resource/aws_bedrockagent_data_source: Add `timeouts.update` with a default value of `30m` ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
+* resource/aws_bedrockagent_knowledge_base: Add `vector_knowledge_base_configuration.bedrock_embedding_model_configuration.audio` and `vector_knowledge_base_configuration.bedrock_embedding_model_configuration.video` configuration blocks ([#48538](https://github.com/hashicorp/terraform-provider-aws/issues/48538))
+* resource/aws_bedrockagent_knowledge_base: Add support for Managed Knowledge Base type (`type = "MANAGED"`) with `managed_knowledge_base_configuration` block ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
+* resource/aws_guardduty_detector_feature: Support `AI_PROTECTION` and `AI_ANALYST` feature names ([#48972](https://github.com/hashicorp/terraform-provider-aws/issues/48972))
+* resource/aws_guardduty_organization_configuration_feature: Support `AI_PROTECTION` and `AI_ANALYST` feature names ([#48972](https://github.com/hashicorp/terraform-provider-aws/issues/48972))
+
+BUG FIXES:
+
+* provider: Fix "one of `assume_role_with_web_identity.0.web_identity_token,assume_role_with_web_identity.0.web_identity_token_file` must be specified" errors, allowing any `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable value to be used ([#48736](https://github.com/hashicorp/terraform-provider-aws/issues/48736))
+* resource/aws_bedrockagent_data_source: Short-circuit waiting for creation if the resource reaches a `FAILED` state ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
+* resource/aws_datazone_domain: Fixed `AccessDeniedException` error when deleting ([#48516](https://github.com/hashicorp/terraform-provider-aws/issues/48516))
+* resource/aws_mq_broker: Fix perpetual `shared_resources` diffs for ActiveMQ brokers ([#48962](https://github.com/hashicorp/terraform-provider-aws/issues/48962))
+* resource/aws_mq_configuration: Retry `ConflictException: Configuration ID [...] is in use` errors on delete ([#48962](https://github.com/hashicorp/terraform-provider-aws/issues/48962))
+* resource/aws_sagemaker_endpoint: Prevents `Cannot create already existing endpoint` error when retrying creation. ([#48966](https://github.com/hashicorp/terraform-provider-aws/issues/48966))
+* resource/aws_vpc_ipam_pool: Fix "Error: reading EC2 VPC" when creating an IPAM VPC resource planning pool for a VPC in another account. ([#46483](https://github.com/hashicorp/terraform-provider-aws/issues/46483))
 
 ## 6.55.0 (July 15, 2026)
 
