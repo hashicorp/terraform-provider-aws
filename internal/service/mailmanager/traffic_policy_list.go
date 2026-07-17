@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,6 +48,18 @@ func (l *trafficPolicyListResource) List(ctx context.Context, request list.ListR
 
 			id := aws.ToString(item.TrafficPolicyId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
+			var out *mailmanager.GetTrafficPolicyOutput
+			if request.IncludeResource {
+				out, err = findTrafficPolicyByID(ctx, conn, id)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 			var data trafficPolicyResourceModel
 
@@ -56,12 +69,6 @@ func (l *trafficPolicyListResource) List(ctx context.Context, request list.ListR
 				data.Name = types.StringPointerValue(item.TrafficPolicyName)
 
 				if request.IncludeResource {
-					out, err := findTrafficPolicyByID(ctx, conn, id)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewListResultErrorDiagnostic(err).Diagnostics...)
-						return
-					}
-
 					result.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("TrafficPolicy"))...)
 					if result.Diagnostics.HasError() {
 						return
