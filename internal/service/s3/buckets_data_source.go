@@ -27,9 +27,6 @@ func newBucketsDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 	return &bucketsDataSource{}, nil
 }
 
-const (
-	DSNameBuckets = "Buckets Data Source"
-)
 
 type bucketsDataSource struct {
 	framework.DataSourceWithModel[bucketsDataSourceModel]
