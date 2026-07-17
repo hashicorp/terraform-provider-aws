@@ -256,17 +256,20 @@ func resourceGroup() *schema.Resource {
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"retention_triggers": {
 								Type:     schema.TypeList,
 								MaxItems: 1,
 								Optional: true,
+								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"terminate_hook_abandon": {
 											Type:             schema.TypeString,
 											Optional:         true,
+											Computed:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.RetentionAction](),
 										},
 									},
