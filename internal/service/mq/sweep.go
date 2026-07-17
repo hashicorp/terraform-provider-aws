@@ -8,14 +8,39 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func RegisterSweepers() {
 	awsv2.Register("aws_mq_configuration", sweepConfigurations, "aws_mq_broker")
 	awsv2.Register("aws_mq_broker", sweepBrokers)
+}
+
+type configurationSweeper struct {
+	d         *schema.ResourceData
+	sweepable sweep.Sweepable
+}
+
+func (v configurationSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	// For a long time MQ Configurations could not be deleted plus we were not paginating the ListConfigurations API call.
+	// There were/are a lot of configurations to be deleted.
+	// Serialize to avoid "TooManyRequestsException: Too Many Requests" errors.
+	const key = "mq.configurationSweeper"
+	conns.GlobalMutexKV.Lock(key)
+	defer conns.GlobalMutexKV.Unlock(key)
+	return v.sweepable.Delete(ctx, optFns...)
+}
+
+func newConfigurationSweeper(resource *schema.Resource, d *schema.ResourceData, client *conns.AWSClient) sweep.Sweepable {
+	return &configurationSweeper{
+		d:         d,
+		sweepable: sdk.NewSweepResource(resource, d, client),
+	}
 }
 
 func sweepConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -33,7 +58,7 @@ func sweepConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, newConfigurationSweeper(r, d, client))
 		}
 
 		return !lastPage
