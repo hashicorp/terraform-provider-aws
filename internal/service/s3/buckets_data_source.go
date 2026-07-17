@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,6 +35,9 @@ func (d *bucketsDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"buckets": framework.DataSourceComputedListOfObjectAttribute[bucketsModel](ctx),
+			"bucket_region": schema.StringAttribute{
+				Optional: true,
+			},
 			"max_buckets": schema.Int32Attribute{
 				Optional: true,
 			},
@@ -55,8 +58,8 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	var input s3.ListBucketsInput
-	if !data.Region.IsNull() {
-		input.BucketRegion = data.Region.ValueStringPointer()
+	if !data.BucketRegion.IsNull() {
+		input.BucketRegion = data.BucketRegion.ValueStringPointer()
 	}
 	if !data.Prefix.IsNull() {
 		input.Prefix = data.Prefix.ValueStringPointer()
@@ -71,7 +74,7 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.Buckets))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data.Buckets))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -97,9 +100,10 @@ func findBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInpu
 
 type bucketsDataSourceModel struct {
 	framework.WithRegionModel
-	Buckets    fwtypes.ListNestedObjectValueOf[bucketsModel] `tfsdk:"buckets"`
-	MaxBuckets types.Int32                                   `tfsdk:"max_buckets"`
-	Prefix     types.String                                  `tfsdk:"prefix"`
+	Buckets      fwtypes.ListNestedObjectValueOf[bucketsModel] `tfsdk:"buckets"`
+	BucketRegion types.String                                  `tfsdk:"bucket_region"`
+	MaxBuckets   types.Int32                                   `tfsdk:"max_buckets"`
+	Prefix       types.String                                  `tfsdk:"prefix"`
 }
 
 type bucketsModel struct {

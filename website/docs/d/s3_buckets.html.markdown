@@ -23,9 +23,9 @@ data "aws_s3_buckets" "example" {
 
 ```terraform
 data "aws_s3_buckets" "example" {
-  max_buckets = 3
-  prefix      = "tf-"
-  region      = "us-west-2"
+  bucket_region      = "us-west-2"
+  max_buckets        = 3
+  prefix             = "tf-"
 }
 ```
 
@@ -33,6 +33,7 @@ data "aws_s3_buckets" "example" {
 
 The following arguments are optional:
 
+* `bucket_region` - (Optional) imits the response to buckets that are located in the specified AWS Region. The AWS Region must be expressed according to the AWS Region code
 * `max_buckets` - (Optional) Maximum number of buckets to return.
     * Valid Range: Minimum value of 1. Maximum value of 10000.
 * `prefix` - (Optional) Limits the response to bucket names that begin with the specified bucket name prefix.
