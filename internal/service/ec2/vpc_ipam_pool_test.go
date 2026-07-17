@@ -502,7 +502,6 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgr
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
-			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -1019,10 +1018,12 @@ resource "aws_ram_resource_share" "test" {
     Name = %[1]q
   }
 }
+
 resource "aws_ram_resource_association" "test" {
   resource_arn       = aws_vpc_ipam_pool.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
+
 resource "aws_ram_principal_association" "test" {
   principal          = data.aws_organizations_organization.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
