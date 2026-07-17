@@ -33,9 +33,8 @@ data "aws_s3_buckets" "example" {
 
 The following arguments are optional:
 
-* `bucket_region` - (Optional) imits the response to buckets that are located in the specified AWS Region. The AWS Region must be expressed according to the AWS Region code
-* `max_buckets` - (Optional) Maximum number of buckets to return.
-    * Valid Range: Minimum value of 1. Maximum value of 10000.
+* `bucket_region` - (Optional) imits the response to buckets that are located in the specified AWS Region. The AWS Region must be expressed according to the AWS Region code.
+* `max_buckets` - (Optional) Maximum number of buckets returned. Unlike the AWS API parameter, this is a provider-level total cap.
 * `prefix` - (Optional) Limits the response to bucket names that begin with the specified bucket name prefix.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
