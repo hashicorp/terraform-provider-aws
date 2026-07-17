@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
@@ -42,6 +43,9 @@ func (d *bucketsDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			"max_buckets": schema.Int32Attribute{
 				Optional: true,
 			},
+			names.AttrRegion: schema.StringAttribute{
+				Optional: true,
+			},
 			"prefix": schema.StringAttribute{
 				Optional: true,
 			},
@@ -59,6 +63,9 @@ func (d *bucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	var input s3.ListBucketsInput
+	if !data.Region.IsNull() {
+		input.BucketRegion = aws.String(data.Region.ValueString())
+	}
 	if !data.Prefix.IsNull() {
 		input.Prefix = aws.String(data.Prefix.ValueString())
 	}
