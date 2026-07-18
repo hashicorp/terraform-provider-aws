@@ -33,6 +33,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -234,13 +235,13 @@ func (r *securityConfigResource) Create(ctx context.Context, req resource.Create
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 	var plan securityConfigResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := opensearchserverless.CreateSecurityConfigInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -248,34 +249,28 @@ func (r *securityConfigResource) Create(ctx context.Context, req resource.Create
 
 	out, err := conn.CreateSecurityConfig(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	if out == nil || out.SecurityConfigDetail == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			"Empty response.",
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty response"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *securityConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state securityConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -288,40 +283,37 @@ func (r *securityConfigResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityConfig, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *securityConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var plan, state securityConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	diff, diags := fwflex.Diff(ctx, plan, state)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		input := opensearchserverless.UpdateSecurityConfigInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNameSuffix("Updates"))...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -330,24 +322,24 @@ func (r *securityConfigResource) Update(ctx context.Context, req resource.Update
 
 		out, err := conn.UpdateSecurityConfig(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *securityConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state securityConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -361,10 +353,7 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 		if errors.As(err, &nfe) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameSecurityConfig, state.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 	}
 }
 

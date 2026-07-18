@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,10 +25,6 @@ import (
 func newSecurityConfigDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &securityConfigDataSource{}, nil
 }
-
-const (
-	DSNameSecurityConfig = "Security Config Data Source"
-)
 
 type securityConfigDataSource struct {
 	framework.DataSourceWithModel[securityConfigDataSourceModel]
@@ -131,21 +127,18 @@ func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.Read
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
 	var data securityConfigDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findSecurityConfigByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameSecurityConfig, data.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"}))...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -154,7 +147,7 @@ func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.Read
 	data.CreatedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
 	data.LastModifiedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type securityConfigDataSourceModel struct {
