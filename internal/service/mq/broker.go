@@ -438,11 +438,10 @@ func resourceBroker() *schema.Resource {
 						return errors.New("resource_share_arns: Can only be configured when engine is RabbitMQ")
 					}
 
-					// storage_size is Computed, so the raw configuration is checked to
-					// detect only sizes set by the practitioner, not those returned by
-					// the API for an existing broker.
+					// storage_size is Computed, so the raw config (not d.GetOk, which returns
+					// API values too) is checked; a configured value may be unknown, so only null-ness.
 					if rawConfig := diff.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
-						if v := rawConfig.GetAttr("storage_size"); v.IsKnown() && !v.IsNull() {
+						if v := rawConfig.GetAttr("storage_size"); !v.IsNull() {
 							return errors.New("storage_size: Can only be configured when engine is RabbitMQ")
 						}
 					}
