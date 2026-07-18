@@ -676,6 +676,17 @@ func TestAccAutoScalingGroup_instanceLifecyclePolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.0.terminate_hook_abandon", "terminate"),
 				),
 			},
+			testAccGroupImportStep(resourceName),
+			// The policy cannot be cleared via the API, so removing the block retains the
+			// last applied value (Optional + Computed) rather than producing a perpetual diff.
+			{
+				Config: testAccGroupConfig_simple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
 		},
 	})
 }
