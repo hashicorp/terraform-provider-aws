@@ -9,6 +9,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"slices"
 	"strconv"
@@ -2161,8 +2162,25 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 	return instanceStates, nil
 }
 
-func findGroup(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) (*awstypes.AutoScalingGroup, error) {
-	output, err := findGroups(ctx, conn, input)
+func listGroupPages(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...func(*autoscaling.Options)) iter.Seq2[[]awstypes.AutoScalingGroup, error] {
+	return func(yield func([]awstypes.AutoScalingGroup, error) bool) {
+		pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Auto Scaling Groups: %w", err))
+				return
+			}
+
+			if !yield(page.AutoScalingGroups, nil) {
+				return
+			}
+		}
+	}
+}
+
+func findGroup(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.AutoScalingGroup]) (*awstypes.AutoScalingGroup, error) {
+	output, err := findGroups(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -2171,21 +2189,8 @@ func findGroup(ctx context.Context, conn *autoscaling.Client, input *autoscaling
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) ([]awstypes.AutoScalingGroup, error) {
-	var output []awstypes.AutoScalingGroup
-
-	pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.AutoScalingGroups...)
-	}
-
-	return output, nil
+func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.AutoScalingGroup]) ([]awstypes.AutoScalingGroup, error) {
+	return tfslices.CollectAndConcatWithError(listGroupPages(ctx, conn, input), optFns...)
 }
 
 func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.AutoScalingGroup, error) {
