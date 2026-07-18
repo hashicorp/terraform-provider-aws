@@ -290,7 +290,7 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 			if response.Diagnostics.HasError() {
 				return
 			}
-			if c.Type.ValueEnum() != awstypes.OverrideTypeEpisodicOverride && !(c.Reflection.IsNull() || c.Reflection.IsUnknown()) {
+			if !c.Type.IsUnknown() && c.Type.ValueEnum() != awstypes.OverrideTypeEpisodicOverride && !(c.Reflection.IsNull() || c.Reflection.IsUnknown()) {
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection block inside configuration is only valid when configuration type is `EPISODIC_OVERRIDE`."))
 			}
 		}

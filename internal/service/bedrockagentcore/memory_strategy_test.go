@@ -469,6 +469,48 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 `, rName))
 }
 
+func testAccMemoryStrategyConfig_semanticWithReflectionConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Test semantic strategy"
+  namespaces                = ["default"]
+
+  reflection_configuration {
+    namespace_templates = ["default"]
+  }
+}
+`, rName))
+}
+
+func testAccMemoryStrategyConfig_customSemanticWithReflection(rName, consolidationPrompt, consolidationModel, reflectionPrompt, reflectionModel string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test custom strategy"
+  namespaces                = ["default"]
+
+  configuration {
+    type = "SEMANTIC_OVERRIDE"
+    consolidation {
+      append_to_prompt = %[2]q
+      model_id         = %[3]q
+    }
+    reflection {
+      append_to_prompt = %[4]q
+      model_id         = %[5]q
+    }
+  }
+}
+`, rName, consolidationPrompt, consolidationModel, reflectionPrompt, reflectionModel))
+}
+
 func testAccMemoryStrategyConfig_episodicReflection(rName, namespace, reflectionNamespace string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
@@ -669,6 +711,38 @@ func TestAccBedrockAgentCoreMemoryStrategy_customEpisodicReflection(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
 				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_reflectionValidateConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomMemoryName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: Create memory with execution role
+			{
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
+			},
+			// Step 1: reflection_configuration on a non-EPISODIC type → ValidateConfig error
+			{
+				Config:      testAccMemoryStrategyConfig_semanticWithReflectionConfiguration(rName),
+				ExpectError: regexache.MustCompile("The reflection_configuration block is only valid when type is `EPISODIC`"),
+			},
+			// Step 2: reflection block on a non-EPISODIC_OVERRIDE configuration type → ValidateConfig error
+			{
+				Config:      testAccMemoryStrategyConfig_customSemanticWithReflection(rName, "Focus on semantic relationships", "us.amazon.nova-2-lite-v1:0", "Identify patterns", "us.amazon.nova-2-lite-v1:0"),
+				ExpectError: regexache.MustCompile("The reflection block inside configuration is only valid when configuration type is `EPISODIC_OVERRIDE`"),
 			},
 		},
 	})
