@@ -478,7 +478,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 		timeout = 60 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
+		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating, awstypes.EndpointStatusRollingBack),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
 		Refresh: statusEndpoint(conn, name),
 		Timeout: timeout,
