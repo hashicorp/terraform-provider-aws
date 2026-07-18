@@ -1006,9 +1006,12 @@ func TestAccFSxLustreFileSystem_dataReadCacheConfiguration_proportional(t *testi
 			},
 			{
 				// Verify no perpetual diff on subsequent plan
-				Config:             testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
