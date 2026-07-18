@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("collection_id", true),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newProjectResource,
