@@ -33,27 +33,27 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the security configuration.
-* `iam_federation_options` - (Optional) Configuration block for IAM Federation options. Required if `type` is set to `iamfederation`. See [iam_federation_options](#iam_federation_options) below for details.
-* `iam_identity_center_options` - (Optional) Configuration block for IAM Identity Center options. Required if `type` is set to `iamidentitycenter`. See [iam_identity_center_options](#iam_identity_center_options) below for details.
-* `saml_options` - (Optional) Configuration block for SAML options. Required if `type` is set to `saml`. See [saml_options](#saml_options) below for details.
+* `iam_federation_options` - (Optional) Configuration block for IAM Federation options. Required if `type` is set to `iamfederation`. See [`iam_federation_options` Block](#iam_federation_options-block) below for details.
+* `iam_identity_center_options` - (Optional) Configuration block for IAM Identity Center options. Required if `type` is set to `iamidentitycenter`. See [`iam_identity_center_options` Block](#iam_identity_center_options-block) below for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `saml_options` - (Optional) Configuration block for SAML options. Required if `type` is set to `saml`. See [`saml_options` Block](#saml_options-block) below for details.
 
-### iam_federation_options
+### `iam_federation_options` Block
 
 * `group_attribute` - (Optional) Group attribute for this IAM federation integration. At least one of `group_attribute` or `user_attribute` must be specified.
-* `user_attribute` - (Option) User attribute for this IAM federation integration. At least one of `group_attribute` or `user_attribute` must be specified.
+* `user_attribute` - (Optional) User attribute for this IAM federation integration. At least one of `group_attribute` or `user_attribute` must be specified.
 
-### iam_identity_center_options
+### `iam_identity_center_options` Block
 
-* `instance_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
 * `group_attribute` - (Optional) Group attribute for this IAM Identity Center integration. Valid values are `GroupId` and `GroupName`. Defaults to `GroupId`.
+* `instance_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
 * `user_attribute` - (Optional) User attribute for this IAM Identity Center integration. Valid values are `UserId`, `UserName` and `Email`. Defaults to `UserId`.
 
-### saml_options
+### `saml_options` Block
 
 * `group_attribute` - (Optional) Group attribute for this SAML integration.
-* `metadata` - (Required) The XML IdP metadata file generated from your identity provider.
+* `metadata` - (Required) XML IdP metadata file generated from your identity provider.
 * `session_timeout` - (Optional) Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 * `user_attribute` - (Optional) User attribute for this SAML integration.
 
