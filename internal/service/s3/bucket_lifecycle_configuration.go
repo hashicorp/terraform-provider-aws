@@ -433,7 +433,9 @@ func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, reque
 		return
 	}
 
+	transitionDefaultMinimumObjectSize := data.TransitionDefaultMinimumObjectSize
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	data.TransitionDefaultMinimumObjectSize = keepTransitionDefaultMinimumObjectSize(transitionDefaultMinimumObjectSize, data.TransitionDefaultMinimumObjectSize)
 
 	data.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
 	data.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
@@ -485,10 +487,12 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 		return
 	}
 
+	transitionDefaultMinimumObjectSize := data.TransitionDefaultMinimumObjectSize
 	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
+	data.TransitionDefaultMinimumObjectSize = keepTransitionDefaultMinimumObjectSize(transitionDefaultMinimumObjectSize, data.TransitionDefaultMinimumObjectSize)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -546,7 +550,9 @@ func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, reque
 		return
 	}
 
+	transitionDefaultMinimumObjectSize := new.TransitionDefaultMinimumObjectSize
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	new.TransitionDefaultMinimumObjectSize = keepTransitionDefaultMinimumObjectSize(transitionDefaultMinimumObjectSize, new.TransitionDefaultMinimumObjectSize)
 
 	new.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
 	new.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
@@ -656,7 +662,8 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 }
 
 func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
-	if transitionMinSize1 != transitionMinSize2 {
+	// S3-compatible endpoints don't report this value; only compare it when both sides do.
+	if transitionMinSize1 != "" && transitionMinSize2 != "" && transitionMinSize1 != transitionMinSize2 {
 		return false
 	}
 
@@ -673,6 +680,14 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 	}
 
 	return true
+}
+
+// keepTransitionDefaultMinimumObjectSize keeps the planned value when the endpoint doesn't report one.
+func keepTransitionDefaultMinimumObjectSize(keep, readBack fwtypes.StringEnum[awstypes.TransitionDefaultMinimumObjectSize]) fwtypes.StringEnum[awstypes.TransitionDefaultMinimumObjectSize] {
+	if readBack.ValueString() == "" && !keep.IsUnknown() {
+		return keep
+	}
+	return readBack
 }
 
 func statusLifecycleConfigEquals(conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {

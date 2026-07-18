@@ -84,7 +84,8 @@ var (
 	AccountRegionalBucketNameRegex        = accountRegionalBucketNameRegex
 	DirectoryBucketNameSuffixRegexPattern = directoryBucketNameSuffixRegexPattern
 
-	LifecycleConfigEqual = lifecycleConfigEqual
+	KeepTransitionDefaultMinimumObjectSize = keepTransitionDefaultMinimumObjectSize
+	LifecycleConfigEqual                   = lifecycleConfigEqual
 )
 
 type (
