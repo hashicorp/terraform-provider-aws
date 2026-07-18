@@ -42,6 +42,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -243,8 +244,8 @@ func TestAccEKSPodIdentityAssociation_policy(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_policy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "disable_session_tags", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action|length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action[0]", "s3:GetObject"),
 				),
 			},
 			{
@@ -257,9 +258,16 @@ func TestAccEKSPodIdentityAssociation_policy(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_policyUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "disable_session_tags", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action|length(@)", "2"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action[0]", "s3:GetObject"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action[1]", "s3:ListBucket"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
