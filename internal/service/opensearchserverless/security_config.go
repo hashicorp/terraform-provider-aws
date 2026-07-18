@@ -313,7 +313,7 @@ func (r *securityConfigResource) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		input := opensearchserverless.UpdateSecurityConfigInput{}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNameSuffix("Updates")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -376,6 +376,17 @@ type samlOptionsData struct {
 	UserAttribute  types.String `tfsdk:"user_attribute"`
 }
 
+type iamFederationConfigOptionsModel struct {
+	GroupAttribute types.String `tfsdk:"group_attribute"`
+	UserAttribute  types.String `tfsdk:"user_attribute"`
+}
+
+type iamIdentityCenterConfigOptionsModel struct {
+	InstanceArn    fwtypes.ARN                                                  `tfsdk:"instance_arn"`
+	GroupAttribute fwtypes.StringEnum[awstypes.IamIdentityCenterGroupAttribute] `tfsdk:"group_attribute"`
+	UserAttribute  fwtypes.StringEnum[awstypes.IamIdentityCenterUserAttribute]  `tfsdk:"user_attribute"`
+}
+
 type securityConfigImportID struct{}
 
 func (securityConfigImportID) Parse(id string) (string, map[string]any, error) {
@@ -404,15 +415,4 @@ func (securityConfigImportID) Create(ctx context.Context, state tfsdk.State) str
 	state.GetAttribute(ctx, path.Root(names.AttrType), &securityConfigType)
 
 	return fmt.Sprintf("%s/%s/%s", securityConfigType.ValueString(), client.AccountID(ctx), name.ValueString())
-}
-
-type iamFederationConfigOptionsModel struct {
-	GroupAttribute types.String `tfsdk:"group_attribute"`
-	UserAttribute  types.String `tfsdk:"user_attribute"`
-}
-
-type iamIdentityCenterConfigOptionsModel struct {
-	InstanceArn    fwtypes.ARN                                                  `tfsdk:"instance_arn"`
-	GroupAttribute fwtypes.StringEnum[awstypes.IamIdentityCenterGroupAttribute] `tfsdk:"group_attribute"`
-	UserAttribute  fwtypes.StringEnum[awstypes.IamIdentityCenterUserAttribute]  `tfsdk:"user_attribute"`
 }
