@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix `timeout while waiting for state to become 'true'` error when used against non-AWS, S3-compatible endpoints (for example, MinIO and Ceph RGW) that do not return the `x-amz-transition-default-minimum-object-size` response header
+```
