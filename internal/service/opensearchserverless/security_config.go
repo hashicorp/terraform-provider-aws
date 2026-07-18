@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -348,12 +349,14 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          state.ID.ValueStringPointer(),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
+		return
 	}
 }
 
