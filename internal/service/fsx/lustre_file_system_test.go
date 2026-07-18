@@ -2251,3 +2251,5 @@ resource "aws_fsx_lustre_file_system" "test" {
     sizing_mode = "PROPORTIONAL_TO_THROUGHPUT_CAPACITY"
   }
 }
+`)
+}
