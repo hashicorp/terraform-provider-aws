@@ -11,8 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
@@ -255,9 +258,17 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.region\"]"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.0", "@aws.region"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("emit_system_fields"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("@aws.region"),
+					})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -270,18 +281,36 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.account\", \"@aws.region\"]"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.0", "@aws.account"),
-					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.1", "@aws.region"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("emit_system_fields"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("@aws.account"),
+						knownvalue.StringExact("@aws.region"),
+					})),
+				},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.account\", \"@aws.region\", \"@source.log\"]"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
-					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "3"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_fields.*", "@source.log"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("emit_system_fields"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("@aws.account"),
+						knownvalue.StringExact("@aws.region"),
+						knownvalue.StringExact("@source.log"),
+					})),
+				},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[]"),
@@ -289,6 +318,14 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("emit_system_fields"), knownvalue.SetSizeExact(0)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
