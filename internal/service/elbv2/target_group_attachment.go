@@ -218,6 +218,14 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
+func findTargetHealthDescriptionsByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) ([]awstypes.TargetHealthDescription, error) {
+	input := elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(arn),
+	}
+
+	return findTargetHealthDescriptions(ctx, conn, &input)
+}
+
 func findTargetGroupAttachment(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput) (*awstypes.TargetHealthDescription, error) {
 	return findTargetHealthDescription(ctx, conn, input, tfslices.WithFilter(func(v awstypes.TargetHealthDescription) bool {
 		// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while

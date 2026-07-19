@@ -2129,11 +2129,7 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 	instanceStates := make(map[string]map[string]string)
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
-		input := elasticloadbalancingv2.DescribeTargetHealthInput{
-			TargetGroupArn: aws.String(targetGroupARN),
-		}
-
-		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptions(ctx, conn, &input)
+		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptionsByARN(ctx, conn, targetGroupARN)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)

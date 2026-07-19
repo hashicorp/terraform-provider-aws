@@ -5,6 +5,6 @@ package elbv2
 
 // Exports for use in other modules.
 var (
-	FindTargetGroupByARN         = findTargetGroupByARN
-	FindTargetHealthDescriptions = findTargetHealthDescriptions
+	FindTargetGroupByARN              = findTargetGroupByARN
+	FindTargetHealthDescriptionsByARN = findTargetHealthDescriptionsByARN
 )

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -4433,10 +4432,7 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, t *testing.T, v *ela
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
-		input := elasticloadbalancingv2.DescribeTargetHealthInput{
-			TargetGroupArn: v.TargetGroupArn,
-		}
-		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptions(ctx, conn, &input)
+		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptionsByARN(ctx, conn, aws.ToString(v.TargetGroupArn))
 
 		if err != nil {
 			return err
