@@ -217,6 +217,7 @@ Including a `warm_pool` block enables the warm pool for the node group. To disab
 * `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. Defaults to `0`.
 * `pool_state` - (Optional) Instance state to transition warm pool instances to. Valid values: `STOPPED`, `RUNNING`, `HIBERNATED`. Defaults to `STOPPED`.
 * `reuse_on_scale_in` - (Optional) Whether to return instances in the Auto Scaling Group to the warm pool on scale in. Not supported on Bottlerocket. Defaults to `false`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
