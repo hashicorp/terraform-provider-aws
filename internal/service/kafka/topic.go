@@ -7,6 +7,11 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"math/big"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -302,28 +307,12 @@ func (r *topicResource) flatten(ctx context.Context, topic *kafka.DescribeTopicO
 	data.ConfigsActual = v
 
 	if !data.Configs.IsNull() {
-		var serverConfigs map[string]any
-		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, data.ConfigsActual), &serverConfigs); err != nil {
-			diags.AddError("JSON decoding server configs", err.Error())
-			return diags
-		}
-		var clientConfigs map[string]any
-		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, data.Configs), &clientConfigs); err != nil {
-			diags.AddError("JSON decoding client configs", err.Error())
-			return diags
-		}
-
-		for k := range clientConfigs {
-			if v, ok := serverConfigs[k]; ok {
-				clientConfigs[k] = v
-			} else {
-				delete(clientConfigs, k)
-			}
-		}
-
-		v, err := tfjson.EncodeToString(clientConfigs)
+		v, err := reconcileTopicConfigs(
+			fwflex.StringValueFromFramework(ctx, data.Configs),
+			fwflex.StringValueFromFramework(ctx, data.ConfigsActual),
+		)
 		if err != nil {
-			diags.AddError("JSON encoding client configs", err.Error())
+			diags.AddError("Reconciling topic configs", err.Error())
 			return diags
 		}
 
@@ -333,6 +322,74 @@ func (r *topicResource) flatten(ctx context.Context, topic *kafka.DescribeTopicO
 	}
 
 	return diags
+}
+
+func reconcileTopicConfigs(clientConfigsJSON, serverConfigsJSON string) (string, error) {
+	var serverConfigs map[string]json.RawMessage
+	if err := tfjson.DecodeFromString(serverConfigsJSON, &serverConfigs); err != nil {
+		return "", fmt.Errorf("decoding server configs: %w", err)
+	}
+	var clientConfigs map[string]json.RawMessage
+	if err := tfjson.DecodeFromString(clientConfigsJSON, &clientConfigs); err != nil {
+		return "", fmt.Errorf("decoding client configs: %w", err)
+	}
+
+	for key, clientValue := range clientConfigs {
+		serverValue, ok := serverConfigs[key]
+		if !ok {
+			delete(clientConfigs, key)
+			continue
+		}
+
+		if !equivalentTopicConfigNumericString(clientValue, serverValue) {
+			clientConfigs[key] = serverValue
+		}
+	}
+
+	v, err := tfjson.EncodeToString(clientConfigs)
+	if err != nil {
+		return "", fmt.Errorf("encoding client configs: %w", err)
+	}
+
+	return v, nil
+}
+
+func equivalentTopicConfigNumericString(clientValue, serverValue json.RawMessage) bool {
+	var clientString string
+	if err := json.Unmarshal(clientValue, &clientString); err != nil {
+		return false
+	}
+
+	clientNumber, ok := parseTopicConfigNumber(clientString)
+	if !ok {
+		return false
+	}
+	serverNumber, ok := parseTopicConfigNumber(string(serverValue))
+	if !ok {
+		return false
+	}
+
+	return clientNumber.Cmp(serverNumber) == 0
+}
+
+func parseTopicConfigNumber(v string) (*big.Rat, bool) {
+	var value any
+	decoder := json.NewDecoder(strings.NewReader(v))
+	decoder.UseNumber()
+	if err := decoder.Decode(&value); err != nil {
+		return nil, false
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		return nil, false
+	}
+
+	number, ok := value.(json.Number)
+	if !ok {
+		return nil, false
+	}
+
+	rational, ok := new(big.Rat).SetString(number.String())
+	return rational, ok
 }
 
 func waitTopicCreated(ctx context.Context, conn *kafka.Client, clusterARN, topicName string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
