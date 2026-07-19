@@ -417,7 +417,6 @@ func resourceNodeGroup() *schema.Resource {
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
@@ -505,7 +504,6 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
@@ -587,7 +585,6 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
@@ -701,7 +698,6 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
@@ -1297,7 +1293,9 @@ func flattenNodeRepairConfigOverrides(apiObjects []types.NodeRepairConfigOverrid
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]any)
+		tfMap := map[string]any{
+			"repair_action": apiObject.RepairAction,
+		}
 
 		if v := apiObject.MinRepairWaitTimeMins; v != nil {
 			tfMap["min_repair_wait_time_mins"] = aws.ToInt32(v)
@@ -1311,8 +1309,6 @@ func flattenNodeRepairConfigOverrides(apiObjects []types.NodeRepairConfigOverrid
 			tfMap["node_unhealthy_reason"] = aws.ToString(v)
 		}
 
-		tfMap["repair_action"] = string(apiObject.RepairAction)
-
 		tfList = append(tfList, tfMap)
 	}
 
@@ -1324,7 +1320,9 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 		return nil
 	}
 
-	tfMap := map[string]any{}
+	tfMap := map[string]any{
+		"update_strategy": apiObject.UpdateStrategy,
+	}
 
 	if v := apiObject.MaxUnavailable; v != nil {
 		tfMap["max_unavailable"] = aws.ToInt32(v)
@@ -1332,10 +1330,6 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 
 	if v := apiObject.MaxUnavailablePercentage; v != nil {
 		tfMap["max_unavailable_percentage"] = aws.ToInt32(v)
-	}
-
-	if apiObject.UpdateStrategy != "" {
-		tfMap["update_strategy"] = string(apiObject.UpdateStrategy)
 	}
 
 	return tfMap
@@ -1347,7 +1341,7 @@ func flattenWarmPoolConfig(apiObject *types.WarmPoolConfig) map[string]any {
 	}
 
 	tfMap := map[string]any{
-		"pool_state": string(apiObject.PoolState),
+		"pool_state": apiObject.PoolState,
 	}
 
 	if v := apiObject.MaxGroupPreparedCapacity; v != nil {
