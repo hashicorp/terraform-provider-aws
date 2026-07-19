@@ -552,8 +552,8 @@ func TestAccVPCFlowLog_tagFieldSpecifications(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_tagFieldSpecifications(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
-					resource.TestCheckResourceAttr(resourceName, "tag_field_specifications.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag_field_specifications.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "tag_field_specification.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag_field_specification.*", map[string]string{
 						names.AttrResourceType: "instance",
 						"tag_keys.#":           "2",
 						"tag_keys.0":           "Name",
@@ -1228,7 +1228,7 @@ resource "aws_flow_log" "test" {
   vpc_id               = aws_vpc.test.id
   log_format           = "$${version} $${vpc-id} $${instance-tag} $${instance-tag-2}"
 
-  tag_field_specifications {
+  tag_field_specification {
     resource_type = "instance"
     tag_keys      = ["Name", "Environment"]
   }

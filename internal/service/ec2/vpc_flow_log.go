@@ -130,7 +130,13 @@ func resourceFlowLog() *schema.Resource {
 					ForceNew:     true,
 					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 				},
-				"tag_field_specifications": {
+				names.AttrSubnetID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+				},
+				"tag_field_specification": {
 					Type:     schema.TypeSet,
 					Optional: true,
 					ForceNew: true,
@@ -150,12 +156,6 @@ func resourceFlowLog() *schema.Resource {
 							},
 						},
 					},
-				},
-				names.AttrSubnetID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -239,7 +239,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	input := &ec2.CreateFlowLogsInput{
+	input := ec2.CreateFlowLogsInput{
 		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LogDestinationType: awstypes.LogDestinationType(d.Get("log_destination_type").(string)),
 		ResourceIds:        []string{resourceID},
@@ -277,12 +277,12 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("tag_field_specifications"); ok && v.(*schema.Set).Len() > 0 {
-		input.TagFieldSpecifications = expandTagFieldSpecifications(v.(*schema.Set).List())
+	if v, ok := d.GetOk("tag_field_specification"); ok && v.(*schema.Set).Len() > 0 {
+		input.TagFieldSpecifications = expandTagFieldSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateFlowLogs(ctx, input)
+		return conn.CreateFlowLogs(ctx, &input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
 	if err == nil && outputRaw != nil {
@@ -334,8 +334,8 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-	if err := d.Set("tag_field_specifications", flattenTagFieldSpecifications(fl.TagFieldSpecifications)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tag_field_specifications: %s", err)
+	if err := d.Set("tag_field_specification", flattenTagFieldSpecificationResponses(fl.TagFieldSpecifications)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tag_field_specification: %s", err)
 	}
 	switch resourceID := aws.ToString(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
@@ -433,7 +433,7 @@ func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsRes
 	return tfMap
 }
 
-func expandTagFieldSpecifications(tfList []any) []awstypes.TagFieldSpecificationRequest {
+func expandTagFieldSpecificationRequests(tfList []any) []awstypes.TagFieldSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -455,7 +455,7 @@ func expandTagFieldSpecifications(tfList []any) []awstypes.TagFieldSpecification
 	return apiObjects
 }
 
-func flattenTagFieldSpecifications(apiObjects []awstypes.TagFieldSpecificationResponse) []any {
+func flattenTagFieldSpecificationResponses(apiObjects []awstypes.TagFieldSpecificationResponse) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -465,7 +465,7 @@ func flattenTagFieldSpecifications(apiObjects []awstypes.TagFieldSpecificationRe
 	for i, apiObject := range apiObjects {
 		tfList[i] = map[string]any{
 			names.AttrResourceType: apiObject.ResourceType,
-			"tag_keys":             flex.FlattenStringValueList(apiObject.TagKeys),
+			"tag_keys":             apiObject.TagKeys,
 		}
 	}
 
