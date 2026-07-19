@@ -140,7 +140,7 @@ func resourceFlowLog() *schema.Resource {
 								Type:             schema.TypeString,
 								Required:         true,
 								ForceNew:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.TaggableResourceType](),
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"instance", "network-interface", "auto-scaling-group"}, false)),
 							},
 							"tag_keys": {
 								Type:     schema.TypeList,
