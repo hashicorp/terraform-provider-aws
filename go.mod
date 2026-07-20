@@ -160,6 +160,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.53.6
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.48.6
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.94.1
+	github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.15.9
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.62.6
