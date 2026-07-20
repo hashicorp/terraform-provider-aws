@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,15 +16,15 @@ func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	asn := sdkacctest.RandIntRange(64512, 65534)
-	hostOctet := sdkacctest.RandIntRange(1, 254)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	asn := acctest.RandIntRange(t, 64512, 65534)
+	hostOctet := acctest.RandIntRange(t, 1, 254)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayDataSourceConfig_filter(rName, asn, hostOctet),
@@ -47,15 +46,15 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	asn := sdkacctest.RandIntRange(64512, 65534)
-	hostOctet := sdkacctest.RandIntRange(1, 254)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	asn := acctest.RandIntRange(t, 64512, 65534)
+	hostOctet := acctest.RandIntRange(t, 1, 254)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayDataSourceConfig_id(rName, asn, hostOctet),

@@ -161,9 +161,21 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if .HasIDAttrDuplicates -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), knownvalue.NotNull()),
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-		{{ else if gt (len .IdentityAttributes) 0 -}}
+		{{ else if eq (len .IdentityAttributes) 1 -}}
+			{{ if eq .PlannableResourceAction "Replace" -}}
+				{{ range .IdentityAttributes -}}
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
+				{{ end -}}
+			{{ else -}}
+				{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
+			{{ end -}}
+		{{ else if gt (len .IdentityAttributes) 1 -}}
 			{{ range .IdentityAttributes -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				{{ if not .Optional -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if .HasRegionAttribute -}}
@@ -203,9 +215,21 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ if .HasIdentityDuplicateAttrs -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 			{{ end -}}
-		{{ else if gt (len .IdentityAttributes) 0 -}}
+		{{ else if eq (len .IdentityAttributes) 1 -}}
+			{{ if eq .PlannableResourceAction "Replace" -}}
+				{{ range .IdentityAttributes -}}
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
+				{{ end -}}
+			{{ else -}}
+				{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
+			{{ end -}}
+		{{ else if gt (len .IdentityAttributes) 1 -}}
 			{{ range .IdentityAttributes -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				{{ if not .Optional -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if .HasRegionAttribute -}}
@@ -259,7 +283,10 @@ func {{ template "testname" . }}_identitySerial(t *testing.T) {
 }
 {{ end }}
 
-func {{ template "testname" . }}_Identity_basic(t *testing.T) {
+{{ range $case := .IdentityTestCases }}
+{{/* Reset value of `.` */}}
+{{ with $ }}
+func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}basic(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -271,13 +298,16 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . -}}
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -301,7 +331,7 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 						{{ end -}}
 					{{ else if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
+							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttributeResourceAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
@@ -334,7 +364,11 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -346,13 +380,16 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportCommandWithIDBody" . -}}
 				},
@@ -362,13 +399,16 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportBlockWithIDBody" . -}}
 					{{ template "PlannableImportPlanChecks" . }}
@@ -382,13 +422,16 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportBlockWithResourceIdentityBody" . -}}
 					{{ template "PlannableImportPlanChecks" . }}
@@ -402,7 +445,7 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 }
 
 {{ if .GenerateRegionOverrideTest }}
-func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
+func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}regionOverride(t *testing.T) {
 	{{- template "InitRegionOverride" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -414,7 +457,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}region_override/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . -}}
@@ -422,6 +465,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.Region()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .IDAttrFormat "" -}}
@@ -436,7 +482,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 					{{ end -}}
 					{{ if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
-							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
+							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttributeResourceAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
@@ -465,7 +511,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -481,7 +531,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}region_override/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
@@ -489,6 +539,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.Region()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportCommandWithIDBodyCrossRegion" . -}}
 				},
@@ -498,7 +551,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}region_override/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
@@ -506,6 +559,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.Region()),
 							{{ end -}}
+							{{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{- template "ImportCommandWithIDBody" . -}}
 					},
@@ -519,7 +575,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}region_override/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
@@ -527,6 +583,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.Region()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportBlockWithIDBodyCrossRegion" . -}}
 					{{ template "PlannableImportCrossRegionPlanChecks" . }}
@@ -540,7 +599,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}region_override/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
@@ -548,6 +607,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.Region()),
 							{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 						},
 						{{- template "ImportBlockWithIDBody" . -}}
 						{{ template "PlannableImportCrossRegionPlanChecks" . }}
@@ -562,7 +624,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}region_override/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
@@ -570,6 +632,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.Region()),
 							{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 						},
 						{{- template "ImportBlockWithResourceIdentityBody" . -}}
 						{{ template "PlannableImportCrossRegionPlanChecks" . }}
@@ -594,13 +659,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				{{ $step := 1 -}}
 				// Step {{ $step }}: Create pre-Identity
 				{
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v5.100.0/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -615,13 +683,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				// Step {{ ($step = inc $step) | print }}: Current version
 				{
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -666,7 +737,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -685,13 +760,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				{{ $step := 1 -}}
 				// Step {{ $step }}: Create in v6.0
 				{
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v6.0.0/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v6.0.0/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -728,7 +806,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -738,13 +820,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				// Step {{ ($step = inc $step) | print }}: Current version
 				{
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -789,7 +874,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -799,7 +888,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 		})
 	}
 {{ else if .HasV6_0NullValuesError }}
-	func {{ template "testname" . }}_Identity_ExistingResource_basic(t *testing.T) {
+	func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}ExistingResource_basic(t *testing.T) {
 		{{- template "Init" . }}
 
 		{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -808,13 +897,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				{{ $step := 1 -}}
 				// Step {{ $step }}: Create pre-Identity
 				{
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v5.100.0/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -828,13 +920,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 
 				// Step {{ ($step = inc $step) | print }}: v6.0 Identity error
 				{
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v6.0.0/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v6.0.0/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -883,13 +978,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				// Step {{ ($step = inc $step) | print }}: Current version
 				{
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					ConfigPlanChecks: resource.ConfigPlanChecks{
 						PreApply: []plancheck.PlanCheck{
@@ -929,7 +1027,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							}),
 							{{ range .IdentityAttributes -}}
 								{{ if or (not .Optional) .TestNotNull -}}
+									{{ if .ResourceAttributeName -}}
+									statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+									{{ else -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end -}}
 							{{ end }}
 						{{ end -}}
@@ -939,7 +1041,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 		})
 	}
 
-	func {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+	func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}ExistingResource_noRefreshNoChange(t *testing.T) {
 		{{- template "Init" . }}
 
 		{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -953,13 +1055,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				{{ $step := 1 -}}
 				// Step {{ $step }}: Create pre-Identity
 				{
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v5.100.0/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -974,13 +1079,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 				// Step {{ ($step = inc $step) | print }}: Current version
 				{
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . -}}
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -994,7 +1102,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 {{ else if .PreIdentityVersion }}
 	{{ if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
-		func {{ template "testname" . }}_Identity_ExistingResource_basic(t *testing.T) {
+		func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}ExistingResource_basic(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1006,13 +1114,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ .PreIdentityVersion }}/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v{{ .PreIdentityVersion }}/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1031,13 +1142,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ else -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						{{ end -}}
-						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
@@ -1077,7 +1191,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 								}),
 								{{ range .IdentityAttributes -}}
 									{{ if or (not .Optional) .TestNotNull -}}
+										{{ if .ResourceAttributeName -}}
+										statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+										{{ else -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+										{{ end -}}
 									{{ end -}}
 								{{ end }}
 							{{ end -}}
@@ -1088,7 +1206,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 		}
 
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
-		func {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+		func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}ExistingResource_noRefreshNoChange(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1105,13 +1223,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ .PreIdentityVersion }}/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v{{ .PreIdentityVersion }}/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1130,13 +1251,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ else -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						{{ end -}}
-						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
@@ -1154,7 +1278,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 			})
 		}
 	{{ else }}
-		func {{ template "testname" . }}_Identity_ExistingResource_basic(t *testing.T) {
+		func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}ExistingResource_basic(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1166,13 +1290,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v5.100.0/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1189,13 +1316,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v6.0.0/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v6.0.0/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1240,7 +1370,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 								}),
 								{{ range .IdentityAttributes -}}
 									{{ if or (not .Optional) .TestNotNull -}}
+										{{ if .ResourceAttributeName -}}
+										statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+										{{ else -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+										{{ end -}}
 									{{ end -}}
 								{{ end }}
 							{{ end -}}
@@ -1254,13 +1388,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ else -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						{{ end -}}
-						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
@@ -1300,7 +1437,11 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 								}),
 								{{ range .IdentityAttributes -}}
 									{{ if or (not .Optional) .TestNotNull -}}
+										{{ if .ResourceAttributeName -}}
+										statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+										{{ else -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+										{{ end -}}
 									{{ end -}}
 								{{ end }}
 							{{ end -}}
@@ -1310,7 +1451,7 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 			})
 		}
 
-		func {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
+		func {{ template "testname" . }}_Identity_{{ if ne $case "basic"}}{{ FirstUpper $case }}_{{ end }}ExistingResource_noRefreshNoChange(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1327,13 +1468,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ .PreIdentityVersion }}/"),
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v{{ .PreIdentityVersion }}/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1352,13 +1496,16 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ else -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						{{ end -}}
-						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 						ConfigVariables: config.Variables{ {{ if .Generator }}
 							acctest.CtRName: config.StringVariable(rName),{{ end }}
 							{{ template "AdditionalTfVars" . -}}
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 					},
 				},
@@ -1381,13 +1528,16 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 				{{ end -}}
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . -}}
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1406,13 +1556,16 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 				{{ else -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . -}}
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1452,7 +1605,11 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -1480,13 +1637,16 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/{{ $case }}_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . -}}
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1505,13 +1665,16 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 				{{ else -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/{{ if ne $case "basic"}}{{ $case }}_{{ end }}basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					{{ template "AdditionalTfVars" . -}}
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1551,7 +1714,11 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 						}),
 						{{ range .IdentityAttributes -}}
 							{{ if or (not .Optional) .TestNotNull -}}
+								{{ if .ResourceAttributeName -}}
+								statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New({{ .Name }}), tfjsonpath.New({{ .ResourceAttributeName }})),
+								{{ else -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end -}}
 						{{ end }}
 					{{ end -}}
@@ -1560,4 +1727,6 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 		},
 	})
 }
+{{ end }}
+{{ end }}
 {{ end }}

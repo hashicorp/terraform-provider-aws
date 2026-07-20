@@ -17,6 +17,7 @@ var (
 	ResourceGlobalNetwork                        = resourceGlobalNetwork
 	ResourceLink                                 = resourceLink
 	ResourceLinkAssociation                      = resourceLinkAssociation
+	ResourcePrefixListAssociation                = newPrefixListAssociationResource
 	ResourceSite                                 = resourceSite
 	ResourceSiteToSiteVPNAttachment              = resourceSiteToSiteVPNAttachment
 	ResourceTransitGatewayConnectPeerAssociation = resourceTransitGatewayConnectPeerAssociation
@@ -37,6 +38,7 @@ var (
 	FindGlobalNetworkByID                                   = findGlobalNetworkByID
 	FindLinkAssociationByThreePartKey                       = findLinkAssociationByThreePartKey
 	FindLinkByTwoPartKey                                    = findLinkByTwoPartKey
+	FindPrefixListAssociationByTwoPartKey                   = findPrefixListAssociationByTwoPartKey
 	FindSiteByTwoPartKey                                    = findSiteByTwoPartKey
 	FindSiteToSiteVPNAttachmentByID                         = findSiteToSiteVPNAttachmentByID
 	FindTransitGatewayConnectPeerAssociationByTwoPartKey    = findTransitGatewayConnectPeerAssociationByTwoPartKey

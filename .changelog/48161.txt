@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_versioning: Fix perpetual drift on `versioning_configuration.mfa_delete` when `status` is `Disabled`
+```

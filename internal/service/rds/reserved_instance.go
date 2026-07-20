@@ -45,89 +45,91 @@ func resourceReservedInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"currency_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrInstanceCount: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  1,
-			},
-			"lease_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"offering_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"offering_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"product_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"recurring_charges": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recurring_charge_amount": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"recurring_charge_frequency": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"currency_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"fixed_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrInstanceCount: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+					Default:  1,
+				},
+				"lease_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"offering_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"offering_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"product_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"recurring_charges": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"recurring_charge_amount": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"recurring_charge_frequency": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"reservation_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"reservation_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrStartTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

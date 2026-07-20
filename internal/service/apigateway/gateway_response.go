@@ -42,37 +42,39 @@ func resourceGatewayResponse() *schema.Resource {
 				restApiID := idParts[0]
 				responseType := idParts[1]
 				d.Set("response_type", responseType)
-				d.Set("rest_api_id", restApiID)
+				d.Set(attrRestAPIID, restApiID)
 				d.SetId(fmt.Sprintf("aggr-%s-%s", restApiID, responseType))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"response_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"response_templates": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"response_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStatusCode: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"response_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"response_templates": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"response_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStatusCode: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -83,7 +85,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 
 	input := apigateway.PutGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(d.Get(attrRestAPIID).(string)),
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]any)) > 0 {
@@ -105,7 +107,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("aggr-%s-%s", d.Get("rest_api_id").(string), d.Get("response_type").(string)))
+		d.SetId(fmt.Sprintf("aggr-%s-%s", d.Get(attrRestAPIID).(string), d.Get("response_type").(string)))
 	}
 
 	return append(diags, resourceGatewayResponseRead(ctx, d, meta)...)
@@ -115,7 +117,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	gatewayResponse, err := findGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get("rest_api_id").(string))
+	gatewayResponse, err := findGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get(attrRestAPIID).(string))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
@@ -142,7 +144,7 @@ func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 	input := apigateway.DeleteGatewayResponseInput{
 		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteGatewayResponse(ctx, &input)
 

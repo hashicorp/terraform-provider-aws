@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_msk_replicator: Add support for `log_delivery` configuration block
+```
+
+```release-note:bug
+resource/aws_msk_replicator: Mark `replication_info_list.consumer_group_replication.consumer_groups_to_exclude` as Computed
+```
+
+```release-note:bug
+resource/aws_msk_replicator: Mark `replication_info_list.topic_replication.topics_to_exclude` as Computed
+```

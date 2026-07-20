@@ -8,6 +8,7 @@ package route53resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -16,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +35,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRule")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomDomainName()")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomDomainName(t)")
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -48,73 +49,75 @@ func resourceRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-				StateFunc:    trimTrailingPeriod,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validResolverName,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resolver_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rule_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
-			},
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_ip": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv4Address,
-						},
-						"ipv6": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv6Address,
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      53,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ProtocolDo53,
-							ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+					StateFunc:    trimTrailingPeriod,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validResolverName,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resolver_endpoint_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"rule_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
+				},
+				"share_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_ip": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsIPv4Address,
+							},
+							"ipv6": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsIPv6Address,
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      53,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ProtocolDo53,
+								ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: resourceRuleCustomizeDiff,
@@ -126,7 +129,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	input := &route53resolver.CreateResolverRuleInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-rule-")),
 		DomainName:       aws.String(d.Get(names.AttrDomainName).(string)),
 		RuleType:         awstypes.RuleTypeOption(d.Get("rule_type").(string)),
 		Tags:             getTagsIn(ctx),
@@ -161,7 +164,8 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.Route53ResolverClient(ctx)
 
 	rule, err := findResolverRuleByID(ctx, conn, d.Id())
 
@@ -175,17 +179,8 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.Arn)
-	// To be consistent with other AWS services that do not accept a trailing period,
-	// we remove the suffix from the Domain Name returned from the API
-	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
-	d.Set(names.AttrName, rule.Name)
-	d.Set(names.AttrOwnerID, rule.OwnerId)
-	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
-	d.Set("rule_type", rule.RuleType)
-	d.Set("share_status", rule.ShareStatus)
-	if err := d.Set("target_ip", flattenRuleTargetIPs(rule.TargetIps)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_ip: %s", err)
+	if err := resourceRuleFlatten(ctx, awsClient, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -287,6 +282,40 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	}
 
 	return output.ResolverRule, nil
+}
+
+func resourceRuleFlatten(ctx context.Context, awsClient *conns.AWSClient, rule *awstypes.ResolverRule, d *schema.ResourceData) error {
+	conn := awsClient.Route53ResolverClient(ctx)
+	ignoreTagsConfig := awsClient.IgnoreTagsConfig(ctx)
+
+	arn := aws.ToString(rule.Arn)
+	d.Set(names.AttrARN, arn)
+	// To be consistent with other AWS services that do not accept a trailing period,
+	// we remove the suffix from the Domain Name returned from the API
+	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
+	d.Set(names.AttrName, rule.Name)
+	d.Set(names.AttrOwnerID, rule.OwnerId)
+	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
+	d.Set("rule_type", rule.RuleType)
+	shareStatus := rule.ShareStatus
+	d.Set("share_status", shareStatus)
+	if err := d.Set("target_ip", flattenRuleTargetIPs(rule.TargetIps)); err != nil {
+		return fmt.Errorf("setting target_ip: %w", err)
+	}
+
+	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
+	if shareStatus != awstypes.ShareStatusSharedWithMe {
+		tags, err := listTags(ctx, conn, arn)
+		if err != nil {
+			return fmt.Errorf("listing tags for Route53 Resolver Rule (%s): %w", arn, err)
+		}
+
+		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("setting tags: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func statusRule(conn *route53resolver.Client, id string) retry.StateRefreshFunc {

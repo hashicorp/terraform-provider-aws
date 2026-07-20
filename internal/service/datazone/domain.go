@@ -7,7 +7,6 @@ package datazone
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,13 +23,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,6 +38,9 @@ import (
 
 // @FrameworkResource("aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetDomainOutput")
+// @Testing(preIdentityVersion="v6.47.0")
 func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainResource{}
 
@@ -49,7 +52,7 @@ func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error
 
 type domainResource struct {
 	framework.ResourceWithModel[domainResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -151,7 +154,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 
 func (r *domainResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data domainResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -160,13 +163,13 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input datazone.CreateDomainInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	const (
@@ -177,7 +180,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}, errCodeAccessDenied)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -186,7 +189,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	output, err := waitDomainCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) create", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
@@ -198,17 +201,17 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		}
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data domainResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -225,7 +228,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
@@ -235,23 +238,23 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 		output.SingleSignOn = nil
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, output.Tags)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old domainResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -259,36 +262,36 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	conn := r.Meta().DataZoneClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, new, old)
-	response.Diagnostics.Append(d...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input datazone.UpdateDomainInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.Identifier = fwflex.StringFromFramework(ctx, new.ID)
 
 		_, err := conn.UpdateDomain(ctx, &input)
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating DataZone Domain (%s)", new.ID.ValueString()), err.Error())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID.ValueString())
 
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data domainResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -296,7 +299,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	conn := r.Meta().DataZoneClient(ctx)
 
 	input := datazone.DeleteDomainInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Identifier:  data.ID.ValueStringPointer(),
 	}
 	if !data.SkipDeletionCheck.IsNull() {
@@ -309,13 +312,13 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
 
 	if _, err := waitDomainDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) delete", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}

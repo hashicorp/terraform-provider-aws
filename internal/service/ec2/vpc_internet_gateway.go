@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -29,6 +28,9 @@ import (
 // @SDKResource("aws_internet_gateway", name="Internet Gateway")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.InternetGateway")
+// @Testing(preIdentityVersion="v6.41.0")
 func resourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayCreate,
@@ -42,26 +44,24 @@ func resourceInternetGateway() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -111,17 +111,9 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(ig.OwnerId)
-	d.Set(names.AttrARN, internetGatewayARN(ctx, c, ownerID, d.Id()))
-	d.Set(names.AttrOwnerID, ownerID)
-	if len(ig.Attachments) == 0 {
-		// Gateway exists but not attached to the VPC.
-		d.Set(names.AttrVPCID, "")
-	} else {
-		d.Set(names.AttrVPCID, ig.Attachments[0].VpcId)
+	if err := resourceInternetGatewayFlatten(ctx, c, ig, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
-
-	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }
@@ -218,9 +210,8 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 	}, errCodeDependencyViolation)
 
 	if tfawserr.ErrCodeEquals(err, errCodeGatewayNotAttached, errCodeInvalidInternetGatewayIDNotFound) {
-		return &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -239,4 +230,30 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 
 func internetGatewayARN(ctx context.Context, c *conns.AWSClient, accountID, internetGatewayID string) string {
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "internet-gateway/"+internetGatewayID)
+}
+
+func resourceInternetGatewayFlatten(ctx context.Context, awsClient *conns.AWSClient, internetGateway *awstypes.InternetGateway, d *schema.ResourceData) error {
+	ownerID := aws.ToString(internetGateway.OwnerId)
+
+	if err := d.Set(names.AttrARN, internetGatewayARN(ctx, awsClient, ownerID, aws.ToString(internetGateway.InternetGatewayId))); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrARN, err)
+	}
+
+	if err := d.Set(names.AttrOwnerID, ownerID); err != nil {
+		return fmt.Errorf("setting %s: %w", names.AttrOwnerID, err)
+	}
+
+	if len(internetGateway.Attachments) == 0 {
+		if err := d.Set(names.AttrVPCID, ""); err != nil {
+			return fmt.Errorf("setting %s: %w", names.AttrVPCID, err)
+		}
+	} else {
+		if err := d.Set(names.AttrVPCID, internetGateway.Attachments[0].VpcId); err != nil {
+			return fmt.Errorf("setting %s: %w", names.AttrVPCID, err)
+		}
+	}
+
+	setTagsOut(ctx, internetGateway.Tags)
+
+	return nil
 }

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +40,6 @@ import (
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
 // @CustomImport
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -60,101 +58,103 @@ func resourceParameter() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"data_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"aws:ec2:image",
-					"aws:ssm:integration",
-					"text",
-				}, false),
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"has_value_wo": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"insecure_value": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"overwrite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tier": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ParameterTier](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old != "" {
-						return awstypes.ParameterTier(new) == awstypes.ParameterTierIntelligentTiering
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ParameterType](),
-			},
-			names.AttrValue: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				Computed:     true,
-				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
-			},
-			"value_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				WriteOnly:    true,
-				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
-				RequiredWith: []string{"value_wo_version"},
-			},
-			"value_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"value_wo"},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"data_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"aws:ec2:image",
+						"aws:ssm:integration",
+						"text",
+					}, false),
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"has_value_wo": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"insecure_value": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"overwrite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tier": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ParameterTier](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old != "" {
+							return awstypes.ParameterTier(new) == awstypes.ParameterTierIntelligentTiering
+						}
+						return false
+					},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ParameterType](),
+				},
+				names.AttrValue: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					Computed:     true,
+					ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+				},
+				"value_wo": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					WriteOnly:    true,
+					ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+					RequiredWith: []string{"value_wo_version"},
+				},
+				"value_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"value_wo"},
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -446,9 +446,8 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	output, err := conn.GetParameter(ctx, input)
 
 	if errs.IsA[*awstypes.ParameterNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

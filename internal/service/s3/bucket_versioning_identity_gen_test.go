@@ -33,7 +33,7 @@ func TestAccS3BucketVersioning_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccS3BucketVersioning_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketVersioningExists(ctx, resourceName),
+					testAccCheckBucketVersioningExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -205,7 +205,7 @@ func TestAccS3BucketVersioning_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx),
+		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -214,7 +214,7 @@ func TestAccS3BucketVersioning_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketVersioningExists(ctx, resourceName),
+					testAccCheckBucketVersioningExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -262,7 +262,7 @@ func TestAccS3BucketVersioning_Identity_ExistingResource_noRefreshNoChange(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx),
+		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -276,7 +276,7 @@ func TestAccS3BucketVersioning_Identity_ExistingResource_noRefreshNoChange(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketVersioningExists(ctx, resourceName),
+					testAccCheckBucketVersioningExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -319,7 +319,7 @@ func TestAccS3BucketVersioning_Identity_upgrade(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx),
+		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create with Identity version 0
 			{
@@ -328,7 +328,7 @@ func TestAccS3BucketVersioning_Identity_upgrade(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketVersioningExists(ctx, resourceName),
+					testAccCheckBucketVersioningExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -376,7 +376,7 @@ func TestAccS3BucketVersioning_Identity_Upgrade_noRefresh(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx),
+		CheckDestroy: testAccCheckBucketVersioningDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -390,7 +390,7 @@ func TestAccS3BucketVersioning_Identity_Upgrade_noRefresh(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketVersioningExists(ctx, resourceName),
+					testAccCheckBucketVersioningExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),

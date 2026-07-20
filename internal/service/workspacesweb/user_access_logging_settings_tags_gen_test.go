@@ -33,7 +33,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -91,7 +91,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -141,7 +141,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -184,7 +184,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -227,7 +227,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -239,7 +239,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -295,7 +295,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -305,7 +305,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -351,7 +351,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_addOnUpdate(t *testing.T
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -361,7 +361,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_addOnUpdate(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -384,7 +384,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_addOnUpdate(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -437,7 +437,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_onCreate(t *tes
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -449,7 +449,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_onCreate(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -492,7 +492,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_onCreate(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -535,7 +535,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_add(t 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -547,7 +547,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_add(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -579,7 +579,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_add(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -629,7 +629,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_add(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -682,7 +682,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_replac
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -694,7 +694,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_replac
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -725,7 +725,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_EmptyTag_OnUpdate_replac
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -778,7 +778,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_providerOnly
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -791,7 +791,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_providerOnly
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -837,7 +837,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_providerOnly
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -885,7 +885,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_providerOnly
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -927,7 +927,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_providerOnly
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -971,7 +971,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nonOverlappi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -986,7 +986,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nonOverlappi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1042,7 +1042,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nonOverlappi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1097,7 +1097,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nonOverlappi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1141,7 +1141,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_overlapping(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1156,7 +1156,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_overlapping(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1211,7 +1211,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_overlapping(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1270,7 +1270,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_overlapping(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1327,7 +1327,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_updateToProv
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1339,7 +1339,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_updateToProv
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1372,7 +1372,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_updateToProv
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1423,7 +1423,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_updateToReso
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1436,7 +1436,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_updateToReso
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1464,7 +1464,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_updateToReso
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1518,7 +1518,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_emptyResourc
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1533,7 +1533,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_emptyResourc
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1590,7 +1590,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_emptyProvide
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1603,7 +1603,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_emptyProvide
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1654,7 +1654,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nullOverlapp
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1669,7 +1669,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nullOverlapp
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1729,7 +1729,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nullNonOverl
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1744,7 +1744,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_DefaultTags_nullNonOverl
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1806,7 +1806,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_onCreate(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1816,7 +1816,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_onCreate(t *
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1867,7 +1867,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_OnUpdate_add
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1879,7 +1879,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_OnUpdate_add
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1911,7 +1911,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_OnUpdate_add
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1970,7 +1970,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_OnUpdate_rep
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1982,7 +1982,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_OnUpdate_rep
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2012,7 +2012,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_ComputedTag_OnUpdate_rep
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2063,7 +2063,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_defau
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2082,7 +2082,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_defau
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2131,7 +2131,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_defau
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2180,7 +2180,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_defau
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2229,7 +2229,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_resou
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserAccessLoggingSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2246,7 +2246,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_resou
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2304,7 +2304,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_resou
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2361,7 +2361,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_Tags_IgnoreTags_Overlap_resou
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &v),
+					testAccCheckUserAccessLoggingSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

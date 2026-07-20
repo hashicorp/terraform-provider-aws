@@ -66,7 +66,7 @@ This resource supports the following arguments:
 * `target_spot_capacity` - (Optional) The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision.
 * `name` - (Optional) Friendly name given to the instance fleet.
 
-## instance_type_configs Configuration Block
+### instance_type_configs Configuration Block
 
 * `bid_price` - (Optional) The bid price for each EC2 Spot instance type as defined by `instance_type`. Expressed in USD. If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
 * `bid_price_as_percentage_of_on_demand_price` - (Optional) The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instance_type`. Expressed as a number (for example, 20 specifies 20%). If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
@@ -75,14 +75,14 @@ This resource supports the following arguments:
 * `instance_type` - (Required) An EC2 instance type, such as m4.xlarge.
 * `weighted_capacity` - (Optional) The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `aws_emr_instance_fleet`.
 
-## configurations Configuration Block
+### configurations Configuration Block
 
 A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. See [Configuring Applications](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-configure-apps.html).
 
 * `classification` - (Optional) The classification within a configuration.
 * `properties` - (Optional) A map of properties specified within a configuration classification
 
-## ebs_config
+### ebs_config
 
 Attributes for the EBS volumes attached to each EC2 instance in the `master_instance_group` and `core_instance_group` configuration blocks:
 
@@ -91,19 +91,19 @@ Attributes for the EBS volumes attached to each EC2 instance in the `master_inst
 * `iops` - (Optional) The number of I/O operations per second (IOPS) that the volume supports
 * `volumes_per_instance` - (Optional) The number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1)
 
-## launch_specifications Configuration Block
+### launch_specifications Configuration Block
 
 * `on_demand_specification` - (Optional) Configuration block for on demand instances launch specifications
 * `spot_specification` - (Optional) Configuration block for spot instances launch specifications
 
-## on_demand_specification Configuration Block
+### on_demand_specification Configuration Block
 
 The launch specification for On-Demand instances in the instance fleet, which determines the allocation strategy.
 The instance fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation strategy is available in Amazon EMR version 5.12.1 and later.
 
 * `allocation_strategy` - (Required) Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is `lowest-price` (the default), which launches the lowest price first.
 
-## spot_specification Configuration Block
+### spot_specification Configuration Block
 
 The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
 

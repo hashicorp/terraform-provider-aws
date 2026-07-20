@@ -33,18 +33,20 @@ func resourceRegionSettings() *schema.Resource {
 		ReadWithoutTimeout:   resourceRegionSettingsRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"resource_type_management_preference": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeBool},
-			},
-			"resource_type_opt_in_preference": {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeBool},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"resource_type_management_preference": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeBool},
+				},
+				"resource_type_opt_in_preference": {
+					Type:     schema.TypeMap,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeBool},
+				},
+			}
 		},
 	}
 }

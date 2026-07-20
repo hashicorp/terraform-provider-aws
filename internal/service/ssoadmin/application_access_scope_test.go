@@ -10,11 +10,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
@@ -23,11 +22,11 @@ import (
 
 func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_access_scope.test"
 	applicationResourceName := "aws_ssoadmin_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
@@ -35,12 +34,12 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAccessScopeConfig_basic(rName, "sso:account:access"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
+					testAccCheckApplicationAccessScopeExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "sso:account:access"),
 				),
@@ -56,10 +55,10 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 
 func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_access_scope.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
@@ -67,23 +66,31 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAccessScopeConfig_basic(rName, "sso:account:access"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
+					testAccCheckApplicationAccessScopeExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplicationAccessScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_application_access_scope.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_application_access_scope.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckApplicationAccessScopeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationAccessScopeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_application_access_scope" {
@@ -105,7 +112,7 @@ func testAccCheckApplicationAccessScopeDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckApplicationAccessScopeExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckApplicationAccessScopeExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -116,7 +123,7 @@ func testAccCheckApplicationAccessScopeExists(ctx context.Context, name string) 
 			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAccessScope, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

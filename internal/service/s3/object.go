@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -54,7 +53,6 @@ import (
 // @Testing(importIgnore="force_destroy")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -72,186 +70,188 @@ func resourceObject() *schema.Resource {
 			},
 		),
 
-		Schema: map[string]*schema.Schema{
-			"acl": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"bucket_key_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"cache_control": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"checksum_algorithm": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ChecksumAlgorithm](),
-			},
-			"checksum_crc32": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_crc32c": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_crc64nvme": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_sha1": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContent: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, "content_base64"},
-			},
-			"content_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, names.AttrContent},
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_language": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"etag": {
-				Type: schema.TypeString,
-				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
-				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
-				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrKMSKeyID},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKey: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"metadata": {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				ValidateFunc: validateMetadataIsLowerCase,
-			},
-			"object_lock_legal_hold_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectLockLegalHoldStatus](),
-			},
-			"object_lock_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectLockMode](),
-			},
-			"object_lock_retain_until_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			"override_provider": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_tags": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrTags: {
-										Type:             schema.TypeMap,
-										Optional:         true,
-										Elem:             &schema.Schema{Type: schema.TypeString},
-										ValidateDiagFunc: verify.MapSizeBetween(0, 0),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acl": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"bucket_key_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"cache_control": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"checksum_algorithm": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ChecksumAlgorithm](),
+				},
+				"checksum_crc32": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_crc32c": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_crc64nvme": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_sha1": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContent: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrSource, "content_base64"},
+				},
+				"content_base64": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrSource, names.AttrContent},
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_encoding": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_language": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"etag": {
+					Type: schema.TypeString,
+					// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
+					// if/when it's actually implemented. The Etag then won't match raw-file MD5.
+					// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrKMSKeyID},
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKey: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"metadata": {
+					Type:         schema.TypeMap,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					ValidateFunc: validateMetadataIsLowerCase,
+				},
+				"object_lock_legal_hold_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectLockLegalHoldStatus](),
+				},
+				"object_lock_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectLockMode](),
+				},
+				"object_lock_retain_until_date": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				"override_provider": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_tags": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrTags: {
+											Type:             schema.TypeMap,
+											Optional:         true,
+											Elem:             &schema.Schema{Type: schema.TypeString},
+											ValidateDiagFunc: verify.MapSizeBetween(0, 0),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"server_side_encryption": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
-			},
-			names.AttrSource: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrContent, "content_base64"},
-			},
-			"source_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStorageClass: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectStorageClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_redirect": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"server_side_encryption": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+				},
+				names.AttrSource: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrContent, "content_base64"},
+				},
+				"source_hash": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStorageClass: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectStorageClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_redirect": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -294,6 +294,12 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 	d.Set(names.AttrARN, arn.String())
+
+	return resourceObjectFlatten(d, output)
+}
+
+func resourceObjectFlatten(d *schema.ResourceData, output *s3.HeadObjectOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
@@ -658,9 +664,8 @@ func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput,
 	output, err := conn.HeadObject(ctx, input, optFns...)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

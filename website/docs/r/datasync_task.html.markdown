@@ -24,7 +24,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Scheduling
+### Example Usage with Scheduling
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -38,7 +38,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Filtering
+### Example Usage with Filtering
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -58,7 +58,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Enhanced Task Mode
+### Example Usage with Enhanced Task Mode
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -149,6 +149,7 @@ The following arguments are supported inside the `report_overrides` configuratio
 ### Schedule
 
 * `schedule_expression` - (Required) Specifies the schedule you want your task to use for repeated executions. For more information, see [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
+* `status` - (Optional) Whether to enable or disable your task schedule. Valid values: `ENABLED`, `DISABLED`. Default: `ENABLED`.
 
 ### excludes Argument Reference
 

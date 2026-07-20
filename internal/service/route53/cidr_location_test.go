@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ func TestAccRoute53CIDRLocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_cidr_location.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	locationName := sdkacctest.RandString(16)
+	locationName := acctest.RandString(t, 16)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -77,6 +76,14 @@ func TestAccRoute53CIDRLocation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfroute53.ResourceCIDRLocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -87,7 +94,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_cidr_location.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	locationName := sdkacctest.RandString(16)
+	locationName := acctest.RandString(t, 16)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

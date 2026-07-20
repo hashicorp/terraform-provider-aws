@@ -231,6 +231,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topics` - (Optional) Name of the Kafka topics. Only available for MSK sources. A single topic name must be specified.
 * `tumbling_window_in_seconds` - (Optional) Duration in seconds of a processing window for [AWS Lambda streaming analytics](https://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html#services-kinesis-windows). The range is between 1 second up to 900 seconds. Only available for stream sources (DynamoDB and Kinesis).
+* `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
 
 ### amazon_managed_kafka_event_source_config Configuration Block
 
@@ -310,7 +311,37 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - UUID of the created event source mapping.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `5m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute to import Lambda event source mappings. For example:
+
+```terraform
+import {
+  to = aws_lambda_event_source_mapping.example
+  identity = {
+    uuid = "12345kxodurf3443"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `uuid` (String) UUID of the event source mapping.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
 

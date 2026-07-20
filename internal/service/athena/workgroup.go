@@ -46,189 +46,213 @@ func resourceWorkGroup() *schema.Resource {
 
 		CustomizeDiff: managedQueryResultsValidation,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bytes_scanned_cutoff_per_query": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.IntAtLeast(10485760),
-								validation.IntInSlice([]int{0}),
-							),
-						},
-						"customer_content_encryption_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKey: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bytes_scanned_cutoff_per_query": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ValidateFunc: validation.Any(
+									validation.IntAtLeast(10485760),
+									validation.IntInSlice([]int{0}),
+								),
+							},
+							"customer_content_encryption_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKey: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+										},
 									},
 								},
 							},
-						},
-						"enable_minimum_encryption_configuration": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"enforce_workgroup_configuration": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						names.AttrEngineVersion: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"effective_engine_version": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"selected_engine_version": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "AUTO",
+							"enable_minimum_encryption_configuration": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"enforce_workgroup_configuration": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							names.AttrEngineVersion: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"effective_engine_version": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"selected_engine_version": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "AUTO",
+										},
 									},
 								},
 							},
-						},
-						"execution_role": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"identity_center_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enable_identity_center": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"identity_center_instance_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+							"execution_role": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"identity_center_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enable_identity_center": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"identity_center_instance_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
-						},
-						"managed_query_results_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
+							"query_results_s3_access_grants_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.AuthenticationType](),
+										},
+										"create_user_level_prefix": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"enable_s3_access_grants": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
 									},
-									names.AttrEncryptionConfiguration: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKMSKey: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
+								},
+							},
+							"managed_query_results_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrEncryptionConfiguration: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKMSKey: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"monitoring_configuration": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloud_watch_logging_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-											// Empty block and enabled = false is equivalent
-											o, n := d.GetChange("configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration")
-											if o != nil && n != nil {
-												if v, ok := o.([]any); ok && len(v) == 0 {
-													if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
-														vm := v[0].(map[string]any)
-														if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
-															return true
+							"monitoring_configuration": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloud_watch_logging_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+												// Empty block and enabled = false is equivalent
+												o, n := d.GetChange("configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration")
+												if o != nil && n != nil {
+													if v, ok := o.([]any); ok && len(v) == 0 {
+														if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+															vm := v[0].(map[string]any)
+															if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
+																return true
+															}
 														}
 													}
 												}
-											}
-											return false
-										},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-													DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-														if old == "" && new == "false" {
-															return true
-														}
-														return false
+												return false
+											},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+														DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+															if old == "" && new == "false" {
+																return true
+															}
+															return false
+														},
 													},
-												},
-												"log_group": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
-													ValidateFunc: validation.All(
-														validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
-														validation.StringLenBetween(1, 512),
-													),
-												},
-												"log_stream_name_prefix": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
-													ValidateFunc: validation.All(
-														validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
-														validation.StringLenBetween(1, 512),
-													),
-												},
-												"log_type": {
-													Type:             schema.TypeSet,
-													Optional:         true,
-													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrKey: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValues: {
-																Type:     schema.TypeSet,
-																Required: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
+													"log_group": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
+														ValidateFunc: validation.All(
+															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
+															validation.StringLenBetween(1, 512),
+														),
+													},
+													"log_stream_name_prefix": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
+														ValidateFunc: validation.All(
+															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
+															validation.StringLenBetween(1, 512),
+														),
+													},
+													"log_type": {
+														Type:             schema.TypeSet,
+														Optional:         true,
+														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrKey: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrValues: {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem: &schema.Schema{
+																		Type: schema.TypeString,
+																	},
 																},
 															},
 														},
@@ -236,189 +260,189 @@ func resourceWorkGroup() *schema.Resource {
 												},
 											},
 										},
-									},
-									"managed_logging_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-											// Empty block and enabled = false is equivalent
-											o, n := d.GetChange("configuration.0.monitoring_configuration.0.managed_logging_configuration")
-											if o != nil && n != nil {
-												if v, ok := o.([]any); ok && len(v) == 0 {
-													if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
-														vm := v[0].(map[string]any)
-														if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
-															return true
+										"managed_logging_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+												// Empty block and enabled = false is equivalent
+												o, n := d.GetChange("configuration.0.monitoring_configuration.0.managed_logging_configuration")
+												if o != nil && n != nil {
+													if v, ok := o.([]any); ok && len(v) == 0 {
+														if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+															vm := v[0].(map[string]any)
+															if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
+																return true
+															}
 														}
 													}
 												}
-											}
-											return false
-										},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-													DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-														if old == "" && new == "false" {
-															return true
-														}
-														return false
+												return false
+											},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+														DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+															if old == "" && new == "false" {
+																return true
+															}
+															return false
+														},
 													},
-												},
-												names.AttrKMSKey: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringManagedLogging,
-													ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+													names.AttrKMSKey: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringManagedLogging,
+														ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+													},
 												},
 											},
 										},
-									},
-									"s3_logging_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-											// Empty block and enabled = false is equivalent
-											o, n := d.GetChange("configuration.0.monitoring_configuration.0.s3_logging_configuration")
-											if o != nil && n != nil {
-												if v, ok := o.([]any); ok && len(v) == 0 {
-													if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
-														vm := v[0].(map[string]any)
-														if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
-															return true
+										"s3_logging_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+												// Empty block and enabled = false is equivalent
+												o, n := d.GetChange("configuration.0.monitoring_configuration.0.s3_logging_configuration")
+												if o != nil && n != nil {
+													if v, ok := o.([]any); ok && len(v) == 0 {
+														if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+															vm := v[0].(map[string]any)
+															if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
+																return true
+															}
 														}
 													}
 												}
-											}
-											return false
-										},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-													DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
-														if old == "" && new == "false" {
-															return true
-														}
-														return false
+												return false
+											},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+														DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+															if old == "" && new == "false" {
+																return true
+															}
+															return false
+														},
 													},
-												},
-												names.AttrKMSKey: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
-													ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
-												},
-												"log_location": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 1024),
-														validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][a-z0-9\-]*[a-z0-9](/.*)?$`), "must be a valid S3 URI starting with s3://"),
-													),
+													names.AttrKMSKey: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
+														ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+													},
+													"log_location": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 1024),
+															validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][a-z0-9\-]*[a-z0-9](/.*)?$`), "must be a valid S3 URI starting with s3://"),
+														),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"publish_cloudwatch_metrics_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"result_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"acl_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"s3_acl_option": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+							"publish_cloudwatch_metrics_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"result_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"acl_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"s3_acl_option": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.S3AclOption](),
+													},
 												},
 											},
 										},
-									},
-									names.AttrEncryptionConfiguration: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"encryption_option": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
-												},
-												names.AttrKMSKeyARN: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
+										names.AttrEncryptionConfiguration: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"encryption_option": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
+													},
+													names.AttrKMSKeyARN: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-									names.AttrExpectedBucketOwner: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"output_location": {
-										Type:     schema.TypeString,
-										Optional: true,
+										names.AttrExpectedBucketOwner: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"output_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"requester_pays_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							"requester_pays_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
-				),
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.WorkGroupStateEnabled,
-				ValidateDiagFunc: enum.Validate[types.WorkGroupState](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
+					),
+				},
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.WorkGroupStateEnabled,
+					ValidateDiagFunc: enum.Validate[types.WorkGroupState](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -712,6 +736,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.IdentityCenterConfiguration = expandWorkGroupIdentityCenterConfiguration(v.([]any))
 	}
 
+	if v, ok := m["query_results_s3_access_grants_configuration"]; ok {
+		configuration.QueryResultsS3AccessGrantsConfiguration = expandWorkGroupQueryResultsS3AccessGrantsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["managed_query_results_configuration"]; ok {
 		configuration.ManagedQueryResultsConfiguration = expandWorkGroupManagedQueryResultsConfiguration(v.([]any))
 	}
@@ -817,6 +845,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.ExecutionRole = aws.String(v)
 	}
 
+	if v, ok := m["query_results_s3_access_grants_configuration"]; ok {
+		configurationUpdates.QueryResultsS3AccessGrantsConfiguration = expandWorkGroupQueryResultsS3AccessGrantsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["managed_query_results_configuration"]; ok {
 		configurationUpdates.ManagedQueryResultsConfigurationUpdates = expandWorkGroupManagedQueryResultsConfigurationUpdates(v.([]any))
 	}
@@ -915,6 +947,30 @@ func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterCo
 	}
 
 	return identityCenterConfiguration
+}
+
+func expandWorkGroupQueryResultsS3AccessGrantsConfiguration(l []any) *types.QueryResultsS3AccessGrantsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	queryResultsS3AccessGrantsConfiguration := &types.QueryResultsS3AccessGrantsConfiguration{}
+
+	if v, ok := m["authentication_type"].(string); ok && v != "" {
+		queryResultsS3AccessGrantsConfiguration.AuthenticationType = types.AuthenticationType(v)
+	}
+
+	if v, ok := m["create_user_level_prefix"].(bool); ok {
+		queryResultsS3AccessGrantsConfiguration.CreateUserLevelPrefix = aws.Bool(v)
+	}
+
+	if v, ok := m["enable_s3_access_grants"].(bool); ok {
+		queryResultsS3AccessGrantsConfiguration.EnableS3AccessGrants = aws.Bool(v)
+	}
+
+	return queryResultsS3AccessGrantsConfiguration
 }
 
 func expandWorkGroupResultConfiguration(l []any) *types.ResultConfiguration {
@@ -1184,18 +1240,19 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 	}
 
 	m := map[string]any{
-		"bytes_scanned_cutoff_per_query":            aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
-		"customer_content_encryption_configuration": flattenWorkGroupCustomerContentEncryptionConfiguration(configuration.CustomerContentEncryptionConfiguration),
-		"enable_minimum_encryption_configuration":   aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
-		"enforce_workgroup_configuration":           aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		names.AttrEngineVersion:                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
-		"execution_role":                            aws.ToString(configuration.ExecutionRole),
-		"identity_center_configuration":             flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
-		"managed_query_results_configuration":       flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
-		"monitoring_configuration":                  flattenWorkGroupMonitoringConfiguration(configuration.MonitoringConfiguration),
-		"publish_cloudwatch_metrics_enabled":        aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":                      flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
-		"requester_pays_enabled":                    aws.ToBool(configuration.RequesterPaysEnabled),
+		"bytes_scanned_cutoff_per_query":               aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
+		"customer_content_encryption_configuration":    flattenWorkGroupCustomerContentEncryptionConfiguration(configuration.CustomerContentEncryptionConfiguration),
+		"enable_minimum_encryption_configuration":      aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
+		"enforce_workgroup_configuration":              aws.ToBool(configuration.EnforceWorkGroupConfiguration),
+		names.AttrEngineVersion:                        flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                               aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":                flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
+		"query_results_s3_access_grants_configuration": flattenWorkGroupQueryResultsS3AccessGrantsConfiguration(configuration.QueryResultsS3AccessGrantsConfiguration),
+		"managed_query_results_configuration":          flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
+		"monitoring_configuration":                     flattenWorkGroupMonitoringConfiguration(configuration.MonitoringConfiguration),
+		"publish_cloudwatch_metrics_enabled":           aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":                         flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":                       aws.ToBool(configuration.RequesterPaysEnabled),
 	}
 
 	return []any{m}
@@ -1234,6 +1291,20 @@ func flattenWorkGroupIdentityCenterConfiguration(identityCenterConfiguration *ty
 	m := map[string]any{
 		"enable_identity_center":       aws.ToBool(identityCenterConfiguration.EnableIdentityCenter),
 		"identity_center_instance_arn": aws.ToString(identityCenterConfiguration.IdentityCenterInstanceArn),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupQueryResultsS3AccessGrantsConfiguration(queryResultsS3AccessGrantsConfiguration *types.QueryResultsS3AccessGrantsConfiguration) []any {
+	if queryResultsS3AccessGrantsConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"authentication_type":      string(queryResultsS3AccessGrantsConfiguration.AuthenticationType),
+		"create_user_level_prefix": aws.ToBool(queryResultsS3AccessGrantsConfiguration.CreateUserLevelPrefix),
+		"enable_s3_access_grants":  aws.ToBool(queryResultsS3AccessGrantsConfiguration.EnableS3AccessGrants),
 	}
 
 	return []any{m}

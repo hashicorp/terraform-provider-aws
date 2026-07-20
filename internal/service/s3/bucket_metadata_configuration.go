@@ -8,6 +8,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,7 +41,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;awstypes;awstypes.MetadataConfigurationResult")
 // @Testing(importStateIdAttribute="bucket")
 // @Testing(preIdentityVersion="6.32.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newBucketMetadataConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &bucketMetadataConfigurationResource{}
 
@@ -215,7 +215,11 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 
 	conn := r.Meta().S3Client(ctx)
 
-	bucket, expectedBucketOwner := fwflex.StringValueFromFramework(ctx, data.Bucket), fwflex.StringValueFromFramework(ctx, data.ExpectedBucketOwner)
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+	expectedBucketOwner := fwflex.StringValueFromFramework(ctx, data.ExpectedBucketOwner)
 	var input s3.CreateBucketMetadataConfigurationInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -223,6 +227,10 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 	}
 
 	_, err := conn.CreateBucketMetadataConfiguration(ctx, &input)
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket Metadata Configuration (%s)", bucket), err.Error())

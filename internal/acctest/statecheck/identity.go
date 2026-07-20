@@ -5,6 +5,7 @@ package statecheck
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"maps"
 
@@ -63,7 +64,23 @@ func (v *identity) Checks() func() map[string]knownvalue.Check {
 		checks := make(map[string]knownvalue.Check, len(v.values))
 
 		for k, val := range v.values {
-			checks[k] = knownvalue.StringExact(val.(string))
+			// add check for optional identities that may be nil
+			if val == nil {
+				checks[k] = knownvalue.Null()
+			} else {
+				switch v := val.(type) {
+				case string:
+					checks[k] = knownvalue.StringExact(v)
+				case json.Number:
+					if i, err := v.Int64(); err == nil {
+						checks[k] = knownvalue.Int64Exact(i)
+					} else {
+						checks[k] = knownvalue.StringExact(v.String())
+					}
+				default:
+					checks[k] = knownvalue.StringExact(fmt.Sprintf("%v", val))
+				}
+			}
 		}
 
 		return checks

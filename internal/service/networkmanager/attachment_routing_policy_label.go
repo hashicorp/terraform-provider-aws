@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -39,6 +40,7 @@ const (
 
 type attachmentRoutingPolicyLabelResource struct {
 	framework.ResourceWithModel[attachmentRoutingPolicyLabelResourceModel]
+	framework.WithNoUpdate
 }
 
 type attachmentRoutingPolicyLabelResourceModel struct {
@@ -84,6 +86,7 @@ func (r *attachmentRoutingPolicyLabelResource) Create(ctx context.Context, req r
 	coreNetworkID, attachmentID := fwflex.StringValueFromFramework(ctx, plan.CoreNetworkID), fwflex.StringValueFromFramework(ctx, plan.AttachmentID)
 	input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
 		AttachmentId:       aws.String(attachmentID),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		CoreNetworkId:      aws.String(coreNetworkID),
 		RoutingPolicyLabel: fwflex.StringFromFramework(ctx, plan.RoutingPolicyLabel),
 	}
@@ -258,8 +261,8 @@ func statusAttachment(conn *networkmanager.Client, coreNetworkID, attachmentID s
 
 func waitAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, coreNetworkID, attachmentID string, timeout time.Duration) (*awstypes.Attachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
-		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
+		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingTagAcceptance),
 		Timeout: timeout,
 		Refresh: statusAttachment(conn, coreNetworkID, attachmentID),
 	}

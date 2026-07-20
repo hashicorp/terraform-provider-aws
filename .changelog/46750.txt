@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudwatch_alarm_mute_rule
+```
+
+```release-note:new-list-resource
+aws_cloudwatch_alarm_mute_rule
+```

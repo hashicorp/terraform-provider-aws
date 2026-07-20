@@ -26,7 +26,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,22 +37,23 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_group", name="Group")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.AutoScalingGroup")
+// @Testing(importIgnore="force_delete;force_delete_warm_pool;ignore_failed_scaling_activities;wait_for_capacity_timeout")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -68,783 +69,74 @@ func resourceGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"vpc_zone_identifier"},
-			},
-			"availability_zone_distribution": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_distribution_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
-							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"capacity_rebalance": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"capacity_reservation_specification": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_reservation_preference": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
-						},
-						"capacity_reservation_target": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_reservation_ids": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
-									},
-									"capacity_reservation_resource_group_arns": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidARN,
-										},
-										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
-									},
-								},
-							},
-						},
-					},
+				names.AttrAvailabilityZones: {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"vpc_zone_identifier"},
 				},
-			},
-			"context": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"default_cooldown": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"default_instance_warmup": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"desired_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"desired_capacity_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[desiredCapacityType](),
-			},
-			"enabled_metrics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrForceDelete: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"force_delete_warm_pool": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"health_check_grace_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  300,
-			},
-			"health_check_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ignore_failed_scaling_activities": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"initial_lifecycle_hook": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_result": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
-						},
-						"heartbeat_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(30, 7200),
-						},
-						"lifecycle_transition": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
-									`no spaces or special characters except "-", "_", and "/"`),
-							),
-						},
-						"notification_metadata": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"notification_target_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"instance_maintenance_policy": {
-				Type:             schema.TypeList,
-				MaxItems:         1,
-				Optional:         true,
-				DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_healthy_percentage": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ValidateFunc: validation.Any(
-								validation.IntBetween(100, 200),
-								validation.IntBetween(-1, -1),
-							),
-							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return old == "" && new == "-1"
-							},
-						},
-						"min_healthy_percentage": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(-1, 100),
-							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return old == "" && new == "-1"
-							},
-						},
-					},
-				},
-			},
-			"instance_refresh": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"preferences": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarm_specification": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"alarms": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-											},
-										},
-									},
-									"auto_rollback": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"checkpoint_delay": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"checkpoint_percentages": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeInt,
-										},
-									},
-									"instance_warmup": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-									},
-									"max_healthy_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntBetween(100, 200),
-									},
-									"min_healthy_percentage": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      90,
-										ValidateFunc: validation.IntBetween(0, 100),
-									},
-									"scale_in_protected_instances": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.ScaleInProtectedInstancesIgnore,
-										ValidateDiagFunc: enum.Validate[awstypes.ScaleInProtectedInstances](),
-									},
-									"skip_matching": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"standby_instances": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.StandbyInstancesIgnore,
-										ValidateDiagFunc: enum.Validate[awstypes.StandbyInstances](),
-									},
-								},
-							},
-						},
-						"strategy": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RefreshStrategy](),
-						},
-						names.AttrTriggers: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+				"availability_zone_distribution": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_distribution_strategy": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
+								Optional:         true,
+								Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
+								ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
 							},
 						},
 					},
 				},
-			},
-			"launch_configuration": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			names.AttrLaunchTemplate: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  verify.ValidLaunchTemplateID,
-							ConflictsWith: []string{"launch_template.0.name"},
-						},
-						names.AttrName: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  verify.ValidLaunchTemplateName,
-							ConflictsWith: []string{"launch_template.0.id"},
-						},
-						names.AttrVersion: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-					},
+				"capacity_rebalance": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			"load_balancers": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"traffic_source"},
-			},
-			"max_instance_lifetime": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"max_size": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"metrics_granularity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  defaultEnabledMetricsGranularity,
-			},
-			"min_elb_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"min_size": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"mixed_instances_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instances_distribution": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Computed: true,
-							// Ideally we'd want to detect drift detection,
-							// but a DiffSuppressFunc here does not behave nicely
-							// for detecting missing configuration blocks
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									// These fields are returned from calls to the API
-									// even if not provided at input time and can be omitted in requests;
-									// thus, to prevent non-empty plans, we set these
-									// to Computed and remove Defaults
-									"on_demand_allocation_strategy": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"on_demand_base_capacity": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"on_demand_percentage_above_base_capacity": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntBetween(0, 100),
-									},
-									"spot_allocation_strategy": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"spot_instance_pools": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"spot_max_price": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+				"capacity_reservation_specification": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_reservation_preference": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
 							},
-						},
-						names.AttrLaunchTemplate: {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"launch_template_specification": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"launch_template_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												names.AttrVersion: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
+							"capacity_reservation_target": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_reservation_ids": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
 											},
+											ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arns"},
 										},
-									},
-									"override": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"instance_requirements": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accelerator_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"accelerator_manufacturers": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.AcceleratorManufacturer](),
-																},
-															},
-															"accelerator_names": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.AcceleratorName](),
-																},
-															},
-															"accelerator_total_memory_mib": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"accelerator_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.AcceleratorType](),
-																},
-															},
-															"allowed_instance_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																MaxItems: 400,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"bare_metal": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.BareMetal](),
-															},
-															"baseline_ebs_bandwidth_mbps": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"burstable_performance": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.BurstablePerformance](),
-															},
-															"cpu_manufacturers": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.CpuManufacturer](),
-																},
-															},
-															"excluded_instance_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																MaxItems: 400,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"instance_generations": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.InstanceGeneration](),
-																},
-															},
-															"local_storage": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.LocalStorage](),
-															},
-															"local_storage_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Schema{
-																	Type:             schema.TypeString,
-																	ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
-																},
-															},
-															"max_spot_price_as_percentage_of_optimal_on_demand_price": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"memory_gib_per_vcpu": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																	},
-																},
-															},
-															"memory_mib": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"network_bandwidth_gbps": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																	},
-																},
-															},
-															"network_interface_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-															"on_demand_max_price_percentage_over_lowest_price": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"require_hibernate_support": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"spot_max_price_percentage_over_lowest_price": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-															"total_local_storage_gb": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeFloat,
-																			Optional:     true,
-																			ValidateFunc: verify.FloatGreaterThan(0.0),
-																		},
-																	},
-																},
-															},
-															"vcpu_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrMax: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																		names.AttrMin: {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntAtLeast(1),
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												names.AttrInstanceType: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"launch_template_specification": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"launch_template_id": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"launch_template_name": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															names.AttrVersion: {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"weighted_capacity": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
-												},
+										"capacity_reservation_resource_group_arns": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidARN,
 											},
+											ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids"},
 										},
 									},
 								},
@@ -852,161 +144,872 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255),
-				ConflictsWith: []string{names.AttrNamePrefix},
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
-				ConflictsWith: []string{names.AttrName},
-			},
-			"placement_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"predicted_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"protect_from_scale_in": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"service_linked_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"suspended_processes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"propagate_at_launch": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
+				"context": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"default_cooldown": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"default_instance_warmup": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"desired_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"desired_capacity_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[desiredCapacityType](),
+				},
+				"enabled_metrics": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrForceDelete: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"force_delete_warm_pool": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"health_check_grace_period": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  300,
+				},
+				"health_check_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ignore_failed_scaling_activities": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"initial_lifecycle_hook": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_result": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
+							},
+							"heartbeat_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(30, 7200),
+							},
+							"lifecycle_transition": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 255),
+									validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
+										`no spaces or special characters except "-", "_", and "/"`),
+								),
+							},
+							"notification_metadata": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"notification_target_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			"target_group_arns": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"traffic_source"},
-			},
-			"termination_policies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"traffic_source": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIdentifier: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
+				"instance_maintenance_policy": {
+					Type:             schema.TypeList,
+					MaxItems:         1,
+					Optional:         true,
+					DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_healthy_percentage": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ValidateFunc: validation.Any(
+									validation.IntBetween(100, 200),
+									validation.IntBetween(-1, -1),
+								),
+								// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return old == "" && new == "-1"
+								},
+							},
+							"min_healthy_percentage": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(-1, 100),
+								// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return old == "" && new == "-1"
+								},
+							},
 						},
 					},
 				},
-				ConflictsWith: []string{"load_balancers", "target_group_arns"},
-			},
-			"vpc_zone_identifier": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrAvailabilityZones},
-			},
-			"wait_for_capacity_timeout": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "10m",
-				ValidateFunc: verify.ValidDuration,
-			},
-			"wait_for_elb_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"warm_pool": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_reuse_policy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"reuse_on_scale_in": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
+				"instance_refresh": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"preferences": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alarm_specification": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"alarms": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+												},
+											},
+										},
+										"auto_rollback": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"checkpoint_delay": {
+											Type:         nullable.TypeNullableInt,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+										},
+										"checkpoint_percentages": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeInt,
+											},
+										},
+										"instance_warmup": {
+											Type:         nullable.TypeNullableInt,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+										},
+										"max_healthy_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      100,
+											ValidateFunc: validation.IntBetween(100, 200),
+										},
+										"min_healthy_percentage": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      90,
+											ValidateFunc: validation.IntBetween(0, 100),
+										},
+										"scale_in_protected_instances": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.ScaleInProtectedInstancesIgnore,
+											ValidateDiagFunc: enum.Validate[awstypes.ScaleInProtectedInstances](),
+										},
+										"skip_matching": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"standby_instances": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.StandbyInstancesIgnore,
+											ValidateDiagFunc: enum.Validate[awstypes.StandbyInstances](),
+										},
+									},
+								},
+							},
+							"strategy": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RefreshStrategy](),
+							},
+							names.AttrTriggers: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: validateGroupInstanceRefreshTriggerFields,
+								},
+							},
+						},
+					},
+				},
+				"launch_configuration": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
+				},
+				names.AttrLaunchTemplate: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  verify.ValidLaunchTemplateID,
+								ConflictsWith: []string{"launch_template.0.name"},
+							},
+							names.AttrName: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  verify.ValidLaunchTemplateName,
+								ConflictsWith: []string{"launch_template.0.id"},
+							},
+							names.AttrVersion: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
+					},
+					ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
+				},
+				"load_balancers": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"traffic_source"},
+				},
+				"max_instance_lifetime": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"max_size": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"metrics_granularity": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  defaultEnabledMetricsGranularity,
+				},
+				"min_elb_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"min_size": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"mixed_instances_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instances_distribution": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Computed: true,
+								// Ideally we'd want to detect drift detection,
+								// but a DiffSuppressFunc here does not behave nicely
+								// for detecting missing configuration blocks
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										// These fields are returned from calls to the API
+										// even if not provided at input time and can be omitted in requests;
+										// thus, to prevent non-empty plans, we set these
+										// to Computed and remove Defaults
+										"on_demand_allocation_strategy": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"on_demand_base_capacity": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"on_demand_percentage_above_base_capacity": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntBetween(0, 100),
+										},
+										"spot_allocation_strategy": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"spot_instance_pools": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"spot_max_price": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrLaunchTemplate: {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"launch_template_specification": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"launch_template_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"launch_template_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													names.AttrVersion: {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"override": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"instance_requirements": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"accelerator_count": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"accelerator_manufacturers": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.AcceleratorManufacturer](),
+																	},
+																},
+																"accelerator_names": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.AcceleratorName](),
+																	},
+																},
+																"accelerator_total_memory_mib": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"accelerator_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.AcceleratorType](),
+																	},
+																},
+																"allowed_instance_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	MaxItems: 400,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																"bare_metal": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.BareMetal](),
+																},
+																"baseline_ebs_bandwidth_mbps": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"burstable_performance": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.BurstablePerformance](),
+																},
+																"cpu_manufacturers": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.CpuManufacturer](),
+																	},
+																},
+																"excluded_instance_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	MaxItems: 400,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																"instance_generations": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.InstanceGeneration](),
+																	},
+																},
+																"local_storage": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.LocalStorage](),
+																},
+																"local_storage_types": {
+																	Type:     schema.TypeSet,
+																	Optional: true,
+																	Elem: &schema.Schema{
+																		Type:             schema.TypeString,
+																		ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
+																	},
+																},
+																"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"memory_gib_per_vcpu": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																		},
+																	},
+																},
+																"memory_mib": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"network_bandwidth_gbps": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																		},
+																	},
+																},
+																"network_interface_count": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+																"on_demand_max_price_percentage_over_lowest_price": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"require_hibernate_support": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+																"spot_max_price_percentage_over_lowest_price": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+																"total_local_storage_gb": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeFloat,
+																				Optional:     true,
+																				ValidateFunc: verify.FloatGreaterThan(0.0),
+																			},
+																		},
+																	},
+																},
+																"vcpu_count": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrMax: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																			names.AttrMin: {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+													names.AttrInstanceType: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"launch_template_specification": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"launch_template_id": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+																"launch_template_name": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+																names.AttrVersion: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"weighted_capacity": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
+													},
+												},
+											},
+										},
 									},
 								},
 							},
 						},
-						"max_group_prepared_capacity": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      defaultWarmPoolMaxGroupPreparedCapacity,
-							ValidateFunc: validation.IntAtLeast(defaultWarmPoolMaxGroupPreparedCapacity),
-						},
-						"min_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"pool_state": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.WarmPoolStateStopped,
-							ValidateDiagFunc: enum.Validate[awstypes.WarmPoolState](),
+					},
+					ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255),
+					ConflictsWith: []string{names.AttrNamePrefix},
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
+					ConflictsWith: []string{names.AttrName},
+				},
+				"placement_group": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"predicted_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"protect_from_scale_in": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"service_linked_role_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"suspended_processes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"tag": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"propagate_at_launch": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"warm_pool_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"target_group_arns": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"traffic_source"},
+				},
+				"termination_policies": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"traffic_source": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIdentifier: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+						},
+					},
+					ConflictsWith: []string{"load_balancers", "target_group_arns"},
+				},
+				"vpc_zone_identifier": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{names.AttrAvailabilityZones},
+				},
+				"wait_for_capacity_timeout": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "10m",
+					ValidateFunc: verify.ValidDuration,
+				},
+				"wait_for_elb_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"warm_pool": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instance_reuse_policy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"reuse_on_scale_in": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+									},
+								},
+							},
+							"max_group_prepared_capacity": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      defaultWarmPoolMaxGroupPreparedCapacity,
+								ValidateFunc: validation.IntAtLeast(defaultWarmPoolMaxGroupPreparedCapacity),
+							},
+							"min_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"pool_state": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.WarmPoolStateStopped,
+								ValidateDiagFunc: enum.Validate[awstypes.WarmPoolState](),
+							},
+						},
+					},
+				},
+				"warm_pool_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -1199,7 +1202,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		inputCASG.Tags = svcTags(keyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		inputCASG.Tags = svcTags(keyValueTags(ctx, v, asgName, tagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -1326,7 +1329,6 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 
@@ -1339,6 +1341,12 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", d.Id(), err)
 	}
+
+	return append(diags, resourceGroupFlatten(ctx, meta.(*conns.AWSClient), g, d)...)
+}
+
+func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *awstypes.AutoScalingGroup, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
@@ -1414,7 +1422,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("warm_pool_size", g.WarmPoolSize)
 
-	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	ignoreTagsConfig := awsClient.IgnoreTagsConfig(ctx)
+	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), tagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 
@@ -1576,10 +1585,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChanges("tag") {
 		oTagRaw, nTagRaw := d.GetChange("tag")
-		oldTags := svcTags(keyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
-		newTags := svcTags(keyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
+		oldTags := svcTags(keyValueTags(ctx, oTagRaw, d.Id(), tagResourceTypeGroup))
+		newTags := svcTags(keyValueTags(ctx, nTagRaw, d.Id(), tagResourceTypeGroup))
 
-		if err := updateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), tagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
 		}
 	}
@@ -1602,7 +1611,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 			}
 
-			if _, err := waitTrafficSourcesDeleted(ctx, conn, d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countTrafficSourcesInState(ctx, conn, d.Id(), "", trafficSourceStateRemoving)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources removed: %s", d.Id(), err)
 			}
 		}
@@ -1619,7 +1630,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 			}
 
-			if _, err := waitTrafficSourcesCreated(ctx, conn, d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countTrafficSourcesInState(ctx, conn, d.Id(), "", trafficSourceStateAdding)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources added: %s", d.Id(), err)
 			}
 		}
@@ -1643,7 +1656,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
 			}
 
-			if _, err := waitLoadBalancersRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancersInState(ctx, conn, d.Id(), loadBalancerStateRemoving)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers removed: %s", d.Id(), err)
 			}
 		}
@@ -1660,7 +1675,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
 			}
 
-			if _, err := waitLoadBalancersAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancersInState(ctx, conn, d.Id(), loadBalancerStateAdding)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers added: %s", d.Id(), err)
 			}
 		}
@@ -1683,8 +1700,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
-
-			if _, err := waitLoadBalancerTargetGroupsRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), loadBalancerTargetGroupStateRemoving)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 			}
 		}
@@ -1701,7 +1719,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
 
-			if _, err := waitLoadBalancerTargetGroupsAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), 0, func(ctx context.Context) (int, error) {
+				return countLoadBalancerTargetGroupsInState(ctx, conn, d.Id(), loadBalancerTargetGroupStateAdding)
+			}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
 			}
 		}
@@ -1971,7 +1991,9 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 		}
 	}
 
-	if _, err := waitGroupDrained(ctx, conn, name, timeout); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
+		return countGroupInstances(ctx, conn, name)
+	}); err != nil {
 		return fmt.Errorf("waiting for Auto Scaling Group (%s) drain: %w", name, err)
 	}
 
@@ -2023,7 +2045,9 @@ func drainWarmPool(ctx context.Context, conn *autoscaling.Client, name string, t
 		return fmt.Errorf("setting Auto Scaling Warm Pool (%s) capacity to 0: %w", name, err)
 	}
 
-	if _, err := waitWarmPoolDrained(ctx, conn, name, timeout); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
+		return countWarmPoolInstances(ctx, conn, name)
+	}); err != nil {
 		return fmt.Errorf("waiting for Auto Scaling Warm Pool (%s) drain: %w", name, err)
 	}
 
@@ -2146,6 +2170,16 @@ func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string)
 	return output, nil
 }
 
+func countGroupInstances(ctx context.Context, conn *autoscaling.Client, name string) (int, error) {
+	output, err := findGroupByName(ctx, conn, name)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(output.Instances), nil
+}
+
 func findInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeInstanceRefreshesInput) (*awstypes.InstanceRefresh, error) {
 	output, err := findInstanceRefreshes(ctx, conn, input)
 
@@ -2179,13 +2213,10 @@ func findInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input 
 	return output, nil
 }
 
-func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name string) ([]awstypes.LoadBalancerState, error) {
-	input := autoscaling.DescribeLoadBalancersInput{
-		AutoScalingGroupName: aws.String(name),
-	}
+func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLoadBalancersInput) ([]awstypes.LoadBalancerState, error) {
 	var output []awstypes.LoadBalancerState
 
-	pages := autoscaling.NewDescribeLoadBalancersPaginator(conn, &input)
+	pages := autoscaling.NewDescribeLoadBalancersPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2205,13 +2236,30 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name 
 	return output, nil
 }
 
-func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Client, name string) ([]awstypes.LoadBalancerTargetGroupState, error) {
-	input := autoscaling.DescribeLoadBalancerTargetGroupsInput{
-		AutoScalingGroupName: aws.String(name),
+func findLoadBalancerStatesByASGName(ctx context.Context, conn *autoscaling.Client, asgName string) ([]awstypes.LoadBalancerState, error) {
+	input := autoscaling.DescribeLoadBalancersInput{
+		AutoScalingGroupName: aws.String(asgName),
 	}
+
+	return findLoadBalancerStates(ctx, conn, &input)
+}
+
+func countLoadBalancersInState(ctx context.Context, conn *autoscaling.Client, asgName, state string) (int, error) {
+	output, err := findLoadBalancerStatesByASGName(ctx, conn, asgName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(tfslices.Filter(output, func(v awstypes.LoadBalancerState) bool {
+		return aws.ToString(v.State) == state
+	})), nil
+}
+
+func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLoadBalancerTargetGroupsInput) ([]awstypes.LoadBalancerTargetGroupState, error) {
 	var output []awstypes.LoadBalancerTargetGroupState
 
-	pages := autoscaling.NewDescribeLoadBalancerTargetGroupsPaginator(conn, &input)
+	pages := autoscaling.NewDescribeLoadBalancerTargetGroupsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2229,6 +2277,26 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Cl
 	}
 
 	return output, nil
+}
+
+func findLoadBalancerTargetGroupStatesByASGName(ctx context.Context, conn *autoscaling.Client, asgName string) ([]awstypes.LoadBalancerTargetGroupState, error) {
+	input := autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+
+	return findLoadBalancerTargetGroupStates(ctx, conn, &input)
+}
+
+func countLoadBalancerTargetGroupsInState(ctx context.Context, conn *autoscaling.Client, asgName, state string) (int, error) {
+	output, err := findLoadBalancerTargetGroupStatesByASGName(ctx, conn, asgName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(tfslices.Filter(output, func(v awstypes.LoadBalancerTargetGroupState) bool {
+		return aws.ToString(v.State) == state
+	})), nil
 }
 
 func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeScalingActivitiesInput, startTime time.Time) ([]awstypes.Activity, error) {
@@ -2300,6 +2368,18 @@ func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.
 	return findTrafficSourceStates(ctx, conn, &input)
 }
 
+func countTrafficSourcesInState(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, state string) (int, error) {
+	output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(tfslices.Filter(output, func(v awstypes.TrafficSourceState) bool {
+		return aws.ToString(v.State) == state
+	})), nil
+}
+
 func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeWarmPoolInput) (*autoscaling.DescribeWarmPoolOutput, error) {
 	var output *autoscaling.DescribeWarmPoolOutput
 
@@ -2331,12 +2411,22 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 	return output, nil
 }
 
-func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
+func findWarmPoolByASGName(ctx context.Context, conn *autoscaling.Client, asgName string) (*autoscaling.DescribeWarmPoolOutput, error) {
 	input := autoscaling.DescribeWarmPoolInput{
-		AutoScalingGroupName: aws.String(name),
+		AutoScalingGroupName: aws.String(asgName),
 	}
 
 	return findWarmPool(ctx, conn, &input)
+}
+
+func countWarmPoolInstances(ctx context.Context, conn *autoscaling.Client, asgName string) (int, error) {
+	output, err := findWarmPoolByASGName(ctx, conn, asgName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(output.Instances), nil
 }
 
 func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
@@ -2395,7 +2485,7 @@ func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing
 				continue
 			}
 
-			if aws.ToString(v.HealthStatus) != InstanceHealthStatusHealthy {
+			if aws.ToString(v.HealthStatus) != instanceHealthStatusHealthy {
 				continue
 			}
 
@@ -2444,22 +2534,6 @@ func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing
 	}
 }
 
-func statusGroupInstanceCount(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findGroupByName(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, strconv.Itoa(len(output.Instances)), nil
-	}
-}
-
 func statusInstanceRefresh(conn *autoscaling.Client, name, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		input := autoscaling.DescribeInstanceRefreshesInput{
@@ -2481,81 +2555,9 @@ func statusInstanceRefresh(conn *autoscaling.Client, name, id string) retry.Stat
 	}
 }
 
-func statusLoadBalancerInStateCount(conn *autoscaling.Client, name string, states ...string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findLoadBalancerStates(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			if slices.Contains(states, aws.ToString(v.State)) {
-				count++
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
-func statusLoadBalancerTargetGroupInStateCount(conn *autoscaling.Client, name string, states ...string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findLoadBalancerTargetGroupStates(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			if slices.Contains(states, aws.ToString(v.State)) {
-				count++
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
-func statusTrafficSourcesInStateCount(conn *autoscaling.Client, asgName, trafficSourceType string, states ...string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			if slices.Contains(states, aws.ToString(v.State)) {
-				count++
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
 func statusWarmPool(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findWarmPoolByName(ctx, conn, name)
+		output, err := findWarmPoolByASGName(ctx, conn, name)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -2566,22 +2568,6 @@ func statusWarmPool(conn *autoscaling.Client, name string) retry.StateRefreshFun
 		}
 
 		return output.WarmPoolConfiguration, string(output.WarmPoolConfiguration.Status), nil
-	}
-}
-
-func statusWarmPoolInstanceCount(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findWarmPoolByName(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, strconv.Itoa(len(output.Instances)), nil
 	}
 }
 
@@ -2599,118 +2585,6 @@ func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, e
 	}
 
 	return err
-}
-
-func waitGroupDrained(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*awstypes.AutoScalingGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusGroupInstanceCount(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.AutoScalingGroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancersAdded(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerInStateCount(conn, name, LoadBalancerStateAdding),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancersRemoved(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerInStateCount(conn, name, LoadBalancerStateRemoving),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancerTargetGroupsAdded(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerTargetGroupState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerTargetGroupInStateCount(conn, name, LoadBalancerTargetGroupStateAdding),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerTargetGroupState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerTargetGroupState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusLoadBalancerTargetGroupInStateCount(conn, name, LoadBalancerTargetGroupStateRemoving),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.LoadBalancerTargetGroupState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, timeout time.Duration) ([]*awstypes.TrafficSourceState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesInStateCount(conn, asgName, trafficSourceType, TrafficSourceStateAdding),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.TrafficSourceState); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, timeout time.Duration) ([]*awstypes.TrafficSourceState, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesInStateCount(conn, asgName, trafficSourceType, TrafficSourceStateRemoving),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.([]*awstypes.TrafficSourceState); ok {
-		return output, err
-	}
-
-	return nil, err
 }
 
 const (
@@ -2761,22 +2635,6 @@ func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.WarmPoolConfiguration); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitWarmPoolDrained(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*autoscaling.DescribeWarmPoolOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"0"},
-		Refresh: statusWarmPoolInstanceCount(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*autoscaling.DescribeWarmPoolOutput); ok {
 		return output, err
 	}
 

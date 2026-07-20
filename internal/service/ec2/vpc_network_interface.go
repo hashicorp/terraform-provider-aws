@@ -19,10 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -36,7 +36,13 @@ import (
 
 // @SDKResource("aws_network_interface", name="Network Interface")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NetworkInterface")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(importIgnore="private_ip_list_enabled;ipv6_address_list_enabled")
+// @Testing(plannableImportAction="NoOp")
 func resourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
@@ -44,181 +50,205 @@ func resourceNetworkInterface() *schema.Resource {
 		UpdateWithoutTimeout: resourceNetworkInterfaceUpdate,
 		DeleteWithoutTimeout: resourceNetworkInterfaceDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attachment": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attachment_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"instance": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"network_card_index": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attachment": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attachment_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"instance": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable_primary_ipv6": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"interface_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkInterfaceCreationType](),
-			},
-			"ipv4_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-				ConflictsWith: []string{"ipv4_prefix_count"},
-			},
-			"ipv4_prefix_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv4_prefixes"},
-			},
-			"ipv6_address_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_list"},
-			},
-			"ipv6_address_list": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_count"},
-			},
-			"ipv6_address_list_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsIPv6Address,
+				"enable_primary_ipv6": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-				ConflictsWith: []string{"ipv6_address_count", "ipv6_address_list"},
-			},
-			"ipv6_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				"ena_srd_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ena_srd_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"ena_srd_udp_specification": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ena_srd_udp_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
 				},
-				ConflictsWith: []string{"ipv6_prefix_count"},
-			},
-			"ipv6_prefix_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_prefixes"},
-			},
-			"mac_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"private_ips": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"private_ip_list"},
-			},
-			"private_ips_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"private_ip_list"},
-			},
-			"private_ip_list": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"private_ips", "private_ips_count"},
-			},
-			"private_ip_list_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"source_dest_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"interface_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkInterfaceCreationType](),
+				},
+				"ipv4_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+					},
+					ConflictsWith: []string{"ipv4_prefix_count"},
+				},
+				"ipv4_prefix_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv4_prefixes"},
+				},
+				"ipv6_address_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_addresses", "ipv6_address_list"},
+				},
+				"ipv6_address_list": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"ipv6_addresses", "ipv6_address_count"},
+				},
+				"ipv6_address_list_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ipv6_addresses": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.IsIPv6Address,
+					},
+					ConflictsWith: []string{"ipv6_address_count", "ipv6_address_list"},
+				},
+				"ipv6_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+					},
+					ConflictsWith: []string{"ipv6_prefix_count"},
+				},
+				"ipv6_prefix_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_prefixes"},
+				},
+				"mac_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"private_ips": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"private_ip_list"},
+				},
+				"private_ips_count": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"private_ip_list"},
+				},
+				"private_ip_list": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"private_ips", "private_ips_count"},
+				},
+				"private_ip_list_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"source_dest_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -357,7 +387,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
 	input := ec2.CreateNetworkInterfaceInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
@@ -515,6 +545,19 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId:  aws.String(d.Id()),
+			EnaSrdSpecification: expandEnaSrdSpecification(v.([]any)[0].(map[string]any)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) ENA SRD specification: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
@@ -537,56 +580,9 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(eni.OwnerId)
-	d.Set(names.AttrARN, networkInterfaceARN(ctx, c, ownerID, d.Id()))
-	if eni.Attachment != nil {
-		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
-		}
-	} else {
-		d.Set("attachment", nil)
+	if err := resourceNetworkInterfaceFlatten(ctx, c, eni, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s): %s", d.Id(), err)
 	}
-	d.Set(names.AttrDescription, eni.Description)
-	d.Set("interface_type", eni.InterfaceType)
-	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv4_prefixes: %s", err)
-	}
-	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
-	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
-	if len(eni.Ipv6Addresses) > 0 {
-		if err := d.Set("enable_primary_ipv6", eni.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
-		}
-	}
-	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
-	}
-	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv6_addresses: %s", err)
-	}
-	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv6_prefixes: %s", err)
-	}
-	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
-	d.Set("mac_address", eni.MacAddress)
-	d.Set("outpost_arn", eni.OutpostArn)
-	d.Set(names.AttrOwnerID, ownerID)
-	d.Set("private_dns_name", eni.PrivateDnsName)
-	d.Set("private_ip", eni.PrivateIpAddress)
-	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting private_ips: %s", err)
-	}
-	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
-	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
-	}
-	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
-	}
-	d.Set("source_dest_check", eni.SourceDestCheck)
-	d.Set(names.AttrSubnetID, eni.SubnetId)
-
-	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }
@@ -680,8 +676,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			n = make([]string, 0)
 		}
 
-		if len(o.([]any))-1 > 0 {
-			privateIPsToUnassign := make([]any, len(o.([]any))-1)
+		if n := len(o.([]any)); n > 1 {
+			privateIPsToUnassign := make([]any, n-1)
 			idx := 0
 			for i, ip := range o.([]any) {
 				// skip primary private ip address
@@ -1077,6 +1073,26 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Description: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("ena_srd_specification") {
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.EnaSrdSpecification = expandEnaSrdSpecification(v.([]any)[0].(map[string]any))
+		} else {
+			input.EnaSrdSpecification = &awstypes.EnaSrdSpecification{
+				EnaSrdEnabled: aws.Bool(false),
+			}
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) ENA SRD specification: %s", d.Id(), err)
 		}
 	}
 
@@ -1513,6 +1529,132 @@ func flattenIPv6PrefixSpecifications(apiObjects []awstypes.Ipv6PrefixSpecificati
 	}
 
 	return tfList
+}
+
+func expandEnaSrdSpecification(tfMap map[string]any) *awstypes.EnaSrdSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdSpecification{}
+
+	if v, ok := tfMap["ena_srd_enabled"].(bool); ok {
+		apiObject.EnaSrdEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["ena_srd_udp_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdUdpSpecification = expandEnaSrdUdpSpecification(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandEnaSrdUdpSpecification(tfMap map[string]any) *awstypes.EnaSrdUdpSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdUdpSpecification{}
+
+	if v, ok := tfMap["ena_srd_udp_enabled"].(bool); ok {
+		apiObject.EnaSrdUdpEnabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenAttachmentEnaSrdSpecification(apiObject *awstypes.AttachmentEnaSrdSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnaSrdEnabled; v != nil {
+		tfMap["ena_srd_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EnaSrdUdpSpecification; v != nil {
+		tfMap["ena_srd_udp_specification"] = []any{flattenAttachmentEnaSrdUdpSpecification(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAttachmentEnaSrdUdpSpecification(apiObject *awstypes.AttachmentEnaSrdUdpSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnaSrdUdpEnabled; v != nil {
+		tfMap["ena_srd_udp_enabled"] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
+func resourceNetworkInterfaceFlatten(ctx context.Context, awsClient *conns.AWSClient, eni *awstypes.NetworkInterface, d *schema.ResourceData) error {
+	ownerID := aws.ToString(eni.OwnerId)
+	d.Set(names.AttrARN, networkInterfaceARN(ctx, awsClient, ownerID, d.Id()))
+	if eni.Attachment != nil {
+		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
+			return fmt.Errorf("setting attachment: %w", err)
+		}
+	} else {
+		d.Set("attachment", nil)
+	}
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
+		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
+			return fmt.Errorf("setting ena_srd_specification: %w", err)
+		}
+	} else {
+		d.Set("ena_srd_specification", nil)
+	}
+	d.Set(names.AttrDescription, eni.Description)
+	d.Set("interface_type", eni.InterfaceType)
+	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
+		return fmt.Errorf("setting ipv4_prefixes: %w", err)
+	}
+	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
+	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
+	if len(eni.Ipv6Addresses) > 0 {
+		if err := d.Set("enable_primary_ipv6", eni.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
+			return fmt.Errorf("setting enable_primary_ipv6: %w", err)
+		}
+	}
+	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("setting ipv6 address list: %w", err)
+	}
+	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("setting ipv6_addresses: %w", err)
+	}
+	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
+		return fmt.Errorf("setting ipv6_prefixes: %w", err)
+	}
+	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
+	d.Set("mac_address", eni.MacAddress)
+	d.Set(names.AttrOutpostARN, eni.OutpostArn)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("private_ip", eni.PrivateIpAddress)
+	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+		return fmt.Errorf("setting private_ips: %w", err)
+	}
+	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
+	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+		return fmt.Errorf("setting private_ip_list: %w", err)
+	}
+	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
+		return fmt.Errorf("setting security_groups: %w", err)
+	}
+	d.Set("source_dest_check", eni.SourceDestCheck)
+	d.Set(names.AttrSubnetID, eni.SubnetId)
+
+	setTagsOut(ctx, eni.TagSet)
+
+	return nil
 }
 
 // Some AWS services creates ENIs behind the scenes and keeps these around for a while

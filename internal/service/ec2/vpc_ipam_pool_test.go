@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +27,16 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_max_netmask_length"),
@@ -52,6 +52,11 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "create-complete"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -61,7 +66,7 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMPoolConfig_updated,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_default_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_max_netmask_length", "32"),
@@ -78,6 +83,11 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "modify-complete"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -88,19 +98,27 @@ func TestAccIPAMPool_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -111,16 +129,16 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_ipv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", acctest.CtFalse),
 				),
@@ -139,16 +157,16 @@ func TestAccIPAMPool_ipv6PublicIPAmazon(t *testing.T) { // nosemgrep:ci.vpc-in-t
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_ipv6PublicIPAmazon,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "amazon"),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", "ec2"),
@@ -169,16 +187,16 @@ func TestAccIPAMPool_ipv6Contiguous(t *testing.T) { // nosemgrep:ci.vpc-in-test-
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_ipv6Contiguous,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "byoip"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", acctest.CtFalse),
@@ -198,17 +216,17 @@ func TestAccIPAMPool_cascade(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_cascade,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					testAccCheckIPAMPoolCIDRCreate(ctx, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
+					testAccCheckIPAMPoolCIDRCreate(ctx, t, &pool),
 				),
 			},
 			{
@@ -226,16 +244,16 @@ func TestAccIPAMPool_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -248,7 +266,7 @@ func TestAccIPAMPool_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMPoolConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -257,7 +275,7 @@ func TestAccIPAMPool_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMPoolConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -271,16 +289,16 @@ func TestAccIPAMPool_ipv6PrivateScope(t *testing.T) { // nosemgrep:ci.vpc-in-tes
 	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_ipv6PrivateScope,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 				),
 			},
 		},
@@ -294,20 +312,20 @@ func TestAccIPAMPool_ResourcePlanningVPC_ipv4(t *testing.T) { // nosemgrep:ci.vp
 
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
@@ -332,20 +350,20 @@ func TestAccIPAMPool_ResourcePlanningVPC_ipv6(t *testing.T) { // nosemgrep:ci.vp
 
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
@@ -370,40 +388,49 @@ func TestAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) { //
 	}
 
 	ctx := acctest.Context(t)
-	var pool1, pool2 awstypes.IpamPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var pool awstypes.IpamPool
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
 	vpcResourceName2 := "aws_vpc.new"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool1),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool2),
-					testAccCheckIPAMPoolRecreated(&pool1, &pool2),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName2, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -416,24 +443,24 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossRegion(t *testing.T) { // nosemgre
 
 	ctx := acctest.Context(t)
 	var pool awstypes.IpamPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
 	parentPoolResourceName := "aws_vpc_ipam_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_crossRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
@@ -452,30 +479,46 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossRegion(t *testing.T) { // nosemgre
 	})
 }
 
+// Prerequisites:
+// * Organization member account
+// * Organizations management account
+// Authenticate with member account as target account and management account as alternate.
+// Required this way since an IPAM admin account has to be a member account and
+// not the management account.
 func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	var pool awstypes.IpamPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test_alternate"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccIPAMPoolConfig_resourcePlanningVPC_crossAccountInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_crossAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
@@ -499,13 +542,13 @@ func TestAccIPAMPool_ResourcePlanningVPC_noParentLocale(t *testing.T) { // nosem
 	}
 
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIPAMPoolConfig_resourcePlanningVPC_noParentLocale(rName),
@@ -515,14 +558,14 @@ func TestAccIPAMPool_ResourcePlanningVPC_noParentLocale(t *testing.T) { // nosem
 	})
 }
 
-func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolExists(ctx context.Context, t *testing.T, n string, v *awstypes.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolByID(ctx, conn, rs.Primary.ID)
 
@@ -536,9 +579,9 @@ func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamP
 	}
 }
 
-func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAMPoolDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_pool" {
@@ -562,9 +605,9 @@ func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, t *testing.T, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.ProvisionIpamPoolCidrInput{
 			IpamPoolId: ipampool.IpamPoolId,
@@ -573,16 +616,6 @@ func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.Ipam
 		_, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 		return err
-	}
-}
-
-func testAccCheckIPAMPoolRecreated(before, after *awstypes.IpamPool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.IpamPoolId), aws.ToString(after.IpamPoolId); before == after {
-			return fmt.Errorf("IPAM Pool (%s) was not recreated", before)
-		}
-
-		return nil
 	}
 }
 
@@ -928,16 +961,30 @@ resource "aws_vpc_ipam_pool" "vpc" {
 `, rName))
 }
 
-func testAccIPAMPoolConfig_resourcePlanningVPC_crossAccount(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountProvider(),
-		fmt.Sprintf(`
-data "aws_region" "current" {}
-
+// Initialize all the providers used by cross account IPAM pool test.
+var testAccIPAMPoolConfig_resourcePlanningVPC_crossAccountInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "current" {}
 
 data "aws_caller_identity" "alternate" {
   provider = awsalternate
+}
+`)
+
+func testAccIPAMPoolConfig_resourcePlanningVPC_crossAccount(rName string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolConfig_resourcePlanningVPC_crossAccountInit,
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+# Alternate account must be Org admin account
+data "aws_organizations_organization" "test" {
+  provider = awsalternate
+}
+
+# Primary account must be org IPAM admin account
+resource "aws_vpc_ipam_organization_admin_account" "test" {
+  provider = awsalternate
+
+  delegated_admin_account_id = data.aws_caller_identity.current.account_id
 }
 
 # Primary account - IPAM and parent pool
@@ -946,19 +993,15 @@ resource "aws_vpc_ipam" "test" {
     region_name = data.aws_region.current.name
   }
 
-  tags = {
-    Name = %[1]q
-  }
+  depends_on = [
+    aws_vpc_ipam_organization_admin_account.test
+  ]
 }
 
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
   locale         = data.aws_region.current.name
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
@@ -966,14 +1009,38 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
   cidr         = "10.0.0.0/16"
 }
 
-# Alternate account - VPC to be managed by IPAM
+# RAM IPAM pool must be shared for other account vpc to use it
+resource "aws_ram_resource_share" "test" {
+  name                      = %[1]q
+  allow_external_principals = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_association" "test" {
+  resource_arn       = aws_vpc_ipam_pool.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_principal_association" "test" {
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+# Alternate account - VPC to be managed by IPAM (same as Org admin account)
 resource "aws_vpc" "test_alternate" {
   provider = awsalternate
 
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
   ipv4_netmask_length = 24
 
-  depends_on = [aws_vpc_ipam_pool_cidr.test]
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test,
+    aws_ram_principal_association.test,
+    aws_ram_resource_association.test
+  ]
 
   tags = {
     Name = %[1]q

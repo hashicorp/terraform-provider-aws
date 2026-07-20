@@ -62,23 +62,17 @@ func (l *listResourceRuleAssociation) List(ctx context.Context, request list.Lis
 			rd := l.ResourceData()
 			rd.SetId(id)
 
-			tflog.Info(ctx, "Reading Route 53 Resolver Rule Association")
-			diags := resourceRuleAssociationRead(ctx, rd, l.Meta())
+			diags := resourceRuleAssociationFlatten(rd, &item)
 			if diags.HasError() {
 				tflog.Error(ctx, "Reading Route 53 Resolver Rule Association", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+					"error": sdkdiag.DiagnosticsString(diags),
 				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
 				continue
 			}
 
 			result.DisplayName = aws.ToString(item.Name)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

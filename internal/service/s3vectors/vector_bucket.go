@@ -40,7 +40,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3vectors/types;awstypes;awstypes.VectorBucket")
 // @Testing(importIgnore="force_destroy")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketResource{}
 

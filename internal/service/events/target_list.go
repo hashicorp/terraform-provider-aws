@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -91,23 +90,11 @@ func (l *listResourceTarget) List(ctx context.Context, request list.ListRequest,
 			rd.Set(names.AttrRule, ruleName)
 			rd.Set("target_id", targetID)
 
-			tflog.Info(ctx, "Reading EventBridge Target")
-			diags := resourceTargetRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading EventBridge Target", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
-			}
+			resourceTargetFlatten(ctx, eventBusName, rd, &item)
 
 			result.DisplayName = targetID
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -128,22 +115,21 @@ type listTargetModel struct {
 
 func listTargets(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput) iter.Seq2[awstypes.Target, error] {
 	return func(yield func(awstypes.Target, error) bool) {
+		var stopped bool
 		err := listTargetsByRulePages(ctx, conn, input, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
-
 			for _, item := range page.Targets {
 				if !yield(item, nil) {
-					return !lastPage
+					stopped = true
+					return false
 				}
 			}
-
 			return !lastPage
 		})
-
-		if err != nil {
-			yield(awstypes.Target{}, fmt.Errorf("listing EventBridge Target resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Target](), fmt.Errorf("listing EventBridge Targets: %w", err))
 			return
 		}
 	}

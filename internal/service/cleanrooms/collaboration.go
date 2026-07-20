@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -34,7 +33,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetCollaborationOutput")
 // @Testing(preIdentityVersion="v6.26.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,
@@ -48,113 +46,115 @@ func resourceCollaboration() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"analytics_engine": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator_display_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"creator_member_abilities": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"data_encryption_metadata": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_clear_text": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"allow_duplicates": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"allow_joins_on_columns_with_different_names": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-						},
-						"preserve_nulls": {
-							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"analytics_engine": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creator_display_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"creator_member_abilities": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"data_encryption_metadata": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_clear_text": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"allow_duplicates": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"allow_joins_on_columns_with_different_names": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							"preserve_nulls": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"member": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAccountID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrDisplayName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"member_abilities": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"member": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAccountID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrDisplayName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"member_abilities": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"query_log_status": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"query_log_status": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -226,32 +226,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameCollaboration, d.Id(), err)
 	}
 
-	collaboration := out.Collaboration
-	d.Set(names.AttrARN, collaboration.Arn)
-	d.Set(names.AttrName, collaboration.Name)
-	d.Set(names.AttrDescription, collaboration.Description)
-	d.Set("analytics_engine", collaboration.AnalyticsEngine)
-	d.Set("creator_display_name", collaboration.CreatorDisplayName)
-	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
-	d.Set("update_time", collaboration.UpdateTime.String())
-	d.Set("query_log_status", collaboration.QueryLogStatus)
-	if err := d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_encryption_metadata: %s", err)
-	}
-
-	membersOut, err := findMembersByCollaborationId(ctx, conn, d.Id())
-	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
-	}
-
-	if err := d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting member: %s", err)
-	}
-	if err := d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creator_member_abilities: %s", err)
-	}
-
-	return diags
+	return append(diags, resourceCollaborationFlatten(ctx, conn, d, out)...)
 }
 
 func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -446,4 +421,29 @@ func flattenMemberAbilities(abilities []types.MemberAbility) []string {
 		flattenedAbilities = append(flattenedAbilities, string(ability))
 	}
 	return flattenedAbilities
+}
+
+func resourceCollaborationFlatten(ctx context.Context, conn *cleanrooms.Client, d *schema.ResourceData, out *cleanrooms.GetCollaborationOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	collaboration := out.Collaboration
+	d.Set(names.AttrARN, collaboration.Arn)
+	d.Set(names.AttrName, collaboration.Name)
+	d.Set(names.AttrDescription, collaboration.Description)
+	d.Set("analytics_engine", collaboration.AnalyticsEngine)
+	d.Set("creator_display_name", collaboration.CreatorDisplayName)
+	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
+	d.Set("update_time", collaboration.UpdateTime.String())
+	d.Set("query_log_status", collaboration.QueryLogStatus)
+	d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata))
+
+	membersOut, err := findMembersByCollaborationId(ctx, conn, d.Id())
+	if err != nil {
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
+	}
+
+	d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId))
+	d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId))
+
+	return diags
 }

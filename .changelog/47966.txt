@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_iam_access_key: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_iam_access_key
+```

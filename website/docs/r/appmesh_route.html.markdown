@@ -142,170 +142,178 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
 * `virtual_router_name` - (Required) Name of the virtual router in which to create the route. Must be between 1 and 255 characters in length.
 * `spec` - (Required) Route specification to apply.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `spec` object supports the following:
+### `spec` Block
 
-* `grpc_route` - (Optional) GRPC routing information for the route.
-* `http2_route` - (Optional) HTTP/2 routing information for the route.
-* `http_route` - (Optional) HTTP routing information for the route.
-* `priority` - (Optional) Priority for the route, between `0` and `1000`.
-Routes are matched based on the specified value, where `0` is the highest priority.
-* `tcp_route` - (Optional) TCP routing information for the route.
+* `grpc_route` - (Optional) GRPC routing information for the route. See [`grpc_route` Block](#grpc_route-block) for details.
+* `http2_route` - (Optional) HTTP/2 routing information for the route. See [`http2_route` Block](#http2_route-block) for details.
+* `http_route` - (Optional) HTTP routing information for the route. See [`http_route` Block](#http_route-block) for details.
+* `priority` - (Optional) Priority for the route, between `0` and `1000`. Routes are matched based on the specified value, where `0` is the highest priority.
+* `tcp_route` - (Optional) TCP routing information for the route. See [`tcp_route` Block](#tcp_route-block) for details.
 
-The `grpc_route` object supports the following:
+### `grpc_route` Block
 
-* `action` - (Required) Action to take if a match is determined.
-* `match` - (Required) Criteria for determining an gRPC request match.
-* `retry_policy` - (Optional) Retry policy.
-* `timeout` - (Optional) Types of timeouts.
+* `action` - (Required) Action to take if a match is determined. See [`action` Block](#action-block) for details.
+* `match` - (Required) Criteria for determining an gRPC request match. See [`match` Block](#match-block) for details.
+* `retry_policy` - (Optional) Retry policy. See [`retry_policy` Block](#retry_policy-block) for details.
+* `timeout` - (Optional) Types of timeouts. See [`timeout` Block](#timeout-block) for details.
 
-The `http2_route` and `http_route` objects supports the following:
+### `http2_route` and `http_route` Blocks
 
 * `action` - (Required) Action to take if a match is determined.
 * `match` - (Required) Criteria for determining an HTTP request match.
 * `retry_policy` - (Optional) Retry policy.
 * `timeout` - (Optional) Types of timeouts.
 
-The `tcp_route` object supports the following:
+### `tcp_route` Block
 
 * `action` - (Required) Action to take if a match is determined.
 * `timeout` - (Optional) Types of timeouts.
 
-The `action` object supports the following:
+### `action` Block
 
-* `weighted_target` - (Required) Targets that traffic is routed to when a request matches the route.
-You can specify one or more targets and their relative weights with which to distribute traffic.
+* `weighted_target` - (Required) Targets that traffic is routed to when a request matches the route. You can specify one or more targets and their relative weights with which to distribute traffic.
 
-The `timeout` object supports the following:
+### `timeout` Block
 
-* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+* `per_request` - (Optional) Per request timeout. See [`per_request` Block](#per_request-block) for details.
 
-The `idle` object supports the following:
+#### `idle` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `grpc_route`'s `match` object supports the following:
+#### `per_request` Block
+
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
+
+### `match` Block
 
 * `metadata` - (Optional) Data to match from the gRPC request.
 * `method_name` - (Optional) Method name to match from the request. If you specify a name, you must also specify a `service_name`.
 * `service_name` - (Optional) Fully qualified domain name for the service to match from the request.
-* `port`- (Optional) The port number to match from the request.
+* `port` - (Optional) The port number to match from the request.
 
-The `metadata` object supports the following:
+### `metadata` Block
 
 * `name` - (Required) Name of the route. Must be between 1 and 50 characters in length.
 * `invert` - (Optional) If `true`, the match is on the opposite of the `match` criteria. Default is `false`.
 * `match` - (Optional) Data to match from the request.
 
-The `metadata`'s `match` object supports the following:
+### `match` Block
 
 * `exact` - (Optional) Value sent by the client must match the specified value exactly. Must be between 1 and 255 characters in length.
 * `prefix` - (Optional) Value sent by the client must begin with the specified characters. Must be between 1 and 255 characters in length.
-* `port`- (Optional) The port number to match from the request.
+* `port` - (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the value sent by the client must be included in.
 * `regex` - (Optional) Value sent by the client must include the specified characters. Must be between 1 and 255 characters in length.
 * `suffix` - (Optional) Value sent by the client must end with the specified characters. Must be between 1 and 255 characters in length.
 
-The `grpc_route`'s `retry_policy` object supports the following:
+### `retry_policy` Block
 
-* `grpc_retry_events` - (Optional) List of gRPC retry events.
-Valid values: `cancelled`, `deadline-exceeded`, `internal`, `resource-exhausted`, `unavailable`.
-* `http_retry_events` - (Optional) List of HTTP retry events.
-Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
+* `grpc_retry_events` - (Optional) List of gRPC retry events. Valid values: `cancelled`, `deadline-exceeded`, `internal`, `resource-exhausted`, `unavailable`.
+* `http_retry_events` - (Optional) List of HTTP retry events. Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
 * `max_retries` - (Required) Maximum number of retries.
 * `per_retry_timeout` - (Required) Per-retry timeout.
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 
-The `grpc_route`'s `timeout` object supports the following:
+### `timeout` Block
 
-* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) Per request timeout.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+* `per_request` - (Optional) Per request timeout. See [`per_request` Block](#per_request-block) for details.
 
-The `idle` and `per_request` objects support the following:
+#### `idle` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `http2_route` and `http_route`'s `match` object supports the following:
+#### `per_request` Block
 
-* `prefix` - (Optional) Path with which to match requests.
-This parameter must always start with /, which by itself matches all requests to the virtual router service name.
-* `port`- (Optional) The port number to match from the request.
-* `header` - (Optional) Client request headers to match on.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
+
+### `match` Block
+
+* `header` - (Optional) Client request headers to match on. See [`header` Block](#header-block) for details.
 * `method` - (Optional) Client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
-* `path` - (Optional) Client request path to match on.
-* `query_parameter` - (Optional) Client request query parameters to match on.
+* `path` - (Optional) Client request path to match on. See [`path` Block](#path-block) for details.
+* `port` - (Optional) The port number to match from the request.
+* `prefix` - (Optional) Path with which to match requests. This parameter must always start with /, which by itself matches all requests to the virtual router service name.
+* `query_parameter` - (Optional) Client request query parameters to match on. See [`query_parameter` Block](#query_parameter-block) for details.
 * `scheme` - (Optional) Client request header scheme to match on. Valid values: `http`, `https`.
 
-The `match`'s `path` object supports the following:
+### `path` Block
 
 * `exact` - (Optional) The exact path to match on.
 * `regex` - (Optional) The regex used to match the path.
 
-The `match`'s `query_parameter` object supports the following:
+### `query_parameter` Block
 
 * `name` - (Required) Name for the query parameter that will be matched on.
 * `match` - (Optional) The query parameter to match on.
 
-The `query_parameter`'s `match` object supports the following:
+### `match` Block
 
 * `exact` - (Optional) The exact query parameter to match on.
 
-The `http2_route` and `http_route`'s `retry_policy` object supports the following:
+### `retry_policy` Block
 
-* `http_retry_events` - (Optional) List of HTTP retry events.
-Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
+* `http_retry_events` - (Optional) List of HTTP retry events. Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
 * `max_retries` - (Required) Maximum number of retries.
 * `per_retry_timeout` - (Required) Per-retry timeout.
-* `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
+* `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`. You must specify at least one value for `http_retry_events`, or at least one value for `tcp_retry_events`.
 
-You must specify at least one value for `http_retry_events`, or at least one value for `tcp_retry_events`.
+### `timeout` Block
 
-The `http2_route` and `http_route`'s `timeout` object supports the following:
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle. See [`idle` Block](#idle-block) for details.
+* `per_request` - (Optional) Per request timeout. See [`per_request` Block](#per_request-block) for details.
 
-* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) Per request timeout.
-
-The `idle` and `per_request` objects support the following:
+#### `idle` Block
 
 * `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
 * `value` - (Required) Number of time units. Minimum value of `0`.
 
-The `per_retry_timeout` object supports the following:
+#### `per_request` Block
+
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
+
+### `per_retry_timeout` Block
 
 * `unit` - (Required) Retry unit. Valid values: `ms`, `s`.
 * `value` - (Required) Retry value.
 
-The `weighted_target` object supports the following:
+### `weighted_target` Block
 
 * `virtual_node` - (Required) Virtual node to associate with the weighted target. Must be between 1 and 255 characters in length.
 * `weight` - (Required) Relative weight of the weighted target. An integer between 0 and 100.
 * `port` - (Optional) The targeted port of the weighted object.
 
-The `header` object supports the following:
+### `header` Block
 
 * `name` - (Required) Name for the HTTP header in the client request that will be matched on.
 * `invert` - (Optional) If `true`, the match is on the opposite of the `match` method and value. Default is `false`.
 * `match` - (Optional) Method and value to match the header value sent with a request. Specify one match method.
 
-The `header`'s `match` object supports the following:
+### `match` Block
 
 * `exact` - (Optional) Header value sent by the client must match the specified value exactly.
 * `prefix` - (Optional) Header value sent by the client must begin with the specified characters.
-* `port`- (Optional) The port number to match from the request.
+* `port` - (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the header value sent by the client must be included in.
 * `regex` - (Optional) Header value sent by the client must include the specified characters.
 * `suffix` - (Optional) Header value sent by the client must end with the specified characters.
 
-The `range` object supports the following:
+### `range` Block
 
 * `end` - (Required) End of the range.
-* `start` - (Requited) Start of the range.
+* `start` - (Required) Start of the range.
 
 ## Attribute Reference
 
@@ -334,5 +342,3 @@ Using `terraform import`, import App Mesh virtual routes using `mesh_name` and `
 ```console
 % terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
 ```
-
-[1]: /docs/providers/aws/index.html

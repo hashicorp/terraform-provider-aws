@@ -1,9 +1,6 @@
 ---
 extends: default
 
-ignore: |
-  vendor/
-
 rules:
   comments:
     min-spaces-from-content: 1

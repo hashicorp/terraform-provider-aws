@@ -21,24 +21,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearchserverless_security_policy", name="Security Policy")
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @ImportIDHandler("securityPolicyImportID", setIDAttribute=true)
+// @Testing(idAttrDuplicates="id")
+// @Testing(importStateIdFunc="testAccSecurityPolicyImportStateIDFunc")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.SecurityPolicyDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newSecurityPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &securityPolicyResource{}, nil
 }
 
 type securityPolicyResource struct {
 	framework.ResourceWithModel[securityPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *securityPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -88,7 +98,7 @@ func (r *securityPolicyResource) Schema(ctx context.Context, request resource.Sc
 
 func (r *securityPolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data securityPolicyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -97,18 +107,18 @@ func (r *securityPolicyResource) Create(ctx context.Context, request resource.Cr
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input opensearchserverless.CreateSecurityPolicyInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateSecurityPolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Serverless Security Policy (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
@@ -117,19 +127,19 @@ func (r *securityPolicyResource) Create(ctx context.Context, request resource.Cr
 	data.ID = fwflex.StringValueToFramework(ctx, name)
 	data.PolicyVersion = fwflex.StringToFramework(ctx, output.SecurityPolicyDetail.PolicyVersion)
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *securityPolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data securityPolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findSecurityPolicyByNameAndType(ctx, conn, name, data.Type.ValueString())
 
 	if retry.NotFound(err) {
@@ -140,27 +150,24 @@ func (r *securityPolicyResource) Read(ctx context.Context, request resource.Read
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Serverless Security Policy (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *securityPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old securityPolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -170,19 +177,19 @@ func (r *securityPolicyResource) Update(ctx context.Context, request resource.Up
 	if !new.Description.Equal(old.Description) || !new.Policy.Equal(old.Policy) {
 		name := fwflex.StringValueFromFramework(ctx, new.ID)
 		var input opensearchserverless.UpdateSecurityPolicyInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.PolicyVersion = old.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		output, err := conn.UpdateSecurityPolicy(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Serverless Security Policy (%s)", name), err.Error())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 			return
 		}
@@ -191,21 +198,21 @@ func (r *securityPolicyResource) Update(ctx context.Context, request resource.Up
 		new.PolicyVersion = fwflex.StringToFramework(ctx, output.SecurityPolicyDetail.PolicyVersion)
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *securityPolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data securityPolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := opensearchserverless.DeleteSecurityPolicyInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Type:        data.Type.ValueEnum(),
 	}
@@ -216,23 +223,10 @@ func (r *securityPolicyResource) Delete(ctx context.Context, request resource.De
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Serverless Security Policy (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
-}
-
-func (r *securityPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, resourceIDSeparator)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", request.ID, resourceIDSeparator)
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[1])...)
 }
 
 type securityPolicyResourceModel struct {
@@ -243,4 +237,30 @@ type securityPolicyResourceModel struct {
 	Policy        jsontypes.Normalized                            `tfsdk:"policy"`
 	PolicyVersion types.String                                    `tfsdk:"policy_version"`
 	Type          fwtypes.StringEnum[awstypes.SecurityPolicyType] `tfsdk:"type"`
+}
+
+type securityPolicyImportID struct{}
+
+func (securityPolicyImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, resourceIDSeparator)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", id, resourceIDSeparator)
+	}
+
+	name := parts[0]
+	securityType := parts[1]
+
+	result := map[string]any{
+		names.AttrName: name,
+		names.AttrType: securityType,
+	}
+
+	return name, result, nil
+}
+
+func (securityPolicyImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var name types.String
+	state.GetAttribute(ctx, path.Root(names.AttrName), &name)
+
+	return name.ValueString()
 }

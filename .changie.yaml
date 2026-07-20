@@ -1,0 +1,121 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+# NOTE: Changelog entries are automatically sorted alphabetically by .ci/scripts/sort-changelog-entries.sh
+#       during GitHub Actions workflow execution (see .github/workflows/update-changelog.yml)
+changesDir: .changes/6.x
+unreleasedDir: unreleased
+changelogPath: CHANGELOG.md
+versionExt: md
+versionFormat: '## {{.Version}} ({{.Time.Format "January 2, 2006"}})'
+kindFormat: "{{ upper .Kind }}S:"
+changeFormat: |-
+  {{/* Pull Request URL */}}
+  {{- $pr := .Custom.PullRequest }}
+  {{- define "pr" }}{{ printf " ([#%s](https://github.com/hashicorp/terraform-provider-aws/issues/%s))" . . }}{{ end }}
+
+  {{- $entries := compact (splitList "\n" .Custom.Impact) }}
+  {{- $last := last $entries }}
+  {{- $desc := .Custom.Body }}
+
+  {{- range $entries }}
+  {{- if eq . $last }}
+  {{- printf "* %s: %s" . $desc -}}{{ if $pr }}{{ template "pr" $pr }}{{ end -}}
+  {{ else }}
+  {{- printf "* %s: %s" . $desc }}{{ if $pr }}{{ template "pr" $pr }}{{ end }}
+  {{ end -}}
+  {{ end -}}
+
+kinds:
+  - key: breaking-change
+    label: Breaking Change
+    skipBody: true
+    additionalChoices:
+      - &Impact
+        key: Impact
+        optional: false
+        type: block
+        label: |
+          What resource(s), data source(s), etc. does this affect? Where multiple
+          resources are impacted, separate them with a newline similar to:
+          -------------------------
+          provider
+          resource/aws_instance
+          data-source/aws_instance
+
+      - &Body
+        key: Body
+        label: Change entry body
+        type: string
+        optional: false
+
+      - &PullRequest
+        key: PullRequest
+        label: Pull Request Number (if known)
+        type: int
+        optional: true
+        minInt: 9999
+
+  - key: note
+    label: Note
+    skipBody: true
+    additionalChoices:
+      - *Impact
+      - *Body
+      - *PullRequest
+
+  - key: feature
+    format: "FEATURES:"
+    label: "Resource, Data Source, Ephemeral Resource, Function, List Resource"
+    skipBody: true
+    changeFormat: |-
+      {{- printf "* **%s**: `%s`" .Custom.NewType .Custom.Name }}
+      {{- with .Custom.PullRequest }}
+      {{- printf " ([#%s](https://github.com/hashicorp/terraform-provider-aws/issues/%s))" . . -}}
+      {{ end }}
+    additionalChoices:
+      - key: NewType
+        label: What type of functionality are you adding?
+        type: enum
+        optional: false
+        enumOptions:
+          - New Resource
+          - New Data Source
+          - New Ephemeral Resource
+          - New Function
+          - New List Resource
+
+      - key: Name
+        label: Name of the Resource, Data Source, etc.
+        type: string
+        optional: false
+
+      - *PullRequest
+
+  - key: enhancement
+    label: Enhancement
+    skipBody: true
+    additionalChoices:
+      - *Impact
+      - *Body
+      - *PullRequest
+
+  - key: bug
+    format: "BUG FIXES:"
+    label: Bug
+    skipBody: true
+    additionalChoices:
+      - *Impact
+      - *Body
+      - *PullRequest
+
+newlines:
+  afterKind: 1
+  afterChangelogVersion: 1
+  beforeKind: 1
+  endOfVersion: 1
+
+replacements:
+  - path: version/VERSION
+    find: '[0-9]\.(?:[0-9])+\.(?:[0-9])+'
+    replace: "{{ .VersionNoPrefix }}"

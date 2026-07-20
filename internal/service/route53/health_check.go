@@ -16,10 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -44,144 +45,146 @@ func resourceHealthCheck() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"child_health_threshold": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtMost(256),
-			},
-			"child_healthchecks": {
-				Type:     schema.TypeSet,
-				MaxItems: 256,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(0, 64),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				Optional: true,
-			},
-			"cloudwatch_alarm_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cloudwatch_alarm_region": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.CloudWatchRegion](),
-			},
-			"disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_sni": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"failure_threshold": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 10),
-			},
-			"fqdn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"insufficient_data_health_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.InsufficientDataHealthStatus](),
-			},
-			"invert_healthcheck": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrIPAddress: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsIPAddress,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return net.ParseIP(old).Equal(net.ParseIP(new))
+				"child_health_threshold": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtMost(256),
 				},
-			},
-			"measure_latency": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			names.AttrPort: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			"reference_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				// The max length of the reference name is 64 characters for the API.
-				// Terraform appends a 37-character unique ID to the provided
-				// reference_name. This limits the length of the resource argument to 27.
-				//
-				// Example generated suffix: -terraform-20190122200019880700000001
-				ValidateFunc: validation.StringLenBetween(0, (64 - id.UniqueIDSuffixLength - 11)),
-			},
-			"regions": {
-				Type:     schema.TypeSet,
-				MinItems: 3,
-				MaxItems: 64,
-				Elem: &schema.Schema{
+				"child_healthchecks": {
+					Type:     schema.TypeSet,
+					MaxItems: 256,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(0, 64),
+					},
+					Optional: true,
+				},
+				"cloudwatch_alarm_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"cloudwatch_alarm_region": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckRegion](),
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.CloudWatchRegion](),
 				},
-				Optional: true,
-				Computed: true,
-			},
-			"request_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{10, 30}),
-			},
-			"resource_path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"routing_control_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"search_string": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
-				StateFunc: func(val any) string {
-					return strings.ToUpper(val.(string))
+				"disabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
+				"enable_sni": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"failure_threshold": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 10),
+				},
+				"fqdn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"insufficient_data_health_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.InsufficientDataHealthStatus](),
+				},
+				"invert_healthcheck": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrIPAddress: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsIPAddress,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return net.ParseIP(old).Equal(net.ParseIP(new))
+					},
+				},
+				"measure_latency": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				names.AttrPort: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				"reference_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					// The max length of the reference name is 64 characters for the API.
+					// Terraform appends a 37-character unique ID to the provided
+					// reference_name. This limits the length of the resource argument to 27.
+					//
+					// Example generated suffix: -terraform-20190122200019880700000001
+					ValidateFunc: validation.StringLenBetween(0, (64 - sdkid.UniqueIDSuffixLength - 11)),
+				},
+				"regions": {
+					Type:     schema.TypeSet,
+					MinItems: 3,
+					MaxItems: 64,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.HealthCheckRegion](),
+					},
+					Optional: true,
+					Computed: true,
+				},
+				"request_interval": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntInSlice([]int{10, 30}),
+				},
+				"resource_path": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"routing_control_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"search_string": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
+					StateFunc: func(val any) string {
+						return strings.ToUpper(val.(string))
+					},
+				},
+			}
 		},
 
 		CustomizeDiff: triggersCustomizeDiff,
@@ -278,7 +281,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Regions = flex.ExpandStringyValueSet[awstypes.HealthCheckRegion](v.(*schema.Set))
 	}
 
-	callerRef := id.UniqueId()
+	callerRef := create.UniqueId(ctx)
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
 	}

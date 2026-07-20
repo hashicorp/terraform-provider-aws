@@ -10,23 +10,25 @@ description: |-
 
 Provides a SageMaker AI endpoint configuration resource.
 
+~> **Note:** `aws_sagemaker_endpoint` resources cannot recognize changes to an `aws_sagemaker_endpoint_configuration` resource unless the Endpoint Configuration's `name` attribute, changes. Endpoint Configuration names should be randomized by either specifying `name_prefix` or specifying no name. This will automatically change the name when the Endpoint Configuration is modified. The Endpoint Configuration's lifecycle meta-argument `lifecycle.create_before_destroy` should also be set to `true` to prevent conflicts.
+
 ## Example Usage
 
 Basic usage:
 
 ```terraform
-resource "aws_sagemaker_endpoint_configuration" "ec" {
-  name = "my-endpoint-config"
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  name_prefix = "example-endpoint-config"
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.m.name
+    model_name             = aws_sagemaker_model.example.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
   }
 
-  tags = {
-    Name = "foo"
+  lifecycle {
+    create_before_destroy = true
   }
 }
 ```
@@ -40,7 +42,7 @@ This resource supports the following arguments:
 * `execution_role_arn` - (Optional) ARN of an IAM role that SageMaker AI can assume to perform actions on your behalf. Required when `model_name` is not specified in `production_variants` to support Inference Components.
 * `kms_key_arn` - (Optional) ARN of a AWS KMS key that SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name_prefix` - (Optional) Unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
-* `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`. If `name_prefix` is specified, `name` is populated with the full name.
 * `production_variants` - (Required) List each model that you want to host at this endpoint. [See below](#production_variants).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shadow_production_variants` - (Optional) Models that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on `production_variants`. If you use this field, you can only specify one variant for `production_variants` and one variant for `shadow_production_variants`. [See below](#production_variants) (same arguments as `production_variants`).
@@ -49,6 +51,7 @@ This resource supports the following arguments:
 ### production_variants
 
 * `accelerator_type` - (Optional) Size of the Elastic Inference (EI) instance to use for the production variant.
+* `capacity_reservation_config` - (Optional) Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint. See [capacity_reservation_config](#capacity_reservation_config) below.
 * `container_startup_health_check_timeout_in_seconds` - (Optional) Timeout value, in seconds, for your inference container to pass health check by SageMaker AI Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `core_dump_config` - (Optional) Core dump configuration from the model container when the process crashes. Fields are documented below.
 * `enable_ssm_access` - (Optional) Whether to turn on native AWS SSM access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind endpoints. Ignored if `model_name` is not set (Inference Components endpoint).
@@ -63,6 +66,11 @@ This resource supports the following arguments:
 * `serverless_config` - (Optional) How an endpoint performs asynchronous inference.
 * `variant_name` - (Optional) Name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) Size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
+
+#### capacity_reservation_config
+
+* `capacity_reservation_preference` - (Optional) Capacity reservation preference. Valid value is `capacity-reservations-only`. When set to `capacity-reservations-only`, SageMaker AI launches instances only into an ML capacity reservation; if no capacity is available, the instances fail to launch.
+* `ml_reservation_arn` - (Optional) The Amazon Resource Name (ARN) that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
 
 #### core_dump_config
 
@@ -130,22 +138,47 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to this endpoint configuration.
-* `name` - Name of the endpoint configuration.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
-  id = "endpoint-config-foo"
+  to = aws_sagemaker_endpoint_configuration.example
+  identity = {
+    name = "example-endpoint-config"
+  }
+}
+
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import endpoint configurations using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the endpoint configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Endpoint Configurations using `name`. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.example
+  id = "example-endpoint-config"
+}
+```
+
+Using `terraform import`, import Endpoint Configurations using `name`. For example:
 
 ```console
-% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+% terraform import aws_sagemaker_endpoint_configuration.example example-endpoint-config
 ```

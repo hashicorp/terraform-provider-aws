@@ -18,10 +18,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -33,7 +33,15 @@ import (
 )
 
 // @SDKResource("aws_route53_zone", name="Hosted Zone")
+// @Testing(name="Zone")
 // @Tags(identifierAttribute="zone_id", resourceType="hostedzone")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53;route53.GetHostedZoneOutput")
+// @IdentityAttribute("zone_id")
+// @Testing(idAttrDuplicates="zone_id")
+// @Testing(domainTfVar="zoneName")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
 func resourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
@@ -41,85 +49,83 @@ func resourceZone() *schema.Resource {
 		UpdateWithoutTimeout: resourceZoneUpdate,
 		DeleteWithoutTimeout: resourceZoneDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"delegation_set_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"vpc"},
-				ValidateFunc:  validation.StringLenBetween(0, 32),
-			},
-			"enable_accelerated_recovery": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrName: {
-				// AWS Provider 3.0.0 - trailing period removed from name
-				// returned from API, no longer requiring custom DiffSuppressFunc;
-				// instead a StateFunc allows input to be provided
-				// with or without the trailing period
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				StateFunc:    normalizeDomainName,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"name_servers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"primary_name_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				MinItems:      1,
-				ConflictsWith: []string{"delegation_set_id"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVPCID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"vpc_region": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "Managed by Terraform",
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"delegation_set_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"vpc"},
+					ValidateFunc:  validation.StringLenBetween(0, 32),
+				},
+				"enable_accelerated_recovery": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrName: {
+					// AWS Provider 3.0.0 - trailing period removed from name
+					// returned from API, no longer requiring custom DiffSuppressFunc;
+					// instead a StateFunc allows input to be provided
+					// with or without the trailing period
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					StateFunc:    normalizeDomainName,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"name_servers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"primary_name_server": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					MinItems:      1,
+					ConflictsWith: []string{"delegation_set_id"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVPCID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"vpc_region": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrVPCID),
 				},
-				Set: sdkv2.SimpleSchemaSetFunc(names.AttrVPCID),
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -136,7 +142,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	name := d.Get(names.AttrName).(string)
 	input := route53.CreateHostedZoneInput{
-		CallerReference: aws.String(sdkid.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		Name:            aws.String(name),
 		HostedZoneConfig: &awstypes.HostedZoneConfig{
 			Comment: aws.String(d.Get(names.AttrComment).(string)),
@@ -207,8 +213,14 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceZoneFlatten(ctx, conn, d, meta.(*conns.AWSClient), output)...)
+}
+
+func resourceZoneFlatten(ctx context.Context, conn *route53.Client, d *schema.ResourceData, awsClient *conns.AWSClient, output *route53.GetHostedZoneOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
-	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), zoneID))
+	d.Set(names.AttrARN, zoneARN(ctx, awsClient, zoneID))
 	d.Set(names.AttrComment, "")
 	d.Set("delegation_set_id", "")
 	if v := output.HostedZone.Features; v != nil {
@@ -233,6 +245,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		d.Set(names.AttrComment, output.HostedZone.Config.Comment)
 
 		if output.HostedZone.Config.PrivateZone {
+			var err error
 			nameServers, err = findNameServersByZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string))
 
 			if err != nil {
@@ -469,7 +482,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 
 		output, err := conn.ChangeResourceRecordSets(ctx, &input)
 
-		if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+		if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 			err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 		}
 

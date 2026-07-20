@@ -13,8 +13,8 @@ Provides an EC2 launch template resource. Can be used to create instances or aut
 ## Example Usage
 
 ```terraform
-resource "aws_launch_template" "foo" {
-  name = "foo"
+resource "aws_launch_template" "example" {
+  name = "example"
 
   block_device_mappings {
     device_name = "/dev/sdf"
@@ -115,7 +115,7 @@ This resource supports the following arguments:
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
-* `description` - (Optional) Description of the launch template.
+* `description` - (Optional) Description of the launch template version (`VersionDescription` in the [EC2 API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateLaunchTemplateVersion.html)). Launch templates in AWS do not have a template-level description; whenever a change to this resource creates a new version, the new version is created with this description. To give each version a distinct description, update this argument in the same apply as the other changes.
 * `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
@@ -144,6 +144,8 @@ This resource supports the following arguments:
 * `placement` - (Optional) The placement of the instance. See [Placement](#placement) below for more details.
 * `private_dns_name_options` - (Optional) The options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `ram_disk_id` - (Optional) The ID of the RAM disk.
+* `secondary_interfaces` - (Optional) Secondary interfaces to associate with instances launched from the template. See [Secondary
+  Interfaces](#secondary-interfaces) below for more details.
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
 * `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
@@ -488,6 +490,20 @@ The `private_dns_name_options` block supports the following:
 * `enable_resource_name_dns_a_record` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `hostname_type` - (Optional) The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
+### Secondary Interfaces
+
+The [Secondary Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateInstanceSecondaryInterfaceSpecificationRequest.html) to associate with instances launched from the template.
+
+Each `secondary_interfaces` block supports the following:
+
+* `delete_on_termination` - (Optional) Whether the secondary interface is deleted when the instance is terminated. The only supported value is `true`.
+* `device_index` - (Optional) Device index for the secondary interface attachment.
+* `interface_type` - (Optional) Type of secondary interface. The only supported value is: `secondary`.
+* `network_card_index` - (Optional) Index of the network card.
+* `private_ip_address_count` - (Optional) Number of private IPv4 addresses to assign to the secondary interface.
+* `private_ip_addresses` - (Optional) Private IPv4 addresses to assign to the secondary interface.
+* `secondary_subnet_id` - (Optional) ID of the secondary subnet.
+
 ### Tag Specifications
 
 The tags to apply to the resources during launch. You can tag instances, volumes, elastic GPUs and spot instance requests. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
@@ -507,6 +523,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_launch_template.web
+  identity = {
+    id = "lt-12345678"
+  }
+}
+
+resource "aws_launch_template" "web" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Launch Template ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Launch Templates using the `id`. For example:
 

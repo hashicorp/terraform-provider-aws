@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,48 +39,50 @@ func ResourceProtectionGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"aggregation": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupAggregation](),
-			},
-			"members": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      0,
-				MaxItems:      10000,
-				ConflictsWith: []string{names.AttrResourceType},
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(verify.ValidARN,
-						validation.StringLenBetween(1, 2048),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"aggregation": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupAggregation](),
 				},
-			},
-			"pattern": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupPattern](),
-			},
-			"protection_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 36),
-				ForceNew:     true,
-			},
-			"protection_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ConflictsWith:    []string{"members"},
-				ValidateDiagFunc: enum.Validate[awstypes.ProtectedResourceType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"members": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MinItems:      0,
+					MaxItems:      10000,
+					ConflictsWith: []string{names.AttrResourceType},
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(verify.ValidARN,
+							validation.StringLenBetween(1, 2048),
+						),
+					},
+				},
+				"pattern": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectionGroupPattern](),
+				},
+				"protection_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 36),
+					ForceNew:     true,
+				},
+				"protection_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{"members"},
+					ValidateDiagFunc: enum.Validate[awstypes.ProtectedResourceType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -201,9 +202,8 @@ func findProtectionGroupByID(ctx context.Context, conn *shield.Client, id string
 	resp, err := conn.DescribeProtectionGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

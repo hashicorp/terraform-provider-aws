@@ -39,7 +39,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_basic(t *testing.T)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
-		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_basic(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &v),
+					testAccCheckApplicationLayerAutomaticResponseExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
@@ -126,7 +126,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource_ba
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.ShieldServiceID),
-		CheckDestroy: testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
+		CheckDestroy: testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -135,7 +135,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource_ba
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &v),
+					testAccCheckApplicationLayerAutomaticResponseExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -149,7 +149,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource_ba
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &v),
+					testAccCheckApplicationLayerAutomaticResponseExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -210,7 +210,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource_no
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.ShieldServiceID),
-		CheckDestroy: testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
+		CheckDestroy: testAccCheckApplicationLayerAutomaticResponseDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -224,7 +224,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource_no
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &v),
+					testAccCheckApplicationLayerAutomaticResponseExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

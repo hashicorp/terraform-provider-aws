@@ -1,10 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_s3_bucket" "test" {
-  bucket = var.rName
-}
-
 resource "aws_s3_object" "test" {
   count = var.resource_count
 
@@ -19,6 +15,10 @@ resource "aws_s3_object" "other" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "other-${var.rName}-${count.index}"
   content = "other content"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = var.rName
 }
 
 variable "rName" {

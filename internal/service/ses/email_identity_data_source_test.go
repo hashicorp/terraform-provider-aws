@@ -19,11 +19,11 @@ func testAccEmailIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := acctest.DefaultEmailAddress
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
@@ -39,11 +39,11 @@ func testAccEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),

@@ -165,7 +165,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
@@ -193,7 +193,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 					// Alternatively, if the data source returns the values for a corresponding resource, use `resource.TestCheckResourceAttrPair` to
 					// check that the values are the same.
 					{{- end }}
-					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "{{ .ARNNamespace }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
 				),
 			},
 		},

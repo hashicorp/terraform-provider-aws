@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,23 +15,23 @@ import (
 func TestAccServiceCatalogAppRegistryAttributeGroupAssociationsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group_associations.test"
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttributeGroupAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
+					testAccCheckAttributeGroupAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "attribute_group_ids.#", "1"),
 				),
 			},

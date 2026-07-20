@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -107,62 +106,64 @@ func resourceNetworkACL() *schema.Resource {
 // Used in aws_network_acl and aws_default_network_acl ingress and egress rule sets.
 func networkACLRuleNestedBlock() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeString,
-				Required: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeString,
+					Required: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					// Accept pascal case for backwards compatibility reasons, See: TestAccVPCNetworkACL_caseSensitivityNoChanges
+					ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.RuleAction.Values("")...), true),
 				},
-				// Accept pascal case for backwards compatibility reasons, See: TestAccVPCNetworkACL_caseSensitivityNoChanges
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.RuleAction.Values("")...), true),
-			},
-			names.AttrCIDRBlock: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-			},
-			"from_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IsPortNumberOrZero,
-			},
-			"icmp_code": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"icmp_type": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-					_, err := networkACLProtocolNumber(v.(string))
-
-					if err != nil {
-						errors = append(errors, fmt.Errorf("%q : %w", k, err))
-					}
-
-					return
+				names.AttrCIDRBlock: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
-			},
-			"rule_no": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 32766),
-			},
-			"to_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IsPortNumberOrZero,
-			},
+				"from_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumberOrZero,
+				},
+				"icmp_code": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"icmp_type": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+						_, err := networkACLProtocolNumber(v.(string))
+
+						if err != nil {
+							errors = append(errors, fmt.Errorf("%q : %w", k, err))
+						}
+
+						return
+					},
+				},
+				"rule_no": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 32766),
+				},
+				"to_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumberOrZero,
+				},
+			}
 		},
 	}
 }
@@ -172,7 +173,7 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNetworkAclInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkAcl),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}

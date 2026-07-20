@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elastictranscoder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elastictranscoder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,478 +35,480 @@ func ResourcePreset() *schema.Resource {
 
 		DeprecationMessage: "This resource is deprecated. Use AWS Elemental MediaConvert instead.",
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"audio": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// awstypes.AudioParameters
-					Schema: map[string]*schema.Schema{
-						"audio_packing_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"SingleTrack",
-								"OneChannelPerTrack",
-								"OneChannelPerTrackWithMosTo8Tracks",
-							}, false),
-						},
-						"bit_rate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"channels": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"0",
-								"1",
-								"2",
-							}, false),
-						},
-						"codec": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"AAC",
-								"flac",
-								"mp2",
-								"mp3",
-								"pcm",
-								"vorbis",
-							}, false),
-						},
-						"sample_rate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"22050",
-								"32000",
-								"44100",
-								"48000",
-								"96000",
-							}, false),
+				"audio": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						// awstypes.AudioParameters
+						Schema: map[string]*schema.Schema{
+							"audio_packing_mode": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"SingleTrack",
+									"OneChannelPerTrack",
+									"OneChannelPerTrackWithMosTo8Tracks",
+								}, false),
+							},
+							"bit_rate": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"channels": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"0",
+									"1",
+									"2",
+								}, false),
+							},
+							"codec": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"AAC",
+									"flac",
+									"mp2",
+									"mp3",
+									"pcm",
+									"vorbis",
+								}, false),
+							},
+							"sample_rate": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"22050",
+									"32000",
+									"44100",
+									"48000",
+									"96000",
+								}, false),
+							},
 						},
 					},
 				},
-			},
-			"audio_codec_options": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bit_depth": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"8",
-								"16",
-								"24",
-								"32",
-							}, false),
-						},
-						"bit_order": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"LittleEndian",
-							}, false),
-						},
-						names.AttrProfile: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"AAC-LC",
-								"HE-AAC",
-								"HE-AACv2",
-							}, false),
-						},
-						"signed": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Signed",
-								"Unsigned",
-							}, false),
-						},
-					},
-				},
-			},
-
-			"container": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"flac",
-					"flv",
-					"fmp4",
-					"gif",
-					"mp2",
-					"mp3",
-					"mp4",
-					"mpg",
-					"mxf",
-					"oga",
-					"ogg",
-					"ts",
-					"wav",
-					"webm",
-				}, false),
-			},
-
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"thumbnails": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					// elastictranscoder.Thumbnails
-					Schema: map[string]*schema.Schema{
-						"aspect_ratio": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"1:1",
-								"4:3",
-								"3:2",
-								"16:9",
-							}, false),
-						},
-						names.AttrFormat: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"jpg",
-								"png",
-							}, false),
-						},
-						names.AttrInterval: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"max_height": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"max_width": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"padding_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Pad",
-								"NoPad",
-							}, false),
-						},
-						"resolution": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"sizing_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Fit",
-								"Fill",
-								"Stretch",
-								"Keep",
-								"ShrinkToFit",
-								"ShrinkToFill",
-							}, false),
+				"audio_codec_options": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bit_depth": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"8",
+									"16",
+									"24",
+									"32",
+								}, false),
+							},
+							"bit_order": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"LittleEndian",
+								}, false),
+							},
+							names.AttrProfile: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"AAC-LC",
+									"HE-AAC",
+									"HE-AACv2",
+								}, false),
+							},
+							"signed": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Signed",
+									"Unsigned",
+								}, false),
+							},
 						},
 					},
 				},
-			},
 
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"Custom",
-					"System",
-				}, false),
-			},
+				"container": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"flac",
+						"flv",
+						"fmp4",
+						"gif",
+						"mp2",
+						"mp3",
+						"mp4",
+						"mpg",
+						"mxf",
+						"oga",
+						"ogg",
+						"ts",
+						"wav",
+						"webm",
+					}, false),
+				},
 
-			"video": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// awstypes.VideoParameters
-					Schema: map[string]*schema.Schema{
-						"aspect_ratio": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"1:1",
-								"4:3",
-								"3:2",
-								"16:9",
-							}, false),
-						},
-						"bit_rate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"codec": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"gif",
-								"H.264",
-								"mpeg2",
-								"vp8",
-								"vp9",
-							}, false),
-						},
-						"display_aspect_ratio": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"1:1",
-								"4:3",
-								"3:2",
-								"16:9",
-							}, false),
-						},
-						"fixed_gop": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"true",
-								"false",
-							}, false),
-						},
-						"frame_rate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"auto",
-								"10",
-								"15",
-								"23.97",
-								"24",
-								"25",
-								"29.97",
-								"30",
-								"50",
-								"60",
-							}, false),
-						},
-						"keyframes_max_dist": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"max_frame_rate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"10",
-								"15",
-								"23.97",
-								"24",
-								"25",
-								"29.97",
-								"30",
-								"50",
-								"60",
-							}, false),
-						},
-						"max_height": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"max_width": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"padding_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Pad",
-								"NoPad",
-							}, false),
-						},
-						"resolution": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"sizing_policy": {
-							Type:     schema.TypeString,
-							Default:  "Fit",
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Fit",
-								"Fill",
-								"Stretch",
-								"Keep",
-								"ShrinkToFit",
-								"ShrinkToFill",
-							}, false),
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+
+				"thumbnails": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						// elastictranscoder.Thumbnails
+						Schema: map[string]*schema.Schema{
+							"aspect_ratio": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"1:1",
+									"4:3",
+									"3:2",
+									"16:9",
+								}, false),
+							},
+							names.AttrFormat: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"jpg",
+									"png",
+								}, false),
+							},
+							names.AttrInterval: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"max_height": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"max_width": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"padding_policy": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Pad",
+									"NoPad",
+								}, false),
+							},
+							"resolution": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"sizing_policy": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Fit",
+									"Fill",
+									"Stretch",
+									"Keep",
+									"ShrinkToFit",
+									"ShrinkToFill",
+								}, false),
+							},
 						},
 					},
 				},
-			},
 
-			"video_watermarks": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					// awstypes.PresetWatermark
-					Schema: map[string]*schema.Schema{
-						"horizontal_align": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Left",
-								"Right",
-								"Center",
-							}, false),
-						},
-						"horizontal_offset": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 40),
-						},
-						"max_height": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"max_width": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"opacity": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"sizing_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Fit",
-								"Stretch",
-								"ShrinkToFit",
-							}, false),
-						},
-						names.AttrTarget: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Content",
-								"Frame",
-							}, false),
-						},
-						"vertical_align": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Top",
-								"Bottom",
-								"Center",
-							}, false),
-						},
-						"vertical_offset": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"Custom",
+						"System",
+					}, false),
+				},
+
+				"video": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						// awstypes.VideoParameters
+						Schema: map[string]*schema.Schema{
+							"aspect_ratio": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"1:1",
+									"4:3",
+									"3:2",
+									"16:9",
+								}, false),
+							},
+							"bit_rate": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"codec": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"gif",
+									"H.264",
+									"mpeg2",
+									"vp8",
+									"vp9",
+								}, false),
+							},
+							"display_aspect_ratio": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"1:1",
+									"4:3",
+									"3:2",
+									"16:9",
+								}, false),
+							},
+							"fixed_gop": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"true",
+									"false",
+								}, false),
+							},
+							"frame_rate": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"auto",
+									"10",
+									"15",
+									"23.97",
+									"24",
+									"25",
+									"29.97",
+									"30",
+									"50",
+									"60",
+								}, false),
+							},
+							"keyframes_max_dist": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"max_frame_rate": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"10",
+									"15",
+									"23.97",
+									"24",
+									"25",
+									"29.97",
+									"30",
+									"50",
+									"60",
+								}, false),
+							},
+							"max_height": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"max_width": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"padding_policy": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Pad",
+									"NoPad",
+								}, false),
+							},
+							"resolution": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"sizing_policy": {
+								Type:     schema.TypeString,
+								Default:  "Fit",
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Fit",
+									"Fill",
+									"Stretch",
+									"Keep",
+									"ShrinkToFit",
+									"ShrinkToFill",
+								}, false),
+							},
 						},
 					},
 				},
-			},
 
-			"video_codec_options": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"video_watermarks": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						// awstypes.PresetWatermark
+						Schema: map[string]*schema.Schema{
+							"horizontal_align": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Left",
+									"Right",
+									"Center",
+								}, false),
+							},
+							"horizontal_offset": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 40),
+							},
+							"max_height": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"max_width": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"opacity": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"sizing_policy": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Fit",
+									"Stretch",
+									"ShrinkToFit",
+								}, false),
+							},
+							names.AttrTarget: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Content",
+									"Frame",
+								}, false),
+							},
+							"vertical_align": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Top",
+									"Bottom",
+									"Center",
+								}, false),
+							},
+							"vertical_offset": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+
+				"video_codec_options": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -526,7 +528,7 @@ func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	if name, ok := d.GetOk(names.AttrName); ok {
 		req.Name = aws.String(name.(string))
 	} else {
-		name := id.PrefixedUniqueId("tf-et-preset-")
+		name := sdkid.PrefixedUniqueId("tf-et-preset-")
 		d.Set(names.AttrName, name)
 		req.Name = aws.String(name)
 	}

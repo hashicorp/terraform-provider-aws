@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +21,7 @@ import (
 func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
-	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 30, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -66,7 +66,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
-	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 30, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -81,6 +81,14 @@ func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) 
 					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceWorkgroup(), "aws_redshiftserverless_workgroup.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_redshiftserverless_workgroup.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_redshiftserverless_workgroup.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,7 +97,7 @@ func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) 
 func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
-	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 30, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -104,6 +112,14 @@ func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceEndpointAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

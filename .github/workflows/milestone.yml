@@ -8,8 +8,8 @@ on:
     types: [closed]
 
 permissions:
-  issues: write
-  pull-requests: write
+  issues: write         # required to update labels and post comments on issues
+  pull-requests: write  # required to update labels and post comments on pull requests
 
 jobs:
   Comment:
@@ -30,7 +30,7 @@ jobs:
       MILESTONE: ${{ github.event.milestone.number }}
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: 'Remove Prioritized Label'
         env:

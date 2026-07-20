@@ -88,6 +88,7 @@ Data Pipeline
 DataSync
 DataZone
 Detective
+DevOps Agent
 DevOps Guru
 Device Farm
 Direct Connect
@@ -121,6 +122,7 @@ Elemental MediaPackage
 Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging
 End User Messaging SMS
 EventBridge
 EventBridge Pipes
@@ -143,6 +145,7 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Interconnect
 Invoicing
 IoT Core
 IoT Greengrass
@@ -156,6 +159,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda MicroVMs
 Launch Wizard
 Lex Model Building
 Lex V2 Models
@@ -186,7 +190,6 @@ Outposts
 Outposts (EC2)
 Parallel Computing Service
 Payment Cryptography Control Plane
-Pinpoint
 Polly
 Pricing Calculator
 Private CA Connector for Active Directory
@@ -213,6 +216,7 @@ Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
+S3 Files
 S3 Glacier
 S3 Tables
 S3 Vectors
@@ -250,6 +254,7 @@ Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Experience Customization
 User Notifications
 User Notifications Contacts
 VPC (Virtual Private Cloud)

@@ -24,7 +24,7 @@ resource "aws_storagegateway_file_system_association" "example" {
 }
 ```
 
-## Required Services Example
+### Required Services Example
 
 ```terraform
 data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {

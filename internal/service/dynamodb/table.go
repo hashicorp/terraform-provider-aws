@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,7 +51,9 @@ const (
 
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,10 +61,6 @@ func resourceTable() *schema.Resource {
 		ReadWithoutTimeout:   resourceTableRead,
 		UpdateWithoutTimeout: resourceTableUpdate,
 		DeleteWithoutTimeout: resourceTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(createTableTimeout),
@@ -106,6 +104,9 @@ func resourceTable() *schema.Resource {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta any) bool {
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
+			customdiff.ForceNewIfChange("restore_backup_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
@@ -168,7 +169,7 @@ func resourceTable() *schema.Resource {
 							},
 						},
 					},
-					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName, names.AttrType),
 				},
 				"billing_mode": {
 					Type:             schema.TypeString,
@@ -187,10 +188,11 @@ func resourceTable() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
-								Type:       schema.TypeString,
-								Optional:   true,
-								Computed:   true,
-								Deprecated: "hash_key is deprecated. Use key_schema instead.",
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								Deprecated:   "hash_key is deprecated. Use key_schema instead.",
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 							"key_schema": {
 								Type:     schema.TypeList,
@@ -199,8 +201,9 @@ func resourceTable() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"attribute_name": {
-											Type:     schema.TypeString,
-											Required: true,
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 										"key_type": {
 											Type:             schema.TypeString,
@@ -226,9 +229,10 @@ func resourceTable() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
 							},
 							"range_key": {
-								Type:       schema.TypeString,
-								Optional:   true,
-								Deprecated: "range_key is deprecated. Use key_schema instead.",
+								Type:             schema.TypeString,
+								Optional:         true,
+								Deprecated:       "range_key is deprecated. Use key_schema instead.",
+								ValidateDiagFunc: verify.WarnStringIsNotEmpty,
 							},
 							"read_capacity": {
 								Type:     schema.TypeInt,
@@ -270,7 +274,7 @@ func resourceTable() *schema.Resource {
 					Type:          schema.TypeList,
 					Optional:      true,
 					MaxItems:      1,
-					ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
+					ConflictsWith: []string{"restore_backup_arn", "restore_source_name", "restore_source_table_arn"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"input_compression_type": {
@@ -466,16 +470,22 @@ func resourceTable() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidUTCTimestamp,
 				},
+				"restore_backup_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"import_table", "restore_source_name", "restore_source_table_arn"},
+				},
 				"restore_source_table_arn": {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ValidateFunc:  verify.ValidARN,
-					ConflictsWith: []string{"import_table", "restore_source_name"},
+					ConflictsWith: []string{"import_table", "restore_backup_arn", "restore_source_name"},
 				},
 				"restore_source_name": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"import_table", "restore_source_table_arn"},
+					ConflictsWith: []string{"import_table", "restore_backup_arn", "restore_source_table_arn"},
 				},
 				"restore_to_latest_time": {
 					Type:     schema.TypeBool,
@@ -726,6 +736,72 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		if err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, tableName, err)
 		}
+	} else if backupARN, ok := d.GetOk("restore_backup_arn"); ok {
+		input := &dynamodb.RestoreTableFromBackupInput{
+			TargetTableName: aws.String(tableName),
+			BackupArn:       aws.String(backupARN.(string)),
+		}
+
+		billingModeOverride := awstypes.BillingMode(d.Get("billing_mode").(string))
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []awstypes.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]any)
+				if err := validateGSIProvisionedThroughput(gsi, billingModeOverride); err != nil {
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Get(names.AttrName).(string), err)
+				}
+
+				gsiObject := expandGlobalSecondaryIndex(gsi, billingModeOverride)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, *gsiObject)
+			}
+			input.GlobalSecondaryIndexOverride = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+		}
+
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.OnDemandThroughputOverride = expandOnDemandThroughput(v.([]any)[0].(map[string]any))
+		}
+
+		if _, ok := d.GetOk("write_capacity"); ok {
+			if _, ok := d.GetOk("read_capacity"); ok {
+				capacityMap := map[string]any{
+					"write_capacity": d.Get("write_capacity"),
+					"read_capacity":  d.Get("read_capacity"),
+				}
+				input.ProvisionedThroughputOverride = expandProvisionedThroughput(capacityMap, billingModeOverride)
+			}
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]any))
+		}
+
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
+			return conn.RestoreTableFromBackup(ctx, input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
+		})
+
+		if err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, tableName, err)
+		}
 	} else if vit, ok := d.GetOk("import_table"); ok && len(vit.([]any)) > 0 && vit.([]any)[0] != nil {
 		input := expandImportTable(vit.([]any)[0].(map[string]any))
 
@@ -955,6 +1031,13 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), err)
 	}
 
+	return resourceTableFlatten(ctx, c, d, table)
+}
+
+func resourceTableFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, table *awstypes.TableDescription) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := c.DynamoDBClient(ctx)
+
 	d.Set(names.AttrARN, table.TableArn)
 	d.Set(names.AttrName, table.TableName)
 
@@ -1021,6 +1104,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	replicas := flattenReplicaDescriptions(table.Replicas)
 
+	var err error
 	if replicas, err = addReplicaPITRs(ctx, conn, d.Id(), replicas); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), err)
 	}
@@ -1095,11 +1179,23 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// will signal the problems.
 	var gsiUpdates []awstypes.GlobalSecondaryIndexUpdate
 
-	if d.HasChange("global_secondary_index") {
-		var err error
-		o, n := d.GetChange("global_secondary_index")
-		gsiUpdates, err = updateDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), newBillingMode)
+	if d.HasChanges("global_secondary_index", "attribute") {
+		oldGSI, newGSI := d.GetChange("global_secondary_index")
+		oldAttr, newAttr := d.GetChange("attribute")
 
+		oldAttrTypes := map[string]string{}
+		for _, a := range oldAttr.(*schema.Set).List() {
+			attr := a.(map[string]any)
+			oldAttrTypes[attr[names.AttrName].(string)] = attr[names.AttrType].(string)
+		}
+		newAttrTypes := map[string]string{}
+		for _, a := range newAttr.(*schema.Set).List() {
+			attr := a.(map[string]any)
+			newAttrTypes[attr[names.AttrName].(string)] = attr[names.AttrType].(string)
+		}
+
+		var err error
+		gsiUpdates, err = updateDiffGSI(oldGSI.(*schema.Set).List(), newGSI.(*schema.Set).List(), newBillingMode, oldAttrTypes, newAttrTypes)
 		if err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("computing GSI difference: %w", err))
 		}
@@ -1441,10 +1537,10 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(ctx, conn, d.Id(), replicas, expandGlobalTableWitness(d.Get("global_table_witness")), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
-			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
+			// ValidationException: Cannot add or delete the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
 				!tfawserr.ErrMessageContains(err, errCodeValidationException, "MultiRegionConsistency must be set as STRONG when GlobalTableWitnessUpdates parameter is present") &&
-				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") {
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "the local region through ReplicaUpdates.") {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
 			}
 		}
@@ -2009,7 +2105,7 @@ func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList [
 	return nil
 }
 
-func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
+func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode, oldAttrTypes, newAttrTypes map[string]string) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]any)
 	for _, gsidata := range oldGsi {
@@ -2114,7 +2210,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
 
-			recreateAttributesChanged := checkIfGSIRecreateAttributesChanged(oldMap, newMap)
+			recreateAttributesChanged := checkIfGSIRecreateAttributesChanged(oldMap, newMap, oldAttrTypes, newAttrTypes)
 
 			gsiNeedsRecreate := nonKeyAttributesChanged || recreateAttributesChanged || warmThroughPutDecreased
 
@@ -2202,11 +2298,13 @@ func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]any) bool {
 	return oldNkaExists != newNkaExists
 }
 
-func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
+func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any, oldAttrTypes, newAttrTypes map[string]string) bool {
 	oldAttributes := stripGSIUpdatableAttributes(oldMap)
 
 	newAttributes := stripGSIUpdatableAttributes(newMap)
 
+	// Config uses either hash_key or key_schema syntax, but not both.
+	// If hash_key matches, key_schema is redundant, remove it.
 	oHk, oOk := oldAttributes["hash_key"]
 	nHk, nOk := newAttributes["hash_key"]
 	if oOk && nOk && oHk == nHk && oHk != "" {
@@ -2214,7 +2312,34 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
 		delete(newAttributes, "key_schema")
 	}
 
-	return !reflect.DeepEqual(oldAttributes, newAttributes)
+	// If key_schema matches, hash_key/range_key are redundant, remove them.
+	// Only when key_schema is a non-empty list, to avoid matching on nil/empty defaults.
+	oKs, oKsOk := oldAttributes["key_schema"]
+	nKs, nKsOk := newAttributes["key_schema"]
+	oKsList, _ := oKs.([]any)
+	nKsList, _ := nKs.([]any)
+	if oKsOk && nKsOk && len(oKsList) > 0 && len(nKsList) > 0 && reflect.DeepEqual(oKs, nKs) {
+		delete(oldAttributes, "hash_key")
+		delete(newAttributes, "hash_key")
+		delete(oldAttributes, "range_key")
+		delete(newAttributes, "range_key")
+	}
+
+	if !reflect.DeepEqual(oldAttributes, newAttributes) {
+		return true
+	}
+
+	// Check if the type of any key attribute used by this GSI changed.
+	for _, keyAttr := range []string{oldMap["hash_key"].(string), oldMap["range_key"].(string)} {
+		if keyAttr == "" {
+			continue
+		}
+		if oldAttrTypes[keyAttr] != newAttrTypes[keyAttr] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) error {
@@ -2924,7 +3049,7 @@ func expandLocalSecondaryIndexes(cfg []any, keySchemaM map[string]any) []awstype
 
 func expandImportTable(data map[string]any) *dynamodb.ImportTableInput {
 	a := &dynamodb.ImportTableInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := data["input_compression_type"].(string); ok {
@@ -3186,7 +3311,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 					indexedAttributes[hashKey.AsString()] = true
 				}
 				rangeKey := v.GetAttr("range_key")
-				if rangeKey.IsKnown() && !rangeKey.IsNull() {
+				if rangeKey.IsKnown() && !rangeKey.IsNull() && rangeKey.AsString() != "" {
 					indexedAttributes[rangeKey.AsString()] = true
 				}
 				keySchema := v.GetAttr("key_schema")
@@ -3203,7 +3328,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
 	remoteGSIAttributes := map[string]bool{}
 	name := planRaw.GetAttr(names.AttrName)
-	if name.IsKnown() {
+	if name.IsKnown() && d.Id() != "" {
 		table, err := findTableByName(ctx, conn, name.AsString())
 		if err != nil && !retry.NotFound(err) {
 			return err

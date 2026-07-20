@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -23,7 +23,7 @@ import (
 
 func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
+	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -48,7 +48,7 @@ func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
+	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_domain.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -67,6 +67,14 @@ func testAccDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 					testAccCheckDomainExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDomain(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

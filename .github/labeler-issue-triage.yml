@@ -224,6 +224,8 @@ service/detective:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_detective_'
 service/devicefarm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devicefarm_'
+service/devopsagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsagent_'
 service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:
@@ -346,6 +348,8 @@ service/inspector:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector_'
 service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
+service/interconnect:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_interconnect_'
 service/internetmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
 service/invoicing:
@@ -414,6 +418,8 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/lambdamicrovms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
 service/launchwizard:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
@@ -626,6 +632,8 @@ service/s3:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
+service/s3files:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3files_'
 service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
 service/s3tables:
@@ -732,6 +740,8 @@ service/transitgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_transit_gateway'
 service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
+service/uxc:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_uxc_'
 service/verifiedaccess:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
 service/verifiedpermissions:

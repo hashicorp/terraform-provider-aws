@@ -231,17 +231,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_eks_node_group.my_node_group
-  id = "my_cluster:my_node_group"
+  to = aws_eks_node_group.example
+  identity = {
+    cluster_name    = "example-cluster"
+    node_group_name = "example-group"
+  }
+}
+
+resource "aws_eks_node_group" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `node_group_name` (String) Name of the node group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_eks_node_group.example
+  id = "example-cluster:example-group"
+}
+```
+
+Using `terraform import`, import Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group
+% terraform import aws_eks_node_group.example example-cluster:example-group
 ```

@@ -47,7 +47,6 @@ resource "aws_msk_replicator" "test" {
     target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
-
     topic_replication {
       topic_name_configuration {
         type = "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS"
@@ -75,6 +74,7 @@ This resource supports the following arguments:
 * `service_execution_role_arn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replication_info_list` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
+* `log_delivery` - (Optional) Configuration block for delivering replicator logs to customer destinations. Detailed below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kafka_cluster Argument Reference
@@ -112,6 +112,7 @@ This resource supports the following arguments:
 ### consumer_group_replication Argument Reference
 
 * `consumer_groups_to_replicate` - (Required) List of regular expression patterns indicating the consumer groups to copy.
+* `consumer_group_offset_sync_mode` - (Optional) Consumer group offset synchronization mode. Valid values are `LEGACY` and `ENHANCED`. With `LEGACY`, offsets are synchronized when producers write to the source cluster. With `ENHANCED`, consumer offsets are synchronized regardless of producer location. `ENHANCED` requires a corresponding replicator that replicates data from the target cluster to the source cluster and requires `topic_name_configuration.type` to be set to `IDENTICAL`. Defaults to `LEGACY`. Changing this value will force a new resource.
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
@@ -123,6 +124,32 @@ This resource supports the following arguments:
 ### starting_position
 
 * `type` - (Optional) The type of replication starting position. Supports `LATEST` and `EARLIEST`.
+
+### log_delivery
+
+* `replicator_log_delivery` - (Optional) Configuration block for replicator log delivery. Detailed below.
+
+### replicator_log_delivery
+
+* `cloudwatch_logs` - (Optional) Configuration block for replicator log delivery to Amazon CloudWatch Logs. Detailed below.
+* `firehose` - (Optional) Configuration block for replicator log delivery to Amazon Data Firehose. Detailed below.
+* `s3` - (Optional) Configuration block for replicator log delivery to Amazon S3. Detailed below.
+
+### cloudwatch_logs
+
+* `enabled` - (Required) Boolean whether to enable log delivery to CloudWatch Logs.
+* `log_group` - (Optional) Name of CloudWatch Logs log group. Required if `enabled` is `true`. If `enabled` is `false`, this value must not be set.
+
+### firehose
+
+* `enabled` - (Required) Boolean whether to enable log delivery to Firehose.
+* `delivery_stream` - (Optional) Name of the Firehose delivery stream. Required if `enabled` is `true`. If `enabled` is `false`, this value must not be set.
+
+### s3
+
+* `enabled` - (Required) Boolean whether to enable log delivery to S3.
+* `bucket` - (Optional) Name of the S3 bucket. Required if `enabled` is `true`. If `enabled` is `false`, this value must not be set.
+* `prefix` - (Optional) Prefix to use when storing replicator logs in S3. If `enabled` is `false`, this value must not be set.
 
 ## Attribute Reference
 
@@ -141,17 +168,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using the replicator ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_msk_replicator.example
-  id = "arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+  identity = {
+    arn = "arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b"
+  }
+}
+
+resource "aws_msk_replicator" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import MSK replicators using the replicator ARN. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the MSK replicator.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using `arn`. For example:
+
+```terraform
+import {
+  to = aws_msk_replicator.example
+  id = "arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b"
+}
+```
+
+Using `terraform import`, import MSK replicators using `arn`. For example:
 
 ```console
-% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+% terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:replicator/example-replicator/b3a16098-f408-4995-8e36-482db4f1b46b
 ```
