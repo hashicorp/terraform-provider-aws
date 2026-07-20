@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -212,6 +213,10 @@ func testAccCheckEvaluationJobDestroy(ctx context.Context, t *testing.T) resourc
 
 			arn := rs.Primary.Attributes["job_arn"]
 			output, err := tfbedrock.FindEvaluationJobByARN(ctx, conn, arn)
+
+			if retry.NotFound(err) {
+				return nil
+			}
 			if err != nil {
 				return err
 			}
