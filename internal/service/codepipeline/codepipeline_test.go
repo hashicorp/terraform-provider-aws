@@ -1237,7 +1237,7 @@ func TestAccCodePipeline_conditions(t *testing.T) {
 func TestAccCodePipeline_computeAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 	codestarConnectionResourceName := "aws_codestarconnections_connection.test"
 
@@ -1248,12 +1248,12 @@ func TestAccCodePipeline_computeAction(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_computeAction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &p),
+					testAccCheckPipelineExists(ctx, t, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
