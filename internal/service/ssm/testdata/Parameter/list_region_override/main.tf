@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ssm_parameter" "test" {
-  count = var.resource_count
+  count  = var.resource_count
+  region = var.region
 
   name = "${var.rName}-${count.index}"
 }
@@ -16,5 +17,11 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
   nullable    = false
 }

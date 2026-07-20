@@ -5,6 +5,8 @@ resource "aws_ssm_parameter" "test" {
   count = var.resource_count
 
   name = "${var.rName}-${count.index}"
+
+  tags = var.resource_tags
 }
 
 variable "rName" {
@@ -16,5 +18,11 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource"
+  type        = map(string)
   nullable    = false
 }
