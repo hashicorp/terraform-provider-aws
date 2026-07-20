@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,6 +35,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -86,8 +88,27 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Required: true,
 			},
 			"namespaces": schema.SetAttribute{
+				CustomType:         fwtypes.SetOfStringType,
+				Optional:           true,
+				Computed:           true,
+				DeprecationMessage: "namespaces is deprecated. Use namespace_templates instead.",
+				PlanModifiers: []planmodifier.Set{
+					tfsetplanmodifier.DefaultValueFromPath[fwtypes.SetOfString](path.Root("namespace_templates")),
+				},
+			},
+			"namespace_templates": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
+				Validators: []validator.Set{
+					setvalidator.ExactlyOneOf(
+						path.MatchRelative().AtParent().AtName("namespaces"),
+						path.MatchRelative().AtParent().AtName("namespace_templates"),
+					),
+				},
+				PlanModifiers: []planmodifier.Set{
+					tfsetplanmodifier.DefaultValueFromPath[fwtypes.SetOfString](path.Root("namespaces")),
+				},
 			},
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
@@ -602,6 +623,7 @@ type memoryStrategyResourceModel struct {
 	MemoryID               types.String                                              `tfsdk:"memory_id"`
 	Name                   types.String                                              `tfsdk:"name"`
 	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
+	NamespaceTemplates     fwtypes.SetOfString                                       `tfsdk:"namespace_templates"`
 	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
 	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
 }

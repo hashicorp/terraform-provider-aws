@@ -22,11 +22,11 @@ Manages an AWS Bedrock AgentCore Memory Strategy. Memory strategies define how t
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "semantic" {
-  name        = "semantic-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "SEMANTIC"
-  description = "Semantic understanding strategy"
-  namespaces  = ["default"]
+  name                = "semantic-strategy"
+  memory_id           = aws_bedrockagentcore_memory.example.id
+  type                = "SEMANTIC"
+  description         = "Semantic understanding strategy"
+  namespace_templates = ["default"]
 }
 ```
 
@@ -34,11 +34,11 @@ resource "aws_bedrockagentcore_memory_strategy" "semantic" {
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "summary" {
-  name        = "summary-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "SUMMARIZATION"
-  description = "Text summarization strategy"
-  namespaces  = ["{sessionId}"]
+  name                = "summary-strategy"
+  memory_id           = aws_bedrockagentcore_memory.example.id
+  type                = "SUMMARIZATION"
+  description         = "Text summarization strategy"
+  namespace_templates = ["{sessionId}"]
 }
 ```
 
@@ -46,11 +46,11 @@ resource "aws_bedrockagentcore_memory_strategy" "summary" {
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "user_pref" {
-  name        = "user-preference-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "USER_PREFERENCE"
-  description = "User preference tracking strategy"
-  namespaces  = ["preferences"]
+  name                = "user-preference-strategy"
+  memory_id           = aws_bedrockagentcore_memory.example.id
+  type                = "USER_PREFERENCE"
+  description         = "User preference tracking strategy"
+  namespace_templates = ["preferences"]
 }
 ```
 
@@ -58,11 +58,11 @@ resource "aws_bedrockagentcore_memory_strategy" "user_pref" {
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "episodic" {
-  name        = "episodic-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "EPISODIC"
-  description = "Episodic memory strategy"
-  namespaces  = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+  name                = "episodic-strategy"
+  memory_id           = aws_bedrockagentcore_memory.example.id
+  type                = "EPISODIC"
+  description         = "Episodic memory strategy"
+  namespace_templates = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
 }
 ```
 
@@ -75,7 +75,7 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_semantic" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Custom semantic processing strategy"
-  namespaces                = ["{sessionId}"]
+  namespace_templates       = ["{sessionId}"]
 
   configuration {
     type = "SEMANTIC_OVERRIDE"
@@ -97,11 +97,11 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_semantic" {
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "custom_summary" {
-  name        = "custom-summary-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "CUSTOM"
-  description = "Custom summarization strategy"
-  namespaces  = ["summaries"]
+  name                = "custom-summary-strategy"
+  memory_id           = aws_bedrockagentcore_memory.example.id
+  type                = "CUSTOM"
+  description         = "Custom summarization strategy"
+  namespace_templates = ["summaries"]
 
   configuration {
     type = "SUMMARY_OVERRIDE"
@@ -118,11 +118,11 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_summary" {
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "custom_user_pref" {
-  name        = "custom-user-preference-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "CUSTOM"
-  description = "Custom user preference tracking strategy"
-  namespaces  = ["user_prefs"]
+  name                = "custom-user-preference-strategy"
+  memory_id           = aws_bedrockagentcore_memory.example.id
+  type                = "CUSTOM"
+  description         = "Custom user preference tracking strategy"
+  namespace_templates = ["user_prefs"]
 
   configuration {
     type = "USER_PREFERENCE_OVERRIDE"
@@ -149,7 +149,7 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Custom episodic processing strategy"
-  namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
+  namespace_templates       = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
 
   configuration {
     type = "EPISODIC_OVERRIDE"
@@ -174,13 +174,14 @@ The following arguments are required:
 * `name` - (Required) Name of the memory strategy.
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
 * `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
-* `namespaces` - (Required) Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) Description of the memory strategy.
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration`](#configuration) below.
+* `description` - (Optional) Description of the memory strategy.
+* `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured.
+* `namespaces` - (Optional) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `configuration`
 
