@@ -41,7 +41,7 @@ val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn"
 val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
-const val defaultTerraformVersion = "1.15.8"
+val defaultTerraformVersion = "1.15.8"
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
