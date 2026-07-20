@@ -88,15 +88,6 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				CustomType: fwtypes.SetOfStringType,
 				Required:   true,
 			},
-			names.AttrType: schema.StringAttribute{
-				Required:   true,
-				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-		},
-		Blocks: map[string]schema.Block{
 			"reflection_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[reflectionConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -111,6 +102,15 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					},
 				},
 			},
+			names.AttrType: schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
 			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -163,29 +163,29 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								},
 							},
 						},
-						"reflection": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[reflectionOverrideModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("reflection"),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"append_to_prompt": schema.StringAttribute{
-										Required: true,
-									},
-									"model_id": schema.StringAttribute{
-										Required: true,
-									},
-									"namespace_templates": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
-										Optional:   true,
+							"reflection": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[reflectionOverrideModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								PlanModifiers: []planmodifier.List{
+									errorIfSingleBlockRemoved("reflection"),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"append_to_prompt": schema.StringAttribute{
+											Required: true,
+										},
+										"model_id": schema.StringAttribute{
+											Required: true,
+										},
+										"namespace_templates": schema.ListAttribute{
+											CustomType: fwtypes.ListOfStringType,
+											Optional:   true,
+										},
 									},
 								},
 							},
-						},
 					},
 				},
 			},
@@ -297,6 +297,7 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 			}
 		}
 	}
+	}
 }
 
 func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -362,7 +363,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			if episodicReflection, ok := found.Configuration.Reflection.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
 				var rc reflectionConfigurationModel
 				if episodicReflection.Value.NamespaceTemplates != nil {
-					rc.NamespaceTemplates = fwflex.FlattenFrameworkStringValueListOfString(ctx, episodicReflection.Value.NamespaceTemplates)
+					rc.NamespaceTemplates, _ = fwtypes.ListOfStringValueFrom(ctx, episodicReflection.Value.NamespaceTemplates)
 				}
 				plan.ReflectionConfiguration, _ = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rc)
 			}
@@ -424,7 +425,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		if episodicReflection, ok := out.Configuration.Reflection.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
 			var rc reflectionConfigurationModel
 			if episodicReflection.Value.NamespaceTemplates != nil {
-				rc.NamespaceTemplates = fwflex.FlattenFrameworkStringValueListOfString(ctx, episodicReflection.Value.NamespaceTemplates)
+				rc.NamespaceTemplates, _ = fwtypes.ListOfStringValueFrom(ctx, episodicReflection.Value.NamespaceTemplates)
 			}
 			state.ReflectionConfiguration, _ = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rc)
 		}
@@ -680,16 +681,16 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]     `tfsdk:"configuration"`
-	Description             types.String                                                  `tfsdk:"description"`
-	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
-	MemoryStrategyID        types.String                                                  `tfsdk:"memory_strategy_id"`
-	MemoryID                types.String                                                  `tfsdk:"memory_id"`
-	Name                    types.String                                                  `tfsdk:"name"`
-	Namespaces              fwtypes.SetOfString                                           `tfsdk:"namespaces"`
-	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[reflectionConfigurationModel] `tfsdk:"reflection_configuration"`
-	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]               `tfsdk:"type"`
-	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
+	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
+	Description            types.String                                              `tfsdk:"description"`
+	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
+	MemoryID               types.String                                              `tfsdk:"memory_id"`
+	Name                   types.String                                              `tfsdk:"name"`
+	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
+	ReflectionConfiguration  fwtypes.ListNestedObjectValueOf[reflectionConfigurationModel] `tfsdk:"reflection_configuration"`
+	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
+	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
 }
 
 func (m *memoryStrategyResourceModel) GetIdentifier() string {
@@ -814,10 +815,10 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 }
 
 type customConfigurationModel struct {
-	Type          fwtypes.StringEnum[awstypes.OverrideType]                `tfsdk:"type"`
-	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel]    `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel]    `tfsdk:"extraction"`
-	Reflection    fwtypes.ListNestedObjectValueOf[reflectionOverrideModel] `tfsdk:"reflection"`
+	Type          fwtypes.StringEnum[awstypes.OverrideType]             `tfsdk:"type"`
+	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"consolidation"`
+	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"extraction"`
+	Reflection    fwtypes.ListNestedObjectValueOf[reflectionOverrideModel]   `tfsdk:"reflection"`
 }
 
 var (
@@ -859,7 +860,6 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 					return diags
 				}
 			}
-		}
 
 		if t.Reflection != nil {
 			switch rt := t.Reflection.(type) {
@@ -879,6 +879,8 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 					}
 				}
 			}
+		}
+		}
 		}
 	default:
 		diags.AddError(
@@ -970,6 +972,7 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 			return nil, diags
 		}
 	}
+
 
 	var reflection *reflectionOverrideModel
 	if !m.Reflection.IsNull() {
