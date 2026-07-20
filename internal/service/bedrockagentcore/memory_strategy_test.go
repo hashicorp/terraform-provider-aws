@@ -293,7 +293,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			},
 			// Step 1: Create episodic strategy
 			{
-				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "EPISODIC", "Episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeEpisodic, "Episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -310,7 +310,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			},
 			// Step 2: Update episodic description (in-place)
 			{
-				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "EPISODIC", "Updated episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeEpisodic, "Updated episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
@@ -325,7 +325,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			},
 			// Step 3: Change type episodic→semantic (replacement)
 			{
-				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", names.AttrDescription, "default"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeSemantic, names.AttrDescription, "default"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -343,7 +343,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			},
 			// Step 4: Update description + namespace (in-place)
 			{
-				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", "Updated description", "custom"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeSemantic, "Updated description", "custom"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
@@ -358,7 +358,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			},
 			// Step 5: Change type semantic→user_preference (replacement)
 			{
-				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "USER_PREFERENCE", "User preference strategy", "preferences"),
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -376,7 +376,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 			},
 			// Step 6: Try to create ANOTHER user_preference strategy → should ERROR
 			{
-				Config:      testAccMemoryStrategyConfig_duplicateType(rName, "USER_PREFERENCE"),
+				Config:      testAccMemoryStrategyConfig_duplicateType(rName, awstypes.MemoryStrategyTypeUserPreference),
 				ExpectError: regexache.MustCompile("Found multiple strategies of type"),
 			},
 			// Step 7: Import test - verify composite ID import works
@@ -419,7 +419,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 2: Create CUSTOM strategy with consolidation block
 			{
-				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SEMANTIC_OVERRIDE", "Focus on semantic relationships", "us.amazon.nova-2-lite-v1:0"),
+				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, awstypes.OverrideTypeSemanticOverride, "Focus on semantic relationships", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -440,7 +440,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 3: Add extraction block and update consolidation properties (same override type)
 			{
-				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "Updated semantic consolidation", "amazon.nova-lite-v1:0", "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
+				Config: testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeSemanticOverride, "Updated semantic consolidation", "amazon.nova-lite-v1:0", "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -461,12 +461,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 4: Try to remove consolidation block → should ERROR
 			{
-				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, "SEMANTIC_OVERRIDE", "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
+				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
 				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block"),
 			},
 			//// Step 5: Change override type → should replace resource
 			{
-				Config: testAccMemoryStrategyConfig_custom(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "amazon.nova-lite-v1:0", "Extract user preferences", "us.amazon.nova-2-lite-v1:0"),
+				Config: testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeUserPreferenceOverride, "Store user preferences", "amazon.nova-lite-v1:0", "Extract user preferences", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -489,12 +489,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
 			{
-				Config:      testAccMemoryStrategyConfig_custom(rName, "SUMMARY_OVERRIDE", "Summary consolidation", "amazon.nova-lite-v1:0", "Summary extraction", "us.amazon.nova-2-lite-v1:0"),
+				Config:      testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeSummaryOverride, "Summary consolidation", "amazon.nova-lite-v1:0", "Summary extraction", "us.amazon.nova-2-lite-v1:0"),
 				ExpectError: regexache.MustCompile(`Attribute "configuration\[0\].extraction" must not be configured`),
 			},
 			//// Step 7: SUMMARY_OVERRIDE with no extraction block → should succeed
 			{
-				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SUMMARY_OVERRIDE", "Summary consolidation only", "amazon.nova-lite-v1:0"),
+				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, awstypes.OverrideTypeSummaryOverride, "Summary consolidation only", "amazon.nova-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -583,7 +583,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 `, rName, strategyType, acctest.ListOfStrings(nss...)))
 }
 
-func testAccMemoryStrategyConfig_withExecutionRole(rName, strategyType, description, namespace string) string {
+func testAccMemoryStrategyConfig_withExecutionRole(rName string, strategyType awstypes.MemoryStrategyType, description string, nss ...string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
@@ -591,12 +591,12 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = %[2]q
   description               = %[3]q
-  namespaces                = [%[4]q]
+  namespace_templates       = [%[4]s]
 }
-`, rName, strategyType, description, namespace))
+`, rName, strategyType, description, acctest.ListOfStrings(nss...)))
 }
 
-func testAccMemoryStrategyConfig_duplicateType(rName string, strategyType string) string {
+func testAccMemoryStrategyConfig_duplicateType(rName string, strategyType awstypes.MemoryStrategyType) string {
 	namespace := "default"
 	duplicateNamespace := "duplicate"
 	if strategyType == "EPISODIC" {
@@ -610,12 +610,12 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = %[2]q
   description               = "Duplicate strategy"
-  namespaces                = [%[3]q]
+  namespace_templates       = [%[3]q]
 }
 `, rName, strategyType, duplicateNamespace))
 }
 
-func testAccMemoryStrategyConfig_custom(rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
+func testAccMemoryStrategyConfig_custom(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
@@ -623,7 +623,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Test custom strategy"
-  namespaces                = ["{sessionId}"]
+  namespace_templates       = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -640,7 +640,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 `, rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel))
 }
 
-func testAccMemoryStrategyConfig_customConsolidationOnly(rName, overrideType, consolidationPrompt, consolidationModel string) string {
+func testAccMemoryStrategyConfig_customConsolidationOnly(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
@@ -648,7 +648,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Test custom strategy"
-  namespaces                = ["{sessionId}"]
+  namespace_templates       = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -661,7 +661,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 `, rName, overrideType, consolidationPrompt, consolidationModel))
 }
 
-func testAccMemoryStrategyConfig_customExtractionOnly(rName, overrideType, extractionPrompt, extractionModel string) string {
+func testAccMemoryStrategyConfig_customExtractionOnly(rName string, overrideType awstypes.OverrideType, extractionPrompt, extractionModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
@@ -669,7 +669,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Test custom strategy"
-  namespaces                = ["{sessionId}"]
+  namespace_templates       = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -690,7 +690,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   memory_id                 = aws_bedrockagentcore_memory.test.id
   type                      = "CUSTOM"
   description               = "Test custom strategy"
-  namespaces                = ["default"]
+  namespace_templates       = ["default"]
 }
 `, rName))
 }
