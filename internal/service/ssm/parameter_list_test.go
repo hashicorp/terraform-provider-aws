@@ -44,8 +44,7 @@ func TestAccSSMParameter_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					"resource_count": config.IntegerVariable(2),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -61,8 +60,7 @@ func TestAccSSMParameter_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					"resource_count": config.IntegerVariable(2),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ssm_parameter.test", identity1.Checks()),

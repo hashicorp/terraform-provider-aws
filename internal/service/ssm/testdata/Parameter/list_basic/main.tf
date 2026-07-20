@@ -2,19 +2,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ssm_parameter" "test" {
-  count = var.resource_count
+  count = 2
 
-  name = "${var.rName}-${count.index}"
+  name  = "${var.rName}-${count.index}"
+  type  = "String"
+  value = "${var.rName}-${count.index}"
 }
 
 variable "rName" {
   description = "Name for resource"
   type        = string
-  nullable    = false
-}
-
-variable "resource_count" {
-  description = "Number of resources to create"
-  type        = number
   nullable    = false
 }

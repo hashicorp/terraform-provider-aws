@@ -5,7 +5,9 @@ resource "aws_ssm_parameter" "test" {
   count  = var.resource_count
   region = var.region
 
-  name = "${var.rName}-${count.index}"
+  name  = "${var.rName}-${count.index}"
+  type  = "String"
+  value = "${var.rName}-${count.index}"
 }
 
 variable "rName" {
