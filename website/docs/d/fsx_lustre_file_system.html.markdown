@@ -3,12 +3,12 @@ subcategory: "FSx"
 layout: "aws"
 page_title: "AWS: aws_fsx_lustre_file_system"
 description: |-
-  Retrieve information on an FSx for Lustre File System.
+  Provides details about an FSx for Lustre File System.
 ---
 
 # Data Source: aws_fsx_lustre_file_system
 
-Retrieve information on an FSx for Lustre File System.
+Provides details about an FSx for Lustre File System.
 
 ## Example Usage
 
