@@ -309,6 +309,7 @@ provider "aws" {
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
+|Security Agent|`securityagent`|`AWS_ENDPOINT_URL_SECURITYAGENT`|`securityagent`|
 |Security Hub|`securityhub`|`AWS_ENDPOINT_URL_SECURITYHUB`|`securityhub`|
 |Security Lake|`securitylake`|`AWS_ENDPOINT_URL_SECURITYLAKE`|`securitylake`|
 |Serverless Application Repository|`serverlessrepo`(or `serverlessapprepo` or `serverlessapplicationrepository`)|`AWS_ENDPOINT_URL_SERVERLESSAPPLICATIONREPOSITORY`|`serverlessapplicationrepository`|

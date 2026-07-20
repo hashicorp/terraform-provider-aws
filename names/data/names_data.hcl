@@ -8002,6 +8002,30 @@ service "secretsmanager" {
   brand                    = "AWS"
 }
 
+service "securityagent" {
+  sdk {
+    id            = "SecurityAgent"
+    arn_namespace = "securityagent"
+  }
+
+  names {
+    provider_name_upper = "SecurityAgent"
+    human_friendly      = "Security Agent"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
+  }
+
+  resource_prefix {
+    correct = "aws_securityagent_"
+  }
+
+  provider_package_correct = "securityagent"
+  doc_prefix               = ["securityagent_"]
+  brand                    = "AWS"
+}
+
 service "securityhub" {
   sdk {
     id            = "SecurityHub"

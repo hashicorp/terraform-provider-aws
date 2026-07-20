@@ -2078,6 +2078,12 @@ service/secretsmanager:
           - any-glob-to-any-file:
               - 'internal/service/secretsmanager/**/*'
               - 'website/**/secretsmanager_*'
+service/securityagent:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/securityagent/**/*'
+              - 'website/**/securityagent_*'
 service/securityhub:
   - any:
       - changed-files:
