@@ -658,6 +658,8 @@ service/schemas:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_schemas_'
 service/secretsmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_secretsmanager_'
+service/securityagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityagent_'
 service/securityhub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityhub_'
 service/securitylake:

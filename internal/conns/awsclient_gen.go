@@ -231,6 +231,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/securityagent"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
@@ -1227,6 +1228,10 @@ func (c *AWSClient) SchemasClient(ctx context.Context) *schemas.Client {
 
 func (c *AWSClient) SecretsManagerClient(ctx context.Context) *secretsmanager.Client {
 	return errs.Must(client[*secretsmanager.Client](ctx, c, names.SecretsManager, make(map[string]any)))
+}
+
+func (c *AWSClient) SecurityAgentClient(ctx context.Context) *securityagent.Client {
+	return errs.Must(client[*securityagent.Client](ctx, c, names.SecurityAgent, make(map[string]any)))
 }
 
 func (c *AWSClient) SecurityHubClient(ctx context.Context) *securityhub.Client {
