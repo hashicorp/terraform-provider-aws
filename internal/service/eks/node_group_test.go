@@ -66,6 +66,7 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVersion, eksClusterResourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1402,7 +1403,7 @@ func TestAccEKSNodeGroup_warmPool(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_warmPoolDisabled(rName),
+				Config: testAccNodeGroupConfig_warmPoolRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
@@ -2821,7 +2822,7 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccNodeGroupConfig_warmPoolDisabled(rName string) string {
+func testAccNodeGroupConfig_warmPoolRemoved(rName string) string {
 	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
