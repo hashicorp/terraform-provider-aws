@@ -483,7 +483,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if len(ipamPoolIDs) > 0 {
 		// IPAM eventual consistency. It can take ~30 min to release allocations.
-		timeout := min(d.Timeout(schema.TimeoutDelete), 35*time.Minute)
+		timeout := min(d.Timeout(schema.TimeoutDelete), 35*time.Minute) //nolint:mnd // 35 minutes is the minimum feasible wait time
 		for ipamPoolID := range ipamPoolIDs {
 			if ipamPoolID == amazonIPv6PoolID {
 				continue
