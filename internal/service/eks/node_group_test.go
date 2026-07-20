@@ -1365,10 +1365,10 @@ func TestAccEKSNodeGroup_warmPool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.max_group_prepared_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.pool_state", "STOPPED"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.reuse_on_scale_in", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.max_group_prepared_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.min_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.pool_state", ""),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.reuse_on_scale_in", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1388,8 +1388,8 @@ func TestAccEKSNodeGroup_warmPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.max_group_prepared_capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.min_size", "2"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.pool_state", "STOPPED"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.reuse_on_scale_in", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.pool_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.reuse_on_scale_in", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2774,12 +2774,7 @@ resource "aws_eks_node_group" "test" {
     min_size     = 1
   }
 
-  warm_pool_config {
-    max_group_prepared_capacity = 2
-    min_size                    = 1
-    pool_state                  = "STOPPED"
-    reuse_on_scale_in           = true
-  }
+  warm_pool_config {}
 
   depends_on = [
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
@@ -2808,8 +2803,8 @@ resource "aws_eks_node_group" "test" {
   warm_pool_config {
     max_group_prepared_capacity = 3
     min_size                    = 2
-    pool_state                  = "STOPPED"
-    reuse_on_scale_in           = false
+    pool_state                  = "RUNNING"
+    reuse_on_scale_in           = true
   }
 
   depends_on = [
