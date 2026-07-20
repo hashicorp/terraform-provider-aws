@@ -177,8 +177,8 @@ object PullRequest : BuildType({
             use = true
             publish = true
             rules = """
-                %system.teamcity.build.checkoutDir%/go-mod-cache
-                %system.teamcity.build.checkoutDir%/go-build-cache
+                go-mod-cache
+                go-build-cache
             """.trimIndent()
         }
 
