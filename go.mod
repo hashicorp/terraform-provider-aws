@@ -8,7 +8,7 @@ godebug tlsmlkem=0
 
 require (
 	github.com/ProtonMail/go-crypto v1.4.1
-	github.com/YakDriver/go-version v0.1.0
+	github.com/YakDriver/go-version v0.2.0
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.42.1
@@ -41,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.69.1
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/backup v1.58.1
+	github.com/aws/aws-sdk-go-v2/service/backup v1.58.2
 	github.com/aws/aws-sdk-go-v2/service/batch v1.67.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1
@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.64.1
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.67.1
@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.43.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/evs v1.12.1
@@ -136,7 +136,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.44.1
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.83.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.83.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.38.1
@@ -155,7 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.39.1
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.49.1
@@ -169,6 +169,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/location v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.53.1
+	github.com/aws/aws-sdk-go-v2/service/mailmanager v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.95.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.100.1
@@ -192,7 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.19.1
-	github.com/aws/aws-sdk-go-v2/service/odb v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/odb v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.74.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.52.1
@@ -211,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.118.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.121.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.122.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.64.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.41.1

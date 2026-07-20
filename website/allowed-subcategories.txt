@@ -222,6 +222,7 @@ S3 Tables
 S3 Vectors
 S3 on Outposts
 SES (Simple Email)
+SES Mail Manager
 SESv2 (Simple Email V2)
 SFN (Step Functions)
 SNS (Simple Notification)
