@@ -2416,7 +2416,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime), // nosemgrep:ci.semgrep.pluginsdk.internal-retry-statechangeconf-refresh-remove-context
 		Timeout: timeout,
 	}
 
