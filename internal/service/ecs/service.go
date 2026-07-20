@@ -2144,7 +2144,7 @@ func statusService(conn *ecs.Client, serviceName, clusterNameOrARN string) retry
 	}
 }
 
-func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
+func statusServiceWaitForStable(rollbackCtx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
 	var primaryTaskSet *awstypes.Deployment
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
@@ -2191,7 +2191,7 @@ func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN 
 
 			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
-				go rollbackRoutine(ctx, conn, sigintConfig, primaryDeploymentArn)
+				go rollbackRoutine(rollbackCtx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
 			}
 
@@ -2416,7 +2416,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
 		Timeout: timeout,
 	}
 
