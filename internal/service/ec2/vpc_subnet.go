@@ -473,25 +473,27 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// If the subnet's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
-	var ipamPoolID string
+	ipamPoolIDs := make(map[string]struct{})
 	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
-		ipamPoolID = v.(string)
+		ipamPoolIDs[v.(string)] = struct{}{}
 	}
-	if ipamPoolID == "" {
-		if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
-			ipamPoolID = v.(string)
-		}
+	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+		ipamPoolIDs[v.(string)] = struct{}{}
 	}
-	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
-		const (
-			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
-		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
-			return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Id())
-		})
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+	if len(ipamPoolIDs) > 0 {
+		// IPAM eventual consistency. It can take ~30 min to release allocations.
+		timeout := min(d.Timeout(schema.TimeoutDelete), 35*time.Minute)
+		for ipamPoolID := range ipamPoolIDs {
+			if ipamPoolID == amazonIPv6PoolID {
+				continue
+			}
+			_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+				return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Id())
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Subnet (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+			}
 		}
 	}
 
