@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_codepipeline
+```
+
+```release-note:enhancement
+resource/aws_codepipeline: Add resource identity support
+```

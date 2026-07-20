@@ -41,6 +41,12 @@ import {
 resource "aws_iam_outbound_web_identity_federation" "example" {}
 ```
 
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Outbound Web Identity Federation resources using the AWS account ID. For example:
 
 ```terraform

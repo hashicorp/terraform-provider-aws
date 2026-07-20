@@ -12,8 +12,10 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -433,6 +435,200 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 
 			if diff := cmp.Diff(testcase.expectedIgnoreConfig, results); diff != "" {
 				t.Errorf("Unexpected ignore_tags diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
+	ctx := t.Context()
+	testcases := map[string]struct {
+		tfMap          map[string]any
+		envvars        map[string]string
+		expectedConfig *awsbase.AssumeRoleWithWebIdentity
+		expectErr      bool
+	}{
+		"nil": {
+			tfMap:          nil,
+			envvars:        map[string]string{},
+			expectedConfig: nil,
+		},
+		"token config": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "my-token",
+			},
+			envvars: map[string]string{},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
+		},
+		"token envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "my-token",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
+		},
+		"token envvar and config": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "token2",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "token1",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "token2",
+			},
+		},
+		"token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars: map[string]string{},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
+		},
+		"token_file envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
+		},
+		"token_file envvar and config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "token-file2",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "token-file1",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "token-file2",
+			},
+		},
+		"no token or token_file": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars:   map[string]string{},
+			expectErr: true,
+		},
+		"token config token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token":      "my-token",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars:   map[string]string{},
+			expectErr: true,
+		},
+		"token envvar token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "my-token",
+			},
+			expectErr: true,
+		},
+		"token config token_file envvar": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "my-token",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectErr: true,
+		},
+		"token envvar token_file envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar:      "my-token",
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectErr: true,
+		},
+	}
+
+	for name, testcase := range testcases { //nolint:paralleltest
+		t.Run(name, func(t *testing.T) {
+			oldEnv := stashEnv()
+			defer popEnv(oldEnv)
+
+			for k, v := range testcase.envvars {
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
+			}
+
+			results, err := expandAssumeRoleWithWebIdentity(ctx, testcase.tfMap)
+
+			if got, want := err != nil, testcase.expectErr; !cmp.Equal(got, want) {
+				t.Errorf("expandAssumeRoleWithWebIdentity() err %t, want %t", got, want)
+			}
+			if err == nil {
+				if results == nil && testcase.expectedConfig != nil {
+					t.Errorf("Expected assume_role_with_web_identity config to be %v, got nil", testcase.expectedConfig)
+				}
+
+				if diff := cmp.Diff(testcase.expectedConfig, results); diff != "" {
+					t.Errorf("Unexpected assume_role_with_web_identity diff: %s", diff)
+				}
 			}
 		})
 	}

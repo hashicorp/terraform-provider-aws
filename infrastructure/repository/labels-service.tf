@@ -198,6 +198,7 @@ variable "service_labels" {
     "kms",
     "lakeformation",
     "lambda",
+    "lambdamicrovms",
     "launchwizard",
     "lexmodels",
     "lexruntime",

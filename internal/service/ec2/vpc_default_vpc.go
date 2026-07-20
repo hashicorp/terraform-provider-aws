@@ -24,7 +24,13 @@ import (
 
 // @SDKResource("aws_default_vpc", name="Default VPC")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
+// @Testing(generator=false)
+// @Testing(importIgnore="force_destroy;existing_default_vpc", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.52.0")
 func resourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

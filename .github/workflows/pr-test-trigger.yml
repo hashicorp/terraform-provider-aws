@@ -1,0 +1,96 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: PR Test Trigger
+
+permissions:
+  contents: read        # required for checkout
+  pull-requests: write  # required to post feedback comments
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  trigger:
+    name: Trigger Tests from Comment
+    runs-on: ubuntu-latest
+    # Only run when the comment is on a pull request and starts with /test
+    if: |
+      github.event.issue.pull_request
+      && startsWith(github.event.comment.body, '/test')
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.comment.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Setup Go
+        if: steps.community_check.outputs.maintainer == 'true'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Install tctest
+        if: steps.community_check.outputs.maintainer == 'true'
+        run: go install github.com/katbyte/tctest@v0.9.0
+
+      - name: Determine Changed Packages
+        if: steps.community_check.outputs.maintainer == 'true'
+        id: pkgs
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pkgs=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/files --paginate \
+            --jq '[.[].filename | select(startswith("internal/service/")) | split("/")[2]] | unique | join(",")')
+          echo "pkgs=${pkgs}" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on Multiple Packages
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && contains(steps.pkgs.outputs.pkgs, ',')
+        env:
+          PKGS: ${{ steps.pkgs.outputs.pkgs }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.issue.html_url }} --body \
+            "This PR touches multiple packages (\`${PKGS}\`). Please run tests manually."
+
+      - name: Run Tests
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && !contains(steps.pkgs.outputs.pkgs, ',')
+        id: run_tests
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          PKGS: ${{ steps.pkgs.outputs.pkgs }}
+          TCTEST_SERVER: ${{ secrets.TCTEST_SERVER }}
+          TCTEST_BUILDTYPEID: ${{ secrets.TCTEST_BUILDTYPEID }}
+          TCTEST_REPO: hashicorp/terraform-provider-aws
+          TCTEST_FILEREGEX: "^internal/.*"
+          TCTEST_SKIP_QUEUE: 1
+          TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          output=$(tctest pr ${PR_NUMBER} --properties PKG=${PKGS} --comment)
+          echo "${output}"
+          if ! echo "${output}" | grep -q "triggered tests for 1 PRs!"; then
+            echo "::error::tctest did not successfully trigger tests: ${output}"
+            exit 1
+          fi
+
+      - name: Comment on Test Start
+        if: steps.run_tests.outcome == 'success'
+        env:
+          PKGS: ${{ steps.pkgs.outputs.pkgs }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.issue.html_url }} --body \
+            "Automated tests have been triggered for package \`${PKGS}\`. Results will be posted when complete."
