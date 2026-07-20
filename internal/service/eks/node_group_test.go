@@ -66,7 +66,7 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVersion, eksClusterResourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1364,11 +1364,11 @@ func TestAccEKSNodeGroup_warmPool(t *testing.T) {
 				Config: testAccNodeGroupConfig_warmPool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "STOPPED"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.reuse_on_scale_in", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.max_group_prepared_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.min_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.pool_state", "STOPPED"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.reuse_on_scale_in", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1385,11 +1385,11 @@ func TestAccEKSNodeGroup_warmPool(t *testing.T) {
 				Config: testAccNodeGroupConfig_warmPoolUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "3"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "2"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "STOPPED"),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.reuse_on_scale_in", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.max_group_prepared_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.min_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.pool_state", "STOPPED"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.0.reuse_on_scale_in", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1406,7 +1406,7 @@ func TestAccEKSNodeGroup_warmPool(t *testing.T) {
 				Config: testAccNodeGroupConfig_warmPoolRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
-					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_config.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2774,7 +2774,7 @@ resource "aws_eks_node_group" "test" {
     min_size     = 1
   }
 
-  warm_pool {
+  warm_pool_config {
     max_group_prepared_capacity = 2
     min_size                    = 1
     pool_state                  = "STOPPED"
@@ -2805,7 +2805,7 @@ resource "aws_eks_node_group" "test" {
     min_size     = 1
   }
 
-  warm_pool {
+  warm_pool_config {
     max_group_prepared_capacity = 3
     min_size                    = 2
     pool_state                  = "STOPPED"

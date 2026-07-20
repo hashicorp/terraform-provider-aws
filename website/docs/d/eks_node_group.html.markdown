@@ -63,7 +63,7 @@ This data source exports the following attributes in addition to the arguments a
     * `effect` - The effect of the taint.
 * `tags` - Key-value map of resource tags.
 * `version` - Kubernetes version.
-* `warm_pool` - Configuration block with EC2 Auto Scaling warm pool settings.
+* `warm_pool_config` - Configuration block with EC2 Auto Scaling warm pool settings.
     * `max_group_prepared_capacity` - Maximum number of instances allowed to be in the warm pool combined with the Auto Scaling Group.
     * `min_size` - Minimum number of instances maintained in the warm pool.
     * `pool_state` - Instance state that warm pool instances are transitioned to.

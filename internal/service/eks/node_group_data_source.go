@@ -205,7 +205,7 @@ func dataSourceNodeGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"warm_pool": {
+				"warm_pool_config": {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -288,11 +288,11 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
 	if nodeGroup.WarmPoolConfig != nil {
-		if err := d.Set("warm_pool", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
+		if err := d.Set("warm_pool_config", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting warm_pool_config: %s", err)
 		}
 	} else {
-		d.Set("warm_pool", nil)
+		d.Set("warm_pool_config", nil)
 	}
 
 	setTagsOut(ctx, nodeGroup.Tags)

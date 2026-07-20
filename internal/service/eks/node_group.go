@@ -378,7 +378,7 @@ func resourceNodeGroup() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"warm_pool": {
+				"warm_pool_config": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -483,7 +483,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Version = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("warm_pool"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk("warm_pool_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
 	}
 
@@ -571,11 +571,11 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
 	if nodeGroup.WarmPoolConfig != nil {
-		if err := d.Set("warm_pool", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
+		if err := d.Set("warm_pool_config", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting warm_pool_config: %s", err)
 		}
 	} else {
-		d.Set("warm_pool", nil)
+		d.Set("warm_pool_config", nil)
 	}
 
 	setTagsOut(ctx, nodeGroup.Tags)
@@ -642,7 +642,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config", "warm_pool") {
+	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config", "warm_pool_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
@@ -672,8 +672,8 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
-		if d.HasChange("warm_pool") {
-			if v, ok := d.GetOk("warm_pool"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if d.HasChange("warm_pool_config") {
+			if v, ok := d.GetOk("warm_pool_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
 			} else {
 				input.WarmPoolConfig = &types.WarmPoolConfig{Enabled: aws.Bool(false)}
