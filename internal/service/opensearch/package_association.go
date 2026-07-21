@@ -36,15 +36,17 @@ func resourcePackageAssociation() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), ":")
+				idParts := strings.Split(d.Id(), ",")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("unexpected format (%q), expected domainName:packageID", d.Id())
+					return nil, fmt.Errorf("unexpected format (%q), expected domainName,packageID", d.Id())
 				}
 				domainName := idParts[0]
 				packageID := idParts[1]
+
 				d.Set(names.AttrDomainName, domainName)
 				d.Set("package_id", packageID)
 				d.SetId(fmt.Sprintf("%s-%s", domainName, packageID))
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},

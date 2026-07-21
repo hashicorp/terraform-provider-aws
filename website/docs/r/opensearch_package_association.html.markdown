@@ -62,17 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_opensearch_package_association` using `DOMAIN_NAME:PACKAGE_ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_opensearch_package_association` using `DOMAIN_NAME,PACKAGE_ID`. For example:
 
 ```terraform
 import {
   to = aws_opensearch_package_association.example
-  id = "example-domain:F123456789"
+  id = "example-domain,F123456789"
 }
 ```
 
-Using `terraform import`, import `aws_opensearch_package_association` using `DOMAIN_NAME:PACKAGE_ID`. For example:
+Using `terraform import`, import `aws_opensearch_package_association` using `DOMAIN_NAME,PACKAGE_ID`. For example:
 
 ```console
-% terraform import aws_opensearch_package_association.example example-domain:F123456789
+% terraform import aws_opensearch_package_association.example example-domain,F123456789
 ```
