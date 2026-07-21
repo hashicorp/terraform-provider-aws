@@ -129,7 +129,7 @@ func TestAccMailManagerTrafficPolicy_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_mailmanager_traffic_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("created_timestamp"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("default_action"), knownvalue.StringExact("ALLOW")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDefaultAction), knownvalue.StringExact("ALLOW")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("last_updated_timestamp"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("max_message_size_bytes"), knownvalue.Int32Exact(100000)),
