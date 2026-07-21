@@ -9,3 +9,7 @@ resource/aws_bedrockagentcore_memory_strategy: The `namespace` attribute has bee
 ```release-note:enhancement
 resource/aws_bedrockagentcore_memory: Add `timeouts.update` with a default value of `30m`
 ```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Increase default `timeouts` values to `45m`
+```
