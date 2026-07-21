@@ -143,7 +143,6 @@ object PullRequest : BuildType({
     failureConditions {
         val defaultPullRequestTimeoutHours: Long = 6
         executionTimeoutMin = Duration.ofHours(defaultPullRequestTimeoutHours).toMinutes().toInt()
-        testFailure = false
     }
 
     val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
