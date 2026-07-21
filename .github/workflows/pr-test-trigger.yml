@@ -81,6 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           parallelism=$(echo "${COMMENT_BODY}" | grep -oiP 'PARALLELISM=\d+' | head -1)
+          pattern=$(echo "${COMMENT_BODY}" | grep -oiP 'PATTERN=\K\S+' | head -1)
           properties="PKG=${PKGS}"
           if [[ -n "${parallelism}" ]]; then
             parallelism_value="${parallelism#*=}"
@@ -90,7 +91,15 @@ jobs:
             fi
             properties="${properties};ACCTEST_PARALLELISM=${parallelism_value}"
           fi
-          output=$(tctest pr ${PR_NUMBER} --properties "${properties}" --comment)
+
+          # Build tctest command with optional pattern
+          tctest_cmd="tctest pr ${PR_NUMBER}"
+          if [[ -n "${pattern}" ]]; then
+            tctest_cmd="${tctest_cmd} \"${pattern}\""
+          fi
+          tctest_cmd="${tctest_cmd} --properties \"${properties}\" --comment"
+
+          output=$(eval ${tctest_cmd})
           echo "${output}"
           if ! echo "${output}" | grep -q "triggered tests for 1 PRs!"; then
             echo "::error::tctest did not successfully trigger tests: ${output}"
