@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -642,15 +643,29 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func endpointConfigurationPlantimeValidate(_ context.Context, diff *schema.ResourceDiff, v any) error {
+func isDualStackUnsupportedPartition(partition string) bool {
+	switch partition {
+	case endpoints.AwsIsoPartitionID,
+		endpoints.AwsIsoBPartitionID,
+		endpoints.AwsIsoEPartitionID,
+		endpoints.AwsIsoFPartitionID:
+		return true
+	}
+	return false
+}
+
+func endpointConfigurationPlantimeValidate(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	if v, ok := diff.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		if apiObject := expandEndpointConfiguration(v.([]any)[0].(map[string]any)); apiObject != nil {
 			if apiObject.Types[0] == types.EndpointTypePrivate && apiObject.IpAddressType == types.IpAddressTypeIpv4 {
-				return fmt.Errorf("endpoint_configuration type %[1]q requires ip_address_type %[2]q", types.EndpointTypePrivate, types.IpAddressTypeDualstack)
+				if client, ok := meta.(*conns.AWSClient); ok && client != nil {
+					if !isDualStackUnsupportedPartition(client.Partition(ctx)) {
+						return fmt.Errorf("endpoint_configuration type %[1]q requires ip_address_type %[2]q", types.EndpointTypePrivate, types.IpAddressTypeDualstack)
+					}
+				}
 			}
 		}
 	}
-
 	return nil
 }
 
