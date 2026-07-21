@@ -1,0 +1,1 @@
+resource/aws_opensearch_package: Remove \`ForceNew\` from \`package_source\` to allow non-destructive import and updates
