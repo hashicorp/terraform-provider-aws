@@ -70,9 +70,9 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 				},
 			},
 			names.AttrDefaultAction: schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.AcceptAction](),
-					Required:   true,
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.AcceptAction](),
+				Required:   true,
+			},
 			names.AttrID: framework.IDAttribute(),
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -198,9 +198,9 @@ func ipExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressIpOperator](), Required: true},
 				names.AttrValues: schema.ListAttribute{
-						CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
-						Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv4CIDRNetworkAddress())},
-					},
+					CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
+					Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv4CIDRNetworkAddress())},
+				},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ipEvaluateModel](ctx),
@@ -221,9 +221,9 @@ func ipv6ExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressIpOperator](), Required: true},
 				names.AttrValues: schema.ListAttribute{
-						CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
-						Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv6CIDRNetworkAddress())},
-					},
+					CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
+					Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv6CIDRNetworkAddress())},
+				},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ipv6EvaluateModel](ctx),
@@ -242,7 +242,7 @@ func stringExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "ip_expression", "ipv6_expression", "tls_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressStringOperator](), Required: true},
+				"operator":       schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressStringOperator](), Required: true},
 				names.AttrValues: schema.ListAttribute{CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true, Validators: []validator.List{listvalidator.SizeAtLeast(1)}},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
@@ -270,7 +270,7 @@ func tlsExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "ip_expression", "ipv6_expression", "string_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressTlsProtocolOperator](), Required: true},
+				"operator":      schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressTlsProtocolOperator](), Required: true},
 				names.AttrValue: schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressTlsProtocolAttribute](), Required: true},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
