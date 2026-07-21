@@ -126,7 +126,9 @@ func policyStatementBlock(ctx context.Context) schema.ListNestedBlock {
 func conditionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[policyConditionModel](ctx),
-		Validators: []validator.List{listvalidator.SizeAtLeast(1)},
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"boolean_expression": booleanExpressionBlock(ctx),
