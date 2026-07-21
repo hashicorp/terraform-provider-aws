@@ -69,10 +69,10 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"default_action": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.AcceptAction](),
-				Required:   true,
-			},
+			names.AttrDefaultAction: schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.AcceptAction](),
+					Required:   true,
+				},
 			names.AttrID: framework.IDAttribute(),
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -106,12 +106,12 @@ func policyStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: []validator.List{listvalidator.SizeAtLeast(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"action": schema.StringAttribute{
+				names.AttrAction: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.AcceptAction](),
 					Required:   true,
 				},
 			},
-			Blocks: map[string]schema.Block{"condition": conditionBlock(ctx)},
+			Blocks: map[string]schema.Block{names.AttrCondition: conditionBlock(ctx)},
 		},
 	}
 }
@@ -197,10 +197,10 @@ func ipExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressIpOperator](), Required: true},
-				"values": schema.ListAttribute{
-					CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
-					Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv4CIDRNetworkAddress())},
-				},
+				names.AttrValues: schema.ListAttribute{
+						CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
+						Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv4CIDRNetworkAddress())},
+					},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ipEvaluateModel](ctx),
@@ -220,10 +220,10 @@ func ipv6ExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressIpOperator](), Required: true},
-				"values": schema.ListAttribute{
-					CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
-					Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv6CIDRNetworkAddress())},
-				},
+				names.AttrValues: schema.ListAttribute{
+						CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
+						Validators: []validator.List{listvalidator.SizeAtLeast(1), listvalidator.ValueStringsAre(fwvalidators.IPv6CIDRNetworkAddress())},
+					},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ipv6EvaluateModel](ctx),
@@ -243,7 +243,7 @@ func stringExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressStringOperator](), Required: true},
-				"values":   schema.ListAttribute{CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true, Validators: []validator.List{listvalidator.SizeAtLeast(1)}},
+				names.AttrValues: schema.ListAttribute{CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true, Validators: []validator.List{listvalidator.SizeAtLeast(1)}},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[stringEvaluateModel](ctx),
@@ -271,7 +271,7 @@ func tlsExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressTlsProtocolOperator](), Required: true},
-				"value":    schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressTlsProtocolAttribute](), Required: true},
+				names.AttrValue: schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressTlsProtocolAttribute](), Required: true},
 			},
 			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[tlsEvaluateModel](ctx),
