@@ -77,6 +77,9 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"max_message_size_bytes": schema.Int32Attribute{
 				Optional: true,
@@ -378,14 +381,6 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	} else {
-		// Tag updates are handled by the provider's tagging interceptor. Preserve
-		// values that Terraform planned as unknown without making an unnecessary
-		// GetTrafficPolicy call.
-		plan.ARN = state.ARN
-		plan.CreatedTimestamp = state.CreatedTimestamp
-		plan.LastUpdatedTimestamp = state.LastUpdatedTimestamp
-		plan.MaxMessageSizeBytes = state.MaxMessageSizeBytes
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
