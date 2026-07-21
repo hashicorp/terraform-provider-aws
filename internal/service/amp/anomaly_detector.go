@@ -403,30 +403,9 @@ func (r *anomalyDetectorResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().AMPClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
+	// plan = new, state = old
 	var plan, state anomalyDetectorResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -434,44 +413,32 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	// TIP: -- 3. Get the difference between the plan and state, if any
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		var input amp.UpdateAnomalyDetectorInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		var input amp.PutAnomalyDetectorInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdateAnomalyDetector(ctx, &input)
+		input.ClientToken = aws.String(create.UniqueId(ctx))
+
+		_, err := conn.PutAnomalyDetector(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil || out.AnomalyDetector == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
 
-		// TIP: Using the output from the update function, re-set any computed attributes
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
+		_, err = waitAnomalyDetectorUpdated(ctx, conn, plan.ID.ValueString(), plan.WorkspaceID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
-	}
-
-	// TIP: -- 5. Use a waiter to wait for update to complete
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitAnomalyDetectorUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
 	}
 
 	// TIP: -- 6. Save the request plan to response state
@@ -544,17 +511,6 @@ func (r *anomalyDetectorResource) Delete(ctx context.Context, req resource.Delet
 //
 // 	// Set needed attribute values here
 // }
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
 
 // TIP: ==== WAITERS ====
 // Some resources of some services have waiters provided by the AWS API.
