@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.1
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.48.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.16.1
@@ -196,7 +196,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/odb v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.74.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.52.2
 	github.com/aws/aws-sdk-go-v2/service/osis v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.32.1
@@ -209,7 +209,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.118.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.119.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.122.0
@@ -249,7 +249,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/shield v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/signer v1.34.1
