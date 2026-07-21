@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_applicationsignals_service_level_objective
+```
