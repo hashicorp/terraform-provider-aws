@@ -5,3 +5,7 @@ resource/aws_bedrockagentcore_memory_strategy: Add `namespace_templates` argumen
 ```release-note:note
 resource/aws_bedrockagentcore_memory_strategy: The `namespace` attribute has been deprecated. All configurations using `namespace` should be updated to use the `namespace_templates` attribute instead
 ```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory: Add `timeouts.update` with a default value of `30m`
+```

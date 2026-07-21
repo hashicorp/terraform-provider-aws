@@ -185,6 +185,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -321,6 +322,11 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 			return
 		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
+			return
+		}
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
@@ -357,6 +363,24 @@ func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequ
 func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MemoryStatusCreating),
+		Target:                    enum.Slice(awstypes.MemoryStatusActive),
+		Refresh:                   statusMemory(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.Memory); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.MemoryStatusUpdating),
 		Target:                    enum.Slice(awstypes.MemoryStatusActive),
 		Refresh:                   statusMemory(conn, id),
 		Timeout:                   timeout,

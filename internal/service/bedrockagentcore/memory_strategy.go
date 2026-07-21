@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -289,7 +288,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		out, err := updateMemoryWithRetry(ctx, conn, createTimeout, &input, false)
+		out, err := updateMemoryWithRetry(ctx, conn, &input, createTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
 			return
@@ -315,10 +314,20 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			return
 		}
 
-		if _, err := waitMemoryStrategyCreated(ctx, conn, memoryID, fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID), createTimeout); err != nil {
+		memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
+		if _, err := waitMemoryStrategyCreated(ctx, conn, memoryID, memoryStrategyID, createTimeout); err != nil {
 			// Taint the resource.
 			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
+			response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), memoryStrategyID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
+			return
+		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, createTimeout); err != nil {
+			// Taint the resource.
+			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
+			response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), memoryStrategyID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
 	})
@@ -404,7 +413,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 
 		withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 			updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-			out, err := updateMemoryWithRetry(ctx, conn, updateTimeout, &input, false)
+			out, err := updateMemoryWithRetry(ctx, conn, &input, updateTimeout)
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
@@ -421,7 +430,13 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
 				found.Configuration = nil
 			}
+
 			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+
+			if _, err := waitMemoryUpdated(ctx, conn, memoryID, updateTimeout); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
+				return
+			}
 		})
 	}
 	if response.Diagnostics.HasError() {
@@ -455,7 +470,7 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err := updateMemoryWithRetry(ctx, conn, deleteTimeout, &input, true)
+		_, err := updateMemoryWithRetry(ctx, conn, &input, deleteTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
@@ -494,10 +509,10 @@ func withMemoryLock(ctx context.Context, memoryID string, fn func(ctx context.Co
 func updateMemoryWithRetry(
 	ctx context.Context,
 	conn *bedrockagentcorecontrol.Client,
-	timeout time.Duration,
 	input *bedrockagentcorecontrol.UpdateMemoryInput,
-	deleteOp bool,
+	timeout time.Duration,
 ) (*bedrockagentcorecontrol.UpdateMemoryOutput, error) {
+	deleteOp := len(input.MemoryStrategies.DeleteMemoryStrategies) > 0
 	return tfresource.RetryWhen(
 		ctx,
 		timeout,
@@ -515,27 +530,23 @@ func updateMemoryWithRetry(
 func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 	const (
 		// Retry message substrings for transitional/ignored states
+		msgMemoryTransitionalState         = "Memory is in transitional state"
 		msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
 		msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
 		msgDeleteNonExistentStrategy       = "Cannot delete non-existent memory strategies"
 	)
 	return func(err error) (bool, error) {
-		if err == nil {
-			return false, nil
-		}
-
 		switch {
 		case errs.IsA[*awstypes.ConflictException](err):
 			return true, smarterr.NewError(err)
 
-		case errs.IsA[*awstypes.ValidationException](err):
-			msg := err.Error()
-			if deleteOp && strings.Contains(msg, msgDeleteNonExistentStrategy) {
-				return false, nil
-			}
-			if strings.Contains(msg, msgMemoryStrategiesBeingModified) || strings.Contains(msg, msgMemoryStrategyTransitionalState) {
-				return true, smarterr.NewError(err)
-			}
+		case deleteOp && errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgDeleteNonExistentStrategy):
+			return false, nil
+
+		case errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryStrategiesBeingModified),
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryStrategyTransitionalState),
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryTransitionalState):
+			return true, smarterr.NewError(err)
 		}
 
 		return false, smarterr.NewError(err)
