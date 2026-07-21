@@ -20,22 +20,19 @@ data "aws_odb_autonomous_database" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+This data source supports the following arguments:
 
 * `id` - (Required) Unique Autonomous Database identifier.
-
-The following argument is optional:
-
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
 * `actual_used_data_storage_size_in_tbs` - Actual data storage currently in use, in TB.
 * `allocated_storage_size_in_tbs` - Storage currently allocated, in TB.
 * `allowlisted_ips` - IP addresses allowed to access the database.
+* `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
 * `auto_refresh_frequency_in_seconds` - Automatic refresh frequency in seconds.
 * `auto_refresh_point_lag_in_seconds` - Refresh lag from the source in seconds.
 * `autonomous_maintenance_schedule_type` - Maintenance schedule type.
