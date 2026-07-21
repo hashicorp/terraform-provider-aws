@@ -52,6 +52,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newKeywordResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity", true),
+				inttypes.StringIdentityAttribute("keyword", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      keywordImportID{},
+			},
+		},
+		{
 			Factory:  newOptOutListResource,
 			TypeName: "aws_pinpointsmsvoicev2_opt_out_list",
 			Name:     "Opt-out List",
@@ -95,6 +109,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("configuration_set_name", true),
 				inttypes.StringIdentityAttribute("event_destination_name", true),
+			}),
+		},
+		{
+			Factory:  newKeywordResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_keyword",
+			Name:     "Keyword",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("origination_identity", true),
+				inttypes.StringIdentityAttribute("keyword", true),
 			}),
 		},
 		{
