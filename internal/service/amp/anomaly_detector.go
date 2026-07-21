@@ -358,7 +358,7 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, req resource.Creat
 	plan.ID = fwflex.StringToFramework(ctx, out.AnomalyDetectorId)
 	plan.ARN = fwflex.StringToFramework(ctx, out.Arn)
 
-	detector, err := waitAnomalyDetectorCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	detector, err := waitAnomalyDetectorCreated(ctx, conn, plan.ID.ValueString(), plan.WorkspaceID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.State.SetAttribute(ctx, path.Root(names.AttrID), plan.ID)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
@@ -366,9 +366,9 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, detector, &plan, fwflex.WithFieldNamePrefix("AnomalyDetector")))
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -569,18 +569,18 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.AnomalyDetector, error) {
+func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id, workspaceID string, timeout time.Duration) (*awstypes.AnomalyDetectorDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusAnomalyDetector(conn, id),
+		Pending:                   []string{string(awstypes.AnomalyDetectorStatusCodeCreating)},
+		Target:                    []string{string(awstypes.AnomalyDetectorStatusCodeActive)},
+		Refresh:                   statusAnomalyDetector(conn, id, workspaceID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.AnomalyDetector); ok {
+	if out, ok := outputRaw.(*awstypes.AnomalyDetectorDescription); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -591,18 +591,18 @@ func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id string
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.AnomalyDetector, error) {
+func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id, workspaceID string, timeout time.Duration) (*awstypes.AnomalyDetectorDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusAnomalyDetector(conn, id),
+		Pending:                   []string{string(awstypes.AnomalyDetectorStatusCodeUpdating)},
+		Target:                    []string{string(awstypes.AnomalyDetectorStatusCodeActive)},
+		Refresh:                   statusAnomalyDetector(conn, id, workspaceID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.AnomalyDetector); ok {
+	if out, ok := outputRaw.(*awstypes.AnomalyDetectorDescription); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -611,16 +611,16 @@ func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id string
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
-func waitAnomalyDetectorDeleted(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.AnomalyDetector, error) {
+func waitAnomalyDetectorDeleted(ctx context.Context, conn *amp.Client, id, workspaceID string, timeout time.Duration) (*awstypes.AnomalyDetectorDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: []string{string(awstypes.AnomalyDetectorStatusCodeDeleting), string(awstypes.AnomalyDetectorStatusCodeActive)},
 		Target:  []string{},
-		Refresh: statusAnomalyDetector(conn, id),
+		Refresh: statusAnomalyDetector(conn, id, workspaceID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.AnomalyDetector); ok {
+	if out, ok := outputRaw.(*awstypes.AnomalyDetectorDescription); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -634,9 +634,9 @@ func waitAnomalyDetectorDeleted(ctx context.Context, conn *amp.Client, id string
 //
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
-func statusAnomalyDetector(conn *amp.Client, id string) retry.StateRefreshFunc {
+func statusAnomalyDetector(conn *amp.Client, id string, workspaceID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findAnomalyDetectorByID(ctx, conn, id)
+		out, err := findAnomalyDetectorByID(ctx, conn, id, workspaceID)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -645,7 +645,7 @@ func statusAnomalyDetector(conn *amp.Client, id string) retry.StateRefreshFunc {
 			return nil, "", smarterr.NewError(err)
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.Status.StatusCode), nil
 	}
 }
 
@@ -654,7 +654,7 @@ func statusAnomalyDetector(conn *amp.Client, id string) retry.StateRefreshFunc {
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findAnomalyDetectorByID(ctx context.Context, conn *amp.Client, id, workspaceID string) (*awstypes.AnomalyDetector, error) {
+func findAnomalyDetectorByID(ctx context.Context, conn *amp.Client, id, workspaceID string) (*awstypes.AnomalyDetectorDescription, error) {
 	input := amp.DescribeAnomalyDetectorInput{
 		AnomalyDetectorId: aws.String(id),
 		WorkspaceId:       aws.String(workspaceID),
@@ -703,8 +703,8 @@ type anomalyDetectorResourceModel struct {
 	MissingDataAction           fwtypes.ListNestedObjectValueOf[anomalyDetectorMissingDataActionModel] `tfsdk:"missing_data_action"`
 	Status                      fwtypes.ListNestedObjectValueOf[anomalyDetectorStatusModel]            `tfsdk:"status"`
 	Tags                        tftags.Map                                                             `tfsdk:"tags"`
-	TagsAll                     tftags.Map
-	Timeouts                	timeouts.Value                                                		   `tfsdk:"timeouts"`                                                            `tfsdk:"tags_all"`
+	TagsAll                     tftags.Map                                                             `tfsdk:"tags_all"`
+	Timeouts                    timeouts.Value                                                         `tfsdk:"timeouts"`
 	WorkspaceID                 types.String                                                           `tfsdk:"workspace_id"`
 }
 
