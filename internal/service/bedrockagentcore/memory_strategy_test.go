@@ -478,20 +478,22 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, awstypes.OverrideTypeSemanticOverride, "Focus on semantic relationships", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Focus on semantic relationships"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "us.amazon.nova-2-lite-v1:0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Focus on semantic relationships"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						"extraction":   knownvalue.ListSizeExact(0),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
 			},
 			// Step 3: Add extraction block and update consolidation properties (same override type)
@@ -499,20 +501,25 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 				Config: testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeSemanticOverride, "Updated semantic consolidation", "amazon.nova-lite-v1:0", "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Updated semantic consolidation"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "amazon.nova-lite-v1:0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract semantic meaning"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "us.amazon.nova-2-lite-v1:0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Updated semantic consolidation"),
+							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
+						})}),
+						"extraction": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
 			},
 			// Step 4: Try to remove consolidation block → should ERROR
@@ -525,22 +532,25 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 				Config: testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeUserPreferenceOverride, "Store user preferences", "amazon.nova-lite-v1:0", "Extract user preferences", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "USER_PREFERENCE_OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Store user preferences"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "amazon.nova-lite-v1:0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract user preferences"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "us.amazon.nova-2-lite-v1:0"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Store user preferences"),
+							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
+						})}),
+						"extraction": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Extract user preferences"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeUserPreferenceOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
 			},
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
@@ -553,16 +563,23 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, awstypes.OverrideTypeSummaryOverride, "Summary consolidation only", "amazon.nova-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SUMMARY_OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Summary consolidation only"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "amazon.nova-lite-v1:0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Summary consolidation only"),
+							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
+						})}),
+						"extraction":   knownvalue.ListSizeExact(0),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSummaryOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
 			},
 		},
 	})
