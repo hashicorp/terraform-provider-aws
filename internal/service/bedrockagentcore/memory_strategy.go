@@ -699,16 +699,14 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 
 	case awstypes.MemoryStrategyTypeEpisodic:
 		var r awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy
-		r.Value.Name = m.Name.ValueStringPointer()
-		r.Value.Description = m.Description.ValueStringPointer()
-		smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &r.Value.Namespaces, false))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		// The API requires the reflection namespace to be the same as or a prefix
 		// of the episodic namespace. Set it to match the episodic namespaces.
 		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
-			Namespaces: r.Value.Namespaces,
+			NamespaceTemplates: r.Value.NamespaceTemplates,
 		}
 		return &r, diags
 
