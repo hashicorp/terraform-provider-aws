@@ -118,7 +118,9 @@ func policyStatementBlock(ctx context.Context) schema.ListNestedBlock {
 					Required:   true,
 				},
 			},
-			Blocks: map[string]schema.Block{names.AttrCondition: conditionBlock(ctx)},
+			Blocks: map[string]schema.Block{
+				names.AttrCondition: conditionBlock(ctx),
+			},
 		},
 	}
 }
@@ -160,7 +162,9 @@ func booleanExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 					Required:   true,
 				},
 			},
-			Blocks: map[string]schema.Block{"evaluate": booleanEvaluateBlock(ctx)},
+			Blocks: map[string]schema.Block{
+				"evaluate": booleanEvaluateBlock(ctx),
+			},
 		},
 	}
 }
@@ -181,18 +185,22 @@ func booleanEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 				"is_in_address_list": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[isInAddressListModel](ctx),
 					Validators: conditionUnionValidators("analysis"),
-					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"address_lists": schema.ListAttribute{
-							CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"address_lists": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								ElementType: types.StringType,
+								Required:    true,
+								Validators: []validator.List{
+									listvalidator.SizeBetween(1, 1),
+								},
+							},
+							"attribute": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.IngressAddressListEmailAttribute](),
+								Required:   true,
 							},
 						},
-						"attribute": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.IngressAddressListEmailAttribute](),
-							Required:   true,
-						},
-					}},
+					},
 				},
 			},
 		},
@@ -206,13 +214,15 @@ func analysisAttributes() map[string]schema.Attribute {
 			Required:   true,
 			Validators: []validator.String{
 				fwvalidators.ARN(),
-			}},
+			},
+		},
 		"result_field": schema.StringAttribute{
 			Required: true,
 			Validators: []validator.String{
 				stringvalidator.LengthBetween(1, 256),
 				stringvalidator.RegexMatches(regexache.MustCompile(`^(addon\.)?[\sa-zA-Z0-9_]+$`), "must contain only spaces, alphanumeric characters, and underscores, optionally prefixed by addon."),
-			}},
+			},
+		},
 	}
 }
 
@@ -227,25 +237,31 @@ func ipExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 					Required:   true,
 				},
 				names.AttrValues: schema.ListAttribute{
-					CustomType: fwtypes.ListOfStringType, ElementType: types.StringType, Required: true,
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Required:    true,
 					Validators: []validator.List{
 						listvalidator.SizeAtLeast(1),
 						listvalidator.ValueStringsAre(fwvalidators.IPv4CIDRNetworkAddress()),
 					},
 				},
 			},
-			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ipEvaluateModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 1),
-				},
-				NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-					"attribute": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.IngressIpv4Attribute](),
-						Required:   true,
+			Blocks: map[string]schema.Block{
+				"evaluate": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ipEvaluateModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
 					},
-				}},
-			}},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"attribute": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.IngressIpv4Attribute](),
+								Required:   true,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -270,19 +286,22 @@ func ipv6ExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 			},
-			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ipv6EvaluateModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"attribute": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.IngressIpv6Attribute](),
-							Required:   true,
+			Blocks: map[string]schema.Block{
+				"evaluate": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ipv6EvaluateModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"attribute": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.IngressIpv6Attribute](),
+								Required:   true,
+							},
 						},
-					}},
-			}},
+					},
+				},
+			},
 		},
 	}
 }
@@ -306,28 +325,34 @@ func stringExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 			},
-			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[stringEvaluateModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{"attribute": schema.StringAttribute{
-						CustomType: fwtypes.StringEnumType[awstypes.IngressStringEmailAttribute](),
-						Optional:   true,
-						Validators: []validator.String{
-							stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis")),
+			Blocks: map[string]schema.Block{
+				"evaluate": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[stringEvaluateModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"attribute": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.IngressStringEmailAttribute](),
+								Optional:   true,
+								Validators: []validator.String{
+									stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis")),
+								},
+							},
 						},
-					}},
-					Blocks: map[string]schema.Block{"analysis": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
-						Validators: conditionUnionValidators("attribute"),
-						NestedObject: schema.NestedBlockObject{
-							Attributes: analysisAttributes(),
+						Blocks: map[string]schema.Block{
+							"analysis": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
+								Validators: conditionUnionValidators("attribute"),
+								NestedObject: schema.NestedBlockObject{
+									Attributes: analysisAttributes(),
+								},
+							},
 						},
-					}},
+					},
 				},
-			}},
+			},
 		},
 	}
 }
@@ -347,19 +372,22 @@ func tlsExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 					Required:   true,
 				},
 			},
-			Blocks: map[string]schema.Block{"evaluate": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[tlsEvaluateModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"attribute": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.IngressTlsAttribute](),
-							Required:   true,
+			Blocks: map[string]schema.Block{
+				"evaluate": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[tlsEvaluateModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"attribute": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.IngressTlsAttribute](),
+								Required:   true,
+							},
 						},
-					}},
-			}},
+					},
+				},
+			},
 		},
 	}
 }
