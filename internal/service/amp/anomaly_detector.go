@@ -316,11 +316,6 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
