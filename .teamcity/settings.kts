@@ -118,8 +118,8 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.gomodcache")
-            text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.gobuildcache")
+            // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.gomodcache")
+            // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.gobuildcache")
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             // set variable to false by default
@@ -172,15 +172,15 @@ object PullRequest : BuildType({
             testFormat = "json"
         }
 
-        buildCache {
-            name = "terraform-provider-aws-build-cache"
-            use = true
-            publish = true
-            rules = """
-                .gomodcache
-                .gobuildcache
-            """.trimIndent()
-        }
+        // buildCache {
+        //     name = "terraform-provider-aws-build-cache"
+        //     use = true
+        //     publish = true
+        //     rules = """
+        //         .gomodcache
+        //         .gobuildcache
+        //     """.trimIndent()
+        // }
 
         feature {
             type = "JetBrains.SharedResources"
