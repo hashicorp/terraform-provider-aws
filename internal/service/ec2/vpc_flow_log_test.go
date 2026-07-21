@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	checkFlowLogARN = tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`))
+)
+
 func TestAccVPCFlowLog_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
@@ -44,16 +48,31 @@ func TestAccVPCFlowLog_basic(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deliver_cross_account_role", ""),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkFlowLogARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deliver_cross_account_role"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_options"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("eni_id"), knownvalue.Null()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrIAMRoleARN), iamRoleResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("log_destination"), cloudwatchLogGroupResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_destination_type"), tfknownvalue.StringExact(awstypes.LogDestinationTypeCloudWatchLogs)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_format"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_aggregation_interval"), knownvalue.Int64Exact(600)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_nat_gateway_id"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnetID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tag_field_specification"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("traffic_type"), tfknownvalue.StringExact(awstypes.TrafficTypeAll)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayAttachmentID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayID), knownvalue.Null()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), vpcResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
