@@ -155,7 +155,10 @@ func booleanExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("ip_expression", "ipv6_expression", "string_expression", "tls_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.IngressBooleanOperator](), Required: true},
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.IngressBooleanOperator](),
+					Required:   true,
+				},
 			},
 			Blocks: map[string]schema.Block{"evaluate": booleanEvaluateBlock(ctx)},
 		},
