@@ -91,7 +91,7 @@ jobs:
             fi
             properties="${properties};ACCTEST_PARALLELISM=${parallelism_value}"
           fi
-          
+
           # Build tctest command with optional pattern
           tctest_cmd="tctest pr ${PR_NUMBER}"
           if [[ -n "${pattern}" ]]; then
