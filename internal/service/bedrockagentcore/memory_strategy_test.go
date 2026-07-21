@@ -566,7 +566,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{

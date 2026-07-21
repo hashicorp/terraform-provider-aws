@@ -889,25 +889,34 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	switch m.Type.ValueEnum() {
 	case awstypes.OverrideTypeSemanticOverride:
 		if consolidation != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &rConsolidation.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberSemanticConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rConsolidation.Value = &r
 		}
 
 		if extraction != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &rExtraction.Value))
+			var r awstypes.CustomExtractionConfigurationInputMemberSemanticExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rExtraction.Value = &r
 		}
 
 	case awstypes.OverrideTypeSummaryOverride:
 		if consolidation != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &rConsolidation.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberSummaryConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rConsolidation.Value = &r
 		}
 
 		// Note: AWS SDK doesn't have SummaryExtractionOverride - only Semantic and UserPreference
@@ -916,32 +925,44 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 
 	case awstypes.OverrideTypeUserPreferenceOverride:
 		if consolidation != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &rConsolidation.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberUserPreferenceConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rConsolidation.Value = &r
 		}
 
 		if extraction != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &rExtraction.Value))
+			var r awstypes.CustomExtractionConfigurationInputMemberUserPreferenceExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rExtraction.Value = &r
 		}
 
 	case awstypes.OverrideTypeEpisodicOverride:
 		if consolidation != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &rConsolidation.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberEpisodicConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rConsolidation.Value = &r
 		}
 
 		if extraction != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &rExtraction.Value))
+			var r awstypes.CustomExtractionConfigurationInputMemberEpisodicExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			rExtraction.Value = &r
 		}
 
 	default:
