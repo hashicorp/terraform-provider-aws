@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,6 +59,43 @@ func (d *securityConfigDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"iam_federation_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamFederationConfigOptionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Description: "Group attribute.",
+							Computed:    true,
+						},
+						"user_attribute": schema.StringAttribute{
+							Description: "User attribute.",
+							Computed:    true,
+						},
+					},
+				},
+			},
+			"iam_identity_center_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamIdentityCenterConfigOptionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"instance_arn": schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Description: "Instance ARN.",
+							Computed:    true,
+						},
+						"group_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterGroupAttribute](),
+							Description: "Group attribute.",
+							Computed:    true,
+						},
+						"user_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterUserAttribute](),
+							Description: "User attribute.",
+							Computed:    true,
+						},
+					},
+				},
+			},
 			"saml_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -114,11 +152,13 @@ func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.Read
 
 type securityConfigDataSourceModel struct {
 	framework.WithRegionModel
-	ConfigVersion    types.String                                     `tfsdk:"config_version"`
-	CreatedDate      types.String                                     `tfsdk:"created_date"`
-	Description      types.String                                     `tfsdk:"description"`
-	ID               types.String                                     `tfsdk:"id"`
-	LastModifiedDate types.String                                     `tfsdk:"last_modified_date"`
-	SamlOptions      fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
-	Type             types.String                                     `tfsdk:"type"`
+	ConfigVersion            types.String                                                         `tfsdk:"config_version"`
+	CreatedDate              types.String                                                         `tfsdk:"created_date"`
+	Description              types.String                                                         `tfsdk:"description"`
+	IamFederationOptions     fwtypes.ListNestedObjectValueOf[iamFederationConfigOptionsModel]     `tfsdk:"iam_federation_options"`
+	IamIdentityCenterOptions fwtypes.ListNestedObjectValueOf[iamIdentityCenterConfigOptionsModel] `tfsdk:"iam_identity_center_options"`
+	ID                       types.String                                                         `tfsdk:"id"`
+	LastModifiedDate         types.String                                                         `tfsdk:"last_modified_date"`
+	SamlOptions              fwtypes.ListNestedObjectValueOf[samlOptionsData]                     `tfsdk:"saml_options"`
+	Type                     types.String                                                         `tfsdk:"type"`
 }
