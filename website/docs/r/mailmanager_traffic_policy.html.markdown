@@ -42,66 +42,90 @@ resource "aws_mailmanager_traffic_policy" "example" {
 The following arguments are required:
 
 * `default_action` - (Required) Default action applied to traffic that does not match any policy statement. Valid values are `ALLOW` and `DENY`.
-* `max_message_size_bytes` - (Required) Maximum message size, in bytes, allowed by the traffic policy.
 * `name` - (Required) Name of the traffic policy.
-* `policy_statement` - (Required) Traffic policy statements. See [Policy Statement](#policy-statement) below.
+* `policy_statement` - (Required) Traffic policy statements. See [`policy_statement` Block](#policy_statement-block) below.
 
 The following arguments are optional:
 
+* `max_message_size_bytes` - (Optional) Maximum message size, in bytes, allowed by the traffic policy.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Policy Statement
+### `policy_statement` Block
 
 * `action` - (Required) Action applied when all conditions match. Valid values are `ALLOW` and `DENY`.
-* `condition` - (Required) Conditions evaluated by the statement. See [Condition](#condition) below.
+* `condition` - (Required) Conditions evaluated by the statement. See [`condition` Block](#condition-block) below.
 
-### Condition
+### `condition` Block
 
 Exactly one of the following expression blocks must be configured:
 
-* `boolean_expression` - (Optional) Boolean comparison. See [Boolean Expression](#boolean-expression) below.
-* `ip_expression` - (Optional) IPv4 address comparison. See [IP Expression](#ip-expression) below.
-* `ipv6_expression` - (Optional) IPv6 address comparison. See [IPv6 Expression](#ipv6-expression) below.
-* `string_expression` - (Optional) String comparison. See [String Expression](#string-expression) below.
-* `tls_expression` - (Optional) TLS policy comparison. See [TLS Expression](#tls-expression) below.
+* `boolean_expression` - (Optional) Boolean comparison. See [`boolean_expression` Block](#boolean_expression-block) below.
+* `ip_expression` - (Optional) IPv4 address comparison. See [`ip_expression` Block](#ip_expression-block) below.
+* `ipv6_expression` - (Optional) IPv6 address comparison. See [`ipv6_expression` Block](#ipv6_expression-block) below.
+* `string_expression` - (Optional) String comparison. See [`string_expression` Block](#string_expression-block) below.
+* `tls_expression` - (Optional) TLS policy comparison. See [`tls_expression` Block](#tls_expression-block) below.
 
-### Boolean Expression
+### `boolean_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [Operand](#operand) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (Boolean Expression)](#evaluate-block-boolean-expression) below.
 * `operator` - (Required) Boolean operator used for the comparison.
 
-### IP Expression
+### `evaluate` Block (Boolean Expression)
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [Operand](#operand) below.
+Exactly one of the following blocks must be configured:
+
+* `analysis` - (Optional) Analysis result to evaluate. See [`analysis` Block](#analysis-block) below.
+* `is_in_address_list` - (Optional) Address list membership check. See [`is_in_address_list` Block](#is_in_address_list-block) below.
+
+### `is_in_address_list` Block
+
+* `address_lists` - (Required) List containing exactly one address list ARN to check membership against.
+* `attribute` - (Required) Email attribute to check against the address list.
+
+### `ip_expression` Block
+
+* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (IP/IPv6 Expression)](#evaluate-block-ipipv6-expression) below.
 * `operator` - (Required) IP address operator used for the comparison.
 * `values` - (Required) IPv4 CIDR ranges used for the comparison.
 
-### IPv6 Expression
+### `ipv6_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [Operand](#operand) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (IP/IPv6 Expression)](#evaluate-block-ipipv6-expression) below.
 * `operator` - (Required) IPv6 address operator used for the comparison.
 * `values` - (Required) IPv6 CIDR ranges used for the comparison.
 
-### String Expression
+### `evaluate` Block (IP/IPv6 Expression)
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [Operand](#operand) below.
+* `attribute` - (Required) Message attribute to evaluate.
+
+### `string_expression` Block
+
+* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (String Expression)](#evaluate-block-string-expression) below.
 * `operator` - (Required) String operator used for the comparison.
 * `values` - (Required) Strings used for the comparison.
 
-### TLS Expression
+### `evaluate` Block (String Expression)
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [Operand](#operand) below.
+Exactly one of the following must be configured:
+
+* `analysis` - (Optional) Analysis result to evaluate. See [`analysis` Block](#analysis-block) below.
+* `attribute` - (Optional) Email attribute to evaluate.
+
+### `analysis` Block
+
+* `analyzer` - (Required) ARN of the Add On performing the analysis.
+* `result_field` - (Required) Result field returned in the analysis.
+
+### `tls_expression` Block
+
+* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (TLS Expression)](#evaluate-block-tls-expression) below.
 * `operator` - (Required) TLS policy operator used for the comparison.
 * `value` - (Required) TLS policy used for the comparison.
 
-### Operand
+### `evaluate` Block (TLS Expression)
 
-Exactly one of the following arguments must be configured:
-
-* `address_list_id` - (Optional) ID of an SES Mail Manager address list.
-* `analysis` - (Optional) Analysis result to evaluate.
-* `attribute` - (Optional) Message attribute to evaluate.
+* `attribute` - (Required) TLS attribute to evaluate.
 
 ## Attribute Reference
 
