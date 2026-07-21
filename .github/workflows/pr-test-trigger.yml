@@ -71,6 +71,7 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.issue.number }}
           PKGS: ${{ steps.pkgs.outputs.pkgs }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
           TCTEST_SERVER: ${{ secrets.TCTEST_SERVER }}
           TCTEST_BUILDTYPEID: ${{ secrets.TCTEST_BUILDTYPEID }}
           TCTEST_REPO: hashicorp/terraform-provider-aws
@@ -79,7 +80,17 @@ jobs:
           TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          output=$(tctest pr ${PR_NUMBER} --properties PKG=${PKGS} --comment)
+          parallelism=$(echo "${COMMENT_BODY}" | grep -oiP 'PARALLELISM=\d+' | head -1)
+          properties="PKG=${PKGS}"
+          if [[ -n "${parallelism}" ]]; then
+            parallelism_value="${parallelism#*=}"
+            if [[ "${parallelism_value}" -gt 20 ]]; then
+              echo "::error::Parallelism value ${parallelism_value} exceeds maximum of 20"
+              exit 1
+            fi
+            properties="${properties};ACCTEST_PARALLELISM=${parallelism_value}"
+          fi
+          output=$(tctest pr ${PR_NUMBER} --properties "${properties}" --comment)
           echo "${output}"
           if ! echo "${output}" | grep -q "triggered tests for 1 PRs!"; then
             echo "::error::tctest did not successfully trigger tests: ${output}"

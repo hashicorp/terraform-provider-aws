@@ -8168,6 +8168,30 @@ service "servicequotas" {
   doc_prefix               = ["servicequotas_"]
 }
 
+service "mailmanager" {
+  sdk {
+    id            = "MailManager"
+    arn_namespace = "ses"
+  }
+
+  names {
+    provider_name_upper = "MailManager"
+    human_friendly      = "SES Mail Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListIngressPoints"
+  }
+
+  resource_prefix {
+    correct = "aws_mailmanager_"
+  }
+
+  provider_package_correct = "mailmanager"
+  doc_prefix               = ["mailmanager_"]
+  brand                    = "Amazon"
+}
+
 service "ses" {
   sdk {
     id            = "SES"
