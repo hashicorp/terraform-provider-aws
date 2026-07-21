@@ -12,6 +12,8 @@ Manages an Oracle Database@AWS Autonomous Database Serverless (ADB-S) instance. 
 
 Provisioning, updating, and deleting an Autonomous Database are asynchronous and can take several hours. The AWS account and Region must be onboarded for Oracle Database@AWS and have sufficient service quotas.
 
+The AWS API defines all create parameters as optional because the valid combination depends on `source`. For a new database (`source = "NONE"`), configure the ODB network, database identity, workload, compute, storage, license, and ADMIN password values required by your Oracle Database@AWS tenancy.
+
 ## Example Usage
 
 ### Basic Usage
@@ -50,9 +52,7 @@ data "aws_odb_autonomous_database" "example" {
 
 ## Argument Reference
 
-The AWS API defines all create parameters as optional because the valid combination depends on `source`. For a new database (`source = "NONE"`), configure the ODB network, database identity, workload, compute, storage, license, and ADMIN password values required by your Oracle Database@AWS tenancy.
-
-The following arguments are optional:
+This resource supports the following arguments:
 
 * `admin_password_wo` - (Optional, Sensitive, Write-only) Password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Set `admin_password_wo_version` with this argument.
 * `admin_password_wo_version` - (Optional) Arbitrary integer stored in state. Change this value together with `admin_password_wo` to rotate the ADMIN password.
@@ -65,10 +65,12 @@ The following arguments are optional:
 * `character_set` - (Optional) Database character set. Changing this value creates a new resource.
 * `compute_count` - (Optional) Compute capacity in ECPUs or OCPUs. Valid values are from `0.1` through `512`.
 * `cpu_core_count` - (Optional) Allocated CPU core count. Valid values are from `1` through `128`.
+* `customer_contacts_to_send_to_oci` - (Optional) Customer contacts that receive operational notifications from OCI. See [`customer_contacts_to_send_to_oci` Block](#customer_contacts_to_send_to_oci-block) below.
 * `data_storage_size_in_gbs` - (Optional) Data volume size in GB. Valid values are from `20` through `393216`.
 * `data_storage_size_in_tbs` - (Optional) Data volume size in whole TB. Valid values are from `1` through `384`.
 * `database_edition` - (Optional) Oracle Database edition. Valid values are `STANDARD_EDITION` and `ENTERPRISE_EDITION`.
 * `db_name` - (Optional) Database name. Must begin with a letter, contain only alphanumeric characters, and contain at most 30 characters.
+* `db_tools_details` - (Optional) Database management tools to enable. See [`db_tools_details` Block](#db_tools_details-block) below.
 * `db_version` - (Optional) Oracle Database software version.
 * `db_workload` - (Optional) Database workload. Valid values are `OLTP`, `AJD`, `APEX`, and `LH`.
 * `display_name` - (Optional) User-friendly database name.
@@ -82,34 +84,38 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) ARN of the AWS KMS key used when `encryption_key_provider` is `AWS_KMS`.
 * `license_model` - (Optional) Oracle license model. Valid values are `BRING_YOUR_OWN_LICENSE` and `LICENSE_INCLUDED`.
 * `local_adg_auto_failover_max_data_loss_limit` - (Optional) Maximum data-loss limit, in seconds, for automatic local Data Guard failover.
+* `long_term_backup_schedule` - (Optional) Long-term backup schedule. See [`long_term_backup_schedule` Block](#long_term_backup_schedule-block) below.
 * `ncharacter_set` - (Optional) National character set. Changing this value creates a new resource.
-* `odb_network_id` - (Optional) ID or ARN of the ODB network used by the database. Changing this value creates a new resource.
+* `odb_network_id` - (Optional) ID of the ODB network used by the database. Changing this value creates a new resource.
 * `open_mode` - (Optional) Database open mode.
 * `permission_level` - (Optional) Database permission level.
 * `private_endpoint_ip` - (Optional) Private endpoint IP address.
 * `private_endpoint_label` - (Optional) Private endpoint label.
 * `refreshable_mode` - (Optional) Refresh mode for a refreshable clone.
-* `resource_pool_leader_id` - (Optional) ID or ARN of the resource-pool leader Autonomous Database.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_pool_leader_id` - (Optional) ID of the resource-pool leader Autonomous Database.
+* `resource_pool_summary` - (Optional) Resource pool configuration. See [`resource_pool_summary` Block](#resource_pool_summary-block) below.
+* `scheduled_operations` - (Optional) Scheduled database start and stop times. See [`scheduled_operations` Block](#scheduled_operations-block) below.
 * `source` - (Optional) Source from which to create the database. Valid values are `NONE`, `DATABASE`, `BACKUP_FROM_ID`, `BACKUP_FROM_TIMESTAMP`, `CROSS_REGION_DATAGUARD`, `CROSS_REGION_DISASTER_RECOVERY`, and `CLONE_TO_REFRESHABLE`. Changing this value creates a new resource.
+* `source_configuration` - (Optional) Source-specific configuration used during creation. See [`source_configuration` Block](#source_configuration-block) below. Changing this value creates a new resource.
 * `standby_allowlisted_ips` - (Optional) List of between 1 and 1024 IP addresses allowed to access the standby database.
 * `standby_allowlisted_ips_source` - (Optional) Source of the standby allowlist. Valid values are `PRIMARY`, `SEPARATE`, and `NOT_APPLICABLE`.
-* `time_of_auto_refresh_start` - (Optional) RFC3339 timestamp at which automatic refresh begins.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys overwrite those defined at the provider level.
+* `time_of_auto_refresh_start` - (Optional) RFC3339 timestamp at which automatic refresh begins.
+* `transportable_tablespace` - (Optional) Transportable tablespace configuration. See [`transportable_tablespace` Block](#transportable_tablespace-block) below. Changing this value creates a new resource.
 
-The following nested blocks are supported:
-
-### `customer_contacts_to_send_to_oci`
+### `customer_contacts_to_send_to_oci` Block
 
 * `email` - (Required) Email address that receives operational notifications from OCI.
 
-### `db_tools_details`
+### `db_tools_details` Block
 
 * `compute_count` - (Optional) Compute capacity allocated to the database tool.
 * `is_enabled` - (Optional) Whether the database tool is enabled.
 * `max_idle_time_in_minutes` - (Optional) Maximum idle time before the tool is shut down.
 * `name` - (Optional) Database tool name.
 
-### `long_term_backup_schedule`
+### `long_term_backup_schedule` Block
 
 At most one block can be configured.
 
@@ -118,7 +124,7 @@ At most one block can be configured.
 * `retention_period_in_days` - (Optional) Backup retention period. Valid values are from `90` through `3650`.
 * `time_of_backup` - (Optional) RFC3339 timestamp at which the backup is taken.
 
-### `resource_pool_summary`
+### `resource_pool_summary` Block
 
 At most one block can be configured.
 
@@ -126,58 +132,56 @@ At most one block can be configured.
 * `pool_size` - (Optional) Number of Autonomous Databases the pool can contain.
 * `pool_storage_size_in_tbs` - (Optional) Pool storage size in TB.
 
-The `available_compute_capacity`, `available_storage_capacity_in_tbs`, and `total_compute_capacity` fields are computed.
-
-### `scheduled_operations`
+### `scheduled_operations` Block
 
 * `day_of_week` - (Required) Day of the week.
 * `scheduled_start_time` - (Optional) Scheduled start time in UTC.
 * `scheduled_stop_time` - (Optional) Scheduled stop time in UTC.
 
-### `source_configuration`
+### `source_configuration` Block
 
 At most one `source_configuration` block can be configured. The block must contain exactly one of the source-specific blocks below. Changing any source configuration creates a new resource.
 
-#### `clone_to_refreshable`
+#### `clone_to_refreshable` Block
 
-* `source_autonomous_database_id` - (Required) ID of the source Autonomous Database.
 * `auto_refresh_frequency_in_seconds` - (Optional) Automatic refresh frequency in seconds.
 * `auto_refresh_point_lag_in_seconds` - (Optional) Refresh lag in seconds.
 * `clone_type` - (Optional) Clone type.
 * `open_mode` - (Optional) Clone open mode.
 * `refreshable_mode` - (Optional) Refresh mode.
+* `source_autonomous_database_id` - (Required) ID of the source Autonomous Database.
 * `time_of_auto_refresh_start` - (Optional) RFC3339 automatic refresh start timestamp.
 
-#### `cross_region_data_guard`
+#### `cross_region_data_guard` Block
 
 * `source_autonomous_database_arn` - (Required) ARN of the source Autonomous Database.
 
-#### `cross_region_disaster_recovery`
+#### `cross_region_disaster_recovery` Block
 
+* `is_replicate_automatic_backups` - (Optional) Whether automatic backups are replicated.
 * `remote_disaster_recovery_type` - (Required) Remote disaster recovery type.
 * `source_autonomous_database_arn` - (Required) ARN of the source Autonomous Database.
-* `is_replicate_automatic_backups` - (Optional) Whether automatic backups are replicated.
 
-#### `database_clone`
-
-* `clone_type` - (Required) Clone type.
-* `source_autonomous_database_id` - (Required) ID of the source Autonomous Database.
-
-#### `point_in_time_restore`
+#### `database_clone` Block
 
 * `clone_type` - (Required) Clone type.
 * `source_autonomous_database_id` - (Required) ID of the source Autonomous Database.
+
+#### `point_in_time_restore` Block
+
 * `clone_table_space_list` - (Optional) List of tablespace IDs to clone.
+* `clone_type` - (Required) Clone type.
+* `source_autonomous_database_id` - (Required) ID of the source Autonomous Database.
 * `timestamp` - (Optional) RFC3339 timestamp to which the database is restored.
 * `use_latest_available_backup_timestamp` - (Optional) Whether to use the latest available backup timestamp.
 
-#### `restore_from_backup`
+#### `restore_from_backup` Block
 
 * `autonomous_database_backup_id` - (Required) ID of the Autonomous Database backup.
-* `clone_type` - (Required) Clone type.
 * `clone_table_space_list` - (Optional) List of tablespace IDs to clone.
+* `clone_type` - (Required) Clone type.
 
-### `transportable_tablespace`
+### `transportable_tablespace` Block
 
 At most one block can be configured. Changing this block creates a new resource.
 
@@ -187,16 +191,16 @@ At most one block can be configured. Changing this block creates a new resource.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique Autonomous Database identifier. This is the Terraform resource ID.
-* `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
 * `actual_used_data_storage_size_in_tbs` - Actual data storage currently in use, in TB.
 * `allocated_storage_size_in_tbs` - Storage currently allocated, in TB.
+* `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
 * `availability_zone` - Availability Zone of the database.
 * `availability_zone_id` - Availability Zone ID of the database.
 * `available_upgrade_versions` - Oracle Database versions available for upgrade.
 * `compute_model` - Compute model, either `ECPU` or `OCPU`.
 * `created_at` - Creation date and time.
 * `database_type` - Autonomous Database type.
+* `id` - Unique Autonomous Database identifier. This is the Terraform resource ID.
 * `oci_resource_anchor_name` - OCI resource anchor name.
 * `oci_url` - OCI console URL.
 * `ocid` - Oracle Cloud Identifier.
@@ -209,6 +213,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Current database lifecycle status.
 * `status_reason` - Additional lifecycle status information.
 * `tags_all` - Map of tags assigned to the resource, including tags inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `resource_pool_summary` Block
+
+The `resource_pool_summary` block exports the following attributes in addition to the arguments above:
+
+* `available_compute_capacity` - Available compute capacity.
+* `available_storage_capacity_in_tbs` - Available storage capacity in TB.
+* `total_compute_capacity` - Total compute capacity.
 
 ## Timeouts
 
