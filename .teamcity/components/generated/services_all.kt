@@ -151,6 +151,7 @@ val services = mapOf(
     "location" to ServiceSpec("Location"),
     "logs" to ServiceSpec("CloudWatch Logs"),
     "macie2" to ServiceSpec("Macie"),
+    "mailmanager" to ServiceSpec("SES Mail Manager"),
     "mediaconnect" to ServiceSpec("Elemental MediaConnect"),
     "mediaconvert" to ServiceSpec("Elemental MediaConvert"),
     "medialive" to ServiceSpec("Elemental MediaLive"),

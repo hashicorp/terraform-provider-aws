@@ -414,6 +414,53 @@ func TestAccSageMakerEndpoint_changeEndpointConfig_namePrefix_noCreateBeforeDest
 	})
 }
 
+func TestAccSageMakerEndpoint_AppAutoScaling_replaceEndpointConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_sagemaker_endpoint.test"
+	sagemakerEndpointConfigurationResourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	variantName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	variantName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_AppAutoScaling_basic(rName, variantName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					acctest.CheckResourceAttrHasPrefix(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", variantName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointConfig_AppAutoScaling_basic(rName, variantName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName, names.AttrName),
+					acctest.CheckResourceAttrHasPrefix(sagemakerEndpointConfigurationResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(sagemakerEndpointConfigurationResourceName, "production_variants.0.variant_name", variantName2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
@@ -782,4 +829,57 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   }
 }
 `, rName, instanceCount))
+}
+
+func testAccEndpointConfig_AppAutoScaling_basic(rName, variantName string) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_model_base(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name_prefix = "%[1]s-"
+
+  production_variants {
+    initial_instance_count = 2
+    initial_variant_weight = 1
+    instance_type          = "ml.m5.large"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = %[2]q
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "sagemaker"
+  resource_id        = "endpoint/${aws_sagemaker_endpoint.test.name}/variant/${aws_sagemaker_endpoint_configuration.test.production_variants[0].variant_name}"
+  scalable_dimension = "sagemaker:variant:DesiredInstanceCount"
+  min_capacity       = 1
+  max_capacity       = 3
+}
+
+resource "aws_appautoscaling_policy" "test" {
+  name = %[1]q
+
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+
+  policy_type = "TargetTrackingScaling"
+
+  target_tracking_scaling_policy_configuration {
+    target_value = 70.0
+
+    predefined_metric_specification {
+      predefined_metric_type = "SageMakerVariantInvocationsPerInstance"
+    }
+  }
+}
+`, rName, variantName))
 }

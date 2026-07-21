@@ -776,7 +776,7 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 				Config: testAccQueueConfig_managedEncryption(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, t, resourceName, &queueAttributes),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueue(), resourceName), // nosemgrep:disappears-expect-resource-action
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
 				),
 			},
 			{

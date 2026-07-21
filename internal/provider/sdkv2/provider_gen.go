@@ -1450,6 +1450,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mailmanager
+
+				"mailmanager": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// mediaconnect
 
 				"mediaconnect": {

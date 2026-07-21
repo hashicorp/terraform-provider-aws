@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkDataSource("aws_elasticache_service_update_actions", name="Service Update Actions")
@@ -140,4 +141,14 @@ func findServiceUpdateActions(ctx context.Context, conn *elasticache.Client, inp
 	}
 
 	return output, nil
+}
+
+func findServiceUpdateAction(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUpdateActionsInput) (*awstypes.UpdateAction, error) {
+	output, err := findServiceUpdateActions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
