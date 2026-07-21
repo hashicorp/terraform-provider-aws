@@ -1241,7 +1241,7 @@ func TestAccCodePipeline_computeAction(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 	codestarConnectionResourceName := "aws_codestarconnections_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
