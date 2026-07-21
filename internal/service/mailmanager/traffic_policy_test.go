@@ -43,7 +43,7 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &trafficPolicy),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "default_action", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "ALLOW"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
 					resource.TestCheckNoResourceAttr(resourceName, "max_message_size_bytes"),
@@ -86,7 +86,7 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 				Config: testAccTrafficPolicyConfig_update(rName, "ALLOW", 100000, "CIDR_MATCHES", "192.0.2.0/24"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "default_action", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "100000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -96,7 +96,7 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &after),
 					testAccCheckTrafficPolicyNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "default_action", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "200000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "NOT_CIDR_MATCHES"),
