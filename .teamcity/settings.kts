@@ -118,8 +118,8 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/go-mod-cache")
-            // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/go-build-cache")
+            // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.gomodcache")
+            // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.gobuildcache")
             text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
             text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             // set variable to false by default
@@ -178,8 +178,8 @@ object PullRequest : BuildType({
         //     use = true
         //     publish = true
         //     rules = """
-        //         go-mod-cache
-        //         go-build-cache
+        //         .gomodcache
+        //         .gobuildcache
         //     """.trimIndent()
         // }
 
