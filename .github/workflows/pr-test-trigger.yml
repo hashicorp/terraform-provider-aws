@@ -98,7 +98,7 @@ jobs:
             tctest_cmd="${tctest_cmd} \"${pattern}\""
           fi
           tctest_cmd="${tctest_cmd} --properties \"${properties}\" --comment"
-          
+
           output=$(eval ${tctest_cmd})
           echo "${output}"
           if ! echo "${output}" | grep -q "triggered tests for 1 PRs!"; then
