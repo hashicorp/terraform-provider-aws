@@ -647,6 +647,7 @@ The `mcp_server` block supports the following:
 The `http` block supports exactly one of the following:
 
 * `agentcore_runtime` - (Optional) AgentCore Runtime target configuration. See [`agentcore_runtime`](#agentcore_runtime) below.
+* `passthrough` - (Optional) Passthrough target configuration that forwards requests to an external HTTPS endpoint. See [`passthrough`](#passthrough) below.
 
 ~> **Note:** HTTP targets can only be attached to gateways that do not have a `protocol_type` set. They are not supported on MCP-protocol gateways.
 
@@ -656,6 +657,22 @@ The `agentcore_runtime` block supports the following:
 
 * `arn` - (Required) ARN of the AgentCore Runtime agent that the gateway routes requests to.
 * `qualifier` - (Optional) Runtime qualifier identifying a specific endpoint version. Defaults to `DEFAULT` when not set.
+
+### `passthrough`
+
+The `passthrough` block supports the following:
+
+* `endpoint` - (Required) HTTPS endpoint that the gateway forwards requests to for this passthrough target. Must start with `https://`.
+* `protocol_type` - (Required) Application protocol the passthrough target implements. Valid values: `MCP`, `A2A`, `INFERENCE`, `CUSTOM`.
+* `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
+* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
+
+### `stickiness_configuration`
+
+The `stickiness_configuration` block supports the following:
+
+* `identifier` - (Required) Expression identifying where to extract the session identifier from the request (for example, `$context.header.x-session-id`).
+* `timeout` - (Optional) Session stickiness timeout, in seconds. Valid values range from 1 to 86400.
 
 ### `api_schema_configuration`
 
