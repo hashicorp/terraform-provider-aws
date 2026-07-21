@@ -44,6 +44,7 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 			"actual_used_data_storage_size_in_tbs": schema.Float64Attribute{Computed: true, Description: "Actual amount of data storage currently in use, in TB."},
 			"allocated_storage_size_in_tbs":        schema.Float64Attribute{Computed: true, Description: "Amount of storage currently allocated, in TB."},
 			"allowlisted_ips": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: tftypes.StringType,
 				Description: "IP addresses allowed to access the Autonomous Database.",
@@ -54,6 +55,7 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 			"availability_zone":                    schema.StringAttribute{Computed: true, Description: "Availability Zone of the Autonomous Database."},
 			"availability_zone_id":                 schema.StringAttribute{Computed: true, Description: "Availability Zone ID of the Autonomous Database."},
 			"available_upgrade_versions": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: tftypes.StringType,
 				Description: "Oracle Database versions available for upgrade.",
@@ -101,6 +103,7 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 			"source_id":                                   schema.StringAttribute{Computed: true, Description: "Source database or backup ID."},
 			"sql_web_developer_url":                       schema.StringAttribute{Computed: true, Description: "Oracle SQL Developer Web URL."},
 			"standby_allowlisted_ips": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: tftypes.StringType,
 				Description: "IP addresses allowed to access the standby database.",
@@ -119,72 +122,34 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 	}
 }
 
-func computedCustomerContactsAttribute(ctx context.Context) schema.ListNestedAttribute {
-	return schema.ListNestedAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseCustomerContactModel](ctx),
-		Computed:   true,
-		NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-			"email": schema.StringAttribute{Computed: true, Description: "Email address of the customer contact."},
-		}},
-		Description: "Customer contacts that receive operational notifications from OCI.",
-	}
+func computedCustomerContactsAttribute(ctx context.Context) schema.ListAttribute {
+	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseCustomerContactModel](ctx)
+	attribute.Description = "Customer contacts that receive operational notifications from OCI."
+	return attribute
 }
 
-func computedDatabaseToolsAttribute(ctx context.Context) schema.ListNestedAttribute {
-	return schema.ListNestedAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseToolModel](ctx),
-		Computed:   true,
-		NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-			"compute_count":            schema.Float64Attribute{Computed: true, Description: "Compute capacity allocated to the database tool."},
-			"is_enabled":               schema.BoolAttribute{Computed: true, Description: "Whether the database tool is enabled."},
-			"max_idle_time_in_minutes": schema.Int32Attribute{Computed: true, Description: "Maximum idle time, in minutes."},
-			names.AttrName:             schema.StringAttribute{Computed: true, Description: "Database tool name."},
-		}},
-		Description: "Database management tools enabled for the Autonomous Database.",
-	}
+func computedDatabaseToolsAttribute(ctx context.Context) schema.ListAttribute {
+	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseToolModel](ctx)
+	attribute.Description = "Database management tools enabled for the Autonomous Database."
+	return attribute
 }
 
-func computedLongTermBackupScheduleAttribute(ctx context.Context) schema.ListNestedAttribute {
-	return schema.ListNestedAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseLongTermBackupScheduleModel](ctx),
-		Computed:   true,
-		NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-			"is_disabled":              schema.BoolAttribute{Computed: true, Description: "Whether the schedule is disabled."},
-			"repeat_cadence":           schema.StringAttribute{CustomType: fwtypes.StringEnumType[types.RepeatCadence](), Computed: true, Description: "Backup cadence."},
-			"retention_period_in_days": schema.Int32Attribute{Computed: true, Description: "Retention period, in days."},
-			"time_of_backup":           schema.StringAttribute{CustomType: timetypes.RFC3339Type{}, Computed: true, Description: "Backup date and time."},
-		}},
-		Description: "Long-term backup schedule.",
-	}
+func computedLongTermBackupScheduleAttribute(ctx context.Context) schema.ListAttribute {
+	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseLongTermBackupScheduleModel](ctx)
+	attribute.Description = "Long-term backup schedule."
+	return attribute
 }
 
-func computedResourcePoolSummaryAttribute(ctx context.Context) schema.ListNestedAttribute {
-	return schema.ListNestedAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseResourcePoolSummaryModel](ctx),
-		Computed:   true,
-		NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-			"available_compute_capacity":        schema.Int32Attribute{Computed: true, Description: "Available compute capacity."},
-			"available_storage_capacity_in_tbs": schema.Float64Attribute{Computed: true, Description: "Available storage capacity, in TB."},
-			"is_disabled":                       schema.BoolAttribute{Computed: true, Description: "Whether the resource pool is disabled."},
-			"pool_size":                         schema.Int32Attribute{Computed: true, Description: "Number of databases the pool can contain."},
-			"pool_storage_size_in_tbs":          schema.Int32Attribute{Computed: true, Description: "Pool storage size, in TB."},
-			"total_compute_capacity":            schema.Int32Attribute{Computed: true, Description: "Total compute capacity."},
-		}},
-		Description: "Resource pool configuration.",
-	}
+func computedResourcePoolSummaryAttribute(ctx context.Context) schema.ListAttribute {
+	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseResourcePoolSummaryModel](ctx)
+	attribute.Description = "Resource pool configuration."
+	return attribute
 }
 
-func computedScheduledOperationsAttribute(ctx context.Context) schema.ListNestedAttribute {
-	return schema.ListNestedAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseScheduledOperationModel](ctx),
-		Computed:   true,
-		NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-			"day_of_week":          schema.StringAttribute{CustomType: fwtypes.StringEnumType[types.DayOfWeekName](), Computed: true, Description: "Day of the week."},
-			"scheduled_start_time": schema.StringAttribute{Computed: true, Description: "Scheduled start time in UTC."},
-			"scheduled_stop_time":  schema.StringAttribute{Computed: true, Description: "Scheduled stop time in UTC."},
-		}},
-		Description: "Scheduled database start and stop times.",
-	}
+func computedScheduledOperationsAttribute(ctx context.Context) schema.ListAttribute {
+	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseScheduledOperationModel](ctx)
+	attribute.Description = "Scheduled database start and stop times."
+	return attribute
 }
 
 func (d *dataSourceAutonomousDatabase) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -206,6 +171,7 @@ func (d *dataSourceAutonomousDatabase) Read(ctx context.Context, req datasource.
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	data.ByolComputeCountLimit = flattenAutonomousDatabaseByolComputeCountLimit(out.ByolComputeCountLimit)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.CustomerContacts, &data.CustomerContactsToSendToOCI)...)
 	resp.Diagnostics.Append(flattenAutonomousDatabaseScheduledOperations(ctx, out.ScheduledOperations, &data.ScheduledOperations)...)
 	if out.EncryptionSummary != nil {
@@ -235,7 +201,7 @@ type autonomousDatabaseDataSourceModel struct {
 	AvailabilityZoneID                   tftypes.String                                                                 `tfsdk:"availability_zone_id"`
 	AvailableUpgradeVersions             fwtypes.ListValueOf[tftypes.String]                                            `tfsdk:"available_upgrade_versions"`
 	BackupRetentionPeriodInDays          tftypes.Int32                                                                  `tfsdk:"backup_retention_period_in_days"`
-	ByolComputeCountLimit                tftypes.Float64                                                                `tfsdk:"byol_compute_count_limit"`
+	ByolComputeCountLimit                tftypes.Float64                                                                `tfsdk:"byol_compute_count_limit" autoflex:",noflatten"`
 	CharacterSet                         tftypes.String                                                                 `tfsdk:"character_set"`
 	ComputeCount                         tftypes.Float64                                                                `tfsdk:"compute_count"`
 	ComputeModel                         fwtypes.StringEnum[types.ComputeModel]                                         `tfsdk:"compute_model"`
