@@ -59,7 +59,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -446,54 +445,33 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.Updat
 }
 
 func (r *anomalyDetectorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().AMPClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state anomalyDetectorResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	input := amp.DeleteAnomalyDetectorInput{
 		AnomalyDetectorId: state.ID.ValueStringPointer(),
+		WorkspaceId:       state.WorkspaceID.ValueStringPointer(),
+		ClientToken:	   aws.String(create.UniqueId(ctx)),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteAnomalyDetector(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitAnomalyDetectorDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitAnomalyDetectorDeleted(ctx, conn, state.ID.ValueString(), state.WorkspaceID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
