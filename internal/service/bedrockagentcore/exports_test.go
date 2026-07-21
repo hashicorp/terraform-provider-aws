@@ -55,6 +55,8 @@ type (
 	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
 	ManagedVPCResourceModel                = managedVPCResourceModel
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
+	OAuth2AuthorizationServerMetadataModel = oauth2AuthorizationServerMetadataModel
+	OAuth2DiscoveryModel                   = oauth2DiscoveryModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel
 	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel

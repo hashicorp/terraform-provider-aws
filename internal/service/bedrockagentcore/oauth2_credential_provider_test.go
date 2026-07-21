@@ -6,10 +6,16 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,10 +24,120 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestOAuth2CredentialProviderTokenEndpointAuthMethodsValidation(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		methods     string
+		expectError *regexp.Regexp
+	}{
+		"empty": {
+			methods:     "[]",
+			expectError: regexache.MustCompile(`list must contain at least 1 elements and at most 2 elements`),
+		},
+		"too many": {
+			methods:     `["client_secret_post", "client_secret_basic", "client_secret_post"]`,
+			expectError: regexache.MustCompile(`list must contain at least 1 elements and at most 2 elements`),
+		},
+		"invalid value": {
+			methods:     `["private_key_jwt"]`,
+			expectError: regexache.MustCompile(`value must match regular expression`),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config:      testOAuth2CredentialProviderConfig_tokenEndpointAuthMethods(testCase.methods),
+						ExpectError: testCase.expectError,
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestOAuth2CredentialProviderAuthorizationServerMetadataAutoFlexExpand(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	model := tfbedrockagentcore.OAuth2DiscoveryModel{
+		AuthorizationServerMetadata: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OAuth2AuthorizationServerMetadataModel{
+			AuthorizationEndpoint:    types.StringValue("https://example.com/authorize"),
+			Issuer:                   types.StringValue("https://example.com"),
+			ResponseTypes:            fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"code"}),
+			TokenEndpoint:            types.StringValue("https://example.com/token"),
+			TokenEndpointAuthMethods: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"client_secret_post", "client_secret_basic"}),
+		}),
+		DiscoveryURL: types.StringNull(),
+	}
+	expected := &awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata{
+		Value: awstypes.Oauth2AuthorizationServerMetadata{
+			AuthorizationEndpoint:    aws.String("https://example.com/authorize"),
+			Issuer:                   aws.String("https://example.com"),
+			ResponseTypes:            []string{"code"},
+			TokenEndpoint:            aws.String("https://example.com/token"),
+			TokenEndpointAuthMethods: []string{"client_secret_post", "client_secret_basic"},
+		},
+	}
+
+	got, diags := model.Expand(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary())
+	}
+	if diff := cmp.Diff(got, expected, cmpopts.IgnoreUnexported(
+		awstypes.Oauth2AuthorizationServerMetadata{},
+		awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata{},
+	)); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+	}
+}
+
+func TestOAuth2CredentialProviderAuthorizationServerMetadataAutoFlexFlatten(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	apiObject := awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata{
+		Value: awstypes.Oauth2AuthorizationServerMetadata{
+			AuthorizationEndpoint:    aws.String("https://example.com/authorize"),
+			Issuer:                   aws.String("https://example.com"),
+			ResponseTypes:            []string{"code"},
+			TokenEndpoint:            aws.String("https://example.com/token"),
+			TokenEndpointAuthMethods: []string{"client_secret_post", "client_secret_basic"},
+		},
+	}
+	expected := tfbedrockagentcore.OAuth2DiscoveryModel{
+		AuthorizationServerMetadata: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OAuth2AuthorizationServerMetadataModel{
+			AuthorizationEndpoint:    types.StringValue("https://example.com/authorize"),
+			Issuer:                   types.StringValue("https://example.com"),
+			ResponseTypes:            fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"code"}),
+			TokenEndpoint:            types.StringValue("https://example.com/token"),
+			TokenEndpointAuthMethods: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"client_secret_post", "client_secret_basic"}),
+		}),
+		DiscoveryURL: types.StringNull(),
+	}
+
+	var got tfbedrockagentcore.OAuth2DiscoveryModel
+	diags := got.Flatten(ctx, apiObject)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary())
+	}
+	if diff := cmp.Diff(got, expected); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+	}
+}
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -645,6 +761,32 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   }
 }
 `, rName, clientId, clientSecret, version, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2)
+}
+
+func testOAuth2CredentialProviderConfig_tokenEndpointAuthMethods(methods string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name                       = "test-token-endpoint-auth-methods"
+  credential_provider_vendor = "CustomOauth2"
+
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id     = "test-client-id"
+      client_secret = "test-client-secret"
+
+      oauth_discovery {
+        authorization_server_metadata {
+          authorization_endpoint      = "https://example.com/authorize"
+          issuer                      = "https://example.com"
+          response_types              = ["code"]
+          token_endpoint              = "https://example.com/token"
+          token_endpoint_auth_methods = %[1]s
+        }
+      }
+    }
+  }
+}
+`, methods)
 }
 
 func testAccOAuth2CredentialProviderConfig_full(rName string) string {

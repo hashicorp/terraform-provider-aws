@@ -66,10 +66,11 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
       oauth_discovery {
         authorization_server_metadata {
-          issuer                 = "https://auth.company.com/realms/production"
-          authorization_endpoint = "https://auth.company.com/realms/production/protocol/openid-connect/auth"
-          token_endpoint         = "https://auth.company.com/realms/production/protocol/openid-connect/token"
-          response_types         = ["code", "id_token"]
+          issuer                      = "https://auth.company.com/realms/production"
+          authorization_endpoint      = "https://auth.company.com/realms/production/protocol/openid-connect/auth"
+          token_endpoint              = "https://auth.company.com/realms/production/protocol/openid-connect/token"
+          response_types              = ["code", "id_token"]
+          token_endpoint_auth_methods = ["client_secret_basic"]
         }
       }
     }
@@ -221,6 +222,7 @@ The `authorization_server_metadata` block supports the following:
 * `authorization_endpoint` - (Required) OAuth2 authorization endpoint URL.
 * `token_endpoint` - (Required) OAuth2 token endpoint URL.
 * `response_types` - (Optional) Set of OAuth2 response types supported by the authorization server.
+* `token_endpoint_auth_methods` - (Optional) List of authentication methods supported by the token endpoint. Must contain one or two values matching `client_secret_post` or `client_secret_basic`.
 
 ## Attribute Reference
 
