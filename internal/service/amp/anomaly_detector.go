@@ -45,17 +45,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -195,7 +194,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 				Required: true,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCreatedAt: schema.StringAttribute{ 
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed: true,
 			},
 			"evaluation_interval_in_seconds": schema.Int32Attribute{
@@ -204,9 +203,9 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 			},
 			names.AttrID: framework.IDAttribute(),
 			"labels": schema.MapAttribute{
-				CustomType: fwtypes.MapOfStringType,
+				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
-				Optional: true,
+				Optional:    true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -221,7 +220,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
-				}, 
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"random_cut_forest": schema.ListNestedBlock{
@@ -238,7 +237,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 									},
 									"sample_size": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, 
+										Computed: true,
 									},
 									"shingle_size": schema.Int32Attribute{
 										Optional: true,
@@ -301,7 +300,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"status": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[statusModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorStatusModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -316,6 +315,11 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -335,50 +339,50 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, req resource.Creat
 	// 6. Use a waiter to wait for create to complete
 	// 7. Save the request plan to response state
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().AMPClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan anomalyDetectorResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	var input amp.CreateAnomalyDetectorInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `AnomalyDetectorId`
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AnomalyDetector")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields not covered by AutoFlex
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CreateAnomalyDetector(ctx, &input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Alias.String())
 		return
 	}
-	if out == nil || out.AnomalyDetector == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	// TIP: -- 5. Using the output from the create function, set attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
+	if out == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Alias.String())
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitAnomalyDetectorCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	// Set computed values
+	plan.ID = fwflex.StringToFramework(ctx, out.AnomalyDetectorId)
+	plan.ARN = fwflex.StringToFramework(ctx, out.Arn)
+
+	detector, err := waitAnomalyDetectorCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		resp.State.SetAttribute(ctx, path.Root(names.AttrID), plan.ID)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, detector, &plan, fwflex.WithFieldNamePrefix("AnomalyDetector")))
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
 	// TIP: -- 7. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
@@ -733,9 +737,10 @@ type anomalyDetectorResourceModel struct {
 	ID                          types.String                                                           `tfsdk:"id"`
 	Labels                      fwtypes.MapOfString                                                    `tfsdk:"labels"`
 	MissingDataAction           fwtypes.ListNestedObjectValueOf[anomalyDetectorMissingDataActionModel] `tfsdk:"missing_data_action"`
-	Status                      fwtypes.ListNestedObjectValueOf[statusModel]                           `tfsdk:"status"`
+	Status                      fwtypes.ListNestedObjectValueOf[anomalyDetectorStatusModel]            `tfsdk:"status"`
 	Tags                        tftags.Map                                                             `tfsdk:"tags"`
-	TagsAll                     tftags.Map                                                             `tfsdk:"tags_all"`
+	TagsAll                     tftags.Map
+	Timeouts                	timeouts.Value                                                		   `tfsdk:"timeouts"`                                                            `tfsdk:"tags_all"`
 	WorkspaceID                 types.String                                                           `tfsdk:"workspace_id"`
 }
 
@@ -850,14 +855,14 @@ func (m anomalyDetectorMissingDataActionModel) Expand(ctx context.Context) (resu
 func (m *anomalyDetectorMissingDataActionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case *awstypes.AnomalyDetectorMissingDataActionMemberMarkAsAnomaly:
-		m.MarkAsAnomaly = types.BoolValue(t.Value)
+		m.MarkAsAnomaly = fwflex.BoolValueToFramework(ctx, t.Value)
 	case *awstypes.AnomalyDetectorMissingDataActionMemberSkip:
-		m.Skip = types.BoolValue(t.Value)
+		m.Skip = fwflex.BoolValueToFramework(ctx, t.Value)
 	}
 	return diags
 }
 
-type statusModel struct {
+type anomalyDetectorStatusModel struct {
 	StatusCode   fwtypes.StringEnum[awstypes.AnomalyDetectorStatusCode] `tfsdk:"status_code"`
 	StatusReason types.String                                           `tfsdk:"status_reason"`
 }
