@@ -16,7 +16,7 @@ Manages an SES Mail Manager Traffic Policy.
 
 ```terraform
 resource "aws_mailmanager_traffic_policy" "example" {
-  default_action          = "ALLOW"
+  default_action         = "ALLOW"
   max_message_size_bytes = 100000
   name                   = "example"
 
