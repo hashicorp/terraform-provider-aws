@@ -191,62 +191,127 @@ type anomalyDetectorResource struct {
 func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrAlias: schema.StringAttribute{
+				Required: true,
+			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{ 
+				Computed: true,
+			},
+			"evaluation_interval_in_seconds": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrID: framework.IDAttribute(),
+			"labels": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				ElementType: types.StringType,
 				Optional: true,
 			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "AnomalyDetectorId"
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"type": schema.StringAttribute{
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"workspace_id": schema.StringAttribute{
 				Required: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
+			"configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				}, 
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"random_cut_forest": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[randomCutForestConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"query": schema.StringAttribute{
+										Required: true,
+									},
+									"sample_size": schema.Int32Attribute{
+										Optional: true,
+										Computed: true, 
+									},
+									"shingle_size": schema.Int32Attribute{
+										Optional: true,
+										Computed: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"ignore_near_expected_from_above": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[ignoreNearExpectedModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"amount": schema.Float64Attribute{
+													Optional: true,
+												},
+												"ratio": schema.Float64Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+									"ignore_near_expected_from_below": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[ignoreNearExpectedModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"amount": schema.Float64Attribute{
+													Optional: true,
+												},
+												"ratio": schema.Float64Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"missing_data_action": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorMissingDataActionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
+						"mark_as_anomaly": schema.BoolAttribute{
+							Optional: true,
 						},
-						"nested_computed": schema.StringAttribute{
+						"skip": schema.BoolAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+			"status": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[statusModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"status_code": schema.StringAttribute{
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+						},
+						"status_reason": schema.StringAttribute{
+							Computed: true,
 						},
 					},
 				},
@@ -675,6 +740,7 @@ type anomalyDetectorResourceModel struct {
 	MissingDataAction           fwtypes.ListNestedObjectValueOf[anomalyDetectorMissingDataActionModel] `tfsdk:"missing_data_action"`
 	Status                      fwtypes.ListNestedObjectValueOf[statusModel]                           `tfsdk:"status"`
 	Tags                        tftags.Map                                                             `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                             `tfsdk:"tags_all"`
 	WorkspaceID                 types.String                                                           `tfsdk:"workspace_id"`
 }
 
@@ -697,7 +763,7 @@ func (m anomalyDetectorConfigurationModel) Expand(ctx context.Context) (result a
 		}
 
 		var r awstypes.AnomalyDetectorConfigurationMemberRandomCutForest
-		diags.Append(fwflex.Expand(ctx, data, &r)...)
+		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -800,8 +866,6 @@ type statusModel struct {
 	StatusCode   fwtypes.StringEnum[awstypes.AnomalyDetectorStatusCode] `tfsdk:"status_code"`
 	StatusReason types.String                                           `tfsdk:"status_reason"`
 }
-
-// FIXME: ADD EXPAND AND FLATTEN FOR INTERFACE TYPES
 
 // TIP: ==== IMPORT ID HANDLER ====
 // When a resource type has a Resource Identity with multiple attributes, it needs a handler to
