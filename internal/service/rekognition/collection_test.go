@@ -44,7 +44,7 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "rekognition", "collection/{id}"),
-					resource.TestCheckResourceAttr(resourceName, "collection", rName),
+					resource.TestCheckResourceAttr(resourceName, "collection", rName), // TODO should be collection_id
 					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "collection_id"),
 				),
