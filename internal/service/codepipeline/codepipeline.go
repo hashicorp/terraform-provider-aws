@@ -679,6 +679,7 @@ func resourcePipeline() *schema.Resource {
 				},
 			}
 		},
+		CustomizeDiff: outputArtifactsConflictValidate,
 	}
 }
 
@@ -2129,8 +2130,6 @@ func flattenOutputArtifactsForComputeAction(apiObjects []types.OutputArtifact) [
 		}
 		if v := apiObject.Files; len(v) > 0 {
 			tfMap["files"] = v
-		} else {
-			tfMap["files"] = nil
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2347,4 +2346,27 @@ func flattenTriggerDeclarations(apiObjects []types.PipelineTriggerDeclaration) [
 	}
 
 	return tfList
+}
+
+func outputArtifactsConflictValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	stageCount := diff.Get("stage.#").(int)
+	for i := range stageCount {
+		actionCount := diff.Get(fmt.Sprintf("stage.%d.action.#", i)).(int)
+		for j := range actionCount {
+			category := diff.Get(fmt.Sprintf("stage.%d.action.%d.category", i, j)).(string)
+			outputArtifactsCount := diff.Get(fmt.Sprintf("stage.%d.action.%d.output_artifacts.#", i, j)).(int)
+			computeArtifactsCount := diff.Get(fmt.Sprintf("stage.%d.action.%d.output_artifacts_for_compute_action.#", i, j)).(int)
+
+			if outputArtifactsCount > 0 && computeArtifactsCount > 0 {
+				return fmt.Errorf("stage.%d.action.%d: only one of \"output_artifacts\" or \"output_artifacts_for_compute_action\" may be set", i, j)
+			}
+			if category == string(types.ActionCategoryCompute) && outputArtifactsCount > 0 {
+				return fmt.Errorf("stage.%d.action.%d: \"output_artifacts\" cannot be set when category is %q, use \"output_artifacts_for_compute_action\"", i, j, category)
+			}
+			if category != string(types.ActionCategoryCompute) && computeArtifactsCount > 0 {
+				return fmt.Errorf("stage.%d.action.%d: \"output_artifacts_for_compute_action\" can only be set when category is %q", i, j, types.ActionCategoryCompute)
+			}
+		}
+	}
+	return nil
 }
