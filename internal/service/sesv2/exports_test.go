@@ -5,6 +5,7 @@ package sesv2
 
 // Exports for use in tests only.
 var (
+	ResourceAccountSuppressionAttributes     = newAccountSuppressionAttributesResource
 	ResourceAccountVDMAttributes             = resourceAccountVDMAttributes
 	ResourceConfigurationSet                 = resourceConfigurationSet
 	ResourceConfigurationSetEventDestination = resourceConfigurationSetEventDestination
