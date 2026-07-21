@@ -308,6 +308,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"additional_params": schema.StringAttribute{
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
 									"api_key_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
@@ -949,6 +953,16 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if t.Value.AdditionalParams != nil {
+			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
+			if err != nil {
+				diags.AddError("reading Smithy document", err.Error())
+				return diags
+			}
+			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+		} else {
+			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
 		m.OpenAiModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("model configuration flatten: %T", v))
@@ -994,6 +1008,17 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberOpenAiModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		if !data.AdditionalParams.IsNull() && !data.AdditionalParams.IsUnknown() {
+			doc, err := tfsmithy.DocumentFromJSONString(data.AdditionalParams.ValueString(), document.NewLazyDocument)
+			if err != nil {
+				diags.AddError("creating Smithy document", err.Error())
+				return nil, diags
+			}
+			r.Value.AdditionalParams = doc
+		}
 		return &r, diags
 	}
 	return nil, diags
@@ -1016,11 +1041,12 @@ type harnessGeminiModelConfigModel struct {
 }
 
 type harnessOpenAIModelConfigModel struct {
-	ApiKeyARN   fwtypes.ARN   `tfsdk:"api_key_arn"`
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float64 `tfsdk:"temperature"`
-	TopP        types.Float64 `tfsdk:"top_p"`
+	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
+	ApiKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
+	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
+	ModelID          types.String                           `tfsdk:"model_id"`
+	Temperature      types.Float64                          `tfsdk:"temperature"`
+	TopP             types.Float64                          `tfsdk:"top_p"`
 }
 
 type harnessLiteLLMModelConfigModel struct {

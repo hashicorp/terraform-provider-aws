@@ -60,6 +60,30 @@ resource "aws_bedrockagentcore_harness" "example" {
 }
 ```
 
+### With OpenAI Additional Parameters
+
+```terraform
+resource "aws_bedrockagentcore_harness" "example" {
+  harness_name       = "example_openai"
+  execution_role_arn = aws_iam_role.example.arn
+
+  model {
+    openai_model_config {
+      api_key_arn = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
+      model_id     = "gpt-5"
+
+      additional_params = jsonencode({
+        reasoning_effort = "high"
+      })
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+```
+
 ### With Tools and Truncation
 
 ```terraform
@@ -162,7 +186,8 @@ The `model` block supports exactly one of the following:
 ### `openai_model_config` Block
 
 * `model_id` - (Required) OpenAI model ID.
-* `api_key_arn` - (Required) ARN of the secret containing the API key.
+* `api_key_arn` - (Required) ARN of the AgentCore API key credential provider.
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the OpenAI model provider unchanged.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
