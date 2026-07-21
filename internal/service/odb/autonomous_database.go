@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -31,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -128,6 +131,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Description: "Amount of storage currently allocated, in TB.",
 		},
 		"allowlisted_ips": schema.ListAttribute{
+			CustomType:  fwtypes.ListOfStringType,
 			Optional:    true,
 			Computed:    true,
 			ElementType: types.StringType,
@@ -161,6 +165,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Description: "Availability Zone ID where the Autonomous Database is located.",
 		},
 		"available_upgrade_versions": schema.ListAttribute{
+			CustomType:  fwtypes.ListOfStringType,
 			Computed:    true,
 			ElementType: types.StringType,
 			Description: "Oracle Database versions to which the Autonomous Database can be upgraded.",
@@ -436,6 +441,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Description: "URL for Oracle SQL Developer Web.",
 		},
 		"standby_allowlisted_ips": schema.ListAttribute{
+			CustomType:  fwtypes.ListOfStringType,
 			Optional:    true,
 			Computed:    true,
 			ElementType: types.StringType,
@@ -765,6 +771,7 @@ func sourceConfigurationResourceBlock(ctx context.Context) schema.ListNestedBloc
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"clone_table_space_list": schema.ListAttribute{
+								CustomType:  autonomousDatabaseListOfInt32Type(ctx),
 								Optional:    true,
 								ElementType: types.Int32Type,
 								Description: "Tablespace IDs to clone.",
@@ -800,6 +807,7 @@ func sourceConfigurationResourceBlock(ctx context.Context) schema.ListNestedBloc
 								Description: "ID of the Autonomous Database backup.",
 							},
 							"clone_table_space_list": schema.ListAttribute{
+								CustomType:  autonomousDatabaseListOfInt32Type(ctx),
 								Optional:    true,
 								ElementType: types.Int32Type,
 								Description: "Tablespace IDs to clone.",
@@ -816,6 +824,10 @@ func sourceConfigurationResourceBlock(ctx context.Context) schema.ListNestedBloc
 		},
 		Description: "Source-specific configuration used during creation. Exactly one nested source block must be configured.",
 	}
+}
+
+func autonomousDatabaseListOfInt32Type(ctx context.Context) basetypes.ListTypable {
+	return fwtypes.NewListValueOfNull[types.Int32](ctx).Type(ctx).(basetypes.ListTypable)
 }
 
 func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -877,12 +889,7 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 	}
 
 	if autonomousDatabasePostCreateUpdateRequired(plan) {
-		updateInput := odb.UpdateAutonomousDatabaseInput{
-			AutonomousDatabaseId: aws.String(id),
-		}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &updateInput)...)
-		updateInput.EncryptionKeyProvider, updateInput.EncryptionKeyConfiguration = expandAutonomousDatabaseEncryption(plan.EncryptionKeyProvider, plan.KMSKeyID)
-		updateInput.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, &resp.Diagnostics)
+		updateInput := expandAutonomousDatabasePostCreateUpdateInput(ctx, id, plan, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -914,6 +921,11 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 		}
 	}
 
+	// These configured blocks are not always returned by GetAutonomousDatabase.
+	// Start flattening with their configuration values so omitted API fields do
+	// not produce an inconsistent result after apply.
+	plan.CustomerContactsToSendToOCI = config.CustomerContactsToSendToOCI
+	plan.LongTermBackupSchedule = config.LongTermBackupSchedule
 	flattenAutonomousDatabase(ctx, created, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -963,6 +975,38 @@ func autonomousDatabasePostCreateUpdateRequired(plan autonomousDatabaseResourceM
 		isKnownAutonomousDatabaseValue(plan.TimeOfAutoRefreshStart)
 }
 
+type autonomousDatabasePostCreateUpdateModel struct {
+	AutoRefreshFrequencyInSeconds        types.Int32
+	AutoRefreshPointLagInSeconds         types.Int32
+	IsRefreshableClone                   types.Bool
+	LocalAdgAutoFailoverMaxDataLossLimit types.Int32
+	LongTermBackupSchedule               fwtypes.ListNestedObjectValueOf[autonomousDatabaseLongTermBackupScheduleModel]
+	OpenMode                             fwtypes.StringEnum[odbtypes.OpenMode]
+	PermissionLevel                      fwtypes.StringEnum[odbtypes.PermissionLevel]
+	RefreshableMode                      fwtypes.StringEnum[odbtypes.RefreshableMode]
+	TimeOfAutoRefreshStart               timetypes.RFC3339
+}
+
+func expandAutonomousDatabasePostCreateUpdateInput(ctx context.Context, id string, plan autonomousDatabaseResourceModel, diags *diag.Diagnostics) odb.UpdateAutonomousDatabaseInput {
+	input := odb.UpdateAutonomousDatabaseInput{
+		AutonomousDatabaseId: aws.String(id),
+	}
+	postCreateUpdate := autonomousDatabasePostCreateUpdateModel{
+		AutoRefreshFrequencyInSeconds:        plan.AutoRefreshFrequencyInSeconds,
+		AutoRefreshPointLagInSeconds:         plan.AutoRefreshPointLagInSeconds,
+		IsRefreshableClone:                   plan.IsRefreshableClone,
+		LocalAdgAutoFailoverMaxDataLossLimit: plan.LocalAdgAutoFailoverMaxDataLossLimit,
+		LongTermBackupSchedule:               plan.LongTermBackupSchedule,
+		OpenMode:                             plan.OpenMode,
+		PermissionLevel:                      plan.PermissionLevel,
+		RefreshableMode:                      plan.RefreshableMode,
+		TimeOfAutoRefreshStart:               plan.TimeOfAutoRefreshStart,
+	}
+	diags.Append(flex.Expand(ctx, postCreateUpdate, &input)...)
+
+	return input
+}
+
 type autonomousDatabaseValue interface {
 	IsNull() bool
 	IsUnknown() bool
@@ -970,49 +1014,6 @@ type autonomousDatabaseValue interface {
 
 func isKnownAutonomousDatabaseValue(value autonomousDatabaseValue) bool {
 	return !value.IsNull() && !value.IsUnknown()
-}
-
-func autonomousDatabaseUpdateRequired(plan, state autonomousDatabaseResourceModel) bool {
-	return !plan.AdminPasswordWOVersion.Equal(state.AdminPasswordWOVersion) ||
-		!plan.AllowlistedIps.Equal(state.AllowlistedIps) ||
-		!plan.AutoRefreshFrequencyInSeconds.Equal(state.AutoRefreshFrequencyInSeconds) ||
-		!plan.AutoRefreshPointLagInSeconds.Equal(state.AutoRefreshPointLagInSeconds) ||
-		!plan.AutonomousMaintenanceScheduleType.Equal(state.AutonomousMaintenanceScheduleType) ||
-		!plan.BackupRetentionPeriodInDays.Equal(state.BackupRetentionPeriodInDays) ||
-		!plan.ByolComputeCountLimit.Equal(state.ByolComputeCountLimit) ||
-		!plan.ComputeCount.Equal(state.ComputeCount) ||
-		!plan.CpuCoreCount.Equal(state.CpuCoreCount) ||
-		!plan.CustomerContactsToSendToOCI.Equal(state.CustomerContactsToSendToOCI) ||
-		!plan.DataStorageSizeInGBs.Equal(state.DataStorageSizeInGBs) ||
-		!plan.DataStorageSizeInTBs.Equal(state.DataStorageSizeInTBs) ||
-		!plan.DatabaseEdition.Equal(state.DatabaseEdition) ||
-		!plan.DbName.Equal(state.DbName) ||
-		!plan.DbToolsDetails.Equal(state.DbToolsDetails) ||
-		!plan.DbVersion.Equal(state.DbVersion) ||
-		!plan.DbWorkload.Equal(state.DbWorkload) ||
-		!plan.DisplayName.Equal(state.DisplayName) ||
-		!plan.EncryptionKeyProvider.Equal(state.EncryptionKeyProvider) ||
-		!plan.IsAutoScalingEnabled.Equal(state.IsAutoScalingEnabled) ||
-		!plan.IsAutoScalingForStorageEnabled.Equal(state.IsAutoScalingForStorageEnabled) ||
-		!plan.IsBackupRetentionLocked.Equal(state.IsBackupRetentionLocked) ||
-		!plan.IsLocalDataGuardEnabled.Equal(state.IsLocalDataGuardEnabled) ||
-		!plan.IsMtlsConnectionRequired.Equal(state.IsMtlsConnectionRequired) ||
-		!plan.IsRefreshableClone.Equal(state.IsRefreshableClone) ||
-		!plan.KMSKeyID.Equal(state.KMSKeyID) ||
-		!plan.LicenseModel.Equal(state.LicenseModel) ||
-		!plan.LocalAdgAutoFailoverMaxDataLossLimit.Equal(state.LocalAdgAutoFailoverMaxDataLossLimit) ||
-		!plan.LongTermBackupSchedule.Equal(state.LongTermBackupSchedule) ||
-		!plan.OpenMode.Equal(state.OpenMode) ||
-		!plan.PermissionLevel.Equal(state.PermissionLevel) ||
-		!plan.PrivateEndpointIp.Equal(state.PrivateEndpointIp) ||
-		!plan.PrivateEndpointLabel.Equal(state.PrivateEndpointLabel) ||
-		!plan.RefreshableMode.Equal(state.RefreshableMode) ||
-		!plan.ResourcePoolLeaderId.Equal(state.ResourcePoolLeaderId) ||
-		!plan.ResourcePoolSummary.Equal(state.ResourcePoolSummary) ||
-		!plan.ScheduledOperations.Equal(state.ScheduledOperations) ||
-		!plan.StandbyAllowlistedIps.Equal(state.StandbyAllowlistedIps) ||
-		!plan.StandbyAllowlistedIpsSource.Equal(state.StandbyAllowlistedIpsSource) ||
-		!plan.TimeOfAutoRefreshStart.Equal(state.TimeOfAutoRefreshStart)
 }
 
 func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -1026,59 +1027,197 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	if !autonomousDatabaseUpdateRequired(plan, state) {
-		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	input := expandAutonomousDatabaseUpdateInput(ctx, plan, state, config, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	var updated *odbtypes.AutonomousDatabase
+	if autonomousDatabaseUpdateInputHasChanges(input) {
+		out, err := conn.UpdateAutonomousDatabase(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil || out.AutonomousDatabaseId == nil {
+			err := errors.New("empty output")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		updated, err = waitAutonomousDatabaseUpdated(ctx, conn, state.AutonomousDatabaseID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	} else {
+		var err error
+		updated, err = findAutonomousDatabaseByID(ctx, conn, state.AutonomousDatabaseID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	planTags, planTagsAll := plan.Tags, plan.TagsAll
+	flattenAutonomousDatabase(ctx, updated, &plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Tags, plan.TagsAll = planTags, planTagsAll
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, config autonomousDatabaseResourceModel, diags *diag.Diagnostics) odb.UpdateAutonomousDatabaseInput {
 	input := odb.UpdateAutonomousDatabaseInput{
 		AutonomousDatabaseId: state.AutonomousDatabaseID.ValueStringPointer(),
 	}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
+	diags.Append(flex.Expand(ctx, plan, &input)...)
+	if diags.HasError() {
+		return input
 	}
 
 	if !config.AdminPasswordWO.IsNull() && !plan.AdminPasswordWOVersion.Equal(state.AdminPasswordWOVersion) {
 		input.AdminPassword = config.AdminPasswordWO.ValueStringPointer()
 	}
-	input.EncryptionKeyProvider, input.EncryptionKeyConfiguration = expandAutonomousDatabaseEncryption(plan.EncryptionKeyProvider, plan.KMSKeyID)
-	input.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	if plan.AllowlistedIps.Equal(state.AllowlistedIps) {
+		input.AllowlistedIps = nil
+	}
+	if plan.AutoRefreshFrequencyInSeconds.Equal(state.AutoRefreshFrequencyInSeconds) {
+		input.AutoRefreshFrequencyInSeconds = nil
+	}
+	if plan.AutoRefreshPointLagInSeconds.Equal(state.AutoRefreshPointLagInSeconds) {
+		input.AutoRefreshPointLagInSeconds = nil
+	}
+	if plan.AutonomousMaintenanceScheduleType.Equal(state.AutonomousMaintenanceScheduleType) {
+		input.AutonomousMaintenanceScheduleType = ""
+	}
+	if plan.BackupRetentionPeriodInDays.Equal(state.BackupRetentionPeriodInDays) {
+		input.BackupRetentionPeriodInDays = nil
+	}
+	if plan.ByolComputeCountLimit.Equal(state.ByolComputeCountLimit) {
+		input.ByolComputeCountLimit = nil
+	}
+	if plan.ComputeCount.Equal(state.ComputeCount) {
+		input.ComputeCount = nil
+	}
+	if plan.CpuCoreCount.Equal(state.CpuCoreCount) {
+		input.CpuCoreCount = nil
+	}
+	if plan.CustomerContactsToSendToOCI.Equal(state.CustomerContactsToSendToOCI) {
+		input.CustomerContactsToSendToOCI = nil
+	}
+	if plan.DataStorageSizeInGBs.Equal(state.DataStorageSizeInGBs) {
+		input.DataStorageSizeInGBs = nil
+	}
+	if plan.DataStorageSizeInTBs.Equal(state.DataStorageSizeInTBs) {
+		input.DataStorageSizeInTBs = nil
+	}
+	if plan.DatabaseEdition.Equal(state.DatabaseEdition) {
+		input.DatabaseEdition = ""
+	}
+	if plan.DbName.Equal(state.DbName) {
+		input.DbName = nil
+	}
+	if plan.DbToolsDetails.Equal(state.DbToolsDetails) {
+		input.DbToolsDetails = nil
+	}
+	if plan.DbVersion.Equal(state.DbVersion) {
+		input.DbVersion = nil
+	}
+	if plan.DbWorkload.Equal(state.DbWorkload) {
+		input.DbWorkload = ""
+	}
+	if plan.DisplayName.Equal(state.DisplayName) {
+		input.DisplayName = nil
+	}
+	if plan.EncryptionKeyProvider.Equal(state.EncryptionKeyProvider) && plan.KMSKeyID.Equal(state.KMSKeyID) {
+		input.EncryptionKeyProvider = ""
+		input.EncryptionKeyConfiguration = nil
+	} else {
+		input.EncryptionKeyProvider, input.EncryptionKeyConfiguration = expandAutonomousDatabaseEncryption(plan.EncryptionKeyProvider, plan.KMSKeyID)
+	}
+	if plan.IsAutoScalingEnabled.Equal(state.IsAutoScalingEnabled) {
+		input.IsAutoScalingEnabled = nil
+	}
+	if plan.IsAutoScalingForStorageEnabled.Equal(state.IsAutoScalingForStorageEnabled) {
+		input.IsAutoScalingForStorageEnabled = nil
+	}
+	if plan.IsBackupRetentionLocked.Equal(state.IsBackupRetentionLocked) {
+		input.IsBackupRetentionLocked = nil
+	}
+	if plan.IsLocalDataGuardEnabled.Equal(state.IsLocalDataGuardEnabled) {
+		input.IsLocalDataGuardEnabled = nil
+	}
+	if plan.IsMtlsConnectionRequired.Equal(state.IsMtlsConnectionRequired) {
+		input.IsMtlsConnectionRequired = nil
+	}
+	if plan.IsRefreshableClone.Equal(state.IsRefreshableClone) {
+		input.IsRefreshableClone = nil
+	}
+	if plan.LicenseModel.Equal(state.LicenseModel) {
+		input.LicenseModel = ""
+	}
+	if plan.LocalAdgAutoFailoverMaxDataLossLimit.Equal(state.LocalAdgAutoFailoverMaxDataLossLimit) {
+		input.LocalAdgAutoFailoverMaxDataLossLimit = nil
+	}
+	if plan.LongTermBackupSchedule.Equal(state.LongTermBackupSchedule) {
+		input.LongTermBackupSchedule = nil
+	}
+	if plan.OpenMode.Equal(state.OpenMode) {
+		input.OpenMode = ""
+	}
+	if plan.PermissionLevel.Equal(state.PermissionLevel) {
+		input.PermissionLevel = ""
+	}
+	if plan.PrivateEndpointIp.Equal(state.PrivateEndpointIp) {
+		input.PrivateEndpointIp = nil
+	}
+	if plan.PrivateEndpointLabel.Equal(state.PrivateEndpointLabel) {
+		input.PrivateEndpointLabel = nil
+	}
+	if plan.RefreshableMode.Equal(state.RefreshableMode) {
+		input.RefreshableMode = ""
+	}
+	if plan.ResourcePoolLeaderId.Equal(state.ResourcePoolLeaderId) {
+		input.ResourcePoolLeaderId = nil
+	}
+	if plan.ResourcePoolSummary.Equal(state.ResourcePoolSummary) {
+		input.ResourcePoolSummary = nil
+	}
+	if plan.ScheduledOperations.Equal(state.ScheduledOperations) {
+		input.ScheduledOperations = nil
+	} else {
+		input.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, diags)
+	}
+	if plan.StandbyAllowlistedIps.Equal(state.StandbyAllowlistedIps) {
+		input.StandbyAllowlistedIps = nil
+	}
+	if plan.StandbyAllowlistedIpsSource.Equal(state.StandbyAllowlistedIpsSource) {
+		input.StandbyAllowlistedIpsSource = ""
+	}
+	if plan.TimeOfAutoRefreshStart.Equal(state.TimeOfAutoRefreshStart) {
+		input.TimeOfAutoRefreshStart = nil
 	}
 
-	out, err := conn.UpdateAutonomousDatabase(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.AutonomousDatabaseId == nil {
-		err := errors.New("empty output")
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	return input
+}
 
-	updated, err := waitAutonomousDatabaseUpdated(ctx, conn, state.AutonomousDatabaseID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameAutonomousDatabase, state.AutonomousDatabaseID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	flattenAutonomousDatabase(ctx, updated, &plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+func autonomousDatabaseUpdateInputHasChanges(input odb.UpdateAutonomousDatabaseInput) bool {
+	input.AutonomousDatabaseId = nil
+	return !reflect.DeepEqual(input, odb.UpdateAutonomousDatabaseInput{})
 }
 
 func (r *resourceAutonomousDatabase) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -1105,7 +1244,7 @@ func (r *resourceAutonomousDatabase) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	_, err = waitAutonomousDatabaseDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts))
+	err = waitAutonomousDatabaseDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAutonomousDatabase, id, err),
@@ -1210,19 +1349,16 @@ func waitAutonomousDatabaseReady(ctx context.Context, conn *odb.Client, id strin
 	return out, nil
 }
 
-func waitAutonomousDatabaseDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.AutonomousDatabase, error) {
+func waitAutonomousDatabaseDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: append(append([]string{""}, autonomousDatabasePendingStatuses...), autonomousDatabaseSuccessStatuses...),
-		Target:  enum.Slice(odbtypes.AutonomousDatabaseResourceStatusTerminated),
+		Pending: append(append(append([]string{}, autonomousDatabasePendingStatuses...), autonomousDatabaseSuccessStatuses...), string(odbtypes.AutonomousDatabaseResourceStatusTerminated)),
+		Target:  []string{},
 		Refresh: statusAutonomousDatabase(conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*odbtypes.AutonomousDatabase); ok {
-		return out, err
-	}
-	return nil, err
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
 
 func expandAutonomousDatabaseEncryption(provider, kmsKeyID types.String) (odbtypes.EncryptionKeyProviderInput, odbtypes.EncryptionKeyConfigurationInput) {
@@ -1360,12 +1496,33 @@ func expandAutonomousDatabaseSourceConfiguration(ctx context.Context, value fwty
 }
 
 func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.AutonomousDatabase, model *autonomousDatabaseResourceModel, diags *diag.Diagnostics) {
+	customerContacts := model.CustomerContactsToSendToOCI
+	dbToolsDetails := model.DbToolsDetails
+	longTermBackupSchedule := model.LongTermBackupSchedule
+	resourcePoolSummary := model.ResourcePoolSummary
+
 	diags.Append(flex.Flatten(ctx, apiObject, model)...)
 	if diags.HasError() {
 		return
 	}
+	if !dbToolsDetails.IsUnknown() && len(dbToolsDetails.Elements()) == 0 {
+		model.DbToolsDetails = dbToolsDetails
+	}
+	if apiObject.LongTermBackupSchedule == nil && isConfiguredAutonomousDatabaseBlock(longTermBackupSchedule) {
+		model.LongTermBackupSchedule = longTermBackupSchedule
+	}
+	if !resourcePoolSummary.IsUnknown() && len(resourcePoolSummary.Elements()) == 0 {
+		model.ResourcePoolSummary = resourcePoolSummary
+	}
 
-	diags.Append(flex.Flatten(ctx, apiObject.CustomerContacts, &model.CustomerContactsToSendToOCI)...)
+	model.ByolComputeCountLimit = flattenAutonomousDatabaseByolComputeCountLimit(apiObject.ByolComputeCountLimit)
+	model.DataStorageSizeInTBs = flattenAutonomousDatabaseDataStorageSizeInTBs(apiObject.DataStorageSizeInTBs)
+	model.KMSKeyID = types.StringNull()
+	if len(apiObject.CustomerContacts) == 0 && isConfiguredAutonomousDatabaseBlock(customerContacts) {
+		model.CustomerContactsToSendToOCI = customerContacts
+	} else {
+		diags.Append(flex.Flatten(ctx, apiObject.CustomerContacts, &model.CustomerContactsToSendToOCI)...)
+	}
 	diags.Append(flattenAutonomousDatabaseScheduledOperations(ctx, apiObject.ScheduledOperations, &model.ScheduledOperations)...)
 	if diags.HasError() {
 		return
@@ -1379,6 +1536,31 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 	case *odbtypes.EncryptionKeyConfigurationMemberAwsEncryptionKey:
 		model.KMSKeyID = types.StringPointerValue(configuration.Value.KmsKeyId)
 	}
+}
+
+func isConfiguredAutonomousDatabaseBlock(value autonomousDatabaseValue) bool {
+	if value.IsNull() || value.IsUnknown() {
+		return false
+	}
+
+	valueWithElements, ok := value.(interface{ Elements() []attr.Value })
+	return ok && len(valueWithElements.Elements()) > 0
+}
+
+func flattenAutonomousDatabaseByolComputeCountLimit(value *int32) types.Float64 {
+	if value == nil {
+		return types.Float64Null()
+	}
+
+	return types.Float64Value(float64(*value))
+}
+
+func flattenAutonomousDatabaseDataStorageSizeInTBs(value *float64) types.Int32 {
+	if value == nil {
+		return types.Int32Null()
+	}
+
+	return types.Int32Value(int32(*value))
 }
 
 type autonomousDatabaseResourceModel struct {
@@ -1397,7 +1579,7 @@ type autonomousDatabaseResourceModel struct {
 	AvailabilityZoneID                   types.String                                                                    `tfsdk:"availability_zone_id"`
 	AvailableUpgradeVersions             fwtypes.ListValueOf[types.String]                                               `tfsdk:"available_upgrade_versions"`
 	BackupRetentionPeriodInDays          types.Int32                                                                     `tfsdk:"backup_retention_period_in_days"`
-	ByolComputeCountLimit                types.Float64                                                                   `tfsdk:"byol_compute_count_limit"`
+	ByolComputeCountLimit                types.Float64                                                                   `tfsdk:"byol_compute_count_limit" autoflex:",noflatten"`
 	CharacterSet                         types.String                                                                    `tfsdk:"character_set"`
 	ComputeCount                         types.Float64                                                                   `tfsdk:"compute_count"`
 	ComputeModel                         fwtypes.StringEnum[odbtypes.ComputeModel]                                       `tfsdk:"compute_model"`
@@ -1405,7 +1587,7 @@ type autonomousDatabaseResourceModel struct {
 	CreatedAt                            timetypes.RFC3339                                                               `tfsdk:"created_at"`
 	CustomerContactsToSendToOCI          fwtypes.ListNestedObjectValueOf[autonomousDatabaseCustomerContactModel]         `tfsdk:"customer_contacts_to_send_to_oci" autoflex:",noflatten"`
 	DataStorageSizeInGBs                 types.Int32                                                                     `tfsdk:"data_storage_size_in_gbs"`
-	DataStorageSizeInTBs                 types.Int32                                                                     `tfsdk:"data_storage_size_in_tbs"`
+	DataStorageSizeInTBs                 types.Int32                                                                     `tfsdk:"data_storage_size_in_tbs" autoflex:",noflatten"`
 	DatabaseEdition                      fwtypes.StringEnum[odbtypes.DatabaseEdition]                                    `tfsdk:"database_edition"`
 	DatabaseType                         fwtypes.StringEnum[odbtypes.DatabaseType]                                       `tfsdk:"database_type"`
 	DbName                               types.String                                                                    `tfsdk:"db_name"`

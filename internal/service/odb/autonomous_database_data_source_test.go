@@ -21,13 +21,11 @@ func TestAccODBAutonomousDatabaseDataSource_basic(t *testing.T) {
 
 	resourceName := "aws_odb_autonomous_database.test"
 	dataSourceName := "data.aws_odb_autonomous_database.test"
-	networkName := acctest.RandomWithPrefix(t, "tf-odb-net")
 	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	secondOctet := acctest.RandIntRange(t, 10, 200)
 
 	config := acctest.ConfigCompose(
-		testAccAutonomousDatabaseConfigBasic(networkName, displayName, dbName, secondOctet, 2, "AL32UTF8", "test"),
+		testAccAutonomousDatabaseConfigBasic(displayName, dbName, 2, "AL32UTF8", "test"),
 		`
 data "aws_odb_autonomous_database" "test" {
   id = aws_odb_autonomous_database.test.id
@@ -49,6 +47,7 @@ data "aws_odb_autonomous_database" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "data_storage_size_in_tbs", dataSourceName, "data_storage_size_in_tbs"),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", dataSourceName, "db_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Environment", "test"),
 				),
