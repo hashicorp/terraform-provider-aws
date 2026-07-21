@@ -45,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -325,20 +326,6 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 }
 
 func (r *anomalyDetectorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
 	conn := r.Meta().AMPClient(ctx)
 
 	var plan anomalyDetectorResourceModel
@@ -357,7 +344,6 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, req resource.Creat
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CreateAnomalyDetector(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Alias.String())
@@ -384,36 +370,19 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, req resource.Creat
         return
     }
 
-	// TIP: -- 7. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *anomalyDetectorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().AMPClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state anomalyDetectorResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findAnomalyDetectorByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
+	out, err := findAnomalyDetectorByID(ctx, conn, state.ID.ValueString(), state.WorkspaceID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -424,19 +393,13 @@ func (r *anomalyDetectorResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	// TIP: -- 5. Set the arguments and attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Set the state
+	setTagsOut(ctx, out.Tags)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *anomalyDetectorResource) flatten(ctx context.Context, anomalyDetector *awstypes.AnomalyDetector, data *anomalyDetectorResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, anomalyDetector, data)...)
-	return diags
 }
 
 func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -691,12 +654,13 @@ func statusAnomalyDetector(conn *amp.Client, id string) retry.StateRefreshFunc {
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findAnomalyDetectorByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.AnomalyDetector, error) {
-	input := amp.GetAnomalyDetectorInput{
-		Id: aws.String(id),
+func findAnomalyDetectorByID(ctx context.Context, conn *amp.Client, id, workspaceID string) (*awstypes.AnomalyDetector, error) {
+	input := amp.DescribeAnomalyDetectorInput{
+		AnomalyDetectorId: aws.String(id),
+		WorkspaceId:       aws.String(workspaceID),
 	}
 
-	out, err := conn.GetAnomalyDetector(ctx, &input)
+	out, err := conn.DescribeAnomalyDetector(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
