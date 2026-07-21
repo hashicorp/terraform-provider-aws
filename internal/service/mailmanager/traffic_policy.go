@@ -73,7 +73,12 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 				CustomType: fwtypes.StringEnumType[awstypes.AcceptAction](),
 				Required:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -103,7 +108,9 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 func policyStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[policyStatementModel](ctx),
-		Validators: []validator.List{listvalidator.SizeAtLeast(1)},
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrAction: schema.StringAttribute{
