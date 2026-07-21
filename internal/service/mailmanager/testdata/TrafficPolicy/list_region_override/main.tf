@@ -5,7 +5,7 @@ resource "aws_mailmanager_traffic_policy" "test" {
   count  = var.resource_count
   region = var.region
 
-  default_action          = "ALLOW"
+  default_action         = "ALLOW"
   max_message_size_bytes = 100000
   name                   = "${var.rName}-${count.index}"
 
