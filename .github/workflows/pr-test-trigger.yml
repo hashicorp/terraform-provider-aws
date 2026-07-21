@@ -80,15 +80,15 @@ jobs:
           TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          parallelism=$(echo "${COMMENT_BODY}" | grep -oP 'PARALLELISM=\d+' | head -1)
+          parallelism=$(echo "${COMMENT_BODY}" | grep -oiP 'PARALLELISM=\d+' | head -1)
           properties="PKG=${PKGS}"
           if [[ -n "${parallelism}" ]]; then
-            parallelism_value="${parallelism#PARALLELISM=}"
+            parallelism_value="${parallelism#*=}"
             if [[ "${parallelism_value}" -gt 20 ]]; then
-              echo "::error::PARALLELISM value ${parallelism_value} exceeds maximum of 20"
+              echo "::error::Parallelism value ${parallelism_value} exceeds maximum of 20"
               exit 1
             fi
-            properties="${properties};${parallelism}"
+            properties="${properties};ACCTEST_PARALLELISM=${parallelism_value}"
           fi
           output=$(tctest pr ${PR_NUMBER} --properties "${properties}" --comment)
           echo "${output}"
