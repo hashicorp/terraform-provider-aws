@@ -25,18 +25,18 @@ import (
 
 // @SDKListResource("aws_eks_addon")
 func newAddonResourceAsListResource() inttypes.ListResourceForSDK {
-	l := addOnListResource{}
+	l := addonListResource{}
 	l.SetResourceSchema(resourceAddon())
 	return &l
 }
 
-var _ list.ListResource = &addOnListResource{}
+var _ list.ListResource = &addonListResource{}
 
-type addOnListResource struct {
+type addonListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-func (l *addOnListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (l *addonListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			names.AttrClusterName: listschema.StringAttribute{
@@ -47,10 +47,10 @@ func (l *addOnListResource) ListResourceConfigSchema(ctx context.Context, reques
 	}
 }
 
-func (l *addOnListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *addonListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().EKSClient(ctx)
 
-	var query listAddOnModel
+	var query listAddonModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
@@ -68,7 +68,7 @@ func (l *addOnListResource) List(ctx context.Context, request list.ListRequest, 
 		input := eks.ListAddonsInput{
 			ClusterName: aws.String(clusterName),
 		}
-		for item, err := range listAddOns(ctx, conn, &input) {
+		for item, err := range listAddons(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -116,12 +116,12 @@ func (l *addOnListResource) List(ctx context.Context, request list.ListRequest, 
 	}
 }
 
-type listAddOnModel struct {
+type listAddonModel struct {
 	framework.WithRegionModel
 	ClusterName types.String `tfsdk:"cluster_name"`
 }
 
-func listAddOns(ctx context.Context, conn *eks.Client, input *eks.ListAddonsInput, optFns ...func(*eks.Options)) iter.Seq2[string, error] {
+func listAddons(ctx context.Context, conn *eks.Client, input *eks.ListAddonsInput, optFns ...func(*eks.Options)) iter.Seq2[string, error] {
 	return tfiter.ConcatValuesWithError(listAddonPages(ctx, conn, input, optFns...))
 }
 

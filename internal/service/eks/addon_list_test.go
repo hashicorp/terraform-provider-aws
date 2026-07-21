@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEKSAddOn_List_basic(t *testing.T) {
+func TestAccEKSAddon_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_eks_add_on.test[0]"
 	resourceName2 := "aws_eks_add_on.test[1]"
@@ -76,7 +76,7 @@ func TestAccEKSAddOn_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccEKSAddOn_List_includeResource(t *testing.T) {
+func TestAccEKSAddon_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_eks_add_on.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -140,7 +140,7 @@ func TestAccEKSAddOn_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccEKSAddOn_List_regionOverride(t *testing.T) {
+func TestAccEKSAddon_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_eks_add_on.test[0]"
