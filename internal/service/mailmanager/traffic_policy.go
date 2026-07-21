@@ -77,9 +77,6 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"max_message_size_bytes": schema.Int32Attribute{
 				Optional: true,
@@ -371,16 +368,16 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
+	}
 
-		out, err := findTrafficPolicyByID(ctx, conn, plan.ID.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("TrafficPolicy")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	out, err := findTrafficPolicyByID(ctx, conn, plan.ID.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("TrafficPolicy")))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
