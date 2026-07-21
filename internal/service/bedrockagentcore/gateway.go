@@ -153,6 +153,37 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 										Required: true,
 									},
 								},
+								Blocks: map[string]schema.Block{
+									"payload_filter": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorPayloadFilterModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"exclude": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorPayloadExclusionSelectorModel](ctx),
+													Validators: []validator.List{
+														// The API requires PayloadFilter.Exclude, but SizeBetween is
+														// skipped when the block is absent, so payload_filter {} without
+														// exclude passed plan and only failed at apply. IsRequired makes
+														// the omission a plan-time error.
+														listvalidator.IsRequired(),
+														listvalidator.SizeBetween(1, 1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"field": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.InterceptorPayloadExclusion](),
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 						"interceptor": schema.ListNestedBlock{
@@ -165,6 +196,10 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 									"lambda": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaInterceptorConfigurationModel](ctx),
 										Validators: []validator.List{
+											// lambda is the only interceptor variant and is required; without
+											// it interceptor {} expanded to nil and surfaced a confusing
+											// "always an error in the provider" message. Require it at plan.
+											listvalidator.IsRequired(),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
@@ -689,7 +724,46 @@ type gatewayInterceptorConfigurationModel struct {
 }
 
 type interceptorInputConfigurationModel struct {
-	PassRequestHeaders types.Bool `tfsdk:"pass_request_headers"`
+	PassRequestHeaders types.Bool                                                     `tfsdk:"pass_request_headers"`
+	PayloadFilter      fwtypes.ListNestedObjectValueOf[interceptorPayloadFilterModel] `tfsdk:"payload_filter"`
+}
+
+type interceptorPayloadFilterModel struct {
+	Exclude fwtypes.ListNestedObjectValueOf[interceptorPayloadExclusionSelectorModel] `tfsdk:"exclude"`
+}
+
+type interceptorPayloadExclusionSelectorModel struct {
+	Field fwtypes.StringEnum[awstypes.InterceptorPayloadExclusion] `tfsdk:"field"`
+}
+
+var (
+	_ fwflex.Expander  = interceptorPayloadExclusionSelectorModel{}
+	_ fwflex.Flattener = &interceptorPayloadExclusionSelectorModel{}
+)
+
+func (m *interceptorPayloadExclusionSelectorModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.InterceptorPayloadExclusionSelectorMemberField:
+		m.Field = fwtypes.StringEnumValue(t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("interceptor payload exclusion selector flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m interceptorPayloadExclusionSelectorModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.Field.IsNull() {
+		return &awstypes.InterceptorPayloadExclusionSelectorMemberField{
+			Value: m.Field.ValueEnum(),
+		}, diags
+	}
+	return nil, diags
 }
 
 type interceptorConfigurationModel struct {
