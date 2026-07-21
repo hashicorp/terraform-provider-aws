@@ -26,7 +26,7 @@ done
 
 # Authenticate internally using TeamCity's system-provided tokens
 results=$(echo "${response}" |
-	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status | if . == "SUCCESS" then "PASS" elif . == "FAILURE" then "FAIL" else . end)] \(.duration/1000)s\(if .status == "FAILURE" and .details != null then "\n\(.details)" else "" end)"')
+	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status | if . == "SUCCESS" then "PASS" elif . == "FAILURE" then "FAIL" elif . == "UNKNOWN" then "SKIP" else . end)] \(.duration/1000)s\(if (.status == "FAILURE" or .status == "UNKNOWN") and .details != null then "\n\(.details)" else "" end)"')
 
 echo "${results}"
 
