@@ -34,7 +34,14 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 }
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newKeyLastUsageDataSource,
+			TypeName: "aws_kms_key_last_usage",
+			Name:     "Key Last Usage",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
