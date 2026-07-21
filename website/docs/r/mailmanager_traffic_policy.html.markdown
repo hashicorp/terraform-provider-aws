@@ -68,15 +68,20 @@ Exactly one of the following expression blocks must be configured:
 
 ### `boolean_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (Boolean Expression)](#evaluate-block-boolean-expression) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.boolean_expression.evaluate` Block](#policy_statementconditionboolean_expressionevaluate-block) below.
 * `operator` - (Required) Boolean operator used for the comparison.
 
-### `evaluate` Block (Boolean Expression)
+### `policy_statement.condition.boolean_expression.evaluate` Block
 
 Exactly one of the following blocks must be configured:
 
-* `analysis` - (Optional) Analysis result to evaluate. See [`analysis` Block](#analysis-block) below.
+* `analysis` - (Optional) Analysis result to evaluate. See [`policy_statement.condition.boolean_expression.evaluate.analysis` Block](#policy_statementconditionboolean_expressionevaluateanalysis-block) below.
 * `is_in_address_list` - (Optional) Address list membership check. See [`is_in_address_list` Block](#is_in_address_list-block) below.
+
+### `policy_statement.condition.boolean_expression.evaluate.analysis` Block
+
+* `analyzer` - (Required) ARN of the Add On performing the analysis.
+* `result_field` - (Required) Result field returned in the analysis.
 
 ### `is_in_address_list` Block
 
@@ -85,45 +90,49 @@ Exactly one of the following blocks must be configured:
 
 ### `ip_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (IP/IPv6 Expression)](#evaluate-block-ipipv6-expression) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.ip_expression.evaluate` Block](#policy_statementconditionip_expressionevaluate-block) below.
 * `operator` - (Required) IP address operator used for the comparison.
 * `values` - (Required) IPv4 CIDR ranges used for the comparison.
 
+### `policy_statement.condition.ip_expression.evaluate` Block
+
+* `attribute` - (Required) Message attribute to evaluate.
+
 ### `ipv6_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (IP/IPv6 Expression)](#evaluate-block-ipipv6-expression) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.ipv6_expression.evaluate` Block](#policy_statementconditionipv6_expressionevaluate-block) below.
 * `operator` - (Required) IPv6 address operator used for the comparison.
 * `values` - (Required) IPv6 CIDR ranges used for the comparison.
 
-### `evaluate` Block (IP/IPv6 Expression)
+### `policy_statement.condition.ipv6_expression.evaluate` Block
 
 * `attribute` - (Required) Message attribute to evaluate.
 
 ### `string_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (String Expression)](#evaluate-block-string-expression) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.string_expression.evaluate` Block](#policy_statementconditionstring_expressionevaluate-block) below.
 * `operator` - (Required) String operator used for the comparison.
 * `values` - (Required) Strings used for the comparison.
 
-### `evaluate` Block (String Expression)
+### `policy_statement.condition.string_expression.evaluate` Block
 
 Exactly one of the following must be configured:
 
-* `analysis` - (Optional) Analysis result to evaluate. See [`analysis` Block](#analysis-block) below.
+* `analysis` - (Optional) Analysis result to evaluate. See [`policy_statement.condition.string_expression.evaluate.analysis` Block](#policy_statementconditionstring_expressionevaluateanalysis-block) below.
 * `attribute` - (Optional) Email attribute to evaluate.
 
-### `analysis` Block
+### `policy_statement.condition.string_expression.evaluate.analysis` Block
 
 * `analyzer` - (Required) ARN of the Add On performing the analysis.
 * `result_field` - (Required) Result field returned in the analysis.
 
 ### `tls_expression` Block
 
-* `evaluate` - (Required) Operand evaluated by the expression. See [`evaluate` Block (TLS Expression)](#evaluate-block-tls-expression) below.
+* `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.tls_expression.evaluate` Block](#policy_statementconditiontls_expressionevaluate-block) below.
 * `operator` - (Required) TLS policy operator used for the comparison.
 * `value` - (Required) TLS policy used for the comparison.
 
-### `evaluate` Block (TLS Expression)
+### `policy_statement.condition.tls_expression.evaluate` Block
 
 * `attribute` - (Required) TLS attribute to evaluate.
 
