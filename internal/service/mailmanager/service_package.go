@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
-const errCodeCoralThrottlingException = "com.amazon.coral.availability#ThrottlingException"
-
 func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string]any) []func(*mailmanager.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
@@ -24,7 +22,7 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 		func(o *mailmanager.Options) {
 			retryables := []retry.IsErrorRetryable{
 				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-					if tfawserr.ErrCodeEquals(err, errCodeCoralThrottlingException) {
+					if tfawserr.ErrCodeEquals(err, "com.amazon.coral.availability#ThrottlingException") {
 						return aws.TrueTernary
 					}
 
