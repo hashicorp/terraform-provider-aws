@@ -31,7 +31,7 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -109,7 +109,7 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -160,7 +160,7 @@ func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -236,7 +236,7 @@ func testAccCheckTrafficPolicyNotRecreated(before, after *mailmanager.GetTraffic
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckTrafficPolicy(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
 	var input mailmanager.ListTrafficPoliciesInput
 	_, err := conn.ListTrafficPolicies(ctx, &input)
