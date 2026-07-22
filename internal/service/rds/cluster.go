@@ -1617,12 +1617,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-		}
-
-		// This can happen when updates are deferred (apply_immediately = false), and
-		// multiple applies occur before the maintenance window. In this case,
-		// continue sending the desired engine_version as part of the modify request.
-		if d.Get(names.AttrEngineVersion).(string) != d.Get("engine_version_actual").(string) {
+		} else if d.Get(names.AttrEngineVersion).(string) != d.Get("engine_version_actual").(string) {
+			// This can happen when updates are deferred (apply_immediately = false), and
+			// multiple applies occur before the maintenance window. In this case,
+			// continue sending the desired engine_version as part of the modify request.
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
@@ -2002,6 +2000,7 @@ func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *t
 	}
 	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
 }
+
 
 func findDBClusterByID(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) (*types.DBCluster, error) {
 	input := &rds.DescribeDBClustersInput{
