@@ -172,7 +172,9 @@ func booleanExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 func booleanEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[booleanEvaluateModel](ctx),
-		Validators: []validator.List{listvalidator.SizeBetween(1, 1)},
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"analysis": schema.ListNestedBlock{
