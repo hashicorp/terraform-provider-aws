@@ -1366,6 +1366,48 @@ func TestAccCodePipeline_trigger(t *testing.T) {
 	})
 }
 
+func TestAccCodePipeline_computeActionWithOutputAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandString(t, 10)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCodePipelineConfig_computeActionWithOutputArtifacts(rName),
+				ExpectError: regexache.MustCompile(`stage.\d+.action.\d+: only one of "output_artifacts" or "output_artifacts_for_compute_action" may be set`),
+			},
+		},
+	})
+}
+
+func TestAccCodePipeline_nonComputeActionWithOutputAttributesForComputeAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandString(t, 10)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCodePipelineConfig_nonComputeActionWithOutputAttributesForComputeAction(rName),
+				ExpectError: regexache.MustCompile(`stage.\d+.action.\d+: "output_artifacts_for_compute_action" can only be set when category is "Compute"`),
+			},
+		},
+	})
+}
+
 func testAccCheckPipelineExists(ctx context.Context, t *testing.T, n string, v *types.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3718,6 +3760,146 @@ resource "aws_codepipeline" "test" {
     }
   }
 }
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName))
+}
+
+func testAccCodePipelineConfig_computeActionWithOutputArtifacts(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name          = "test-pipeline-%[1]s"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Compute"
+      owner           = "AWS"
+      provider        = "Commands"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      commands = [
+        "echo hello1 > hello1.txt",
+        "echo hello2 > hello2.txt",
+        "echo hello3 > hello3.txt",
+      ]
+
+      configuration = {}
+      output_artifacts = ["test"]
+      output_artifacts_for_compute_action {
+        name  = "ComputeArtifact"
+        files = ["hello1.txt", "hello2.txt", "hello3.txt"]
+      }
+      output_variables = ["AWS_DEFAULT_REGION"]
+    }
+  }
+}
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName))
+}
+
+func testAccCodePipelineConfig_nonComputeActionWithOutputAttributesForComputeAction(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+      output_artifacts_for_compute_action {
+        name  = "ComputeArtifact"
+        files = ["hello1.txt", "hello2.txt", "hello3.txt"]
+      }
+    }
+  }
+}
+
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
