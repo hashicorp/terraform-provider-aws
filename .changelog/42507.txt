@@ -1,3 +1,7 @@
 ```release-note:enhancement
-resource/aws_codepipeline: Support for `Compute` action
+resource/aws_codepipeline: Added new arguments `commands` and 'output_artifacts_for_compute_action' to support 'Compute' action
+```
+
+```release-note:enhancement
+resource/aws_codepipeline: 'output_artifacts_for_compute_action' and 'output_artifacts' now conflict
 ```
