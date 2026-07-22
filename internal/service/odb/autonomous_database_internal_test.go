@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAutonomousDatabaseSchemas(t *testing.T) {
@@ -96,9 +97,11 @@ func TestAutonomousDatabaseUpdateInputChangesOnly(t *testing.T) {
 		t.Fatalf("constructing null resource model: %v", diags)
 	}
 	state.AutonomousDatabaseID = types.StringValue("adb-123")
+	state.AdminPassword = types.StringValue("old-password-123")
 	state.ComputeCount = types.Float64Value(2)
 	state.DisplayName = types.StringValue("example")
 	plan := state
+	plan.AdminPassword = types.StringValue("new-password-123")
 	plan.ComputeCount = types.Float64Value(4)
 	config := plan
 
@@ -112,6 +115,9 @@ func TestAutonomousDatabaseUpdateInputChangesOnly(t *testing.T) {
 	}
 	if got, want := aws.ToFloat64(input.ComputeCount), float64(4); got != want {
 		t.Fatalf("compute_count = %g, want %g", got, want)
+	}
+	if got, want := aws.ToString(input.AdminPassword), "new-password-123"; got != want {
+		t.Fatalf("admin_password = %q, want %q", got, want)
 	}
 	if input.DisplayName != nil {
 		t.Fatalf("display_name = %q, want nil", aws.ToString(input.DisplayName))
@@ -263,7 +269,7 @@ func TestAutonomousDatabaseConfiguredBlocksFlatten(t *testing.T) {
 	}
 	model.CustomerContactsToSendToOCI = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerContactModel{
 		{
-			Email: types.StringValue("terraform@example.com"),
+			Email: types.StringValue("terraform@example.test"),
 		},
 	})
 	model.LongTermBackupSchedule = inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseLongTermBackupScheduleModel{
@@ -334,8 +340,8 @@ func TestWaitAutonomousDatabaseDeletedNotFound(t *testing.T) {
 	t.Parallel()
 
 	conn := newTestClient(t, jsonHandler(http.StatusBadRequest, map[string]any{
-		"__type":  "ResourceNotFoundException",
-		"message": "Autonomous Database not found",
+		"__type":          "ResourceNotFoundException",
+		names.AttrMessage: "Autonomous Database not found",
 	}))
 
 	if err := waitAutonomousDatabaseDeleted(t.Context(), conn, "adb-does-not-exist", 5*time.Second); err != nil {

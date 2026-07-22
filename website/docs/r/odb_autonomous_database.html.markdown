@@ -18,6 +18,8 @@ The AWS API defines all create parameters as optional because the valid combinat
 
 ### Basic Usage
 
+Write-only arguments require Terraform 1.11 or later. With earlier Terraform versions, use the sensitive `admin_password` argument instead; its value is stored in Terraform state.
+
 ```terraform
 variable "autonomous_database_admin_password" {
   type      = string
@@ -54,7 +56,8 @@ data "aws_odb_autonomous_database" "example" {
 
 This resource supports the following arguments:
 
-* `admin_password_wo` - (Optional, Sensitive, Write-only) Password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Set `admin_password_wo_version` with this argument.
+* `admin_password` - (Optional, Sensitive) Password for the `ADMIN` user. Must be between 12 and 30 characters. This value is stored in Terraform state. Conflicts with `admin_password_wo`.
+* `admin_password_wo` - (Optional, Sensitive, Write-only) Password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Requires Terraform 1.11 or later. Set `admin_password_wo_version` with this argument. Conflicts with `admin_password`.
 * `admin_password_wo_version` - (Optional) Arbitrary integer stored in state. Change this value together with `admin_password_wo` to rotate the ADMIN password.
 * `allowlisted_ips` - (Optional) List of between 1 and 1024 IP addresses allowed to access the database.
 * `auto_refresh_frequency_in_seconds` - (Optional) Automatic refresh frequency, in seconds, for a refreshable clone.
@@ -247,4 +250,4 @@ Using `terraform import`, import an Autonomous Database using its ID. For exampl
 % terraform import aws_odb_autonomous_database.example adb-example123
 ```
 
-The ADMIN password and creation-only source configuration are not returned by AWS. After import, configure `admin_password_wo` only when rotating the password.
+The ADMIN password and creation-only source configuration are not returned by AWS. After import, configure `admin_password` or `admin_password_wo` only when setting or rotating the password.

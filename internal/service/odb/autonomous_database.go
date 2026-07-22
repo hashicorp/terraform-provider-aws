@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -50,7 +51,7 @@ import (
 
 // @FrameworkResource("aws_odb_autonomous_database", name="Autonomous Database")
 // @Tags(identifierAttribute="arn")
-// @Testing(importIgnore="admin_password_wo;admin_password_wo_version;source;source_configuration;transportable_tablespace")
+// @Testing(importIgnore="admin_password;admin_password_wo;admin_password_wo_version;source;source_configuration;transportable_tablespace")
 func newResourceAutonomousDatabase(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAutonomousDatabase{}
 	r.SetDefaultCreateTimeout(24 * time.Hour)
@@ -105,12 +106,23 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		names.AttrARN: framework.ARNAttributeComputedOnly(),
 		names.AttrID:  framework.IDAttribute(),
+		"admin_password": schema.StringAttribute{
+			Optional:  true,
+			Sensitive: true,
+			Validators: []validator.String{
+				stringvalidator.LengthBetween(12, 30),
+				stringvalidator.ConflictsWith(path.MatchRoot("admin_password_wo")),
+				stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("admin_password_wo")),
+			},
+			Description: "Password for the ADMIN user. This value is stored in Terraform state. Use admin_password_wo with Terraform 1.11 or later to avoid storing the password in state.",
+		},
 		"admin_password_wo": schema.StringAttribute{
 			Optional:  true,
 			Sensitive: true,
 			WriteOnly: true,
 			Validators: []validator.String{
 				stringvalidator.LengthBetween(12, 30),
+				stringvalidator.ConflictsWith(path.MatchRoot("admin_password")),
 				stringvalidator.AlsoRequires(path.MatchRoot("admin_password_wo_version")),
 			},
 			Description: "Password for the ADMIN user. This write-only value is never stored in Terraform state.",
@@ -156,7 +168,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Description: "Maintenance schedule type for the Autonomous Database.",
 		},
-		"availability_zone": schema.StringAttribute{
+		names.AttrAvailabilityZone: schema.StringAttribute{
 			Computed:    true,
 			Description: "Availability Zone where the Autonomous Database is located.",
 		},
@@ -424,7 +436,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Description: "URL for the Oracle service console.",
 		},
-		"source": schema.StringAttribute{
+		names.AttrSource: schema.StringAttribute{
 			CustomType: sourceType,
 			Optional:   true,
 			PlanModifiers: []planmodifier.String{
@@ -481,7 +493,7 @@ func customerContactsResourceBlock(ctx context.Context) schema.ListNestedBlock {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseCustomerContactModel](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"email": schema.StringAttribute{
+				names.AttrEmail: schema.StringAttribute{
 					Required:    true,
 					Description: "Email address of the customer contact.",
 				},
@@ -850,6 +862,8 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 
 	if !config.AdminPasswordWO.IsNull() {
 		input.AdminPassword = config.AdminPasswordWO.ValueStringPointer()
+	} else if !plan.AdminPassword.IsNull() {
+		input.AdminPassword = plan.AdminPassword.ValueStringPointer()
 	}
 	input.EncryptionKeyProvider, input.EncryptionKeyConfiguration = expandAutonomousDatabaseEncryption(plan.EncryptionKeyProvider, plan.KMSKeyID)
 	input.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, &resp.Diagnostics)
@@ -987,6 +1001,8 @@ type autonomousDatabasePostCreateUpdateModel struct {
 	TimeOfAutoRefreshStart               timetypes.RFC3339
 }
 
+// AutoFlex converts the fields while this wrapper limits the payload to properties accepted by the post-create update API.
+// nosemgrep:ci.semgrep.framework.manual-expander-functions
 func expandAutonomousDatabasePostCreateUpdateInput(ctx context.Context, id string, plan autonomousDatabaseResourceModel, diags *diag.Diagnostics) odb.UpdateAutonomousDatabaseInput {
 	input := odb.UpdateAutonomousDatabaseInput{
 		AutonomousDatabaseId: aws.String(id),
@@ -1080,6 +1096,8 @@ func (r *resourceAutonomousDatabase) Update(ctx context.Context, req resource.Up
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
+// AutoFlex converts the model before unchanged properties are cleared from the update payload.
+// nosemgrep:ci.semgrep.framework.manual-expander-functions
 func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, config autonomousDatabaseResourceModel, diags *diag.Diagnostics) odb.UpdateAutonomousDatabaseInput {
 	input := odb.UpdateAutonomousDatabaseInput{
 		AutonomousDatabaseId: state.AutonomousDatabaseID.ValueStringPointer(),
@@ -1091,6 +1109,8 @@ func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, confi
 
 	if !config.AdminPasswordWO.IsNull() && !plan.AdminPasswordWOVersion.Equal(state.AdminPasswordWOVersion) {
 		input.AdminPassword = config.AdminPasswordWO.ValueStringPointer()
+	} else if !plan.AdminPassword.Equal(state.AdminPassword) {
+		input.AdminPassword = plan.AdminPassword.ValueStringPointer()
 	}
 	if plan.AllowlistedIps.Equal(state.AllowlistedIps) {
 		input.AllowlistedIps = nil
@@ -1230,9 +1250,10 @@ func (r *resourceAutonomousDatabase) Delete(ctx context.Context, req resource.De
 	}
 
 	id := state.AutonomousDatabaseID.ValueString()
-	_, err := conn.DeleteAutonomousDatabase(ctx, &odb.DeleteAutonomousDatabaseInput{
+	input := odb.DeleteAutonomousDatabaseInput{
 		AutonomousDatabaseId: aws.String(id),
-	})
+	}
+	_, err := conn.DeleteAutonomousDatabase(ctx, &input)
 	if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -1254,9 +1275,10 @@ func (r *resourceAutonomousDatabase) Delete(ctx context.Context, req resource.De
 }
 
 func findAutonomousDatabaseByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.AutonomousDatabase, error) {
-	out, err := conn.GetAutonomousDatabase(ctx, &odb.GetAutonomousDatabaseInput{
+	input := odb.GetAutonomousDatabaseInput{
 		AutonomousDatabaseId: aws.String(id),
-	})
+	}
+	out, err := conn.GetAutonomousDatabase(ctx, &input)
 	if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{LastError: err}
 	}
@@ -1340,10 +1362,8 @@ func waitAutonomousDatabaseReady(ctx context.Context, conn *odb.Client, id strin
 	if !ok || out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
-	for _, status := range autonomousDatabaseFailureStatuses {
-		if string(out.Status) == status {
-			return out, fmt.Errorf("Autonomous Database (%s) entered status %s: %s", id, out.Status, aws.ToString(out.StatusReason))
-		}
+	if slices.Contains(autonomousDatabaseFailureStatuses, string(out.Status)) {
+		return out, fmt.Errorf("Autonomous Database (%s) entered status %s: %s", id, out.Status, aws.ToString(out.StatusReason))
 	}
 
 	return out, nil
@@ -1377,6 +1397,8 @@ func expandAutonomousDatabaseEncryption(provider, kmsKeyID types.String) (odbtyp
 	return odbtypes.EncryptionKeyProviderInput(provider.ValueString()), configuration
 }
 
+// Scheduled operations require explicit conversion because the SDK represents day_of_week as a nested structure.
+// nosemgrep:ci.semgrep.framework.manual-expander-functions
 func expandAutonomousDatabaseScheduledOperations(ctx context.Context, value fwtypes.ListNestedObjectValueOf[autonomousDatabaseScheduledOperationModel], diags *diag.Diagnostics) []odbtypes.ScheduledOperationDetails {
 	if value.IsNull() || value.IsUnknown() {
 		return nil
@@ -1402,6 +1424,8 @@ func expandAutonomousDatabaseScheduledOperations(ctx context.Context, value fwty
 	return apiObjects
 }
 
+// Scheduled operations require explicit conversion because the SDK represents day_of_week as a nested structure.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenAutonomousDatabaseScheduledOperations(ctx context.Context, apiObjects []odbtypes.ScheduledOperationDetails, target *fwtypes.ListNestedObjectValueOf[autonomousDatabaseScheduledOperationModel]) diag.Diagnostics {
 	models := make([]autonomousDatabaseScheduledOperationModel, 0, len(apiObjects))
 	for _, apiObject := range apiObjects {
@@ -1420,6 +1444,8 @@ func flattenAutonomousDatabaseScheduledOperations(ctx context.Context, apiObject
 	return diags
 }
 
+// SourceConfiguration is an SDK tagged union and requires explicit member selection.
+// nosemgrep:ci.semgrep.framework.manual-expander-functions
 func expandAutonomousDatabaseSourceConfiguration(ctx context.Context, value fwtypes.ListNestedObjectValueOf[autonomousDatabaseSourceConfigurationModel], diags *diag.Diagnostics) odbtypes.SourceConfiguration {
 	if value.IsNull() || value.IsUnknown() {
 		return nil
@@ -1495,6 +1521,8 @@ func expandAutonomousDatabaseSourceConfiguration(ctx context.Context, value fwty
 	return nil
 }
 
+// AutoFlex handles common fields; manual post-processing preserves configured blocks omitted by the API and normalizes SDK-specific values.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.AutonomousDatabase, model *autonomousDatabaseResourceModel, diags *diag.Diagnostics) {
 	customerContacts := model.CustomerContactsToSendToOCI
 	dbToolsDetails := model.DbToolsDetails
@@ -1566,6 +1594,7 @@ func flattenAutonomousDatabaseDataStorageSizeInTBs(value *float64) types.Int32 {
 type autonomousDatabaseResourceModel struct {
 	framework.WithRegionModel
 	ActualUsedDataStorageSizeInTBs       types.Float64                                                                   `tfsdk:"actual_used_data_storage_size_in_tbs"`
+	AdminPassword                        types.String                                                                    `tfsdk:"admin_password" autoflex:"-"`
 	AdminPasswordWO                      types.String                                                                    `tfsdk:"admin_password_wo" autoflex:"-"`
 	AdminPasswordWOVersion               types.Int64                                                                     `tfsdk:"admin_password_wo_version" autoflex:"-"`
 	AllocatedStorageSizeInTBs            types.Float64                                                                   `tfsdk:"allocated_storage_size_in_tbs"`
