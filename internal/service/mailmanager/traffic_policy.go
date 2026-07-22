@@ -450,14 +450,17 @@ func (r *trafficPolicyResource) Read(ctx context.Context, req resource.ReadReque
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, trafficPolicyID)
 		return
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("TrafficPolicy")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
