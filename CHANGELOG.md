@@ -5,6 +5,7 @@ FEATURES:
 * **New Action:** `aws_elasticache_apply_service_update` ([#48963](https://github.com/hashicorp/terraform-provider-aws/issues/48963))
 * **New Data Source:** `aws_elasticache_service_update_actions` ([#48958](https://github.com/hashicorp/terraform-provider-aws/issues/48958))
 * **New Data Source:** `aws_s3_buckets` ([#48965](https://github.com/hashicorp/terraform-provider-aws/issues/48965))
+* **New List Resource:** `aws_eks_addon` ([#49067](https://github.com/hashicorp/terraform-provider-aws/issues/49067))
 * **New List Resource:** `aws_s3_bucket_notification` ([#48974](https://github.com/hashicorp/terraform-provider-aws/issues/48974))
 * **New List Resource:** `aws_secretsmanager_secret_policy` ([#49058](https://github.com/hashicorp/terraform-provider-aws/issues/49058))
 
