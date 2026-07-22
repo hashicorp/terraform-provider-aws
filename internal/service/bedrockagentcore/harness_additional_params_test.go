@@ -17,6 +17,7 @@ func TestAccBedrockAgentCoreHarness_model_openAIAdditionalParams(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
+	credentialProviderName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_harness.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -31,7 +32,7 @@ func TestAccBedrockAgentCoreHarness_model_openAIAdditionalParams(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_openAIAdditionalParams(rName),
+				Config: testAccHarnessConfig_openAIAdditionalParams(rName, credentialProviderName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 					resource.TestCheckResourceAttr(resourceName, "model.0.openai_model_config.0.additional_params", `{"reasoning_effort":"high"}`),
@@ -48,10 +49,10 @@ func TestAccBedrockAgentCoreHarness_model_openAIAdditionalParams(t *testing.T) {
 	})
 }
 
-func testAccHarnessConfig_openAIAdditionalParams(rName string) string {
+func testAccHarnessConfig_openAIAdditionalParams(rName, credentialProviderName string) string {
 	return acctest.ConfigCompose(
 		testAccHarnessConfig_iamRole(rName),
-		testAccAPIKeyCredentialProviderConfig_basic(rName, "test-api-key"),
+		testAccAPIKeyCredentialProviderConfig_basic(credentialProviderName, "test-api-key"),
 		fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
