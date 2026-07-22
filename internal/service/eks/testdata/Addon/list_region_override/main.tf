@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_eks_add_on" "test" {
+resource "aws_eks_addon" "test" {
   count  = var.resource_count
   region = var.region
 
@@ -104,7 +104,7 @@ locals {
     "kube-proxy",
   ]
 
-  addon_name = local.eks_addons[resource_count]
+  addon_name = local.eks_addons[var.resource_count]
 }
 
 variable "resource_count" {

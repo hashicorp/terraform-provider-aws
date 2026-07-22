@@ -98,7 +98,7 @@ locals {
     "kube-proxy",
   ]
 
-  addon_name = local.eks_addons[resource_count]
+  addon_name = local.eks_addons[var.resource_count]
 }
 
 variable "resource_count" {
