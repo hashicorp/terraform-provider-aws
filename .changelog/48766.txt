@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_memory_strategy: Add `self_managed` block to `configuration` for the `SELF_MANAGED` override type
+resource/aws_bedrockagentcore_memory_strategy: Add `self_managed` configuration, including writable `trigger_conditions`, for the `SELF_MANAGED` override type
 ```
 
 ```release-note:bug
