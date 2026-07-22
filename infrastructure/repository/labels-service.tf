@@ -215,6 +215,7 @@ variable "service_labels" {
     "machinelearning",
     "macie",
     "macie2",
+    "mailmanager",
     "managedblockchain",
     "marketplacecatalog",
     "marketplacecommerceanalytics",
