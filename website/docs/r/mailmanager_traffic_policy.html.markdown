@@ -14,11 +14,10 @@ Manages an SES Mail Manager Traffic Policy.
 
 ### Basic Usage
 
-```terraform
+```hcl
 resource "aws_mailmanager_traffic_policy" "example" {
-  default_action         = "ALLOW"
-  max_message_size_bytes = 100000
-  name                   = "example"
+  default_action = "ALLOW"
+  name           = "example"
 
   policy_statement {
     action = "DENY"
@@ -41,7 +40,7 @@ resource "aws_mailmanager_traffic_policy" "example" {
 
 The following arguments are required:
 
-* `default_action` - (Required) Default action applied to traffic that does not match any policy statement. Valid values are `ALLOW` and `DENY`.
+* `default_action` - (Required) Default action for traffic that does not match any policy statement. Valid values are `ALLOW` and `DENY`.
 * `name` - (Required) Name of the traffic policy.
 * `policy_statement` - (Required) Traffic policy statements. See [`policy_statement` Block](#policy_statement-block) below.
 
@@ -53,10 +52,14 @@ The following arguments are optional:
 
 ### `policy_statement` Block
 
+The `policy_statement` block supports the following arguments:
+
 * `action` - (Required) Action applied when all conditions match. Valid values are `ALLOW` and `DENY`.
 * `condition` - (Required) Conditions evaluated by the statement. See [`condition` Block](#condition-block) below.
 
 ### `condition` Block
+
+The `condition` block supports the following arguments:
 
 Exactly one of the following expression blocks must be configured:
 
@@ -68,10 +71,14 @@ Exactly one of the following expression blocks must be configured:
 
 ### `boolean_expression` Block
 
+The `boolean_expression` block supports the following arguments:
+
 * `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.boolean_expression.evaluate` Block](#policy_statementconditionboolean_expressionevaluate-block) below.
 * `operator` - (Required) Boolean operator used for the comparison.
 
 ### `policy_statement.condition.boolean_expression.evaluate` Block
+
+The `policy_statement.condition.boolean_expression.evaluate` block supports the following arguments:
 
 Exactly one of the following blocks must be configured:
 
@@ -80,15 +87,21 @@ Exactly one of the following blocks must be configured:
 
 ### `policy_statement.condition.boolean_expression.evaluate.analysis` Block
 
-* `analyzer` - (Required) ARN of the Add On performing the analysis.
+The `policy_statement.condition.boolean_expression.evaluate.analysis` block supports the following arguments:
+
+* `analyzer` - (Required) ARN of the analyzer performing the analysis.
 * `result_field` - (Required) Result field returned in the analysis.
 
 ### `is_in_address_list` Block
+
+The `is_in_address_list` block supports the following arguments:
 
 * `address_lists` - (Required) List containing exactly one address list ARN to check membership against.
 * `attribute` - (Required) Email attribute to check against the address list.
 
 ### `ip_expression` Block
+
+The `ip_expression` block supports the following arguments:
 
 * `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.ip_expression.evaluate` Block](#policy_statementconditionip_expressionevaluate-block) below.
 * `operator` - (Required) IP address operator used for the comparison.
@@ -96,9 +109,13 @@ Exactly one of the following blocks must be configured:
 
 ### `policy_statement.condition.ip_expression.evaluate` Block
 
+The `policy_statement.condition.ip_expression.evaluate` block supports the following arguments:
+
 * `attribute` - (Required) Message attribute to evaluate.
 
 ### `ipv6_expression` Block
+
+The `ipv6_expression` block supports the following arguments:
 
 * `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.ipv6_expression.evaluate` Block](#policy_statementconditionipv6_expressionevaluate-block) below.
 * `operator` - (Required) IPv6 address operator used for the comparison.
@@ -106,15 +123,21 @@ Exactly one of the following blocks must be configured:
 
 ### `policy_statement.condition.ipv6_expression.evaluate` Block
 
+The `policy_statement.condition.ipv6_expression.evaluate` block supports the following arguments:
+
 * `attribute` - (Required) Message attribute to evaluate.
 
 ### `string_expression` Block
+
+The `string_expression` block supports the following arguments:
 
 * `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.string_expression.evaluate` Block](#policy_statementconditionstring_expressionevaluate-block) below.
 * `operator` - (Required) String operator used for the comparison.
 * `values` - (Required) Strings used for the comparison.
 
 ### `policy_statement.condition.string_expression.evaluate` Block
+
+The `policy_statement.condition.string_expression.evaluate` block supports the following arguments:
 
 Exactly one of the following must be configured:
 
@@ -123,10 +146,14 @@ Exactly one of the following must be configured:
 
 ### `policy_statement.condition.string_expression.evaluate.analysis` Block
 
-* `analyzer` - (Required) ARN of the Add On performing the analysis.
+The `policy_statement.condition.string_expression.evaluate.analysis` block supports the following arguments:
+
+* `analyzer` - (Required) ARN of the analyzer performing the analysis.
 * `result_field` - (Required) Result field returned in the analysis.
 
 ### `tls_expression` Block
+
+The `tls_expression` block supports the following arguments:
 
 * `evaluate` - (Required) Operand evaluated by the expression. See [`policy_statement.condition.tls_expression.evaluate` Block](#policy_statementconditiontls_expressionevaluate-block) below.
 * `operator` - (Required) TLS policy operator used for the comparison.
@@ -134,15 +161,17 @@ Exactly one of the following must be configured:
 
 ### `policy_statement.condition.tls_expression.evaluate` Block
 
+The `policy_statement.condition.tls_expression.evaluate` block supports the following arguments:
+
 * `attribute` - (Required) TLS attribute to evaluate.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - ID of the traffic policy.
 * `arn` - ARN of the traffic policy.
 * `created_timestamp` - Timestamp when the traffic policy was created.
-* `id` - ID of the traffic policy.
 * `last_updated_timestamp` - Timestamp when the traffic policy was last updated.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -150,7 +179,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
-```terraform
+```hcl
 import {
   to = aws_mailmanager_traffic_policy.example
   identity = {
@@ -176,7 +205,7 @@ resource "aws_mailmanager_traffic_policy" "example" {
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an SES Mail Manager Traffic Policy using its ID. For example:
 
-```terraform
+```hcl
 import {
   to = aws_mailmanager_traffic_policy.example
   id = "example-id"
