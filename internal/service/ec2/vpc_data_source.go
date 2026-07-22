@@ -62,18 +62,6 @@ func dataSourceVPC() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"network_border_group": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"ipam_pool_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							names.AttrSource: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
 						},
 					},
 				},
