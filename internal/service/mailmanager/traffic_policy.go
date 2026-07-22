@@ -45,7 +45,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/mailmanager;mailmanager.GetTrafficPolicyOutput")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckTrafficPolicy")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newTrafficPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trafficPolicyResource{}, nil
