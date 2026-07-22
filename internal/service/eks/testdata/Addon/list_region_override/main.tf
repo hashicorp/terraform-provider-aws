@@ -6,7 +6,7 @@ resource "aws_eks_add_on" "test" {
   region = var.region
 
   cluster_name = aws_eks_cluster.test.name
-  addon_name   = "vpc-cni"
+  addon_name   = local.addon_name
 }
 
 resource "aws_eks_cluster" "test" {
@@ -65,7 +65,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   region = var.region
-  count   = 2
+  count  = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
@@ -96,10 +96,26 @@ variable "rName" {
   nullable    = false
 }
 
+locals {
+  eks_addons = [
+    null,
+    "vpc-cni",
+    "coredns",
+    "kube-proxy",
+  ]
+
+  addon_name = local.eks_addons[resource_count]
+}
+
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
   nullable    = false
+
+  validation {
+    condition     = var.resource_count >= 0 && var.resource_count < 3
+    error_message = "resource_count must be 0 (vpc-cni), 1 (coredns), or 2 (kube-proxy)."
+  }
 }
 
 variable "region" {

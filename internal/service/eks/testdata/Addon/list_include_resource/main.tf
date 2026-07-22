@@ -5,7 +5,7 @@ resource "aws_eks_addon" "test" {
   count = var.resource_count
 
   cluster_name = aws_eks_cluster.test.name
-  addon_name   = "vpc-cni"
+  addon_name   = local.addon_name
 
   tags = var.resource_tags
 }
@@ -90,10 +90,26 @@ variable "rName" {
   nullable    = false
 }
 
+locals {
+  eks_addons = [
+    null,
+    "vpc-cni",
+    "coredns",
+    "kube-proxy",
+  ]
+
+  addon_name = local.eks_addons[resource_count]
+}
+
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
   nullable    = false
+
+  validation {
+    condition     = var.resource_count >= 0 && var.resource_count < 3
+    error_message = "resource_count must be 0 (vpc-cni), 1 (coredns), or 2 (kube-proxy)."
+  }
 }
 
 variable "resource_tags" {
