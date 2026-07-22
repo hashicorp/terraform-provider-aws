@@ -117,11 +117,11 @@ func TestAccAthenaCapacityReservation_targetDPUs(t *testing.T) {
 		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityReservationConfig_targetDPUs(rName, 24),
+				Config: testAccCapacityReservationConfig_targetDPUs(rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_dpus", "24"),
+					resource.TestCheckResourceAttr(resourceName, "target_dpus", "4"),
 				),
 			},
 			{
