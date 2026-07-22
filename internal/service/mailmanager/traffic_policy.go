@@ -465,18 +465,21 @@ func (r *trafficPolicyResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
 	var plan, state trafficPolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().MailManagerClient(ctx)
+
 	diff, d := flex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	if diff.HasChanges() {
 		var input mailmanager.UpdateTrafficPolicyInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TrafficPolicy")))
@@ -495,29 +498,33 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("TrafficPolicy")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *trafficPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
 	var state trafficPolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	id := state.ID.ValueString()
+
+	conn := r.Meta().MailManagerClient(ctx)
+
+	trafficPolicyID := state.ID.ValueString()
 	var input mailmanager.DeleteTrafficPolicyInput
-	input.TrafficPolicyId = aws.String(id)
+	input.TrafficPolicyId = aws.String(trafficPolicyID)
 	_, err := conn.DeleteTrafficPolicy(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, trafficPolicyID)
 	}
 }
 
