@@ -35,3 +35,4 @@ This data source exports the following attributes in addition to the arguments a
 * `authorization_type` - Type of authorization specified for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt the connection, if one has been specified.
 * `secret_arn` - ARN of the secret created from the authorization parameters specified for the connection.
+* `state` - State of the connection. One of `AUTHORIZED`, `AUTHORIZING`, `DEAUTHORIZED`, `DEAUTHORIZING`, `CREATING`, `UPDATING`, `DELETING`, `AUTHORIZATION_FAILED`, or `ACTIVE`.
