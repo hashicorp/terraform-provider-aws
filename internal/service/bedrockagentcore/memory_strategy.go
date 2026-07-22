@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -188,56 +188,19 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 											int32validator.Between(0, 50),
 										},
 									},
-									"trigger_conditions": schema.SingleNestedAttribute{
-										CustomType: fwtypes.NewObjectTypeOf[triggerConditionsModel](ctx),
-										Optional:   true,
-										Computed:   true,
-										Attributes: map[string]schema.Attribute{
-											"message_based_trigger": schema.SingleNestedAttribute{
-												CustomType: fwtypes.NewObjectTypeOf[messageBasedTriggerModel](ctx),
-												Optional:   true,
-												Computed:   true,
-												Attributes: map[string]schema.Attribute{
-													"message_count": schema.Int32Attribute{
-														Optional: true,
-														Computed: true,
-														Default:  int32default.StaticInt32(6),
-														Validators: []validator.Int32{
-															int32validator.Between(1, 50),
-														},
-													},
-												},
-											},
-											"token_based_trigger": schema.SingleNestedAttribute{
-												CustomType: fwtypes.NewObjectTypeOf[tokenBasedTriggerModel](ctx),
-												Optional:   true,
-												Computed:   true,
-												Attributes: map[string]schema.Attribute{
-													"token_count": schema.Int32Attribute{
-														Optional: true,
-														Computed: true,
-														Default:  int32default.StaticInt32(5000),
-														Validators: []validator.Int32{
-															int32validator.Between(100, 500000),
-														},
-													},
-												},
-											},
-											"time_based_trigger": schema.SingleNestedAttribute{
-												CustomType: fwtypes.NewObjectTypeOf[timeBasedTriggerModel](ctx),
-												Optional:   true,
-												Computed:   true,
-												Attributes: map[string]schema.Attribute{
-													"idle_session_timeout": schema.Int32Attribute{
-														Optional: true,
-														Computed: true,
-														Default:  int32default.StaticInt32(20),
-														Validators: []validator.Int32{
-															int32validator.Between(10, 3000),
-														},
-													},
-												},
-											},
+									"trigger_conditions": schema.ListAttribute{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx),
+										ElementType: types.ObjectType{
+											AttrTypes: fwtypes.AttributeTypesMust[triggerConditionsModel](ctx),
+										},
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 1),
+											triggerConditionsValidator{},
 										},
 									},
 								},
@@ -276,6 +239,104 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			}),
 		},
 	}
+}
+
+var _ validator.List = triggerConditionsValidator{}
+
+type triggerConditionsValidator struct{}
+
+func (triggerConditionsValidator) Description(context.Context) string {
+	return "validates self-managed memory trigger condition thresholds"
+}
+
+func (v triggerConditionsValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (triggerConditionsValidator) ValidateList(ctx context.Context, request validator.ListRequest, response *validator.ListResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	value, diags := fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx).ValueFromList(ctx, request.ConfigValue)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conditionsValue, ok := value.(fwtypes.ListNestedObjectValueOf[triggerConditionsModel])
+	if !ok {
+		response.Diagnostics.AddAttributeError(request.Path, "Invalid Attribute Value", fmt.Sprintf("unexpected trigger conditions value type: %T", value))
+		return
+	}
+	conditions, diags := conditionsValue.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() || conditions == nil {
+		return
+	}
+
+	rootPath := request.Path.AtListIndex(0)
+	if !conditions.MessageBasedTrigger.IsNull() && !conditions.MessageBasedTrigger.IsUnknown() {
+		message, diags := conditions.MessageBasedTrigger.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if message != nil {
+			validateTriggerThreshold(
+				rootPath.AtName("message_based_trigger").AtListIndex(0).AtName("message_count"),
+				message.MessageCount,
+				1,
+				50,
+				response,
+			)
+		} else {
+			response.Diagnostics.AddAttributeError(rootPath.AtName("message_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
+		}
+	}
+	if !conditions.TokenBasedTrigger.IsNull() && !conditions.TokenBasedTrigger.IsUnknown() {
+		token, diags := conditions.TokenBasedTrigger.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if token != nil {
+			validateTriggerThreshold(
+				rootPath.AtName("token_based_trigger").AtListIndex(0).AtName("token_count"),
+				token.TokenCount,
+				100,
+				500000,
+				response,
+			)
+		} else {
+			response.Diagnostics.AddAttributeError(rootPath.AtName("token_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
+		}
+	}
+	if !conditions.TimeBasedTrigger.IsNull() && !conditions.TimeBasedTrigger.IsUnknown() {
+		timeBased, diags := conditions.TimeBasedTrigger.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if timeBased != nil {
+			validateTriggerThreshold(
+				rootPath.AtName("time_based_trigger").AtListIndex(0).AtName("idle_session_timeout"),
+				timeBased.IdleSessionTimeout,
+				10,
+				3000,
+				response,
+			)
+		} else {
+			response.Diagnostics.AddAttributeError(rootPath.AtName("time_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
+		}
+	}
+}
+
+func validateTriggerThreshold(attributePath path.Path, value types.Int32, min, max int32, response *validator.ListResponse) {
+	if value.IsNull() || value.IsUnknown() || value.ValueInt32() >= min && value.ValueInt32() <= max {
+		return
+	}
+	response.Diagnostics.AddAttributeError(attributePath, "Invalid Attribute Value", fmt.Sprintf("value must be between %d and %d, got: %d", min, max, value.ValueInt32()))
 }
 
 type errorIfSingleBlockRemoved_ struct {
@@ -453,7 +514,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
 			found.Configuration = nil
 		}
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, flattenMemoryStrategy(ctx, found, &plan))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -504,7 +565,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		out.Configuration = nil
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, flattenMemoryStrategy(ctx, out, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -571,7 +632,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
 				found.Configuration = nil
 			}
-			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+			smerr.AddEnrich(ctx, &response.Diagnostics, flattenMemoryStrategy(ctx, found, &plan))
 		})
 	}
 	if response.Diagnostics.HasError() {
@@ -668,6 +729,7 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 		// Retry message substrings for transitional/ignored states
 		msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
 		msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
+		msgMemoryTransitionalState         = "Memory is in transitional state"
 		msgDeleteNonExistentStrategy       = "Cannot delete non-existent memory strategies"
 	)
 	return func(err error) (bool, error) {
@@ -684,7 +746,9 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 			if deleteOp && strings.Contains(msg, msgDeleteNonExistentStrategy) {
 				return false, nil
 			}
-			if strings.Contains(msg, msgMemoryStrategiesBeingModified) || strings.Contains(msg, msgMemoryStrategyTransitionalState) {
+			if strings.Contains(msg, msgMemoryStrategiesBeingModified) ||
+				strings.Contains(msg, msgMemoryStrategyTransitionalState) ||
+				strings.Contains(msg, msgMemoryTransitionalState) {
 				return true, smarterr.NewError(err)
 			}
 		}
@@ -882,7 +946,7 @@ type customConfigurationModel struct {
 type selfManagedConfigurationModel struct {
 	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
 	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
-	TriggerConditions           fwtypes.ObjectValueOf[triggerConditionsModel]                 `tfsdk:"trigger_conditions"`
+	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions"`
 }
 
 type invocationConfigurationModel struct {
@@ -891,9 +955,9 @@ type invocationConfigurationModel struct {
 }
 
 type triggerConditionsModel struct {
-	MessageBasedTrigger fwtypes.ObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
-	TokenBasedTrigger   fwtypes.ObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
-	TimeBasedTrigger    fwtypes.ObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
+	MessageBasedTrigger fwtypes.ListNestedObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
+	TokenBasedTrigger   fwtypes.ListNestedObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
+	TimeBasedTrigger    fwtypes.ListNestedObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
 }
 
 type messageBasedTriggerModel struct {
@@ -961,7 +1025,7 @@ func (m triggerConditionsModel) Expand(ctx context.Context) (result any, diags d
 	return conditions, diags
 }
 
-func expandTriggerConditions(ctx context.Context, value fwtypes.ObjectValueOf[triggerConditionsModel]) (result []awstypes.TriggerConditionInput, diags diag.Diagnostics) {
+func expandTriggerConditions(ctx context.Context, value fwtypes.ListNestedObjectValueOf[triggerConditionsModel]) (result []awstypes.TriggerConditionInput, diags diag.Diagnostics) {
 	if value.IsNull() || value.IsUnknown() {
 		return nil, diags
 	}
@@ -969,6 +1033,9 @@ func expandTriggerConditions(ctx context.Context, value fwtypes.ObjectValueOf[tr
 	model, d := value.ToPtr(ctx)
 	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() {
+		return nil, diags
+	}
+	if model == nil {
 		return nil, diags
 	}
 
@@ -1004,9 +1071,9 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag
 		return diags
 	}
 
-	m.MessageBasedTrigger = fwtypes.NewObjectValueOfNull[messageBasedTriggerModel](ctx)
-	m.TokenBasedTrigger = fwtypes.NewObjectValueOfNull[tokenBasedTriggerModel](ctx)
-	m.TimeBasedTrigger = fwtypes.NewObjectValueOfNull[timeBasedTriggerModel](ctx)
+	m.MessageBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[messageBasedTriggerModel](ctx)
+	m.TokenBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[tokenBasedTriggerModel](ctx)
+	m.TimeBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[timeBasedTriggerModel](ctx)
 
 	var d diag.Diagnostics
 	for _, condition := range conditions {
@@ -1017,7 +1084,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag
 			if diags.HasError() {
 				return diags
 			}
-			m.MessageBasedTrigger, d = fwtypes.NewObjectValueOf(ctx, &model)
+			m.MessageBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
 		case *awstypes.TriggerConditionMemberTokenBasedTrigger:
 			var model tokenBasedTriggerModel
@@ -1025,7 +1092,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag
 			if diags.HasError() {
 				return diags
 			}
-			m.TokenBasedTrigger, d = fwtypes.NewObjectValueOf(ctx, &model)
+			m.TokenBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
 		case *awstypes.TriggerConditionMemberTimeBasedTrigger:
 			var model timeBasedTriggerModel
@@ -1033,7 +1100,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag
 			if diags.HasError() {
 				return diags
 			}
-			m.TimeBasedTrigger, d = fwtypes.NewObjectValueOf(ctx, &model)
+			m.TimeBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
 		default:
 			diags.AddError(
@@ -1049,19 +1116,93 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag
 	return diags
 }
 
-func flattenTriggerConditions(ctx context.Context, conditions []awstypes.TriggerCondition) (result fwtypes.ObjectValueOf[triggerConditionsModel], diags diag.Diagnostics) {
+func flattenTriggerConditions(ctx context.Context, conditions []awstypes.TriggerCondition) (result fwtypes.ListNestedObjectValueOf[triggerConditionsModel], diags diag.Diagnostics) {
 	var model triggerConditionsModel
 	smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, conditions))
 	if diags.HasError() {
-		return fwtypes.NewObjectValueOfUnknown[triggerConditionsModel](ctx), diags
+		return fwtypes.NewListNestedObjectValueOfUnknown[triggerConditionsModel](ctx), diags
 	}
 
-	result, d := fwtypes.NewObjectValueOf(ctx, &model)
+	result, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() {
-		return fwtypes.NewObjectValueOfUnknown[triggerConditionsModel](ctx), diags
+		return fwtypes.NewListNestedObjectValueOfUnknown[triggerConditionsModel](ctx), diags
 	}
 
+	return result, diags
+}
+
+func preserveTriggerConditionsShape(
+	ctx context.Context,
+	prior fwtypes.ListNestedObjectValueOf[triggerConditionsModel],
+	flattened fwtypes.ListNestedObjectValueOf[triggerConditionsModel],
+) (result fwtypes.ListNestedObjectValueOf[triggerConditionsModel], diags diag.Diagnostics) {
+	if prior.IsNull() || prior.IsUnknown() {
+		return flattened, diags
+	}
+
+	priorModel, d := prior.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return flattened, diags
+	}
+	if priorModel == nil {
+		return prior, diags
+	}
+
+	flattenedModel, d := flattened.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || flattenedModel == nil {
+		return flattened, diags
+	}
+
+	if priorModel.MessageBasedTrigger.IsNull() {
+		flattenedModel.MessageBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[messageBasedTriggerModel](ctx)
+	} else if !priorModel.MessageBasedTrigger.IsUnknown() && !flattenedModel.MessageBasedTrigger.IsNull() {
+		priorMessage, d := priorModel.MessageBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		flattenedMessage, d := flattenedModel.MessageBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if priorMessage != nil && flattenedMessage != nil && priorMessage.MessageCount.IsNull() {
+			flattenedMessage.MessageCount = types.Int32Null()
+			flattenedModel.MessageBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, flattenedMessage)
+			smerr.AddEnrich(ctx, &diags, d)
+		}
+	}
+
+	if priorModel.TokenBasedTrigger.IsNull() {
+		flattenedModel.TokenBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[tokenBasedTriggerModel](ctx)
+	} else if !priorModel.TokenBasedTrigger.IsUnknown() && !flattenedModel.TokenBasedTrigger.IsNull() {
+		priorToken, d := priorModel.TokenBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		flattenedToken, d := flattenedModel.TokenBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if priorToken != nil && flattenedToken != nil && priorToken.TokenCount.IsNull() {
+			flattenedToken.TokenCount = types.Int32Null()
+			flattenedModel.TokenBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, flattenedToken)
+			smerr.AddEnrich(ctx, &diags, d)
+		}
+	}
+
+	if priorModel.TimeBasedTrigger.IsNull() {
+		flattenedModel.TimeBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[timeBasedTriggerModel](ctx)
+	} else if !priorModel.TimeBasedTrigger.IsUnknown() && !flattenedModel.TimeBasedTrigger.IsNull() {
+		priorTime, d := priorModel.TimeBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		flattenedTime, d := flattenedModel.TimeBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if priorTime != nil && flattenedTime != nil && priorTime.IdleSessionTimeout.IsNull() {
+			flattenedTime.IdleSessionTimeout = types.Int32Null()
+			flattenedModel.TimeBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, flattenedTime)
+			smerr.AddEnrich(ctx, &diags, d)
+		}
+	}
+	if diags.HasError() {
+		return flattened, diags
+	}
+
+	result, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, flattenedModel)
+	smerr.AddEnrich(ctx, &diags, d)
 	return result, diags
 }
 
@@ -1107,10 +1248,19 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 		}
 
 		if t.SelfManagedConfiguration != nil {
-			var selfManaged selfManagedConfigurationModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.SelfManagedConfiguration, &selfManaged))
-			if diags.HasError() {
-				return diags
+			selfManaged := selfManagedConfigurationModel{
+				HistoricalContextWindowSize: types.Int32PointerValue(t.SelfManagedConfiguration.HistoricalContextWindowSize),
+			}
+			if t.SelfManagedConfiguration.InvocationConfiguration != nil {
+				invocation := invocationConfigurationModel{
+					PayloadDeliveryBucketName: types.StringPointerValue(t.SelfManagedConfiguration.InvocationConfiguration.PayloadDeliveryBucketName),
+					TopicARN:                  fwtypes.ARNValue(aws.ToString(t.SelfManagedConfiguration.InvocationConfiguration.TopicArn)),
+				}
+				selfManaged.InvocationConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &invocation)
+				smerr.AddEnrich(ctx, &diags, d)
+				if diags.HasError() {
+					return diags
+				}
 			}
 			selfManaged.TriggerConditions, d = flattenTriggerConditions(ctx, t.SelfManagedConfiguration.TriggerConditions)
 			smerr.AddEnrich(ctx, &diags, d)
@@ -1186,15 +1336,24 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 		return &r, diags
 
 	case awstypes.OverrideTypeSelfManaged:
-		var r awstypes.CustomConfigurationInputMemberSelfManagedConfiguration
 		sm, d := m.SelfManaged.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, sm, &r.Value))
+		invocation, d := sm.InvocationConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
+		}
+		r := awstypes.CustomConfigurationInputMemberSelfManagedConfiguration{
+			Value: awstypes.SelfManagedConfigurationInput{
+				HistoricalContextWindowSize: sm.HistoricalContextWindowSize.ValueInt32Pointer(),
+				InvocationConfiguration: &awstypes.InvocationConfigurationInput{
+					PayloadDeliveryBucketName: invocation.PayloadDeliveryBucketName.ValueStringPointer(),
+					TopicArn:                  invocation.TopicARN.ValueStringPointer(),
+				},
+			},
 		}
 		r.Value.TriggerConditions, d = expandTriggerConditions(ctx, sm.TriggerConditions)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1361,6 +1520,57 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 type overrideDetailsModel struct {
 	AppendToPrompt types.String `tfsdk:"append_to_prompt"`
 	ModelID        types.String `tfsdk:"model_id"`
+}
+
+func flattenMemoryStrategy(ctx context.Context, source *awstypes.MemoryStrategy, target *memoryStrategyResourceModel) (diags diag.Diagnostics) {
+	priorTriggerConditions := fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
+	if !target.Configuration.IsNull() && !target.Configuration.IsUnknown() {
+		priorConfiguration, d := target.Configuration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return diags
+		}
+		if priorConfiguration != nil && !priorConfiguration.SelfManaged.IsNull() && !priorConfiguration.SelfManaged.IsUnknown() {
+			priorSelfManaged, d := priorConfiguration.SelfManaged.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return diags
+			}
+			if priorSelfManaged != nil {
+				priorTriggerConditions = priorSelfManaged.TriggerConditions
+			}
+		}
+	}
+
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, source, target, fwflex.WithFieldNamePrefix("Memory")))
+	if diags.HasError() || target.Configuration.IsNull() || target.Configuration.IsUnknown() {
+		return diags
+	}
+
+	configuration, d := target.Configuration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || configuration == nil || configuration.SelfManaged.IsNull() || configuration.SelfManaged.IsUnknown() {
+		return diags
+	}
+	selfManaged, d := configuration.SelfManaged.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || selfManaged == nil {
+		return diags
+	}
+
+	selfManaged.TriggerConditions, d = preserveTriggerConditionsShape(ctx, priorTriggerConditions, selfManaged.TriggerConditions)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return diags
+	}
+	configuration.SelfManaged, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, selfManaged)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return diags
+	}
+	target.Configuration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, configuration)
+	smerr.AddEnrich(ctx, &diags, d)
+	return diags
 }
 
 var (

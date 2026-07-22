@@ -12,8 +12,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	frameworkvalidator "github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -47,23 +49,56 @@ func TestMemoryStrategyTriggerConditionsSchema(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected self_managed to be a ListNestedBlock, got %T", configuration.NestedObject.Blocks["self_managed"])
 	}
-	triggerConditions, ok := selfManaged.NestedObject.Attributes["trigger_conditions"].(fwschema.SingleNestedAttribute)
+	triggerConditions, ok := selfManaged.NestedObject.Attributes["trigger_conditions"].(fwschema.ListAttribute)
 	if !ok {
-		t.Fatalf("expected trigger_conditions to be a SingleNestedAttribute, got %T", selfManaged.NestedObject.Attributes["trigger_conditions"])
+		t.Fatalf("expected trigger_conditions to be a protocol 5 compatible ListAttribute, got %T", selfManaged.NestedObject.Attributes["trigger_conditions"])
 	}
 	if !triggerConditions.Optional || !triggerConditions.Computed {
 		t.Fatalf("expected trigger_conditions to be Optional+Computed, got Optional=%t Computed=%t", triggerConditions.Optional, triggerConditions.Computed)
 	}
 
+	elementType, ok := triggerConditions.ElementType.(types.ObjectType)
+	if !ok {
+		t.Fatalf("expected trigger_conditions elements to be objects, got %T", triggerConditions.ElementType)
+	}
 	for _, name := range []string{"message_based_trigger", "token_based_trigger", "time_based_trigger"} {
-		attribute, ok := triggerConditions.Attributes[name].(fwschema.SingleNestedAttribute)
-		if !ok {
-			t.Errorf("expected %s to be a SingleNestedAttribute, got %T", name, triggerConditions.Attributes[name])
-			continue
+		if _, ok := elementType.AttrTypes[name]; !ok {
+			t.Errorf("expected trigger_conditions object to contain %s", name)
 		}
-		if !attribute.Optional || !attribute.Computed {
-			t.Errorf("expected %s to be Optional+Computed, got Optional=%t Computed=%t", name, attribute.Optional, attribute.Computed)
-		}
+	}
+}
+
+func TestMemoryStrategyTriggerConditionsValidation(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	r, err := tfbedrockagentcore.ResourceMemoryStrategy(ctx)
+	if err != nil {
+		t.Fatalf("creating resource: %s", err)
+	}
+	var schemaResponse fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &schemaResponse)
+	configuration := schemaResponse.Schema.Blocks[names.AttrConfiguration].(fwschema.ListNestedBlock)
+	selfManaged := configuration.NestedObject.Blocks["self_managed"].(fwschema.ListNestedBlock)
+	attribute := selfManaged.NestedObject.Attributes["trigger_conditions"].(fwschema.ListAttribute)
+
+	value := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+		MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+			MessageCount: types.Int32Value(0),
+		}),
+		TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
+		TimeBasedTrigger:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
+	})
+	request := frameworkvalidator.ListRequest{
+		Path:        path.Root("trigger_conditions"),
+		ConfigValue: value.ListValue,
+	}
+	var response frameworkvalidator.ListResponse
+	for _, validator := range attribute.Validators {
+		validator.ValidateList(ctx, request, &response)
+	}
+	if !response.Diagnostics.HasError() {
+		t.Fatal("expected message_count below the service minimum to be rejected")
 	}
 }
 
@@ -72,11 +107,11 @@ func TestMemoryStrategyTriggerConditionsExpand(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	model := tfbedrockagentcore.TriggerConditionsModel{
-		MessageBasedTrigger: fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+		MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
 			MessageCount: types.Int32Value(12),
 		}),
-		TokenBasedTrigger: fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
-		TimeBasedTrigger:  fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
+		TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
+		TimeBasedTrigger:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
 	}
 
 	result, diags := model.Expand(ctx)
@@ -109,12 +144,12 @@ func TestMemoryStrategyTriggerConditionsExpandThroughConfiguration(t *testing.T)
 			PayloadDeliveryBucketName: types.StringValue("example-bucket"),
 			TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-west-2:123456789012:example"),
 		}),
-		TriggerConditions: fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
-			MessageBasedTrigger: fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+		TriggerConditions: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+			MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
 				MessageCount: types.Int32Value(12),
 			}),
-			TokenBasedTrigger: fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
-			TimeBasedTrigger:  fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
+			TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
+			TimeBasedTrigger:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
 		}),
 	}
 	configuration := tfbedrockagentcore.CustomConfigurationModel{
@@ -149,10 +184,10 @@ func TestMemoryStrategyTriggerConditionsExpandThroughConfiguration(t *testing.T)
 		assertMessageTriggerCount(t, modify.SelfManagedConfiguration.TriggerConditions, 12)
 	})
 
-	selfManaged.TriggerConditions = fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
-		MessageBasedTrigger: fwtypes.NewObjectValueOfUnknown[tfbedrockagentcore.MessageBasedTriggerModel](ctx),
-		TokenBasedTrigger:   fwtypes.NewObjectValueOfUnknown[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
-		TimeBasedTrigger:    fwtypes.NewObjectValueOfUnknown[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
+	selfManaged.TriggerConditions = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+		MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.MessageBasedTriggerModel](ctx),
+		TokenBasedTrigger:   fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
+		TimeBasedTrigger:    fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
 	})
 	emptyConfiguration := tfbedrockagentcore.CustomConfigurationModel{
 		Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
@@ -589,9 +624,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.invocation_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.topic_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.payload_delivery_bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "6"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.0.token_count", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.0.idle_session_timeout", "20"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -600,16 +635,17 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					},
 				},
 			},
-			// Step 2: Partially configure only the message threshold. The other
-			// service-normalized defaults remain represented as computed children.
+			// Step 2: Partially configure only the message threshold. The service
+			// still applies defaults for omitted conditions, while Terraform state
+			// preserves the configured shape required by protocol version 5.
 			{
 				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditionsMessageOnly(12)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "25"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "12"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "12"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -622,9 +658,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditions(18, 6000, 30)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "18"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "6000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "18"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.0.token_count", "6000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.0.idle_session_timeout", "30"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1145,8 +1181,8 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
 func testAccMemoryStrategyTriggerConditionsMessageOnly(messageCount int) string {
 	return fmt.Sprintf(`
-trigger_conditions = {
-  message_based_trigger = {
+trigger_conditions {
+  message_based_trigger {
     message_count = %d
   }
 }
@@ -1155,14 +1191,14 @@ trigger_conditions = {
 
 func testAccMemoryStrategyTriggerConditions(messageCount, tokenCount, idleSessionTimeout int) string {
 	return fmt.Sprintf(`
-trigger_conditions = {
-  message_based_trigger = {
+trigger_conditions {
+  message_based_trigger {
     message_count = %d
   }
-  token_based_trigger = {
+  token_based_trigger {
     token_count = %d
   }
-  time_based_trigger = {
+  time_based_trigger {
     idle_session_timeout = %d
   }
 }
