@@ -52,7 +52,7 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 			"auto_refresh_frequency_in_seconds":    schema.Int32Attribute{Computed: true, Description: "Automatic refresh frequency, in seconds."},
 			"auto_refresh_point_lag_in_seconds":    schema.Int32Attribute{Computed: true, Description: "Refresh lag from the source, in seconds."},
 			"autonomous_maintenance_schedule_type": schema.StringAttribute{CustomType: fwtypes.StringEnumType[types.AutonomousMaintenanceScheduleType](), Computed: true, Description: "Maintenance schedule type."},
-			"availability_zone":                    schema.StringAttribute{Computed: true, Description: "Availability Zone of the Autonomous Database."},
+			names.AttrAvailabilityZone:             schema.StringAttribute{Computed: true, Description: "Availability Zone of the Autonomous Database."},
 			"availability_zone_id":                 schema.StringAttribute{Computed: true, Description: "Availability Zone ID of the Autonomous Database."},
 			"available_upgrade_versions": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,

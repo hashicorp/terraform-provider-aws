@@ -68,7 +68,7 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"admin_password_wo", "admin_password_wo_version", "source", "source_configuration", "transportable_tablespace"},
+				ImportStateVerifyIgnore: []string{"admin_password", "admin_password_wo", "admin_password_wo_version", names.AttrSource, "source_configuration", "transportable_tablespace"},
 			},
 			{
 				Config: tagUpdatedConfig,
@@ -101,11 +101,9 @@ func TestAccODBAutonomousDatabase_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:             replacementConfig,
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: replacementConfig,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
@@ -167,7 +165,7 @@ func TestAccODBAutonomousDatabase_allArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scheduled_operations.0.day_of_week", "MONDAY"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_operations.0.scheduled_start_time", "08:00"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_operations.0.scheduled_stop_time", "18:00"),
-					resource.TestCheckResourceAttr(resourceName, "source", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSource, "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", displayName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -218,6 +216,8 @@ func TestAccODBAutonomousDatabase_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -240,7 +240,8 @@ func testAccAutonomousDatabasePreCheck(ctx context.Context, t *testing.T) {
 
 func testAccAutonomousDatabaseServicePreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
-	_, err := conn.ListAutonomousDatabases(ctx, &odb.ListAutonomousDatabasesInput{})
+	input := odb.ListAutonomousDatabasesInput{}
+	_, err := conn.ListAutonomousDatabases(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -310,17 +311,16 @@ func testAccAutonomousDatabaseConfigBasic(displayName, dbName string, computeCou
 		testAccAutonomousDatabaseConfigPrerequisites(),
 		fmt.Sprintf(`
 resource "aws_odb_autonomous_database" "test" {
-  admin_password_wo         = var.odb_test_admin_password
-  admin_password_wo_version = 1
-  character_set             = %[1]q
-  compute_count             = %[2]g
-  data_storage_size_in_tbs  = 1
-  db_name                   = %[3]q
-  db_workload               = "OLTP"
-  display_name              = %[4]q
-  license_model             = "LICENSE_INCLUDED"
-  odb_network_id            = var.odb_test_network_id
-  source                    = "NONE"
+  admin_password           = var.odb_test_admin_password
+  character_set            = %[1]q
+  compute_count            = %[2]g
+  data_storage_size_in_tbs = 1
+  db_name                  = %[3]q
+  db_workload              = "OLTP"
+  display_name             = %[4]q
+  license_model            = "LICENSE_INCLUDED"
+  odb_network_id           = var.odb_test_network_id
+  source                   = "NONE"
 
   tags = {
     Environment = %[5]q
