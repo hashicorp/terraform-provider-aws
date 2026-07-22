@@ -34,6 +34,23 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAnomalyDetectorResource,
+			TypeName: "aws_prometheus_anomaly_detector",
+			Name:     "Anomaly Detector",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+				inttypes.StringIdentityAttribute("workspace_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      anomalyDetectorImportID{},
+			},
+		},
+		{
 			Factory:  newQueryLoggingConfigurationResource,
 			TypeName: "aws_prometheus_query_logging_configuration",
 			Name:     "QueryLoggingConfiguration",
