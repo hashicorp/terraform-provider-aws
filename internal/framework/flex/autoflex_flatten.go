@@ -1387,7 +1387,7 @@ func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom
 
 		vTo.Set(reflect.ValueOf(val))
 
-		tflog.SubsystemError(ctx, subsystemName, "Source does not implement flex.Flattener")
+		tflog.SubsystemError(ctx, subsystemName, "Target does not implement flex.Flattener")
 		// diags.Append(diagFlatteningTargetDoesNotImplementFlexFlattener(reflect.TypeOf(vTo.Interface())))
 		return diags
 	}
