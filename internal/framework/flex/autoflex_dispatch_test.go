@@ -1373,6 +1373,19 @@ func TestFlattenInterface(t *testing.T) {
 				}),
 			},
 		},
+		"single unmapped interface Source and list Target": {
+			Source: awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceUnmappedImpl{
+					Value: awsInterfaceInterfaceUnmappedImplValue{
+						UnmappedField1: "value1",
+					},
+				},
+			},
+			Target: &tfListNestedObject[tfInterfaceFlexer]{},
+			WantTarget: &tfListNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[tfInterfaceFlexer](ctx),
+			},
+		},
 		"nil interface Source and non-Flattener list Target": {
 			Source: awsInterfaceSingle{
 				Field1: nil,
@@ -1424,6 +1437,19 @@ func TestFlattenInterface(t *testing.T) {
 						}),
 					},
 				}),
+			},
+		},
+		"single unmapped interface Source and set Target": {
+			Source: awsInterfaceSingle{
+				Field1: &awsInterfaceInterfaceUnmappedImpl{
+					Value: awsInterfaceInterfaceUnmappedImplValue{
+						UnmappedField1: "value1",
+					},
+				},
+			},
+			Target: &tfSetNestedObject[tfInterfaceFlexer]{},
+			WantTarget: &tfSetNestedObject[tfInterfaceFlexer]{
+				Field1: fwtypes.NewSetNestedObjectValueOfNull[tfInterfaceFlexer](ctx),
 			},
 		},
 

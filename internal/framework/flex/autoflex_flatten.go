@@ -1406,6 +1406,18 @@ func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom
 		return diags
 	}
 
+	if isZero(toFlattener) {
+		tflog.SubsystemWarn(ctx, subsystemName, "No values set by Flatten")
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
 	// Set the target structure as a mapped Object.
 	val, d := tTo.ValueFromObjectPtr(ctx, toFlattener)
 	diags.Append(d...)
@@ -1415,6 +1427,25 @@ func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom
 
 	vTo.Set(reflect.ValueOf(val))
 	return diags
+}
+
+func isZero(v any) bool {
+	val := reflect.ValueOf(v)
+	val = reflect.Indirect(val)
+
+	for field := range tfreflect.ExportedStructFields(val.Type()) {
+		fieldVal := val.FieldByIndex(field.Index)
+
+		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		if !ok {
+			continue // Skip non-attr.Type fields.
+		}
+		if !fieldTo.IsNull() {
+			return false
+		}
+	}
+
+	return true
 }
 
 // flattenSliceOfPrimitiveToList copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework List value.
