@@ -670,7 +670,7 @@ func flattenInterface(ctx context.Context, flattener *autoFlattener, vFrom refle
 		//
 		// interface -> types.List(OfObject) or types.Object.
 		//
-		diags.Append(flattenInterfaceToNestedObject(ctx, flattener, vFrom, vFrom.IsNil(), tTo, vTo)...)
+		diags.Append(flattenInterfaceToNestedObject(ctx, flattener, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -1356,10 +1356,10 @@ func flattenStructToNestedObject(ctx context.Context, flattener *autoFlattener, 
 }
 
 // flattenInterfaceToNestedObject copies an AWS API interface value to a compatible Plugin Framework NestedObjectValue value.
-func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if isNullFrom {
+	if vFrom.IsNil() {
 		val, d := tTo.NullValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
