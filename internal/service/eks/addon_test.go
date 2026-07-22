@@ -32,6 +32,15 @@ func checkAddonARNAlternateRegion(clusterName, addonName string) knownvalue.Chec
 	return tfknownvalue.RegionalARNAlternateRegionRegexp("eks", regexache.MustCompile(`addon/`+clusterName+`/`+addonName+`/.+`))
 }
 
+var (
+	addonNames = [...]string{
+		"vpc-cni",
+		"eks-node-monitoring-agent",
+		"coredns",    // Often ends up in DEGRADED state.
+		"kube-proxy", // Often ends up in DEGRADED state.
+	}
+)
+
 func TestAccEKSAddon_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var addon types.Addon

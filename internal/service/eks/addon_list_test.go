@@ -20,14 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	addonNames = [...]string{
-		"vpc-cni",
-		"coredns",
-		"kube-proxy",
-	}
-)
-
 func TestAccEKSAddon_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_eks_addon.test[0]"

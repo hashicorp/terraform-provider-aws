@@ -5,7 +5,7 @@ resource "aws_eks_addon" "test" {
   count = var.resource_count
 
   cluster_name = aws_eks_cluster.test.name
-  addon_name   = local.addon_name
+  addon_name   = local.eks_addons[count.index]
 }
 
 resource "aws_eks_cluster" "test" {
@@ -90,13 +90,11 @@ variable "rName" {
 
 locals {
   eks_addons = [
-    null,
     "vpc-cni",
+    "eks-node-monitoring-agent",
     "coredns",
     "kube-proxy",
   ]
-
-  addon_name = local.eks_addons[var.resource_count]
 }
 
 variable "resource_count" {
@@ -105,7 +103,7 @@ variable "resource_count" {
   nullable    = false
 
   validation {
-    condition     = var.resource_count >= 0 && var.resource_count < 3
-    error_message = "resource_count must be 0 (vpc-cni), 1 (coredns), or 2 (kube-proxy)."
+    condition     = var.resource_count >= 0 && var.resource_count <= 4
+    error_message = "resource_count must be between 0 and 4."
   }
 }
