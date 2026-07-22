@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_codepipeline: Added new arguments `commands` and 'output_artifacts_for_compute_action' to support 'Compute' action
+resource/aws_codepipeline: Add `stage.action.commands` and `stage.action.output_artifacts_for_compute_action` arguments to support Compute action types
 ```
 
 ```release-note:enhancement
