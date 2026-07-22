@@ -1988,6 +1988,43 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 	})
 }
 
+// Verifies wait_for_steady_state with sigint_rollback enabled without sending SIGINT.
+// Pre-fix providers treated per-refresh context cancel as SIGINT and rolled back
+// healthy deployments (AWS reason: "Service deployment rolled back by user").
+func TestAccECSService_LaunchTypeFargate_waitForSteadyState_sigintRollbackNoSignal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sigint_rollback", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sigint_rollback", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -3660,6 +3697,27 @@ resource "aws_ecs_service" "test" {
 }
 
 `, rName, desiredCount, waitForSteadyState))
+}
+
+func testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName string, desiredCount int) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = %[2]d
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups  = [aws_security_group.test[0].id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = true
+  sigint_rollback       = true
+}
+`, rName, desiredCount))
 }
 
 func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {
