@@ -368,7 +368,15 @@ func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequ
 	input := bedrockagentcorecontrol.DeleteMemoryInput{
 		MemoryId: aws.String(memoryID),
 	}
-	_, err := conn.DeleteMemory(ctx, &input)
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	_, err := tfresource.RetryWhen(
+		ctx,
+		deleteTimeout,
+		func(ctx context.Context) (*bedrockagentcorecontrol.DeleteMemoryOutput, error) {
+			return conn.DeleteMemory(ctx, &input)
+		},
+		memoryStrategyRetryable(false),
+	)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -377,7 +385,7 @@ func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	if _, err := waitMemoryDeleted(ctx, conn, memoryID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitMemoryDeleted(ctx, conn, memoryID, deleteTimeout); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
