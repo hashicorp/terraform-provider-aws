@@ -36,7 +36,7 @@ func TestAccMailManagerTrafficPolicy_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
@@ -91,7 +91,7 @@ func TestAccMailManagerTrafficPolicy_List_includeResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
@@ -166,7 +166,7 @@ func TestAccMailManagerTrafficPolicy_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
