@@ -42,8 +42,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -85,12 +88,13 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_anomaly_detector.test"
+	workspaceResourceName := "aws_prometheus_workspace.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			testAccPreCheckAnomalyDetector(ctx, t)
+			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -100,23 +104,34 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
+
+					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					// 	"console_access": "false",
+					// 	"groups.#":       "0",
+					// 	"username":       "Test",
+					// 	"password":       "TestTest1234",
+					// }),
+					// // TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// // value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", regexache.MustCompile(`anomalydetector:.+$`)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluation_interval_in_seconds"), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
@@ -236,10 +251,13 @@ resource "aws_prometheus_anomaly_detector" "test" {
 
   configuration {
 	random_cut_forest {
-	  query = avg(up)
+	  query = "avg(up)"
 	}
+  }
+  
+  missing_data_action {
+    skip = true
   }
 }
 `, rName)
 }
-

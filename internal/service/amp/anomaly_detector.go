@@ -55,6 +55,7 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_prometheus_anomaly_detector", name="Anomaly Detector")
+// @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
 // @IdentityAttribute("workspace_id")
 // @ImportIDHandler("anomalyDetectorImportID")
@@ -65,9 +66,9 @@ import (
 // https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
 //
 // Some common annotations are included below:
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp;amp.DescribeAnomalyDetectorResponse")
+// // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp;amp.DescribeAnomalyDetectorResponse")
 // @Testing(preCheck="testAccPreCheckAnomalyDetector")
-// @Testing(importIgnore="...;...")
+// // @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
 func newAnomalyDetectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
@@ -102,7 +103,8 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedAt: schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"evaluation_interval_in_seconds": schema.Int32Attribute{
 				Optional: true,
@@ -113,6 +115,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -206,22 +209,22 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			"status": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorStatusModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"status_code": schema.StringAttribute{
-							Computed: true,
-						},
-						"status_reason": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			// "status": schema.ListNestedBlock{
+			// 	CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorStatusModel](ctx),
+			// 	Validators: []validator.List{
+			// 		listvalidator.SizeAtMost(1),
+			// 	},
+			// 	NestedObject: schema.NestedBlockObject{
+			// 		Attributes: map[string]schema.Attribute{
+			// 			"status_code": schema.StringAttribute{
+			// 				Computed: true,
+			// 			},
+			// 			"status_reason": schema.StringAttribute{
+			// 				Computed: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -542,11 +545,11 @@ type anomalyDetectorResourceModel struct {
 	ID                          types.String                                                           `tfsdk:"id"`
 	Labels                      fwtypes.MapOfString                                                    `tfsdk:"labels"`
 	MissingDataAction           fwtypes.ListNestedObjectValueOf[anomalyDetectorMissingDataActionModel] `tfsdk:"missing_data_action"`
-	Status                      fwtypes.ListNestedObjectValueOf[anomalyDetectorStatusModel]            `tfsdk:"status"`
-	Tags                        tftags.Map                                                             `tfsdk:"tags"`
-	TagsAll                     tftags.Map                                                             `tfsdk:"tags_all"`
-	Timeouts                    timeouts.Value                                                         `tfsdk:"timeouts"`
-	WorkspaceID                 types.String                                                           `tfsdk:"workspace_id"`
+	// Status                      fwtypes.ListNestedObjectValueOf[anomalyDetectorStatusModel]            `tfsdk:"status"`
+	Tags        tftags.Map     `tfsdk:"tags"`
+	TagsAll     tftags.Map     `tfsdk:"tags_all"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	WorkspaceID types.String   `tfsdk:"workspace_id"`
 }
 
 var (
@@ -695,7 +698,7 @@ func (anomalyDetectorImportID) Parse(id string) (string, map[string]any, error) 
 	}
 
 	result := map[string]any{
-		"id":    anomalyDetectorID,
+		"id":           anomalyDetectorID,
 		"workspace_id": workspaceID,
 	}
 
