@@ -169,9 +169,9 @@ The `policy_statement.condition.tls_expression.evaluate` block supports the foll
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the traffic policy.
 * `arn` - ARN of the traffic policy.
 * `created_timestamp` - Timestamp when the traffic policy was created.
+* `id` - ID of the traffic policy.
 * `last_updated_timestamp` - Timestamp when the traffic policy was last updated.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -179,7 +179,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
-```hcl
+```terraform
 import {
   to = aws_mailmanager_traffic_policy.example
   identity = {
@@ -205,7 +205,7 @@ resource "aws_mailmanager_traffic_policy" "example" {
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an SES Mail Manager Traffic Policy using its ID. For example:
 
-```hcl
+```terraform
 import {
   to = aws_mailmanager_traffic_policy.example
   id = "example-id"
