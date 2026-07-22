@@ -395,56 +395,63 @@ func tlsExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 }
 
 func (r *trafficPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
-	var plan trafficPolicyResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	var data trafficPolicyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().MailManagerClient(ctx)
+
 	var input mailmanager.CreateTrafficPolicyInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TrafficPolicy")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input, flex.WithFieldNamePrefix("TrafficPolicy")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateTrafficPolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
-	id := aws.ToString(out.TrafficPolicyId)
-	created, err := findTrafficPolicyByID(ctx, conn, id)
+	trafficPolicyID := aws.ToString(out.TrafficPolicyId)
+	trafficPolicyOut, err := findTrafficPolicyByID(ctx, conn, trafficPolicyID)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, trafficPolicyID)
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, created, &plan, flex.WithFieldNamePrefix("TrafficPolicy")))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, trafficPolicyOut, &data, flex.WithFieldNamePrefix("TrafficPolicy")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *trafficPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
 	var state trafficPolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	id := state.ID.ValueString()
-	out, err := findTrafficPolicyByID(ctx, conn, id)
+
+	conn := r.Meta().MailManagerClient(ctx)
+
+	trafficPolicyID := state.ID.ValueString()
+	out, err := findTrafficPolicyByID(ctx, conn, trafficPolicyID)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, trafficPolicyID)
 		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("TrafficPolicy")))
