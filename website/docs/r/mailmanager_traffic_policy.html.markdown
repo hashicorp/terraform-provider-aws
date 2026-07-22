@@ -157,6 +157,10 @@ import {
     id = "example-id"
   }
 }
+
+resource "aws_mailmanager_traffic_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
 
 ### Identity Schema
@@ -176,6 +180,10 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 import {
   to = aws_mailmanager_traffic_policy.example
   id = "example-id"
+}
+
+resource "aws_mailmanager_traffic_policy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
