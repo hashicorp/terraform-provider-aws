@@ -125,22 +125,22 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 				),
 			},
 			{
-					Config: testAccTrafficPolicyConfig_update(rName+"-updated", "DENY", 200000, "NOT_CIDR_MATCHES", "198.51.100.0/24"),
-					ConfigPlanChecks: resource.ConfigPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						},
+				Config: testAccTrafficPolicyConfig_update(rName+"-updated", "DENY", 200000, "NOT_CIDR_MATCHES", "198.51.100.0/24"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
-					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckTrafficPolicyExists(ctx, t, resourceName, &after),
-						testAccCheckTrafficPolicyNotRecreated(&before, &after),
-						resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "DENY"),
-						resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "200000"),
-						resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
-						resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "NOT_CIDR_MATCHES"),
-						resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.0", "198.51.100.0/24"),
-					),
 				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &after),
+					testAccCheckTrafficPolicyNotRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "200000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "NOT_CIDR_MATCHES"),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.0", "198.51.100.0/24"),
+				),
+			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
