@@ -64,7 +64,6 @@ func (l *nodeGroupListResource) List(ctx context.Context, request list.ListReque
 		logging.ResourceAttributeKey(names.AttrClusterName): clusterName,
 	})
 
-	// TIP: -- 4. Get information about a resource from AWS
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := eks.ListNodegroupsInput{
 			ClusterName: aws.String(clusterName),
