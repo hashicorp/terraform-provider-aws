@@ -3,5 +3,5 @@ resource/aws_codepipeline: Add `stage.action.commands` and `stage.action.output_
 ```
 
 ```release-note:enhancement
-resource/aws_codepipeline: 'output_artifacts_for_compute_action' and 'output_artifacts' now conflict
+resource/aws_codepipeline: `stage.action.output_artifacts_for_compute_action` and `stage.action.output_artifacts` now conflict
 ```
