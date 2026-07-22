@@ -66,6 +66,39 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var trafficPolicy mailmanager.GetTrafficPolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_traffic_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrafficPolicyConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &trafficPolicy),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmailmanager.ResourceTrafficPolicy, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -92,17 +125,22 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrafficPolicyConfig_update(rName+"-updated", "DENY", 200000, "NOT_CIDR_MATCHES", "198.51.100.0/24"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &after),
-					testAccCheckTrafficPolicyNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "DENY"),
-					resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "200000"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "NOT_CIDR_MATCHES"),
-					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.0", "198.51.100.0/24"),
-				),
-			},
+					Config: testAccTrafficPolicyConfig_update(rName+"-updated", "DENY", 200000, "NOT_CIDR_MATCHES", "198.51.100.0/24"),
+					ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						},
+					},
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccCheckTrafficPolicyExists(ctx, t, resourceName, &after),
+						testAccCheckTrafficPolicyNotRecreated(&before, &after),
+						resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "DENY"),
+						resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "200000"),
+						resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
+						resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.operator", "NOT_CIDR_MATCHES"),
+						resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ip_expression.0.values.0", "198.51.100.0/24"),
+					),
+				},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -137,39 +175,6 @@ func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.1.string_expression.0.evaluate.0.attribute", "RECIPIENT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.2.tls_expression.0.evaluate.0.attribute", "TLS_PROTOCOL"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var trafficPolicy mailmanager.GetTrafficPolicyOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_mailmanager_traffic_policy.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrafficPolicyConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &trafficPolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmailmanager.ResourceTrafficPolicy, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
 			},
 		},
 	})
