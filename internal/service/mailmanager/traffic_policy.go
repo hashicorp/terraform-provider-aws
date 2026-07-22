@@ -570,23 +570,38 @@ func (m policyConditionModel) Expand(ctx context.Context) (any, diag.Diagnostics
 	switch {
 	case !m.BooleanExpression.IsNull():
 		var r awstypes.PolicyConditionMemberBooleanExpression
-		diags.Append(flex.Expand(ctx, m.BooleanExpression, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.BooleanExpression, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	case !m.IPExpression.IsNull():
 		var r awstypes.PolicyConditionMemberIpExpression
-		diags.Append(flex.Expand(ctx, m.IPExpression, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IPExpression, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	case !m.IPv6Expression.IsNull():
 		var r awstypes.PolicyConditionMemberIpv6Expression
-		diags.Append(flex.Expand(ctx, m.IPv6Expression, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IPv6Expression, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	case !m.StringExpression.IsNull():
 		var r awstypes.PolicyConditionMemberStringExpression
-		diags.Append(flex.Expand(ctx, m.StringExpression, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.StringExpression, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	case !m.TLSExpression.IsNull():
 		var r awstypes.PolicyConditionMemberTlsExpression
-		diags.Append(flex.Expand(ctx, m.TLSExpression, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.TLSExpression, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	}
 	return nil, diags
@@ -597,23 +612,38 @@ func (m *policyConditionModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	switch t := v.(type) {
 	case awstypes.PolicyConditionMemberBooleanExpression:
 		var model booleanExpressionModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.BooleanExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.PolicyConditionMemberIpExpression:
 		var model ipExpressionModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.IPExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.PolicyConditionMemberIpv6Expression:
 		var model ipv6ExpressionModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.IPv6Expression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.PolicyConditionMemberStringExpression:
 		var model stringExpressionModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.StringExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.PolicyConditionMemberTlsExpression:
 		var model tlsExpressionModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.TLSExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	default:
 		diags.AddError("Unexpected Type", fmt.Sprintf("policy condition flatten: %T", v))
@@ -626,11 +656,17 @@ func (m booleanEvaluateModel) Expand(ctx context.Context) (any, diag.Diagnostics
 	switch {
 	case !m.Analysis.IsNull():
 		var r awstypes.IngressBooleanToEvaluateMemberAnalysis
-		diags.Append(flex.Expand(ctx, m.Analysis, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Analysis, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	case !m.IsInAddressList.IsNull():
 		var r awstypes.IngressBooleanToEvaluateMemberIsInAddressList
-		diags.Append(flex.Expand(ctx, m.IsInAddressList, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IsInAddressList, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	}
 	return nil, diags
@@ -641,11 +677,17 @@ func (m *booleanEvaluateModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	switch t := v.(type) {
 	case awstypes.IngressBooleanToEvaluateMemberAnalysis:
 		var model analysisModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Analysis = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.IngressBooleanToEvaluateMemberIsInAddressList:
 		var model isInAddressListModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.IsInAddressList = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	default:
 		diags.AddError("Unexpected Type", fmt.Sprintf("boolean evaluate flatten: %T", v))
@@ -658,7 +700,10 @@ func (m stringEvaluateModel) Expand(ctx context.Context) (any, diag.Diagnostics)
 	switch {
 	case !m.Analysis.IsNull():
 		var r awstypes.IngressStringToEvaluateMemberAnalysis
-		diags.Append(flex.Expand(ctx, m.Analysis, &r.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Analysis, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &r, diags
 	case !m.Attribute.IsNull():
 		return &awstypes.IngressStringToEvaluateMemberAttribute{Value: m.Attribute.ValueEnum()}, diags
@@ -671,7 +716,10 @@ func (m *stringEvaluateModel) Flatten(ctx context.Context, v any) diag.Diagnosti
 	switch t := v.(type) {
 	case awstypes.IngressStringToEvaluateMemberAnalysis:
 		var model analysisModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Analysis = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.IngressStringToEvaluateMemberAttribute:
 		m.Attribute = fwtypes.StringEnumValue(t.Value)
