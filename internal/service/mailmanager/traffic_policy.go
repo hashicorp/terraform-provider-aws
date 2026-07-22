@@ -518,11 +518,13 @@ func (r *trafficPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 
 	trafficPolicyID := state.ID.ValueString()
 	var input mailmanager.DeleteTrafficPolicyInput
+
 	input.TrafficPolicyId = aws.String(trafficPolicyID)
 	_, err := conn.DeleteTrafficPolicy(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
+
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, trafficPolicyID)
 	}
@@ -532,14 +534,19 @@ func findTrafficPolicyByID(ctx context.Context, conn *mailmanager.Client, id str
 	input := mailmanager.GetTrafficPolicyInput{TrafficPolicyId: aws.String(id)}
 	out, err := conn.GetTrafficPolicy(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
+
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
+
 	if out == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
+
 	return out, nil
 }
 
