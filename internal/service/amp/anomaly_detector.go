@@ -5,36 +5,7 @@
 
 package amp
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/amp/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
@@ -58,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -67,6 +39,7 @@ import (
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,32 +54,10 @@ import (
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_amp_anomaly_detector", name="Anomaly Detector")
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-//
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one of the following sets of annotations as appropriate:
-//
-// * ARN Identity
-// @ArnIdentity
-// or
-// @ArnIdentity("arn_attribute")
-//
-// * Singleton Identity
-// @SingletonIdentity
-//
-// * Parameterized Identity
-// @IdentityAttribute("id_attribute")
-// // @IdentityAttribute("another_id_attribute")
+// @FrameworkResource("aws_prometheus_anomaly_detector", name="Anomaly Detector")
+// @IdentityAttribute("id")
+// @IdentityAttribute("workspace_id")
+// @ImportIDHandler("anomalyDetectorImportID")
 //
 // TIP: ==== GENERATED ACCEPTANCE TESTS ====
 // Resource Identity and tagging make use of automatically generated acceptance tests.
@@ -115,7 +66,7 @@ import (
 //
 // Some common annotations are included below:
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp;amp.DescribeAnomalyDetectorResponse")
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckAnomalyDetector")
 // @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
 func newAnomalyDetectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -143,50 +94,6 @@ type anomalyDetectorResource struct {
 	framework.WithImportByIdentity
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -456,7 +363,7 @@ func (r *anomalyDetectorResource) Delete(ctx context.Context, req resource.Delet
 	input := amp.DeleteAnomalyDetectorInput{
 		AnomalyDetectorId: state.ID.ValueStringPointer(),
 		WorkspaceId:       state.WorkspaceID.ValueStringPointer(),
-		ClientToken:	   aws.String(create.UniqueId(ctx)),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 	}
 
 	_, err := conn.DeleteAnomalyDetector(ctx, &input)
@@ -781,15 +688,15 @@ var (
 
 type anomalyDetectorImportID struct{}
 
-func (anomalyDetectorImportID) Parse(id string) (string, map[string]string, error) {
-	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
+func (anomalyDetectorImportID) Parse(id string) (string, map[string]any, error) {
+	anomalyDetectorID, workspaceID, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <anomaly-detector-id>"+intflex.ResourceIdSeparator+"<workspace-id>", id)
 	}
 
-	result := map[string]string{
-		"some-value":    someValue,
-		"another-value": anotherValue,
+	result := map[string]any{
+		"id":    anomalyDetectorID,
+		"workspace_id": workspaceID,
 	}
 
 	return id, result, nil
@@ -808,7 +715,7 @@ func (anomalyDetectorImportID) Parse(id string) (string, map[string]string, erro
 // Once the sweeper function is implemented, register it in sweep.go
 // as follows:
 //
-//	awsv2.Register("aws_amp_anomaly_detector", sweepAnomalyDetectors)
+//	awsv2.Register("aws_prometheus_anomaly_detector", sweepAnomalyDetectors)
 //
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
