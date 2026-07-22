@@ -10,6 +10,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_msk_bootstrap_brokers: Add `bootstrap_brokers_ipv6`, `bootstrap_brokers_sasl_iam_ipv6`, `bootstrap_brokers_sasl_scram_ipv6`, and `bootstrap_brokers_tls_ipv6` attributes to expose IPv6 bootstrap broker URLs ([#48975](https://github.com/hashicorp/terraform-provider-aws/issues/48975))
+* data-source/aws_opensearchserverless_security_config: Add `iam_federation_options` block ([#48495](https://github.com/hashicorp/terraform-provider-aws/issues/48495))
+* data-source/aws_opensearchserverless_security_config: Add `iam_identity_center_options` block ([#48495](https://github.com/hashicorp/terraform-provider-aws/issues/48495))
 * provider: Web identity tokens can be configured via the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable. Any value configured via `assume_role_with_web_identity.web_identity_token` takes precedence ([#48736](https://github.com/hashicorp/terraform-provider-aws/issues/48736))
 * resource/aws_bedrockagent_data_source: Add `data_source_configuration.managed_knowledge_base_connector_configuration` block ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
 * resource/aws_bedrockagent_data_source: Add `timeouts.update` with a default value of `30m` ([#48904](https://github.com/hashicorp/terraform-provider-aws/issues/48904))
@@ -19,6 +21,10 @@ ENHANCEMENTS:
 * resource/aws_guardduty_detector_feature: Support `AI_PROTECTION` and `AI_ANALYST` feature names ([#48972](https://github.com/hashicorp/terraform-provider-aws/issues/48972))
 * resource/aws_guardduty_organization_configuration_feature: Support `AI_PROTECTION` and `AI_ANALYST` feature names ([#48972](https://github.com/hashicorp/terraform-provider-aws/issues/48972))
 * resource/aws_msk_cluster: Add `bootstrap_brokers_ipv6`, `bootstrap_brokers_sasl_iam_ipv6`, `bootstrap_brokers_sasl_scram_ipv6`, and `bootstrap_brokers_tls_ipv6` attributes to expose IPv6 bootstrap broker URLs ([#48975](https://github.com/hashicorp/terraform-provider-aws/issues/48975))
+* resource/aws_opensearch_package_association: Add import support ([#46690](https://github.com/hashicorp/terraform-provider-aws/issues/46690))
+* resource/aws_opensearchserverless_security_config: Add `iam_federation_options` configuration block ([#48495](https://github.com/hashicorp/terraform-provider-aws/issues/48495))
+* resource/aws_opensearchserverless_security_config: Add `iam_identity_center_options` configuration block ([#48495](https://github.com/hashicorp/terraform-provider-aws/issues/48495))
+* resource/aws_s3tables_table: Add `metadata.iceberg.properties` argument ([#48635](https://github.com/hashicorp/terraform-provider-aws/issues/48635))
 
 BUG FIXES:
 
