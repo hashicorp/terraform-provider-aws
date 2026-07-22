@@ -3823,7 +3823,7 @@ resource "aws_codepipeline" "test" {
         "echo hello3 > hello3.txt",
       ]
 
-      configuration = {}
+      configuration    = {}
       output_artifacts = ["test"]
       output_artifacts_for_compute_action {
         name  = "ComputeArtifact"
