@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New List Resource:** `aws_bedrock_evaluation_job` ([#49044](https://github.com/hashicorp/terraform-provider-aws/issues/49044))
+* **New List Resource:** `aws_eks_node_group` ([#49073](https://github.com/hashicorp/terraform-provider-aws/issues/49073))
 * **New Resource:** `aws_bedrock_evaluation_job` ([#49044](https://github.com/hashicorp/terraform-provider-aws/issues/49044))
 
 ENHANCEMENTS:
