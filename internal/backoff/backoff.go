@@ -7,7 +7,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
 // Inspired by https://github.com/ServiceWeaver/weaver and https://github.com/avast/retry-go.
@@ -103,7 +106,17 @@ func (d *sdkv2HelperRetryCompatibleDelay) SetIncrementDelay(incrementDelay bool)
 }
 
 // SDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay.
-func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) Delay {
+//
+// When VCR testing is enabled in replay mode, the DelayFunc is overridden to
+// allow interactions to be replayed with no delay between state change refreshes.
+func SDKv2HelperRetryCompatibleDelay(ctx context.Context, initialDelay, pollInterval, minTimeout time.Duration) Delay {
+	// When VCR testing in replay mode, override the default DelayFunc
+	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
+			return ZeroDelay
+		}
+	}
+
 	return &sdkv2HelperRetryCompatibleDelay{
 		incrementDelay: true,
 		initialDelay:   initialDelay,
@@ -114,8 +127,8 @@ func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time
 
 // DefaultSDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay
 // with default values (from the `RetryContext` function).
-func DefaultSDKv2HelperRetryCompatibleDelay() Delay {
-	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
+func DefaultSDKv2HelperRetryCompatibleDelay(ctx context.Context) Delay {
+	return SDKv2HelperRetryCompatibleDelay(ctx, 0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
 
 var (
@@ -167,9 +180,9 @@ func (t *timerImpl) After(d time.Duration) <-chan time.Time {
 }
 
 // The default RetryConfig is backwards compatible with github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry.
-func defaultLoopConfig() LoopConfig {
+func defaultLoopConfig(ctx context.Context) LoopConfig {
 	return LoopConfig{
-		delay:       DefaultSDKv2HelperRetryCompatibleDelay(),
+		delay:       DefaultSDKv2HelperRetryCompatibleDelay(ctx),
 		gracePeriod: 30 * time.Second,
 		timer:       &timerImpl{},
 	}
@@ -184,8 +197,8 @@ type Loop struct {
 }
 
 // NewLoopWithOptions returns a new loop configured with the provided options.
-func NewLoopWithOptions(timeout time.Duration, opts ...Option) *Loop {
-	config := defaultLoopConfig()
+func NewLoopWithOptions(ctx context.Context, timeout time.Duration, opts ...Option) *Loop {
+	config := defaultLoopConfig(ctx)
 	for _, opt := range opts {
 		opt(&config)
 	}
@@ -198,8 +211,8 @@ func NewLoopWithOptions(timeout time.Duration, opts ...Option) *Loop {
 }
 
 // NewLoop returns a new loop configured with the default options.
-func NewLoop(timeout time.Duration) *Loop {
-	return NewLoopWithOptions(timeout)
+func NewLoop(ctx context.Context, timeout time.Duration) *Loop {
+	return NewLoopWithOptions(ctx, timeout)
 }
 
 // Continue sleeps between attempts.

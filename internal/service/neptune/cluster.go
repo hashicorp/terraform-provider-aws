@@ -475,7 +475,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	var err error
 
 	if restoreDBClusterFromSnapshot {
-		for l := backoff.NewLoop(propagationTimeout); l.Continue(ctx); {
+		for l := backoff.NewLoop(ctx, propagationTimeout); l.Continue(ctx); {
 			_, err = conn.RestoreDBClusterFromSnapshot(ctx, inputR)
 
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid") {
@@ -487,7 +487,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if !restoreDBClusterFromSnapshot {
-		for l := backoff.NewLoop(d.Timeout(schema.TimeoutCreate)); l.Continue(ctx); {
+		for l := backoff.NewLoop(ctx, d.Timeout(schema.TimeoutCreate)); l.Continue(ctx); {
 			_, err = conn.CreateDBCluster(ctx, inputC)
 
 			if tfawserr.ErrMessageContains(err, errCodeInvalidGlobalClusterStateFault, "in progress") {
@@ -556,7 +556,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// When upgrading, the Neptune Cluster may not be available immediately after creation.
-	for l := backoff.NewLoop(d.Timeout(schema.TimeoutRead)); err != nil && l.Continue(ctx); {
+	for l := backoff.NewLoop(ctx, d.Timeout(schema.TimeoutRead)); err != nil && l.Continue(ctx); {
 		dbc, err = findDBClusterByID(ctx, conn, d.Id())
 
 		if errors.Is(err, tfresource.ErrEmptyResult) {
