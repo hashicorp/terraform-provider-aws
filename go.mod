@@ -186,7 +186,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.64.0
-	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.9.1
