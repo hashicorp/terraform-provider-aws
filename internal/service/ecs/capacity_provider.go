@@ -577,6 +577,13 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(output.CapacityProvider.CapacityProviderArn))
 
+	const (
+		timeout = 10 * time.Minute
+	)
+	if _, err := waitCapacityProviderActive(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) create: %s", d.Id(), err)
+	}
+
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
@@ -750,6 +757,22 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	return output, nil
 }
 
+func statusCapacityProvider(conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findCapacityProviderByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
 func statusCapacityProviderDelete(conn *ecs.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
@@ -788,6 +811,23 @@ func statusCapacityProviderUpdate(conn *ecs.Client, arn string) retry.StateRefre
 
 		return output, string(output.UpdateStatus), nil
 	}
+}
+
+func waitCapacityProviderActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target:  enum.Slice(awstypes.CapacityProviderStatusActive),
+		Refresh: statusCapacityProvider(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
