@@ -359,8 +359,8 @@ github.com/aws/aws-sdk-go-v2/service/macie2 v1.54.0 h1:N9K51ZTQmFBGOrgRDiw3KiRO3
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.54.0/go.mod h1:X+aUaqpL6Okxlf/S35NXt7O+raZyNuOo+xqI2mDZnn0=
 github.com/aws/aws-sdk-go-v2/service/mailmanager v1.21.0 h1:ol402u5TRnbQj2UPaF48MRcVoyAtSFOFbFMIDGpzbi8=
 github.com/aws/aws-sdk-go-v2/service/mailmanager v1.21.0/go.mod h1:v48balFpUZwpkKKTtlKT3RRr+dpEHaLmJCQNYmqxaL4=
-github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.52.1 h1:ezAXJ7FaOrdcfud5p/J8iA38I5aEjahu7GLQI8NprFA=
-github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.52.1/go.mod h1:twbI5lyTBUw1v/qPjs+wByrCPDn0uOQCHOXTBc7sgtc=
+github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.53.0 h1:XjRhF2EZRL25JwIo90pwbaWcz3EY5oIGZldjs8K+mqE=
+github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.53.0/go.mod h1:a4HR06mouVxwnUDd/fMx08/QMcJkgRPBe87iHdWyoxc=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.95.1 h1:/M2jZC7lHl38eTJ8Fy/ZCDdnafckgfN0YoLT4BZrlQk=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.95.1/go.mod h1:Mq7nLiCFdLepUes2H7ui6AFChFtRqUIyKU7iO8j9V2U=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.100.1 h1:dRbFOQKVjBFHVByUOPY3BHbsIc9FvTc6lerzitq6e+g=
