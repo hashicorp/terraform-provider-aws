@@ -50,6 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The `listener_arn` and `certificate_arn` separated by a `_`.
 
 ## Import
+~> **Note:** The import ID joins two ARNs with an underscore (`_`). Because ARNs do not themselves contain underscores, the separator is the single underscore between the end of the listener ARN and the start of the certificate ARN (which begins with `arn:aws:iam:`).
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Listener Certificates using the listener arn and certificate arn, separated by an underscore (`_`). For example:
 
