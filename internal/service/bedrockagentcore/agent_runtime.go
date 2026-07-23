@@ -18,8 +18,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -411,10 +412,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 														},
 														NestedObject: schema.NestedBlockObject{
 															Validators: []validator.Object{
-																objectvalidator.ExactlyOneOf(
-																	path.MatchRelative().AtName("match_value_string"),
-																	path.MatchRelative().AtName("match_value_string_list"),
-																),
+																claimMatchValueExactlyOneOf(),
 															},
 															Attributes: map[string]schema.Attribute{
 																"match_value_string": schema.StringAttribute{
@@ -1353,6 +1351,51 @@ var (
 	_ fwflex.Expander  = customJWTAuthorizerClaimMatchValueModel{}
 	_ fwflex.Flattener = &customJWTAuthorizerClaimMatchValueModel{}
 )
+
+var _ validator.Object = claimMatchValueExactlyOneOfValidator{}
+
+// claimMatchValueExactlyOneOf enforces that exactly one of match_value_string or
+// match_value_string_list is set within a claim_match_value block. That block is
+// nested inside a set of custom_claim blocks, where a path-expression validator
+// (objectvalidator/stringvalidator ExactlyOneOf) cannot resolve sibling attributes
+// across the set-element boundary, so the constraint is checked on the object
+// value directly.
+func claimMatchValueExactlyOneOf() validator.Object {
+	return claimMatchValueExactlyOneOfValidator{}
+}
+
+type claimMatchValueExactlyOneOfValidator struct{}
+
+func (v claimMatchValueExactlyOneOfValidator) Description(_ context.Context) string {
+	return "exactly one of match_value_string or match_value_string_list must be set"
+}
+
+func (v claimMatchValueExactlyOneOfValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v claimMatchValueExactlyOneOfValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var config customJWTAuthorizerClaimMatchValueModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.MatchValueString.IsUnknown() || config.MatchValueStringList.IsUnknown() {
+		return
+	}
+
+	if config.MatchValueString.IsNull() == config.MatchValueStringList.IsNull() {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			req.Path,
+			"exactly one of `match_value_string` or `match_value_string_list` must be set",
+		))
+	}
+}
 
 func (m *customJWTAuthorizerClaimMatchValueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
