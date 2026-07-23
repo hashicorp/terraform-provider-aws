@@ -13,6 +13,10 @@ resource "aws_prometheus_anomaly_detector" "test" {
 	  query = "avg(up)"
 	}
   }
+
+  missing_data_action{
+    skip = true
+  }
 }
 variable "rName" {
   description = "Name for resource"
