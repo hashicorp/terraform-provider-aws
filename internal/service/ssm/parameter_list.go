@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -66,17 +67,24 @@ func (l *parameterListResource) List(ctx context.Context, request list.ListReque
 
 			rd := l.ResourceData()
 			rd.SetId(name)
+			rd.Set(names.AttrName, name)
 
-			tflog.Info(ctx, "Reading SSM parameter")
-			diags := resourceParameterRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading SSM parameter %s", name))
-				yield(result)
-				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				param, err := findParameterByName(ctx, conn, name, true)
+				if err != nil {
+					tflog.Error(ctx, "Reading SSM parameter", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+
+				diags := resourceParameterFlatten(rd, param, &parameter)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading SSM parameter", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = name

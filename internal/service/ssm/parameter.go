@@ -293,10 +293,22 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	param := outputRaw.(*awstypes.Parameter)
-	d.Set(names.AttrARN, param.ARN)
-	d.Set(names.AttrName, param.Name)
-	d.Set(names.AttrType, param.Type)
-	d.Set(names.AttrVersion, param.Version)
+	detail, err := findParameterMetadataByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
+	}
+
+	diags = append(diags, resourceParameterFlatten(d, param, detail)...)
+	if diags.HasError() {
+		return diags
+	}
 
 	hasWriteOnly := d.Get("has_value_wo").(bool)
 	rawConfig := d.GetRawConfig()
@@ -315,12 +327,6 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
-		d.Set("insecure_value", param.Value)
-	} else {
-		d.Set(names.AttrValue, param.Value)
-	}
-
 	if hasWriteOnly {
 		d.Set("has_value_wo", true)
 		d.Set(names.AttrValue, nil)
@@ -330,16 +336,21 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
 	}
 
-	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
+	return diags
+}
 
-	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
+func resourceParameterFlatten(d *schema.ResourceData, param *awstypes.Parameter, detail *awstypes.ParameterMetadata) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
+	d.Set(names.AttrARN, param.ARN)
+	d.Set(names.AttrName, param.Name)
+	d.Set(names.AttrType, param.Type)
+	d.Set(names.AttrVersion, param.Version)
+
+	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
+		d.Set("insecure_value", param.Value)
+	} else {
+		d.Set(names.AttrValue, param.Value)
 	}
 
 	d.Set("allowed_pattern", detail.AllowedPattern)
