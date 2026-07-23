@@ -14,21 +14,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_eks_cluster_versions", name="Cluster Versions")
 func newClusterVersionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &clusterVersionsDataSource{}, nil
 }
-
-const (
-	DSNameClusterVersions = "Cluster Versions Data Source"
-)
 
 type clusterVersionsDataSource struct {
 	framework.DataSourceWithModel[clusterVersionsDataSourceModel]
@@ -69,7 +63,7 @@ func (d *clusterVersionsDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	input := eks.DescribeClusterVersionsInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -77,13 +71,13 @@ func (d *clusterVersionsDataSource) Read(ctx context.Context, req datasource.Rea
 	out, err := findClusterVersions(ctx, conn, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EKS, create.ErrActionReading, DSNameClusterVersions, "", err),
+			"reading EKS Cluster Versions",
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.ClusterVersions)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data.ClusterVersions)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
