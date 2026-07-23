@@ -25,6 +25,7 @@ func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
 		acctest.CtBasic: testAccTransitVirtualInterface_basic,
 		"tags":          testAccTransitVirtualInterface_tags,
 		"sitelink":      testAccTransitVirtualInterface_siteLink,
+		"rateLimit":     testAccTransitVirtualInterface_rateLimit,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -357,4 +358,58 @@ resource "aws_dx_transit_virtual_interface" "test" {
   vlan             = %[4]d
 }
 `, cid, rName, bgpAsn, vlan, sitelink_enabled))
+}
+
+func testAccTransitVirtualInterface_rateLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	var vif awstypes.VirtualInterface
+	resourceName := "aws_dx_transit_virtual_interface.test"
+	rName := fmt.Sprintf("tf-testacc-transit-vif-%s", acctest.RandString(t, 9))
+	amzAsn := acctest.RandIntRange(t, 64512, 65534)
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitVirtualInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitVirtualInterfaceConfig_rateLimit(connectionID, rName, amzAsn, bgpAsn, vlan, "1Gbps"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitVirtualInterfaceExists(ctx, t, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "1Gbps"),
+				),
+			},
+			{
+				Config: testAccTransitVirtualInterfaceConfig_rateLimit(connectionID, rName, amzAsn, bgpAsn, vlan, "2Gbps"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitVirtualInterfaceExists(ctx, t, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "2Gbps"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitVirtualInterfaceConfig_rateLimit(cid, rName string, amzAsn, bgpAsn, vlan int, rateLimit string) string {
+	return acctest.ConfigCompose(testAccTransitVirtualInterfaceConfig_base(rName, amzAsn), fmt.Sprintf(`
+resource "aws_dx_transit_virtual_interface" "test" {
+  address_family = "ipv4"
+  bgp_asn        = %[3]d
+  dx_gateway_id  = aws_dx_gateway.test.id
+  connection_id  = %[1]q
+  name           = %[2]q
+  rate_limit     = %[5]q
+  vlan           = %[4]d
+}
+`, cid, rName, bgpAsn, vlan, rateLimit))
 }

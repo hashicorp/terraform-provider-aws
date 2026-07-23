@@ -223,6 +223,7 @@ func resourceConnection() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
+				"rate_limiter_status": rateLimiterStatusSchema(),
 				names.AttrSkipDestroy: {
 					Type:     schema.TypeBool,
 					Default:  false,
@@ -307,6 +308,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("request_macsec", aws.Bool(false))
 	}
 	d.Set("vlan_id", connection.Vlan)
+	d.Set("rate_limiter_status", flattenRateLimiterStatus(connection.RateLimiterStatus))
 
 	return diags
 }
@@ -455,4 +457,49 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id s
 	}
 
 	return nil, err
+}
+
+func rateLimiterStatusSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"in_use": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"max_allowed": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"remaining": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"total_bandwidth": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenRateLimiterStatus(apiObject *awstypes.RateLimiterStatus) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"max_allowed": int(apiObject.MaxAllowed),
+		"in_use":      int(apiObject.InUse),
+		"remaining":   int(apiObject.Remaining),
+	}
+
+	if v := apiObject.TotalBandwidth; v != nil {
+		tfMap["total_bandwidth"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }

@@ -77,8 +77,18 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_account_id` - The ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `port_encryption_status` - The MAC Security (MACsec) port link status of the connection.
+* `rate_limiter_status` - Rate limiter status for the connection. See [`rate_limiter_status` Block](#rate_limiter_status-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vlan_id` - The VLAN ID.
+
+### `rate_limiter_status` Block
+
+`rate_limiter_status` exports the following attributes:
+
+* `max_allowed` - Maximum number of rate limiters allowed on the connection.
+* `in_use` - Number of rate limiters currently in use.
+* `remaining` - Number of rate limiters remaining (available).
+* `total_bandwidth` - Total bandwidth allocated across all rate limiters.
 
 ## Import
 
