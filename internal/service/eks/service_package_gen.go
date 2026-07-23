@@ -284,6 +284,19 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
+		{
+			Factory:  newNodeGroupResourceAsListResource,
+			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("node_group_name", true),
+			}),
+		},
 	})
 }
 
