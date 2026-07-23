@@ -734,7 +734,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("target_table", nil)
 	}
 	if table.ViewDefinition != nil {
-		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition)}); err != nil {
+		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, existingViewRepresentations(d))}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
 		}
 	} else {
@@ -979,7 +979,15 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.Retention = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("storage_descriptor"); ok {
+	// storage_descriptor is Optional+Computed: for a validated multi-dialect
+	// view (one with a validation_connection), Glue resolves and returns the
+	// view's schema as a storage_descriptor, which Read stores in state for
+	// visibility. Since the attribute is Optional+Computed, d.GetOk alone
+	// can't tell that computed value apart from one the practitioner actually
+	// configured, so re-submitting it unconditionally on every Create/Update
+	// trips "Storage descriptor may not be defined when creating a validated
+	// Glue view". Only send it when it's actually present in the HCL config.
+	if v, ok := d.GetOk("storage_descriptor"); ok && attributeInRawConfig(d, "storage_descriptor") {
 		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
@@ -1338,6 +1346,34 @@ func expandPartitionIndexes(tfList []any) []awstypes.PartitionIndex {
 	}
 
 	return apiObjects
+}
+
+// attributeInRawConfig reports whether the practitioner has the named
+// top-level Optional+Computed attribute in their HCL configuration, as
+// opposed to its state value having been populated solely by Read. Since
+// d.GetOk can't distinguish the two for Optional+Computed attributes, this
+// inspects the raw config instead.
+//
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+func attributeInRawConfig(d *schema.ResourceData, name string) bool {
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsKnown() || rawConfig.IsNull() {
+		return false
+	}
+
+	v := rawConfig.GetAttr(name)
+	if !v.IsKnown() || v.IsNull() {
+		return false
+	}
+
+	// For collection types (most commonly nested block lists/sets), an
+	// unconfigured attribute reports as a non-null empty collection rather
+	// than null, so check the length explicitly.
+	if t := v.Type(); t.IsListType() || t.IsSetType() || t.IsMapType() || t.IsTupleType() || t.IsObjectType() {
+		return v.LengthInt() > 0
+	}
+
+	return true
 }
 
 func expandStorageDescriptor(tfList []any) *awstypes.StorageDescriptor {
@@ -1870,7 +1906,39 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 	return apiObjects
 }
 
-func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
+// existingViewRepresentations captures the practitioner's currently-known
+// view_definition.representations (from state, or from config on the initial
+// Read of a Create) before Read overwrites them, keyed by "dialect|dialect_version".
+// Glue doesn't return validation_connection, view_original_text, or
+// view_expanded_text back on GetTable for a validated (is_protected) view, so
+// flattenViewRepresentation uses this to avoid treating that as drift.
+func existingViewRepresentations(d *schema.ResourceData) map[string]map[string]any {
+	existing := make(map[string]map[string]any)
+
+	v, ok := d.GetOk("view_definition")
+	if !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+		return existing
+	}
+	viewDefinition := v.([]any)[0].(map[string]any)
+
+	representations, ok := viewDefinition["representations"].([]any)
+	if !ok {
+		return existing
+	}
+
+	for _, r := range representations {
+		tfMap, ok := r.(map[string]any)
+		if !ok {
+			continue
+		}
+		key := fmt.Sprintf("%s|%s", tfMap["dialect"], tfMap["dialect_version"])
+		existing[key] = tfMap
+	}
+
+	return existing
+}
+
+func flattenViewDefinition(apiObject *awstypes.ViewDefinition, existingRepresentations map[string]map[string]any) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1894,7 +1962,7 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	}
 
 	if v := apiObject.Representations; len(v) > 0 {
-		tfMap["representations"] = flattenViewRepresentations(v)
+		tfMap["representations"] = flattenViewRepresentations(v, existingRepresentations)
 	}
 
 	tfMap["view_version_id"] = apiObject.ViewVersionId
@@ -1906,15 +1974,16 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	return tfMap
 }
 
-func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation) []any {
+func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, existingRepresentations map[string]map[string]any) []any {
 	tfList := make([]any, len(apiObjects))
 	for i, v := range apiObjects {
-		tfList[i] = flattenViewRepresentation(v)
+		key := fmt.Sprintf("%s|%s", v.Dialect, aws.ToString(v.DialectVersion))
+		tfList[i] = flattenViewRepresentation(v, existingRepresentations[key])
 	}
 	return tfList
 }
 
-func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string]any {
+func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, existing map[string]any) map[string]any {
 	tfMap := make(map[string]any)
 
 	if v := apiObject.Dialect; v != "" {
@@ -1927,13 +1996,19 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 
 	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
 		tfMap["validation_connection"] = v
+	} else if v, ok := existing["validation_connection"].(string); ok && v != "" {
+		tfMap["validation_connection"] = v
 	}
 
 	if v := aws.ToString(apiObject.ViewExpandedText); v != "" {
 		tfMap["view_expanded_text"] = v
+	} else if v, ok := existing["view_expanded_text"].(string); ok && v != "" {
+		tfMap["view_expanded_text"] = v
 	}
 
 	if v := aws.ToString(apiObject.ViewOriginalText); v != "" {
+		tfMap["view_original_text"] = v
+	} else if v, ok := existing["view_original_text"].(string); ok && v != "" {
 		tfMap["view_original_text"] = v
 	}
 

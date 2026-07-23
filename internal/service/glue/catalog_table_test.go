@@ -398,6 +398,58 @@ func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
 	})
 }
 
+// Covers two related bugs found when creating and then updating a validated
+// (is_protected) multi-dialect view: expandTableInput was unconditionally
+// re-submitting storage_descriptor (Optional+Computed, populated by Read
+// from Glue's resolved view schema) on Update, which Glue rejects; and Read
+// was wiping out configured representations.validation_connection /
+// view_original_text / view_expanded_text with the empty values Glue's
+// GetTable returns for those fields once a view is validated.
+func TestAccGlueCatalogTable_Update_validatedViewStorageDescriptor(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_validatedView(rName, "SELECT 1 AS col"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+				),
+			},
+			{
+				// Read populates storage_descriptor in state with the schema
+				// Glue resolved for the view. A subsequent update must not
+				// resubmit that computed value, or Glue rejects it: "Storage
+				// descriptor may not be defined when creating a validated
+				// Glue view".
+				Config: testAccCatalogTableConfig_validatedView(rName, "SELECT 2 AS col"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1901,4 +1953,132 @@ resource "aws_glue_connection" "test_athena" {
   }
 }
 `, rName)
+}
+
+// testAccCatalogTableConfig_validatedView provisions a self-contained
+// (table-less) query so it only needs a definer role capable of running
+// Athena queries, without also requiring Lake Formation grants on a
+// referenced table.
+func testAccCatalogTableConfig_validatedView(rName, query string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+
+  # Glue rejects view creation in a database that grants IAM_ALLOWED_PRINCIPALS
+  # Super/ALL permissions (the account-level hybrid-access default): "Create
+  # Table Default Permissions should be empty, either in the database or
+  # settings."
+  create_table_default_permission {
+    permissions = []
+
+    principal {
+      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "results" {
+  bucket        = "%[1]s-results"
+  force_destroy = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name          = %[1]q
+  force_destroy = true
+
+  configuration {
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.results.bucket}/"
+    }
+  }
+}
+
+resource "aws_iam_role" "definer" {
+  name = "%[1]s-definer"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "glue.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "definer" {
+  name = "view-validation"
+  role = aws_iam_role.definer.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:StartQueryExecution",
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "athena:StopQueryExecution",
+          "athena:GetWorkGroup",
+        ]
+        Resource = aws_athena_workgroup.test.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+        ]
+        Resource = [
+          aws_s3_bucket.results.arn,
+          "${aws_s3_bucket.results.arn}/*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_glue_connection" "test_athena" {
+  name            = "%[1]s-a"
+  connection_type = "VIEW_VALIDATION_ATHENA"
+
+  connection_properties = {
+    WORKGROUP_NAME = aws_athena_workgroup.test.name
+  }
+}
+
+// Glue's view validation assumes the definer role in a one-shot attempt with
+// no retry of its own; a role/policy created moments earlier in the same
+// apply can trip IAM's eventual consistency and fail validation permanently.
+resource "time_sleep" "definer_propagation" {
+  create_duration = "10s"
+
+  depends_on = [aws_iam_role_policy.definer]
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  depends_on = [time_sleep.definer_propagation]
+
+  view_definition {
+    is_protected = true
+    definer      = aws_iam_role.definer.arn
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = %[2]q
+      validation_connection = aws_glue_connection.test_athena.name
+    }
+  }
+}
+`, rName, query)
 }
