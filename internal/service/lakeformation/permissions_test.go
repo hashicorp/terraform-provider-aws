@@ -1992,30 +1992,28 @@ EOF
 }
 
 resource "aws_lakeformation_lf_tag_expression" "test" {
-	name = %[1]q
+	   name = %[1]q
+	   expression {
+		       tag_key    = aws_lakeformation_lf_tag.test.key
+			   tag_values = aws_lakeformation_lf_tag.test.values
+	   }
 
-	expression {
-		tag_key    = aws_lakeformation_lf_tag.test.key
-		tag_values = aws_lakeformation_lf_tag.test.values
-	}
-
-	depends_on = [aws_lakeformation_data_lake_settings.test]
+	   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
 resource "aws_lakeformation_permissions" "test" {
-	permissions                   = ["ASSOCIATE", "DESCRIBE"]
-	permissions_with_grant_option = ["ASSOCIATE", "DESCRIBE"]
-	principal                     = aws_iam_role.test.arn
+	   permissions                   = ["ASSOCIATE", "DESCRIBE"]
+	   permissions_with_grant_option = ["ASSOCIATE", "DESCRIBE"]
+	   principal                     = aws_iam_role.test.arn
 
-	lf_tag_expression {
-		catalog_id = data.aws_caller_identity.current.account_id
-		name       = aws_lakeformation_lf_tag_expression.test.name
-	}
-
-	depends_on = [
-		aws_lakeformation_data_lake_settings.test,
-		aws_lakeformation_lf_tag_expression.test,
-	]
+	   lf_tag_expression {
+		       catalog_id = data.aws_caller_identity.current.account_id
+			   name       = aws_lakeformation_lf_tag_expression.test.name
+	   }
+	   depends_on = [
+		       aws_lakeformation_data_lake_settings.test,
+		       aws_lakeformation_lf_tag_expression.test,
+	   ]
 }
 `, rName))
 }
@@ -2024,9 +2022,9 @@ func testAccPermissionsConfig_lfTagPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
-  name               = %[1]q
-  path               = "/"
-  assume_role_policy = <<EOF
+       name               = %[1]q
+       path               = "/"
+	   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2088,9 +2086,9 @@ func testAccPermissionsConfig_lfTagPolicyMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
-  name               = %[1]q
-  path               = "/"
-  assume_role_policy = <<EOF
+	   name               = %[1]q
+       path               = "/"
+	   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
