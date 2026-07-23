@@ -1636,7 +1636,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 
 	publish := d.Get("publish").(bool)
 	publishChanged := d.HasChange("publish")
-	if publish && (configChanged || codeChanged || publishChanged) {
+	if publishChanged || (publish && (configChanged || codeChanged)) {
 		d.SetNewComputed(names.AttrVersion)
 		d.SetNewComputed("qualified_arn")
 		d.SetNewComputed("qualified_invoke_arn")
@@ -2129,7 +2129,7 @@ func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d 
 		d.Set("qualified_arn", functionARN)
 		d.Set("qualified_invoke_arn", invokeARN(ctx, awsClient, functionARN))
 		d.Set(names.AttrVersion, function.Version)
-	} else {
+	} else if d.Get("publish").(bool) {
 		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
 
 		if err != nil {
@@ -2140,7 +2140,13 @@ func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d 
 		d.Set("qualified_arn", qualifiedARN)
 		d.Set("qualified_invoke_arn", invokeARN(ctx, awsClient, qualifiedARN))
 		d.Set(names.AttrVersion, latest.Version)
+	} else {
+		d.Set("qualified_arn", nil)
+		d.Set("qualified_invoke_arn", nil)
+		d.Set(names.AttrVersion, nil)
+	}
 
+	if !hasQualifier {
 		setTagsOut(ctx, output.Tags)
 	}
 
