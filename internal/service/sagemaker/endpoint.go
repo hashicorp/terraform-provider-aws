@@ -355,12 +355,25 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Endpoint (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
+		output, err := waitEndpointInService(ctx, conn, d.Id())
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) update: %s", d.Id(), err)
+		}
+
+		if err := endpointConfigNameApplied(aws.ToString(output.EndpointConfigName), n.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Endpoint (%s): %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
+}
+
+// endpointConfigNameApplied returns an error if the applied configuration name does not match the requested one
+func endpointConfigNameApplied(got, want string) error {
+	if got != want {
+		return fmt.Errorf("endpoint configuration %q was not applied; the endpoint is using %q (SageMaker may have rolled back the update)", want, got)
+	}
+	return nil
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -473,12 +486,12 @@ func statusEndpoint(conn *sagemaker.Client, name string) retry.StateRefreshFunc 
 	}
 }
 
-func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) { //nolint:unparam
+func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
 	const (
 		timeout = 60 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
+		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating, awstypes.EndpointStatusRollingBack),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
 		Refresh: statusEndpoint(conn, name),
 		Timeout: timeout,
