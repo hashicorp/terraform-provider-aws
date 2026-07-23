@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix spurious deployment rollback triggered on every update when `sigint_rollback` is enabled, a regression introduced in v6.53.0
+```
