@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.31
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.30
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.31
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.34
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.35
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.42.1
@@ -230,7 +230,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.2
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.106.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.72.1
 	github.com/aws/aws-sdk-go-v2/service/s3files v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.36.1
@@ -344,10 +344,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.31 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.32 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.23 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.24 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.31 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.31 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.32 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
