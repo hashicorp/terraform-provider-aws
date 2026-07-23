@@ -49,8 +49,11 @@ var (
 )
 
 type (
+	CustomConfigurationModel              = customConfigurationModel
 	CustomJWTAuthorizerConfigurationModel = customJWTAuthorizerConfigurationModel
 	ManagedVPCResourceModel               = managedVPCResourceModel
+	MemoryStrategyResourceModel           = memoryStrategyResourceModel
+	OverrideDetailsModel                  = overrideDetailsModel
 	PrivateEndpointModel                  = privateEndpointModel
 	SelfManagedLatticeResourceModel       = selfManagedLatticeResourceModel
 )
