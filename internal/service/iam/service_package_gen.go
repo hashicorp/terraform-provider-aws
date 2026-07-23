@@ -321,6 +321,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_policy_attachment",
 			Name:     "Policy Attachment",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalARNIdentityNamed("policy_arn"),
 		},
 		{
 			Factory:  resourceRole,

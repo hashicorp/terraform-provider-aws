@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -167,6 +168,17 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 							Description: "Iceberg metadata configuration.",
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergMetadataModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrProperties: schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										ElementType: types.StringType,
+										Description: "A map of configuration properties for the Iceberg table, for example `write.distribution-mode` and `write.sort-order`.",
+										PlanModifiers: []planmodifier.Map{
+											mapplanmodifier.RequiresReplace(),
+										},
+									},
+								},
 								Blocks: map[string]schema.Block{
 									names.AttrSchema: schema.ListNestedBlock{
 										Description: "Schema configuration for the Iceberg table.",
@@ -1014,7 +1026,8 @@ type tableMetadataModel struct {
 }
 
 type icebergMetadataModel struct {
-	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+	Properties fwtypes.MapOfString                                 `tfsdk:"properties"`
+	Schema     fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
 }
 
 type icebergSchemaModel struct {

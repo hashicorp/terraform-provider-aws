@@ -153,6 +153,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -162,6 +163,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mailmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
@@ -423,6 +425,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		kms.ServicePackage(ctx),
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
+		lambdamicrovms.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
 		lexv2models.ServicePackage(ctx),
@@ -432,6 +435,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		logs.ServicePackage(ctx),
 		m2.ServicePackage(ctx),
 		macie2.ServicePackage(ctx),
+		mailmanager.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
 		mediaconvert.ServicePackage(ctx),
 		medialive.ServicePackage(ctx),

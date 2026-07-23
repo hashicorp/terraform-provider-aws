@@ -458,7 +458,7 @@ modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
-	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment|changelog-agent).yml' || true); \
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
 	if [ -n "$$disallowed_files" ]; then \
 		echo "Error: 'pull_request_target' found in disallowed files:"; \
 		echo "$$disallowed_files"; \

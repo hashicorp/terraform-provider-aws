@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_mq_broker: Fix perpetual `shared_resources` diffs for ActiveMQ brokers
+```
+
+```release-note:bug
+resource/aws_mq_configuration: Retry `ConflictException: Configuration ID [...] is in use` errors on delete
+```

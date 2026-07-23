@@ -169,6 +169,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
+			Factory:  newSecretPolicyResourceAsListResource,
+			TypeName: "aws_secretsmanager_secret_policy",
+			Name:     "Secret Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("secret_arn"),
+		},
+		{
 			Factory:  secretVersionResourceAsListResource,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",

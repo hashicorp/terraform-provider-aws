@@ -3376,7 +3376,7 @@ func TestAccEC2Instance_PrimaryNetworkInterface_basic(t *testing.T) {
 				Config: testAccInstanceConfig_primaryNetworkInterface_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
-					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniResourceName, &eni),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
@@ -3418,7 +3418,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterface(t *testing.T) {
 				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
-					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
 						"device_index":       "0",
@@ -3517,7 +3517,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterfaceSourceDestCheck(
 				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterfaceSourceDestCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
-					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
@@ -3551,8 +3551,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &before),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3581,8 +3581,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &after),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3639,8 +3639,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &before),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3669,8 +3669,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &after),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3721,8 +3721,8 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterfaceBefore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &before),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3749,8 +3749,8 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &after),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
