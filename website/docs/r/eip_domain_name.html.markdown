@@ -60,12 +60,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_eip_domain_name.test
-  id = "eipassoc-ab12c345"
+  id = "eipalloc-ab12c345"
 }
 ```
 
 Using `terraform import`, import a static reverse DNS record to an Elastic IP addresses using their association IDs. For example:
 
 ```console
-% terraform import aws_eip_domain_name.test eipassoc-ab12c345
+% terraform import aws_eip_domain_name.test eipalloc-ab12c345
 ```
