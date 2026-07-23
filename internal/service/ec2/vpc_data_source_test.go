@@ -138,6 +138,42 @@ func TestAccVPCDataSource_IPv6CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
+func TestAccVPCDataSource_IPv6CIDRBlockAssociations_ipam(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_vpc.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCDataSourceConfig_IPv6CIDRBlockAssociations_ipam(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_block_associations.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_associations.*.association_id", "aws_vpc.test", "ipv6_association_id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_associations.*.association_id", "aws_vpc_ipv6_cidr_block_association.test", names.AttrID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("ipv6_cidr_block_associations"), knownvalue.SetPartial([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrAssociationID:  knownvalue.NotNull(),
+							"ipv6_address_attribute": tfknownvalue.StringExact(awstypes.Ipv6AddressAttributePublic),
+							"ipv6_cidr_block":        knownvalue.StringRegexp(regexache.MustCompile(`/56$`)),
+							"ipv6_pool":              knownvalue.StringExact("IPAM Managed"),
+							"network_border_group":   knownvalue.StringExact(acctest.Region()),
+							"ip_source":              tfknownvalue.StringExact(awstypes.IpSourceAmazon),
+							names.AttrState:          tfknownvalue.StringExact(awstypes.VpcCidrBlockStateCodeAssociated),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccVPCDataSourceConfig_basic(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -199,7 +235,7 @@ func testAccVPCDataSourceConfig_IPv6CIDRBlockAssociations_amazonProvided() strin
 data "aws_vpc" "test" {
   id = aws_vpc.test.id
   depends_on = [
-    aws_vpc_ipv6_cidr_block_association.test
+    aws_vpc_ipv6_cidr_block_association.test,
   ]
 }
 
@@ -213,4 +249,31 @@ resource "aws_vpc_ipv6_cidr_block_association" "test" {
   assign_generated_ipv6_cidr_block = true
 }
 `
+}
+
+func testAccVPCDataSourceConfig_IPv6CIDRBlockAssociations_ipam(rName string) string {
+	return acctest.ConfigCompose(testAccVPCConfig_baseIPAMIPv6(rName), `
+data "aws_vpc" "test" {
+  id = aws_vpc.test.id
+  depends_on = [
+    aws_vpc_ipv6_cidr_block_association.test,
+  ]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv6_netmask_length = 56
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+}
+
+resource "aws_vpc_ipv6_cidr_block_association" "test" {
+  vpc_id = aws_vpc.test.id
+
+  ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv6_netmask_length = 56
+}
+`)
 }
