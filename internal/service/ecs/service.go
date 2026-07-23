@@ -624,9 +624,33 @@ func resourceService() *schema.Resource {
 								Type:     schema.TypeBool,
 								Required: true,
 							},
+							"reset_on_healthy_task": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"rollback": {
 								Type:     schema.TypeBool,
 								Required: true,
+							},
+							"threshold_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -2583,6 +2607,32 @@ func expandDeploymentCircuitBreaker(tfMap map[string]any) *awstypes.DeploymentCi
 	apiObject.Enable = tfMap["enable"].(bool)
 	apiObject.Rollback = tfMap["rollback"].(bool)
 
+	if v, ok := tfMap["reset_on_healthy_task"].(bool); ok {
+		apiObject.ResetOnHealthyTask = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["threshold_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ThresholdConfiguration = expandThresholdConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandThresholdConfiguration(tfMap map[string]any) *awstypes.ThresholdConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ThresholdConfiguration{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.ThresholdType(v)
+	}
+
+	if v, ok := tfMap[names.AttrValue].(int); ok {
+		apiObject.Value = int32(v)
+	}
+
 	return apiObject
 }
 
@@ -2596,7 +2646,28 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	tfMap["enable"] = apiObject.Enable
 	tfMap["rollback"] = apiObject.Rollback
 
+	if v := apiObject.ResetOnHealthyTask; v != nil {
+		tfMap["reset_on_healthy_task"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.ThresholdConfiguration; v != nil {
+		tfMap["threshold_configuration"] = flattenThresholdConfiguration(v)
+	}
+
 	return tfMap
+}
+
+func flattenThresholdConfiguration(apiObject *awstypes.ThresholdConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrType:  apiObject.Type,
+		names.AttrValue: apiObject.Value,
+	}
+
+	return []any{tfMap}
 }
 
 func flattenDeploymentConfiguration(apiObject *awstypes.DeploymentConfiguration) []any {

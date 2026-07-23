@@ -353,6 +353,15 @@ The `deployment_circuit_breaker` configuration block supports the following:
 
 * `enable` - (Required) Whether to enable the deployment circuit breaker logic for the service.
 * `rollback` - (Required) Whether to enable Amazon ECS to roll back the service if a service deployment fails. If rollback is enabled, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+* `reset_on_healthy_task` - (Optional) Whether the deployment circuit breaker resets its failure count when a task reaches a healthy state. When `true`, a task that reaches a healthy state resets the failure count to `0`; when `false`, the failure count is not reset. Defaults to `true`.
+* `threshold_configuration` - (Optional) Configuration block that controls when the deployment circuit breaker triggers. [See below](#threshold_configuration).
+
+### threshold_configuration
+
+The `threshold_configuration` configuration block supports the following:
+
+* `type` - (Required) How `value` is used to calculate the failure threshold. For the percentage types (`BOUNDED_PERCENT` and `UNBOUNDED_PERCENT`), Amazon ECS multiplies `value` by the latest service desired count; for `COUNT`, Amazon ECS uses `value` directly. Valid values: `COUNT`, `BOUNDED_PERCENT`, `UNBOUNDED_PERCENT`. Default: `BOUNDED_PERCENT`.
+* `value` - (Required) Integer used to calculate the failure threshold. When `type` is `COUNT`, this is the failure threshold itself. When `type` is a percentage type, this value is multiplied by the latest service desired count to produce the failure threshold. Default: `50`.
 
 ### deployment_controller
 
