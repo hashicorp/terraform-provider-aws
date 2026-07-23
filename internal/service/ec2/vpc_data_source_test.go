@@ -7,8 +7,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,7 +97,6 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 func TestAccVPCDataSource_IPv6CIDRBlockAssociations_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -100,12 +105,34 @@ func TestAccVPCDataSource_IPv6CIDRBlockAssociations_multiple(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDataSourceConfig_IPv6CIDRBlockAssociationsMultiple(rName),
+				Config: testAccVPCDataSourceConfig_IPv6CIDRBlockAssociations_amazonProvided(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_block_associations.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_associations.*.association_id", "aws_vpc.test", "ipv6_association_id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_associations.*.association_id", "aws_vpc_ipv6_cidr_block_association.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("ipv6_cidr_block_associations"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrAssociationID:  knownvalue.NotNull(),
+							"ipv6_address_attribute": tfknownvalue.StringExact(awstypes.Ipv6AddressAttributePublic),
+							"ipv6_cidr_block":        knownvalue.StringRegexp(regexache.MustCompile(`/56$`)),
+							"ipv6_pool":              knownvalue.StringExact("Amazon"),
+							"network_border_group":   knownvalue.StringExact(acctest.Region()),
+							"ip_source":              tfknownvalue.StringExact(awstypes.IpSourceAmazon),
+							names.AttrState:          tfknownvalue.StringExact(awstypes.VpcCidrBlockStateCodeAssociated),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrAssociationID:  knownvalue.NotNull(),
+							"ipv6_address_attribute": tfknownvalue.StringExact(awstypes.Ipv6AddressAttributePublic),
+							"ipv6_cidr_block":        knownvalue.StringRegexp(regexache.MustCompile(`/56$`)),
+							"ipv6_pool":              knownvalue.StringExact("Amazon"),
+							"network_border_group":   knownvalue.StringExact(acctest.Region()),
+							"ip_source":              tfknownvalue.StringExact(awstypes.IpSourceAmazon),
+							names.AttrState:          tfknownvalue.StringExact(awstypes.VpcCidrBlockStateCodeAssociated),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -167,28 +194,23 @@ data "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccVPCDataSourceConfig_IPv6CIDRBlockAssociationsMultiple(rName string) string {
-	return fmt.Sprintf(`
+func testAccVPCDataSourceConfig_IPv6CIDRBlockAssociations_amazonProvided() string {
+	return `
+data "aws_vpc" "test" {
+  id = aws_vpc.test.id
+  depends_on = [
+    aws_vpc_ipv6_cidr_block_association.test
+  ]
+}
+
 resource "aws_vpc" "test" {
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_vpc_ipv6_cidr_block_association" "test" {
   vpc_id                           = aws_vpc.test.id
   assign_generated_ipv6_cidr_block = true
 }
-
-
-data "aws_vpc" "test" {
-  depends_on = [
-    aws_vpc_ipv6_cidr_block_association.test
-  ]
-  id = aws_vpc.test.id
-}
-`, rName)
+`
 }
