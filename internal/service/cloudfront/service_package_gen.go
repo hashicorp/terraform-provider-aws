@@ -30,6 +30,10 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Name:     "Create Invalidation",
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
+		{
+			Factory: newResourceInvalidation,
+			Name:    "Invalidation",
+		},
 	}
 }
 
