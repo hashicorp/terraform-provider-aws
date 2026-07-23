@@ -1,3 +1,7 @@
 ```release-note:enhancement
-Add support for `ipv6_cidr_block_associations` to the `aws_ec2_vpc` data source.
+data-source/aws_vpc: Adds support for `ipv6_cidr_block_associations`.
+```
+
+```release-note:enhancement
+data-source/aws_vpc: Deprecates `ipv6_association_id` and `ipv6_cidr_block`.
 ```
