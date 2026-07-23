@@ -95,6 +95,48 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_taskDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_taskDefinition(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttrPair(resourceName, "task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSExpressGatewayService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -803,6 +845,42 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 `, rName, waitForSteadyStateConfig))
+}
+
+func testAccExpressGatewayServiceConfig_taskDefinition(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+  execution_role_arn       = aws_iam_role.execution.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "Main"
+      image     = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+      essential = true
+      portMappings = [{
+        name          = "http"
+        containerPort = 80
+        protocol      = "tcp"
+      }]
+    }
+  ])
+}
+
+resource "aws_ecs_express_gateway_service" "test" {
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  task_definition_arn     = aws_ecs_task_definition.test.arn
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName))
 }
 
 func testAccExpressGatewayServiceConfig_updated(rName string, waitForSteadyState bool) string {
