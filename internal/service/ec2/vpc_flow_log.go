@@ -7,6 +7,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -299,10 +300,10 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
-	fl, err := findFlowLogByID(ctx, conn, d.Id())
+	output, err := findFlowLogByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Flow Log %s not found, removing from state", d.Id())
@@ -314,29 +315,37 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Flow Log (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, flowLogARN(ctx, c, d.Id()))
-	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
-	if fl.DestinationOptions != nil {
-		if err := d.Set("destination_options", []any{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)
+	if err := resourceFlowLogFlatten(ctx, awsClient, output, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening Flow Log (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceFlowLogFlatten(ctx context.Context, awsClient *conns.AWSClient, output *awstypes.FlowLog, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, flowLogARN(ctx, awsClient, d.Id()))
+	d.Set("deliver_cross_account_role", output.DeliverCrossAccountRole)
+	if output.DestinationOptions != nil {
+		if err := d.Set("destination_options", []any{flattenDestinationOptionsResponse(output.DestinationOptions)}); err != nil {
+			return fmt.Errorf("setting destination_options: %w", err)
 		}
 	} else {
 		d.Set("destination_options", nil)
 	}
-	d.Set(names.AttrIAMRoleARN, fl.DeliverLogsPermissionArn)
-	if fl.LogDestinationType == awstypes.LogDestinationTypeCloudWatchLogs && fl.LogDestination == nil {
+	d.Set(names.AttrIAMRoleARN, output.DeliverLogsPermissionArn)
+	if output.LogDestinationType == awstypes.LogDestinationTypeCloudWatchLogs && output.LogDestination == nil {
 		// Legacy usage of LogGroupName. Either importing or migrating from old version of the proivder
-		d.Set("log_destination", cloudwatchLogGroupARNFromName(ctx, c, aws.ToString(fl.LogGroupName)))
+		d.Set("log_destination", cloudwatchLogGroupARNFromName(ctx, awsClient, aws.ToString(output.LogGroupName)))
 	} else {
-		d.Set("log_destination", fl.LogDestination)
+		d.Set("log_destination", output.LogDestination)
 	}
-	d.Set("log_destination_type", fl.LogDestinationType)
-	d.Set("log_format", fl.LogFormat)
-	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-	if err := d.Set("tag_field_specification", flattenTagFieldSpecificationResponses(fl.TagFieldSpecifications)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tag_field_specification: %s", err)
+	d.Set("log_destination_type", output.LogDestinationType)
+	d.Set("log_format", output.LogFormat)
+	d.Set("max_aggregation_interval", output.MaxAggregationInterval)
+	if err := d.Set("tag_field_specification", flattenTagFieldSpecificationResponses(output.TagFieldSpecifications)); err != nil {
+		return fmt.Errorf("setting tag_field_specification: %w", err)
 	}
-	switch resourceID := aws.ToString(fl.ResourceId); {
+	switch resourceID := aws.ToString(output.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set(names.AttrVPCID, resourceID)
 	case strings.HasPrefix(resourceID, "tgw-"):
@@ -352,13 +361,13 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	case strings.HasPrefix(resourceID, "nat-"):
 		d.Set("regional_nat_gateway_id", resourceID)
 	}
-	if !strings.HasPrefix(aws.ToString(fl.ResourceId), "tgw-") {
-		d.Set("traffic_type", fl.TrafficType)
+	if !strings.HasPrefix(aws.ToString(output.ResourceId), "tgw-") {
+		d.Set("traffic_type", output.TrafficType)
 	}
 
-	setTagsOut(ctx, fl.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
