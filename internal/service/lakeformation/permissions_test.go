@@ -371,12 +371,16 @@ func testAccPermissions_lfTagExpression(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_expression.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.0.name", expressionName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.0.catalog_id", "data.aws_caller_identity.current", names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "ASSOCIATE"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "DESCRIBE"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", "ASSOCIATE"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.1", "DESCRIBE"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionAlter)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDescribe)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDrop)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "GRANT_WITH_LF_TAG_EXPRESSION"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", string(awstypes.PermissionAlter)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", string(awstypes.PermissionDescribe)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", string(awstypes.PermissionDrop)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", "GRANT_WITH_LF_TAG_EXPRESSION"),
 				),
 			},
 		},
@@ -1971,6 +1975,8 @@ resource "aws_lakeformation_permissions" "test" {
 
 func testAccPermissionsConfig_lfTagExpression(rName string) string {
 	return acctest.ConfigCompose(testAccLFTagExpression_baseConfig, fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
 	name               = %[1]q
 	path               = "/"
@@ -2002,8 +2008,8 @@ resource "aws_lakeformation_lf_tag_expression" "test" {
 }
 
 resource "aws_lakeformation_permissions" "test" {
-	   permissions                   = ["ASSOCIATE", "DESCRIBE"]
-	   permissions_with_grant_option = ["ASSOCIATE", "DESCRIBE"]
+	   permissions                   = ["ALTER", "DESCRIBE", "DROP", "GRANT_WITH_LF_TAG_EXPRESSION"]
+	   permissions_with_grant_option = ["ALTER", "DESCRIBE", "DROP", "GRANT_WITH_LF_TAG_EXPRESSION"]
 	   principal                     = aws_iam_role.test.arn
 
 	   lf_tag_expression {
