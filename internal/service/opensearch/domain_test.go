@@ -777,6 +777,41 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_optimizedObservability(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName(t)
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_optimizedObservability(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "engine_mode", string(awstypes.EngineModeOptimized)),
+					resource.TestCheckResourceAttr(resourceName, "use_case", string(awstypes.DomainUseCaseObservability)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "OpenSearch_3.5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_complex(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4027,6 +4062,30 @@ resource "aws_opensearch_domain" "test" {
   }
 
   engine_version = "Elasticsearch_2.3"
+}
+`, rName)
+}
+
+func testAccDomainConfig_optimizedObservability(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_3.5"
+  engine_mode    = "OPTIMIZED"
+  use_case       = "OBSERVABILITY"
+
+  cluster_config {
+    instance_type = "or1.medium.search"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 20
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
 }
 `, rName)
 }
