@@ -74,7 +74,6 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionResponseStreamingInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
@@ -88,10 +87,11 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_group", fmt.Sprintf("/aws/lambda/%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
+					resource.TestCheckResourceAttr(resourceName, "qualified_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "qualified_invoke_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
 				),
 			},
 			{
@@ -166,8 +166,9 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf1),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "qualified_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "qualified_invoke_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
 				),
 			},
 			{
@@ -181,8 +182,9 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf2),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "qualified_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "qualified_invoke_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -556,7 +558,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 		},
 	})
@@ -635,7 +637,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 		},
 	})
@@ -652,8 +654,6 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 	fileName := "test-fixtures/lambdatest.zip"
 
-	unpublishedVersion := tflambda.FunctionVersionLatest
-
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
@@ -666,8 +666,9 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, unpublishedVersion),
+					resource.TestCheckResourceAttr(resourceName, "qualified_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "qualified_invoke_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
 				),
 			},
 			{
@@ -678,6 +679,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
+					resource.TestCheckResourceAttrSet(resourceName, "qualified_invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
@@ -685,7 +687,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 			{
 				// No changes, `publish` is true. This should not publish a new version.
@@ -735,8 +737,9 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, "qualified_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "qualified_invoke_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
 				),
 			},
 			{
@@ -879,7 +882,6 @@ func TestAccLambdaFunction_efsFileSystem(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/efs"),
@@ -942,7 +944,6 @@ func TestAccLambdaFunction_s3FileSystem(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_s3files_access_point.for_lambda", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/s3files"),
@@ -995,7 +996,6 @@ func TestAccLambdaFunction_image(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
@@ -1055,7 +1055,6 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
 				),
@@ -1072,7 +1071,6 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
@@ -1111,7 +1109,6 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
@@ -1130,7 +1127,6 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
@@ -1162,7 +1158,6 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
@@ -1181,7 +1176,6 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
@@ -1213,7 +1207,6 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
@@ -1232,7 +1225,6 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
@@ -1373,7 +1365,7 @@ func TestAccLambdaFunction_loggingConfigWithPublish(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 			{
 				Config: testAccFunctionConfig_loggingConfigWithPublish(rName, "JSON"),
@@ -1846,7 +1838,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 			{
 				Config: testAccFunctionConfig_vpcPublish(rName),
@@ -1889,7 +1881,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 			{
 				Config: testAccFunctionConfig_vpcUpdatedPublish(rName),
@@ -2363,7 +2355,7 @@ func TestAccLambdaFunction_LocalUpdate_publish(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "source_code_hash"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "qualified_arn", "qualified_invoke_arn", "source_code_hash", names.AttrVersion},
 			},
 			{
 				PreConfig: func() {
@@ -2696,7 +2688,6 @@ func TestAccLambdaFunction_sourceKMSKeyARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					testAccCheckFunctionName(&conf, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_kms_key_arn", "aws_kms_key.test", names.AttrARN),
 				),
@@ -2717,7 +2708,6 @@ func TestAccLambdaFunction_sourceKMSKeyARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
-					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					testAccCheckFunctionName(&conf, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_kms_key_arn", "aws_kms_key.test2", names.AttrARN),
 				),
@@ -2998,7 +2988,7 @@ func TestAccLambdaFunction_capacityProvider(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "publish_to"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "publish_to", "qualified_arn", "qualified_invoke_arn", names.AttrVersion},
 			},
 		},
 	})
@@ -3103,13 +3093,6 @@ func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, plat
 	}
 
 	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
-}
-
-func testAccCheckFunctionQualifiedInvokeARN(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		qualifiedArn := fmt.Sprintf("%s:%s", aws.ToString(function.Configuration.FunctionArn), aws.ToString(function.Configuration.Version))
-		return acctest.CheckResourceAttrRegionalARNAccountID(name, "qualified_invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", qualifiedArn))(s)
-	}
 }
 
 func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
