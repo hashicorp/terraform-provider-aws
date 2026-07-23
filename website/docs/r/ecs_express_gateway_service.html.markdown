@@ -41,19 +41,23 @@ When an Express service is deleted, it enters a `DRAINING` state where existing 
 
 The following arguments are required:
 
-* `execution_role_arn` - (Required) ARN of the IAM role that allows ECS to pull container images and publish container logs to Amazon CloudWatch.
 * `infrastructure_role_arn` - (Required) ARN of the IAM role that allows ECS to manage AWS infrastructure on your behalf. **Important:** The infrastructure role cannot be modified after the service is created. Changing this forces a new resource to be created.
+
+Exactly one of `primary_container` or `task_definition_arn` must be configured.
 
 The following arguments are optional:
 
 * `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
-* `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`.
+* `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`. Conflicts with `task_definition_arn`.
+* `execution_role_arn` - (Optional) ARN of the IAM role that allows ECS to pull container images and publish container logs to Amazon CloudWatch. Conflicts with `task_definition_arn`.
 * `health_check_path` - (Optional) Path for health check requests. Defaults to `/`.
-* `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192. Defaults to `2048`.
+* `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192. Defaults to `2048`. Conflicts with `task_definition_arn`.
+* `primary_container` - (Optional) Managed container configuration for the service. Conflicts with `task_definition_arn`. See [below](#primary_container).
 * `region` - (Optional) AWS region where the service will be created. If not specified, the region configured in the provider will be used.
 * `service_name` - (Optional) Name of the service. If not specified, a name will be generated. Changing this forces a new resource to be created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `task_role_arn` - (Optional) ARN of the IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `task_definition_arn` - (Optional) ARN of a caller-managed task definition for the service to use instead of the managed `primary_container` configuration. The task definition must include a container named `Main` with a TCP port mapping that has a `name` and `containerPort`. Conflicts with `primary_container`, `cpu`, `memory`, `execution_role_arn`, and `task_role_arn`.
+* `task_role_arn` - (Optional) ARN of the IAM role that allows your Amazon ECS container task to make calls to other AWS services. Conflicts with `task_definition_arn`.
 * `wait_for_steady_state` - (Optional) Whether to wait for the service to reach a steady state before considering the operation complete. Defaults to `false`.
 
 ### primary_container
