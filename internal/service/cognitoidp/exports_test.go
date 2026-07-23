@@ -17,6 +17,7 @@ var (
 	ResourceUserPool                 = resourceUserPool
 	ResourceUserPoolClient           = newUserPoolClientResource
 	ResourceUserPoolDomain           = resourceUserPoolDomain
+	ResourceUserPoolReplica          = newUserPoolReplicaResource
 	ResourceUserPoolUICustomization  = resourceUserPoolUICustomization
 
 	FindGroupByTwoPartKey                    = findGroupByTwoPartKey
@@ -31,5 +32,6 @@ var (
 	FindUserPoolClientByName                 = findUserPoolClientByName
 	FindUserPoolClientByTwoPartKey           = findUserPoolClientByTwoPartKey
 	FindUserPoolDomain                       = findUserPoolDomain
+	FindUserPoolReplicaByTwoPartKey          = findUserPoolReplicaByTwoPartKey
 	FindUserPoolUICustomizationByTwoPartKey  = findUserPoolUICustomizationByTwoPartKey
 )
