@@ -171,8 +171,8 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the memory strategy.
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
+* `name` - (Required) Name of the memory strategy.
 * `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
 
 The following arguments are optional:
@@ -181,6 +181,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the memory strategy.
 * `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured.
 * `namespaces` - (Optional) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
+* `reflection_configuration` - (Optional) Configuration for the reflections created with the episodic memory strategy. Valid when `type` is `EPISODIC`, must be omitted for other types. See [`reflection_configuration`](#reflection_configuration) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `configuration`
@@ -204,6 +205,12 @@ The `extraction` block supports the following:
 
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for extraction processing.
 * `model_id` - (Required) ID of the foundation model to use for extraction processing.
+
+### `reflection_configuration`
+
+The `reflection_configuration` block supports the following:
+
+* `namespace_templates` - (Optional) Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 
 ## Attribute Reference
 

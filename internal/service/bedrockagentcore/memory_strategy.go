@@ -121,6 +121,10 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 						awstypes.MemoryStrategyTypeCustom,
 						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
 					),
+					tfstringvalidator.ConflictsWithWhenNotEquals(
+						awstypes.MemoryStrategyTypeEpisodic,
+						path.MatchRelative().AtParent().AtName("reflection_configuration"),
+					),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -185,6 +189,21 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"reflection_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[episodicReflectionConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"namespace_templates": schema.SetAttribute{
+							CustomType: fwtypes.SetOfStringType,
+							Optional:   true,
+							Computed:   true,
 						},
 					},
 				},
@@ -273,7 +292,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	memoryID := fwflex.StringValueFromFramework(ctx, plan.MemoryID)
+	memoryID, name := fwflex.StringValueFromFramework(ctx, plan.MemoryID), fwflex.StringValueFromFramework(ctx, plan.Name)
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		MemoryId:    aws.String(memoryID),
@@ -288,9 +307,9 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		out, err := updateMemoryWithRetry(ctx, conn, &input, createTimeout)
+		out, err := retryUpdateMemoryStrategy(ctx, conn, &input, createTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
 		}
 
@@ -303,12 +322,6 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			return
 		}
 
-		// For non-CUSTOM types, clear Configuration from the API response before
-		// flattening. The API returns a StrategyConfiguration with Type values
-		// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-		if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-			found.Configuration = nil
-		}
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		if response.Diagnostics.HasError() {
 			return
@@ -360,13 +373,6 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	// For non-CUSTOM types, clear Configuration from the API response before
-	// flattening. The API returns a StrategyConfiguration with Type values
-	// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-	if state.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-		out.Configuration = nil
-	}
-
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
@@ -413,7 +419,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 
 		withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 			updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-			out, err := updateMemoryWithRetry(ctx, conn, &input, updateTimeout)
+			out, err := retryUpdateMemoryStrategy(ctx, conn, &input, updateTimeout)
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
@@ -425,10 +431,6 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
-			}
-
-			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-				found.Configuration = nil
 			}
 
 			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
@@ -470,7 +472,7 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err := updateMemoryWithRetry(ctx, conn, &input, deleteTimeout)
+		_, err := retryUpdateMemoryStrategy(ctx, conn, &input, deleteTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
@@ -506,12 +508,7 @@ func withMemoryLock(ctx context.Context, memoryID string, fn func(ctx context.Co
 	fn(ctx)
 }
 
-func updateMemoryWithRetry(
-	ctx context.Context,
-	conn *bedrockagentcorecontrol.Client,
-	input *bedrockagentcorecontrol.UpdateMemoryInput,
-	timeout time.Duration,
-) (*bedrockagentcorecontrol.UpdateMemoryOutput, error) {
+func retryUpdateMemoryStrategy(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.UpdateMemoryInput, timeout time.Duration) (*bedrockagentcorecontrol.UpdateMemoryOutput, error) {
 	deleteOp := len(input.MemoryStrategies.DeleteMemoryStrategies) > 0
 	return tfresource.RetryWhen(
 		ctx,
@@ -616,29 +613,54 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
-	Description            types.String                                              `tfsdk:"description"`
-	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
-	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
-	MemoryID               types.String                                              `tfsdk:"memory_id"`
-	Name                   types.String                                              `tfsdk:"name"`
-	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
-	NamespaceTemplates     fwtypes.SetOfString                                       `tfsdk:"namespace_templates"`
-	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
-	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
-}
-
-func (m *memoryStrategyResourceModel) GetIdentifier() string {
-	if !m.MemoryStrategyID.IsNull() {
-		return m.MemoryStrategyID.ValueString()
-	} else {
-		return m.Name.ValueString()
-	}
+	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]             `tfsdk:"configuration"`
+	Description             types.String                                                          `tfsdk:"description"`
+	MemoryExecutionRoleARN  fwtypes.ARN                                                           `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID        types.String                                                          `tfsdk:"memory_strategy_id"`
+	MemoryID                types.String                                                          `tfsdk:"memory_id"`
+	Name                    types.String                                                          `tfsdk:"name"`
+	Namespaces              fwtypes.SetOfString                                                   `tfsdk:"namespaces"`
+	NamespaceTemplates      fwtypes.SetOfString                                                   `tfsdk:"namespace_templates"`
+	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[episodicReflectionConfigurationModel] `tfsdk:"reflection_configuration"`
+	Timeouts                timeouts.Value                                                        `tfsdk:"timeouts"`
+	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]                       `tfsdk:"type"`
 }
 
 var (
-	_ fwflex.TypedExpander = &memoryStrategyResourceModel{}
+	_ fwflex.TypedExpander = memoryStrategyResourceModel{}
+	_ fwflex.Flattener     = &memoryStrategyResourceModel{}
 )
+
+func (m *memoryStrategyResourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.MemoryStrategy:
+		// For non-CUSTOM types, clear Configuration from the API response before
+		// flattening. The API returns a StrategyConfiguration with Type values
+		// (e.g. "EPISODIC") that are not valid OverrideType enum values.
+		switch t.Type {
+		case awstypes.MemoryStrategyTypeCustom:
+		default:
+			t.Configuration = nil
+		}
+
+		// To prevent infinite recursion...
+		type modelAlias *memoryStrategyResourceModel
+		alias := modelAlias(m)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias, fwflex.WithFieldNamePrefix("Memory")))
+		if diags.HasError() {
+			return diags
+		}
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("memoryStrategyResourceModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
 
 func (m memoryStrategyResourceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -799,6 +821,7 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 
 	return diags
 }
+
 func (m customConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch targetType {
@@ -1062,4 +1085,8 @@ func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	}
 
 	return diags
+}
+
+type episodicReflectionConfigurationModel struct {
+	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
 }
