@@ -106,15 +106,15 @@ func dataSourceVPC() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"address_attribute": {
+							"ipv6_address_attribute": {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							names.AttrCIDRBlock: {
+							"ipv6_cidr_block": {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"ipam_pool_id": {
+							"ipv6_pool": {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -122,7 +122,7 @@ func dataSourceVPC() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							names.AttrSource: {
+							"ip_source": {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -255,13 +255,13 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	ipv6Associations := []any{}
 	for _, v := range vpc.Ipv6CidrBlockAssociationSet {
 		association := map[string]any{
-			names.AttrAssociationID: aws.ToString(v.AssociationId),
-			"address_attribute":     aws.String(string(v.Ipv6AddressAttribute)),
-			names.AttrCIDRBlock:     aws.ToString(v.Ipv6CidrBlock),
-			"ipam_pool_id":          aws.ToString(v.Ipv6Pool),
-			"network_border_group":  aws.ToString(v.NetworkBorderGroup),
-			names.AttrSource:        aws.String(string(v.IpSource)),
-			names.AttrState:         aws.ToString(aws.String(string(v.Ipv6CidrBlockState.State))),
+			names.AttrAssociationID:  aws.ToString(v.AssociationId),
+			"ipv6_address_attribute": aws.String(string(v.Ipv6AddressAttribute)),
+			"ipv6_cidr_block":        aws.ToString(v.Ipv6CidrBlock),
+			"ipv6_pool":              aws.ToString(v.Ipv6Pool),
+			"network_border_group":   aws.ToString(v.NetworkBorderGroup),
+			"ip_source":              aws.String(string(v.IpSource)),
+			names.AttrState:          aws.ToString(aws.String(string(v.Ipv6CidrBlockState.State))),
 		}
 		ipv6Associations = append(ipv6Associations, association)
 	}
