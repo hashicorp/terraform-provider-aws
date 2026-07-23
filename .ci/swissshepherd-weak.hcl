@@ -1855,8 +1855,6 @@ check "schema_docs" {
     "resource/aws_redshiftserverless_snapshot",
     "resource/aws_redshiftserverless_usage_limit",
     "resource/aws_redshiftserverless_workgroup",
-    "resource/aws_rekognition_collection",
-    "resource/aws_rekognition_project",
     "resource/aws_rekognition_stream_processor",
     "resource/aws_resiliencehub_resiliency_policy",
     "resource/aws_resourceexplorer2_index",
