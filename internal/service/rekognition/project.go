@@ -8,6 +8,7 @@ package rekognition
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
@@ -18,20 +19,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
+// @IdentityAttribute("feature", optional="true")
+// @ImportIDHandler("projectImportID")
+// @Testing(preIdentityVersion="v6.56.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
 
@@ -44,7 +51,7 @@ func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type projectResource struct {
 	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 const (
@@ -116,18 +123,12 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 
 	out, err := conn.CreateProject(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameProject, plan.Name.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	if out == nil || out.ProjectArn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameProject, plan.Name.ValueString(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -143,10 +144,7 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
 	_, err = waitProjectCreated(ctx, conn, state.ID.ValueString(), in.Feature, createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
@@ -171,10 +169,7 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
@@ -234,19 +229,13 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), state.Feature.ValueEnum(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
@@ -335,6 +324,26 @@ func statusProject(conn *rekognition.Client, name string, feature awstypes.Custo
 
 		return out, string(out.Status), nil
 	}
+}
+
+var (
+	_ inttypes.ImportIDParser = projectImportID{}
+)
+
+type projectImportID struct{}
+
+func (projectImportID) Parse(id string) (string, map[string]any, error) {
+	name, feature, found := strings.Cut(id, intflex.ResourceIdSeparator)
+
+	result := map[string]any{
+		names.AttrName: name,
+	}
+
+	if found && feature != "" {
+		result["feature"] = feature
+	}
+
+	return id, result, nil
 }
 
 type projectResourceModel struct {

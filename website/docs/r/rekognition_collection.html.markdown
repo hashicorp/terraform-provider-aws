@@ -49,7 +49,18 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Collection using the `collection_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Collection using the resource identity. For example:
+
+```terraform
+import {
+  to = aws_rekognition_collection.example
+  identity = {
+    collection_id = "collection-id-12345678"
+  }
+}
+```
+
+Alternatively, import using the `collection_id`. For example:
 
 ```terraform
 import {
@@ -63,3 +74,14 @@ Using `terraform import`, import Rekognition Collection using the `collection_id
 ```console
 % terraform import aws_rekognition_collection.example collection-id-12345678
 ```
+
+### Identity Schema
+
+#### Required
+
+* `collection_id` - (String) The name of the collection.
+
+#### Optional
+
+* `account_id` - (String) AWS Account where this resource is managed.
+* `region` - (String) Region where this resource is managed.

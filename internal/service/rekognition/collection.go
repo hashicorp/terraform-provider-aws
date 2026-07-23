@@ -21,11 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +33,8 @@ import (
 
 // @FrameworkResource("aws_rekognition_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("collection_id", identityDuplicateAttributes="id")
+// @Testing(preIdentityVersion="v6.55.0")
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &collectionResource{}
 
@@ -44,7 +46,7 @@ func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, e
 type collectionResource struct {
 	framework.ResourceWithModel[collectionResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 const (
@@ -107,10 +109,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	_, err := conn.CreateCollection(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.CollectionID.ValueString())
 		return
 	}
 
@@ -121,10 +120,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 	})
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.CollectionID.ValueString())
 		return
 	}
 
@@ -154,10 +150,7 @@ func (r *collectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
@@ -199,10 +192,7 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameCollection, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
