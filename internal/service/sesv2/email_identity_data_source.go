@@ -62,6 +62,10 @@ func dataSourceEmailIdentity() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"signing_hosted_zone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							names.AttrStatus: {
 								Type:     schema.TypeString,
 								Computed: true,

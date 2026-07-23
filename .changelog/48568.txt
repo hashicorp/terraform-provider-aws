@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sesv2_email_identity: Add `dkim_signing_attributes.signing_hosted_zone` attribute
+```
+
+```release-note:enhancement
+data-source/aws_sesv2_email_identity: Add `dkim_signing_attributes.signing_hosted_zone` attribute
+```
