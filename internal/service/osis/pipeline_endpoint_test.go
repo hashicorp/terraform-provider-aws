@@ -176,10 +176,6 @@ func testAccPipelineEndpointConfig_pipeline(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -208,9 +204,8 @@ resource "aws_vpc" "pipeline" {
 }
 
 resource "aws_subnet" "pipeline" {
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.pipeline.id
+  cidr_block = "10.0.1.0/24"
+  vpc_id     = aws_vpc.pipeline.id
 }
 
 resource "aws_security_group" "pipeline" {
