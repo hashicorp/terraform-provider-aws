@@ -212,7 +212,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.120.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.122.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.123.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.64.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.41.1
