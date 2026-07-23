@@ -60,9 +60,18 @@ func resourceEBSVolume() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrAvailabilityZone: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrAvailabilityZone, "availability_zone_id"},
+				},
+				"availability_zone_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrAvailabilityZone, "availability_zone_id"},
 				},
 				names.AttrCreateTime: {
 					Type:     schema.TypeString,
@@ -143,9 +152,16 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateVolumeInput{
-		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(create.UniqueId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume),
+	}
+
+	if value, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+		input.AvailabilityZone = aws.String(value.(string))
+	}
+
+	if value, ok := d.GetOk("availability_zone_id"); ok {
+		input.AvailabilityZoneId = aws.String(value.(string))
 	}
 
 	if value, ok := d.GetOk(names.AttrEncrypted); ok {
@@ -233,6 +249,9 @@ func resourceEBSVolumeFlatten(ctx context.Context, awsClient *conns.AWSClient, v
 	}
 	if err := d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone); err != nil {
 		return fmt.Errorf("setting %s: %w", names.AttrAvailabilityZone, err)
+	}
+	if err := d.Set("availability_zone_id", volume.AvailabilityZoneId); err != nil {
+		return fmt.Errorf("setting availability_zone_id: %w", err)
 	}
 	if err := d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339)); err != nil {
 		return fmt.Errorf("setting %s: %w", names.AttrCreateTime, err)
