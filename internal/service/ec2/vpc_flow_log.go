@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -135,6 +136,27 @@ func resourceFlowLog() *schema.Resource {
 					ForceNew:     true,
 					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 				},
+				"tag_field_specification": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TaggableResourceType](),
+							},
+							"tag_keys": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"traffic_type": {
@@ -217,7 +239,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	input := &ec2.CreateFlowLogsInput{
+	input := ec2.CreateFlowLogsInput{
 		ClientToken:        aws.String(create.UniqueId(ctx)),
 		LogDestinationType: awstypes.LogDestinationType(d.Get("log_destination_type").(string)),
 		ResourceIds:        []string{resourceID},
@@ -255,8 +277,12 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("tag_field_specification"); ok && v.(*schema.Set).Len() > 0 {
+		input.TagFieldSpecifications = expandTagFieldSpecificationRequests(v.(*schema.Set).List())
+	}
+
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateFlowLogs(ctx, input)
+		return conn.CreateFlowLogs(ctx, &input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
 	if err == nil && outputRaw != nil {
@@ -308,6 +334,9 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
+	if err := d.Set("tag_field_specification", flattenTagFieldSpecificationResponses(fl.TagFieldSpecifications)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tag_field_specification: %s", err)
+	}
 	switch resourceID := aws.ToString(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set(names.AttrVPCID, resourceID)
@@ -402,6 +431,45 @@ func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsRes
 	}
 
 	return tfMap
+}
+
+func expandTagFieldSpecificationRequests(tfList []any) []awstypes.TagFieldSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.TagFieldSpecificationRequest, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, awstypes.TagFieldSpecificationRequest{
+			ResourceType: awstypes.TaggableResourceType(tfMap[names.AttrResourceType].(string)),
+			TagKeys:      flex.ExpandStringValueList(tfMap["tag_keys"].([]any)),
+		})
+	}
+
+	return apiObjects
+}
+
+func flattenTagFieldSpecificationResponses(apiObjects []awstypes.TagFieldSpecificationResponse) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfList[i] = map[string]any{
+			names.AttrResourceType: apiObject.ResourceType,
+			"tag_keys":             apiObject.TagKeys,
+		}
+	}
+
+	return tfList
 }
 
 func flowLogARN(ctx context.Context, c *conns.AWSClient, flowLogID string) string {

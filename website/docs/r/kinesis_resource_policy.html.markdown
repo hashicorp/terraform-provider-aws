@@ -60,7 +60,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_kinesis_resource_policy.example
   identity = {
-    "arn" = "arn:aws:kinesis:us-east-1:123456789012:stream/example-stream"
+    "resource_arn" = "arn:aws:kinesis:us-east-1:123456789012:stream/example-stream"
   }
 }
 
@@ -73,7 +73,7 @@ resource "aws_kinesis_resource_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Kinesis stream.
+- `resource_arn` (String) Amazon Resource Name (ARN) of the Kinesis stream.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis resource policies using the `resource_arn`. For example:
 

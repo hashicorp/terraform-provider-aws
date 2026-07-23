@@ -10,13 +10,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,10 +25,6 @@ import (
 func newSecurityConfigDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &securityConfigDataSource{}, nil
 }
-
-const (
-	DSNameSecurityConfig = "Security Config Data Source"
-)
 
 type securityConfigDataSource struct {
 	framework.DataSourceWithModel[securityConfigDataSourceModel]
@@ -62,6 +59,43 @@ func (d *securityConfigDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"iam_federation_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamFederationConfigOptionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Description: "Group attribute.",
+							Computed:    true,
+						},
+						"user_attribute": schema.StringAttribute{
+							Description: "User attribute.",
+							Computed:    true,
+						},
+					},
+				},
+			},
+			"iam_identity_center_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamIdentityCenterConfigOptionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"instance_arn": schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Description: "Instance ARN.",
+							Computed:    true,
+						},
+						"group_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterGroupAttribute](),
+							Description: "Group attribute.",
+							Computed:    true,
+						},
+						"user_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterUserAttribute](),
+							Description: "User attribute.",
+							Computed:    true,
+						},
+					},
+				},
+			},
 			"saml_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -93,21 +127,18 @@ func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.Read
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
 	var data securityConfigDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findSecurityConfigByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameSecurityConfig, data.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"}))...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -116,16 +147,18 @@ func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.Read
 	data.CreatedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
 	data.LastModifiedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type securityConfigDataSourceModel struct {
 	framework.WithRegionModel
-	ConfigVersion    types.String                                     `tfsdk:"config_version"`
-	CreatedDate      types.String                                     `tfsdk:"created_date"`
-	Description      types.String                                     `tfsdk:"description"`
-	ID               types.String                                     `tfsdk:"id"`
-	LastModifiedDate types.String                                     `tfsdk:"last_modified_date"`
-	SamlOptions      fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
-	Type             types.String                                     `tfsdk:"type"`
+	ConfigVersion            types.String                                                         `tfsdk:"config_version"`
+	CreatedDate              types.String                                                         `tfsdk:"created_date"`
+	Description              types.String                                                         `tfsdk:"description"`
+	IamFederationOptions     fwtypes.ListNestedObjectValueOf[iamFederationConfigOptionsModel]     `tfsdk:"iam_federation_options"`
+	IamIdentityCenterOptions fwtypes.ListNestedObjectValueOf[iamIdentityCenterConfigOptionsModel] `tfsdk:"iam_identity_center_options"`
+	ID                       types.String                                                         `tfsdk:"id"`
+	LastModifiedDate         types.String                                                         `tfsdk:"last_modified_date"`
+	SamlOptions              fwtypes.ListNestedObjectValueOf[samlOptionsData]                     `tfsdk:"saml_options"`
+	Type                     types.String                                                         `tfsdk:"type"`
 }

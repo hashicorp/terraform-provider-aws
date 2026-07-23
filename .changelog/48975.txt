@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_msk_bootstrap_brokers: Add `bootstrap_brokers_ipv6`, `bootstrap_brokers_sasl_iam_ipv6`, `bootstrap_brokers_sasl_scram_ipv6`, and `bootstrap_brokers_tls_ipv6` attributes to expose IPv6 bootstrap broker URLs
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Add `bootstrap_brokers_ipv6`, `bootstrap_brokers_sasl_iam_ipv6`, `bootstrap_brokers_sasl_scram_ipv6`, and `bootstrap_brokers_tls_ipv6` attributes to expose IPv6 bootstrap broker URLs
+```

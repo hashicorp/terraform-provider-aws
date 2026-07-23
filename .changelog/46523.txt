@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_subnet: Wait for IPAM to release its CIDR on delete
+```

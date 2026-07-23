@@ -88,7 +88,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),
-		CheckDestroy: testAccCheckExampleResourceDestroy(ctx),
+		CheckDestroy: testAccCheckExampleResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -99,7 +99,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 				},
 				Config: testAccExampleResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExampleResourceExists(ctx, resourceName, &example),
+					testAccCheckExampleResourceExists(ctx, t, resourceName, &example),
 				),
 			},
 			{

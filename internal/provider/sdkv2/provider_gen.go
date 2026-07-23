@@ -1328,6 +1328,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// lambdamicrovms
+
+				"lambdamicrovms": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// launchwizard
 
 				"launchwizard": {
@@ -1437,6 +1445,14 @@ func endpointsSchema() *schema.Schema {
 				// macie2
 
 				"macie2": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mailmanager
+
+				"mailmanager": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
