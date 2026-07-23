@@ -65,7 +65,8 @@ This resource supports the following arguments:
 * `replication_source_identifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
 * `serverless_v2_scaling_configuration` - (Optional) If set, create the Neptune cluster as a serverless one. See [Serverless](#serverless) for example block attributes.
 * `skip_final_snapshot` - (Optional) Whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
-* `snapshot_identifier` - (Optional) Whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+* `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a Neptune cluster to an arbitrary point in time. Conflicts with `snapshot_identifier`. Requires at least one of `restore_to_time` or `use_latest_restorable_time`. [Detailed below](#restore_to_point_in_time).
+* `snapshot_identifier` - (Optional) Whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced. Conflicts with `restore_to_point_in_time`.
 * `storage_encrypted` - (Optional) Whether the Neptune cluster is encrypted. The default is `false` if not specified.
 * `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`.
 * `tags` - (Optional) Map of tags to assign to the Neptune cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -98,6 +99,29 @@ resource "aws_neptune_cluster_instance" "example" {
 
 * `min_capacity`: (default: **2.5**) Minimum Neptune Capacity Units (NCUs) for this cluster. Must be greater or equal than **1**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
 * `max_capacity`: (default: **128**) Maximum Neptune Capacity Units (NCUs) for this cluster. Must be lower or equal than **128**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
+
+### Restore To Point In Time
+
+```terraform
+resource "aws_neptune_cluster" "example" {
+  cluster_identifier  = "example"
+  skip_final_snapshot = true
+
+  restore_to_point_in_time {
+    source_cluster_identifier  = "example-source"
+    use_latest_restorable_time = true
+  }
+}
+```
+
+### restore_to_point_in_time
+
+~> **NOTE:** Removing this configuration on the next apply will recreate the cluster.
+
+* `source_cluster_identifier` - (Required) The identifier of the source Neptune cluster from which to restore.
+* `restore_type` - (Optional) The type of restore to be performed. Valid values are `full-copy` and `copy-on-write`. Default is `full-copy`.
+* `restore_to_time` - (Optional) The date and time to restore from. Must be in UTC format (e.g., `2024-01-01T00:00:00Z`). Conflicts with `use_latest_restorable_time`.
+* `use_latest_restorable_time` - (Optional) Set to `true` to restore the cluster to the latest restorable backup time. Conflicts with `restore_to_time`.
 
 ## Attribute Reference
 

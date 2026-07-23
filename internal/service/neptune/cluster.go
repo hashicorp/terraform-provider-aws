@@ -252,6 +252,50 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
+				"restore_to_point_in_time": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"restore_to_time": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+								ExactlyOneOf: []string{
+									"restore_to_point_in_time.0.restore_to_time",
+									"restore_to_point_in_time.0.use_latest_restorable_time",
+								},
+							},
+							"restore_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice([]string{"full-copy", "copy-on-write"}, false),
+							},
+							"source_cluster_identifier": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validIdentifier,
+							},
+							"use_latest_restorable_time": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"restore_to_point_in_time.0.restore_to_time",
+									"restore_to_point_in_time.0.use_latest_restorable_time",
+								},
+							},
+						},
+					},
+					ConflictsWith: []string{
+						"snapshot_identifier",
+					},
+				},
 				"serverless_v2_scaling_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -290,6 +334,7 @@ func resourceCluster() *schema.Resource {
 						// allow snapshot_idenfitier to be removed without forcing re-creation
 						return new == ""
 					},
+					ConflictsWith: []string{"restore_to_point_in_time"},
 				},
 				names.AttrStorageEncrypted: {
 					Type:     schema.TypeBool,
@@ -337,7 +382,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	// Check if any of the parameters that require a cluster modification after creation are set.
 	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
 	clusterUpdate := false
+	restoreToPointInTime := false
 	restoreDBClusterFromSnapshot := false
+	if _, ok := d.GetOk("restore_to_point_in_time"); ok {
+		restoreToPointInTime = true
+	}
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		restoreDBClusterFromSnapshot = true
 	}
@@ -367,6 +416,33 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		ApplyImmediately:    aws.Bool(true),
 		DBClusterIdentifier: aws.String(clusterID),
 	}
+	inputPITR := &neptune.RestoreDBClusterToPointInTimeInput{
+		DBClusterIdentifier:              aws.String(clusterID),
+		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+		Port:                             aws.Int32(int32(d.Get(names.AttrPort).(int))),
+		ServerlessV2ScalingConfiguration: serverlessConfiguration,
+		Tags:                             getTagsIn(ctx),
+	}
+
+	if restoreToPointInTime {
+		v, _ := d.GetOk("restore_to_point_in_time")
+		tfMap := v.([]any)[0].(map[string]any)
+
+		inputPITR.SourceDBClusterIdentifier = aws.String(tfMap["source_cluster_identifier"].(string))
+
+		if v, ok := tfMap["restore_type"].(string); ok && v != "" {
+			inputPITR.RestoreType = aws.String(v)
+		}
+
+		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
+			t, _ := time.Parse(time.RFC3339, v)
+			inputPITR.RestoreToTime = aws.Time(t)
+		}
+
+		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+			inputPITR.UseLatestRestorableTime = aws.Bool(v)
+		}
+	}
 
 	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
@@ -379,7 +455,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		v := int32(v.(int))
 
 		inputC.BackupRetentionPeriod = aws.Int32(v)
-		if restoreDBClusterFromSnapshot {
+		if restoreDBClusterFromSnapshot || restoreToPointInTime {
 			clusterUpdate = true
 			inputM.BackupRetentionPeriod = aws.Int32(v)
 		}
@@ -390,6 +466,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v)
 		inputR.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v)
+		inputPITR.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -410,6 +487,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.EnableIAMDatabaseAuthentication = aws.Bool(v)
 		inputR.EnableIAMDatabaseAuthentication = aws.Bool(v)
+		inputPITR.EnableIAMDatabaseAuthentication = aws.Bool(v)
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
@@ -417,12 +495,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.KmsKeyId = aws.String(v)
 		inputR.KmsKeyId = aws.String(v)
+		inputPITR.KmsKeyId = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
 		v := v.(string)
 
 		inputC.DBClusterParameterGroupName = aws.String(v)
+		inputPITR.DBClusterParameterGroupName = aws.String(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
 			inputM.DBClusterParameterGroupName = aws.String(v)
@@ -434,6 +514,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.DBSubnetGroupName = aws.String(v)
 		inputR.DBSubnetGroupName = aws.String(v)
+		inputPITR.DBSubnetGroupName = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("preferred_backup_window"); ok {
@@ -459,6 +540,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.StorageType = aws.String(v)
 		inputR.StorageType = aws.String(v)
+		inputPITR.StorageType = aws.String(v)
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -466,6 +548,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		inputR.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
+		inputPITR.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
 			inputM.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
@@ -474,7 +557,21 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	var err error
 
-	if restoreDBClusterFromSnapshot {
+	if restoreToPointInTime {
+		for l := backoff.NewLoop(propagationTimeout); l.Continue(ctx); {
+			_, err = conn.RestoreDBClusterToPointInTime(ctx, inputPITR)
+
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid") {
+				continue
+			}
+
+			break
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (restore to point-in-time) (%s): %s", clusterID, err)
+		}
+	} else if restoreDBClusterFromSnapshot {
 		for l := backoff.NewLoop(propagationTimeout); l.Continue(ctx); {
 			_, err = conn.RestoreDBClusterFromSnapshot(ctx, inputR)
 
@@ -484,9 +581,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 			break
 		}
-	}
 
-	if !restoreDBClusterFromSnapshot {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (restore from snapshot) (%s): %s", clusterID, err)
+		}
+	} else {
 		for l := backoff.NewLoop(d.Timeout(schema.TimeoutCreate)); l.Continue(ctx); {
 			_, err = conn.CreateDBCluster(ctx, inputC)
 
@@ -500,10 +599,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 			break
 		}
-	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (%s): %s", clusterID, err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (%s): %s", clusterID, err)
+		}
 	}
 
 	d.SetId(clusterID)
