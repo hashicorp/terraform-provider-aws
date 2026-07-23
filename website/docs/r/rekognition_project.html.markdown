@@ -61,7 +61,30 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Project using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Project using the resource identity. For example:
+
+```terraform
+import {
+  to = aws_rekognition_project.example
+  identity = {
+    name = "project-id-12345678"
+  }
+}
+```
+
+Optionally, you can specify the `feature` in the identity:
+
+```terraform
+import {
+  to = aws_rekognition_project.example
+  identity = {
+    name    = "project-id-12345678"
+    feature = "CUSTOM_LABELS"
+  }
+}
+```
+
+Alternatively, import using the `name`. For example:
 
 ```terraform
 import {
@@ -70,8 +93,35 @@ import {
 }
 ```
 
+Or with the optional `feature`:
+
+```terraform
+import {
+  to = aws_rekognition_project.example
+  id = "project-id-12345678:CUSTOM_LABELS"
+}
+```
+
 Using `terraform import`, import Rekognition Project using the `name`. For example:
 
 ```console
 % terraform import aws_rekognition_project.example project-id-12345678
 ```
+
+Or with the optional `feature`:
+
+```console
+% terraform import aws_rekognition_project.example project-id-12345678:CUSTOM_LABELS
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Desired name of the project.
+
+#### Optional
+
+* `account_id` - (String) AWS Account where this resource is managed.
+* `feature` - (String) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`.
+* `region` - (String) Region where this resource is managed.
