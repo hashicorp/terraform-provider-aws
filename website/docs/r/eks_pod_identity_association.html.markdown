@@ -20,6 +20,27 @@ Pod Identity is a simpler method than IAM roles for service accounts, as this me
 
 ## Example Usage
 
+### With Inline Session Policy
+
+```terraform
+resource "aws_eks_pod_identity_association" "example" {
+  cluster_name    = aws_eks_cluster.example.name
+  namespace       = "example"
+  service_account = "example-sa"
+  role_arn        = aws_iam_role.example.arn
+
+  disable_session_tags = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject"]
+      Resource = "arn:aws:s3:::my-bucket/*"
+    }]
+  })
+}
+```
+
 ### Basic Usage
 
 ```terraform
@@ -68,7 +89,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `disable_session_tags` - (Optional) Disable the tags that are automatically added to role session by Amazon EKS.
+* `disable_session_tags` - (Optional) Disable the tags that are automatically added to role session by Amazon EKS. Must be set to `true` when `policy` is specified.
+* `policy` - (Optional) An IAM policy in JSON format (as an escaped string) that applies additional restrictions to this Pod Identity association beyond the IAM policies attached to the IAM role. The effective permissions are the intersection of the role's policies and this policy, allowing you to enforce least privilege across multiple associations that share the same role. Requires `disable_session_tags = true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be chained to the the IAM role specified as `role_arn`.

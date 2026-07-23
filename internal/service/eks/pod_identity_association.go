@@ -59,6 +59,7 @@ type podIdentityAssociationResourceModel struct {
 	ExternalID         types.String `tfsdk:"external_id"`
 	ID                 types.String `tfsdk:"id"`
 	Namespace          types.String `tfsdk:"namespace"`
+	Policy             types.String `tfsdk:"policy"`
 	RoleARN            fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount     types.String `tfsdk:"service_account"`
 	Tags               tftags.Map   `tfsdk:"tags"`
@@ -96,6 +97,9 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, request res
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
+			},
+			names.AttrPolicy: schema.StringAttribute{
+				Optional: true,
 			},
 			names.AttrExternalID: schema.StringAttribute{
 				Computed: true,
@@ -215,6 +219,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 	conn := r.Meta().EKSClient(ctx)
 
 	if !new.DisableSessionTags.Equal(old.DisableSessionTags) ||
+		!new.Policy.Equal(old.Policy) ||
 		!new.RoleARN.Equal(old.RoleARN) ||
 		!new.TargetRoleARN.Equal(old.TargetRoleARN) {
 		var input eks.UpdatePodIdentityAssociationInput
