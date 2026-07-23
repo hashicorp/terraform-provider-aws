@@ -107,14 +107,89 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_interval_in_seconds", "120"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", regexache.MustCompile(`anomalydetector/.+$`)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluation_interval_in_seconds"), knownvalue.NotNull()),
+					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluation_interval_in_seconds"), knownvalue.NotNull()),
 				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccAMPAnomalyDetector_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_anomaly_detector.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
+			// testAccPreCheckAnomalyDetector(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnomalyDetectorConfig_update(rName, "60", "avg(up)", "mark_as_anomaly"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.skip"),
+				),
+			},
+			{ // Testing evaluation_interval_in_seconds update
+				Config: testAccAnomalyDetectorConfig_update(rName, "120", "avg(up)", "mark_as_anomaly"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
+					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.skip"),
+				),
+			},
+			{ // Testing query update
+				Config: testAccAnomalyDetectorConfig_update(rName, "120", "count(up)", "mark_as_anomaly"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "count(up)"),
+					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.skip"),
+				),
+			},
+			{ // Testing missing_data_action update
+				Config: testAccAnomalyDetectorConfig_update(rName, "120", "count(up)", "skip"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "count(up)"),
+					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.skip", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly"),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -244,6 +319,7 @@ resource "aws_prometheus_workspace" "test" {}
 resource "aws_prometheus_anomaly_detector" "test" {
   alias = %[1]q
   workspace_id = aws_prometheus_workspace.test.id
+  evaluation_interval_in_seconds = 120
 
   configuration {
 	random_cut_forest {
@@ -256,4 +332,26 @@ resource "aws_prometheus_anomaly_detector" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAnomalyDetectorConfig_update(rName, eval_time, query, missingDataAction string) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {}
+
+resource "aws_prometheus_anomaly_detector" "test" {
+  alias = %[1]q
+  workspace_id = aws_prometheus_workspace.test.id
+  evaluation_interval_in_seconds = %[2]s
+
+  configuration {
+	random_cut_forest {
+	  query = %[3]q
+	}
+  }
+
+  missing_data_action {
+    %[4]s = true
+  }
+}
+`, rName, eval_time, query, missingDataAction)
 }
