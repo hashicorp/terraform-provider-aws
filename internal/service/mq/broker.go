@@ -58,7 +58,10 @@ func resourceBroker() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
+			// Updates that reboot a CLUSTER_MULTI_AZ broker, such as a storage size
+			// change, exceed 30 minutes. Reducing storage takes longer still, as
+			// it replaces nodes in a rolling manner.
+			Update: schema.DefaultTimeout(90 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -301,6 +304,10 @@ func resourceBroker() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"pending_storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				names.AttrPubliclyAccessible: {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -344,6 +351,19 @@ func resourceBroker() *schema.Resource {
 								Computed: true,
 							},
 						},
+					},
+				},
+				"storage_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+						// A configured size that matches the pending size has been set
+						// but not yet applied by a reboot, so it is not a difference.
+						if pending := d.Get("pending_storage_size").(int); pending != 0 && n == strconv.Itoa(pending) {
+							return true
+						}
+						return false
 					},
 				},
 				names.AttrStorageType: {
@@ -417,6 +437,14 @@ func resourceBroker() *schema.Resource {
 					if v, ok := diff.GetOk("resource_share_arns"); ok && v.(*schema.Set).Len() > 0 {
 						return errors.New("resource_share_arns: Can only be configured when engine is RabbitMQ")
 					}
+
+					// storage_size is Computed, so the raw config (not d.GetOk, which returns
+					// API values too) is checked; a configured value may be unknown, so only null-ness.
+					if rawConfig := diff.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+						if v := rawConfig.GetAttr("storage_size"); !v.IsNull() {
+							return errors.New("storage_size: Can only be configured when engine is RabbitMQ")
+						}
+					}
 				}
 
 				return nil
@@ -472,6 +500,9 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+	if v, ok := d.GetOk("storage_size"); ok {
+		input.StorageSize = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
@@ -569,6 +600,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
+	d.Set("pending_storage_size", output.PendingStorageSize)
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	// Shared resources are only supported for RabbitMQ brokers and are read
@@ -588,6 +620,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	} else {
 		d.Set("shared_resources", nil)
 	}
+	d.Set("storage_size", output.StorageSize)
 	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 	// AWS does not return user information for RabbitMQ brokers after creation.
@@ -727,6 +760,21 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) resource shares: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("storage_size") {
+		input := &mq.UpdateBrokerInput{
+			BrokerId:    aws.String(d.Id()),
+			StorageSize: aws.Int32(int32(d.Get("storage_size").(int))),
+		}
+
+		_, err := conn.UpdateBroker(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) storage size: %s", d.Id(), err)
 		}
 
 		requiresReboot = true

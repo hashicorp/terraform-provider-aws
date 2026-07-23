@@ -1586,10 +1586,10 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
-				Config: testAccBrokerConfig_engineVersionUpdate(rName, testAccActiveVersionNormalized5_18),
+				Config: testAccBrokerConfig_engineVersionUpdate(rName, testAccActiveMQVersionNormalized5_18),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccActiveVersionNormalized5_18),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccActiveMQVersionNormalized5_18),
 				),
 			},
 		},
@@ -2257,6 +2257,80 @@ func TestAccMQBroker_RabbitMQ_resourceShareARNs(t *testing.T) {
 				// shared_resources reflects live infrastructure (e.g. rotating
 				// VPC endpoint DNS names) and is not guaranteed to round-trip.
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "shared_resources"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+	dataSourceName := "data.aws_mq_broker.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitMQVersionNormalized4_2, 10, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, testAccRabbitMQVersionNormalized4_2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "CLUSTER_MULTI_AZ"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.m7g.medium"),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
+					resource.TestCheckResourceAttr(dataSourceName, "storage_size", "10"),
+				),
+			},
+			{
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitMQVersionNormalized4_2, 15, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "15"),
+				),
+			},
+			{
+				// Reducing storage exercises a different path, as Amazon MQ replaces
+				// nodes rather than resizing them in place.
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitMQVersionNormalized4_2, 10, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+			{
+				// Without apply_immediately the broker is not rebooted, so the new
+				// size is reported as pending rather than applied.
+				Config: testAccBrokerConfig_rabbitStorageSize(rName, testAccRabbitMQVersionNormalized4_2, 20, acctest.CtFalse),
+				Check:  testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+			},
+			{
+				// Amazon MQ reports the pending size shortly after the update is
+				// accepted, so the broker is re-read before it is asserted.
+				RefreshState: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "pending_storage_size", "20"),
+				),
 			},
 		},
 	})
@@ -3513,4 +3587,38 @@ resource "aws_mq_broker" "test" {
   depends_on = [aws_ram_resource_association.test]
 }
 `, rName, testAccRabbitMQVersionNormalized4_2, testAccRabbitMQHostInstanceType1))
+}
+
+func testAccBrokerConfig_rabbitStorageSize(rName, version string, storageSize int, applyImmediately string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately          = %[4]s
+  auto_minor_version_upgrade = true
+  broker_name                = %[1]q
+  deployment_mode            = "CLUSTER_MULTI_AZ"
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m7g.medium"
+  security_groups            = [aws_security_group.test.id]
+  storage_size               = %[3]d
+  storage_type               = "ebs"
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+
+data "aws_mq_broker" "test" {
+  broker_id = aws_mq_broker.test.id
+}
+`, rName, version, storageSize, applyImmediately)
 }
