@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_mailmanager_traffic_policy
+```
+
+```release-note:new-list-resource
+aws_mailmanager_traffic_policy
+```
