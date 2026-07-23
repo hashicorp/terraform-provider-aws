@@ -3333,12 +3333,13 @@ func flattenServiceVolumeConfigurations(ctx context.Context, apiObjects []awstyp
 	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]any{
-			names.AttrName: aws.ToString(apiObject.Name),
+		if apiObject.ManagedEBSVolume == nil {
+			continue
 		}
 
-		if v := apiObject.ManagedEBSVolume; v != nil {
-			tfMap["managed_ebs_volume"] = []any{flattenServiceManagedEBSVolumeConfiguration(ctx, v)}
+		tfMap := map[string]any{
+			names.AttrName:       aws.ToString(apiObject.Name),
+			"managed_ebs_volume": []any{flattenServiceManagedEBSVolumeConfiguration(ctx, apiObject.ManagedEBSVolume)},
 		}
 
 		tfList = append(tfList, tfMap)
