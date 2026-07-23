@@ -262,6 +262,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newAccessEntryResourceAsListResource,
+			TypeName: "aws_eks_access_entry",
+			Name:     "Access Entry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "access_entry_arn",
+			}),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("principal_arn", true),
+			}),
+		},
+		{
 			Factory:  newAddonResourceAsListResource,
 			TypeName: "aws_eks_addon",
 			Name:     "Add-On",

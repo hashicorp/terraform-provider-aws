@@ -159,16 +159,9 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading EKS Access Entry (%s): %s", d.Id(), err)
 	}
 
-	d.Set("access_entry_arn", output.AccessEntryArn)
-	d.Set(names.AttrClusterName, output.ClusterName)
-	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
-	d.Set("kubernetes_groups", output.KubernetesGroups)
-	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
-	d.Set("principal_arn", output.PrincipalArn)
-	d.Set(names.AttrType, output.Type)
-	d.Set(names.AttrUserName, output.Username)
-
-	setTagsOut(ctx, output.Tags)
+	if err := resourceAccessEntryFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -226,6 +219,21 @@ func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func resourceAccessEntryFlatten(ctx context.Context, accessEntry *types.AccessEntry, d *schema.ResourceData) error {
+	d.Set("access_entry_arn", accessEntry.AccessEntryArn)
+	d.Set(names.AttrClusterName, accessEntry.ClusterName)
+	d.Set(names.AttrCreatedAt, aws.ToTime(accessEntry.CreatedAt).Format(time.RFC3339))
+	d.Set("kubernetes_groups", accessEntry.KubernetesGroups)
+	d.Set("modified_at", aws.ToTime(accessEntry.ModifiedAt).Format(time.RFC3339))
+	d.Set("principal_arn", accessEntry.PrincipalArn)
+	d.Set(names.AttrType, accessEntry.Type)
+	d.Set(names.AttrUserName, accessEntry.Username)
+
+	setTagsOut(ctx, accessEntry.Tags)
+
+	return nil
 }
 
 const accessEntryResourceIDSeparator = ":"
