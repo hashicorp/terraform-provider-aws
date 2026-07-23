@@ -8,6 +8,7 @@ package rekognition
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -27,11 +29,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
+// @IdentityAttribute("feature", optional="true")
+// @ImportIDHandler("projectImportID")
+// @Testing(preIdentityVersion="v6.56.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
 
@@ -44,7 +51,7 @@ func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type projectResource struct {
 	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 const (
@@ -317,6 +324,26 @@ func statusProject(conn *rekognition.Client, name string, feature awstypes.Custo
 
 		return out, string(out.Status), nil
 	}
+}
+
+var (
+	_ inttypes.ImportIDParser = projectImportID{}
+)
+
+type projectImportID struct{}
+
+func (projectImportID) Parse(id string) (string, map[string]any, error) {
+	name, feature, found := strings.Cut(id, intflex.ResourceIdSeparator)
+
+	result := map[string]any{
+		names.AttrName: name,
+	}
+
+	if found && feature != "" {
+		result["feature"] = feature
+	}
+
+	return id, result, nil
 }
 
 type projectResourceModel struct {
