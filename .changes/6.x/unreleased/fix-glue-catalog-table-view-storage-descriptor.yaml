@@ -1,0 +1,4 @@
+kind: bug
+custom:
+  Impact: resource/aws_glue_catalog_table
+  Body: Fix `InvalidInputException: Storage descriptor may not be defined when creating a validated Glue view` on `Update` for a multi-dialect view, and stop `Read` from wiping out configured `view_definition.representations.validation_connection` / `view_original_text` / `view_expanded_text` with the empty values Glue's `GetTable` returns for those fields once a view is validated, which previously produced a perpetual plan diff.
