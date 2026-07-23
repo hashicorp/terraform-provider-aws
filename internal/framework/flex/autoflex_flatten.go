@@ -2748,6 +2748,16 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 	)
 }
 
+func diagFlatteningUnknownUnionMember(unionTag string) diag.WarningDiagnostic {
+	return diag.NewWarningDiagnostic(
+		"Unexpected Result",
+		"The API response contained data with an unrecognized type, which will be ignored by the provider.\n\n"+
+			"This may be resolved by updating the provider. "+
+			"If you are on the latest version of the provider, please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Unrecognized tagged union member with tag %q.", unionTag),
+	)
+}
+
 // handleDirectXMLWrapperStruct handles direct XML wrapper struct to target with xmlwrapper tags
 func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sourceFieldName string, valFrom, valTo reflect.Value, _, typeTo reflect.Type, targetPath path.Path, targetFieldName string, flattener *autoFlattener) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -3329,4 +3339,12 @@ func flattenXMLWrapperRule2(ctx context.Context, flattener *autoFlattener, vFrom
 	}
 
 	return diags
+}
+
+// HandleFlattenUnkownUnionMember is used to handle an `awstypes.UnknownUnionMember` when Flattening
+func HandleFlattenUnkownUnionMember(ctx context.Context, unionTag string, diags *diag.Diagnostics) {
+	tflog.Warn(ctx, "Unexpected tagged union member", map[string]any{
+		"tag": unionTag,
+	})
+	diags.Append(diagFlatteningUnknownUnionMember(unionTag))
 }
