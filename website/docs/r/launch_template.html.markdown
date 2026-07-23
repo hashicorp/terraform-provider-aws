@@ -431,6 +431,7 @@ Each `network_interfaces` block supports the following:
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.
+* `ena_queue_count` - (Optional) The number of ENA queues to be created with the instance. Requires an instance type and operating system that support [ENA queue configuration](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-queues.html).
 * `interface_type` - (Optional) The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
 * `ipv4_prefix_count` - (Optional) The number of IPv4 prefixes to be automatically assigned to the network interface. Conflicts with `ipv4_prefixes`
 * `ipv4_prefixes` - (Optional) One or more IPv4 prefixes to be assigned to the network interface. Conflicts with `ipv4_prefix_count`
