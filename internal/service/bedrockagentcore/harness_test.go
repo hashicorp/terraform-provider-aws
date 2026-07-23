@@ -470,6 +470,210 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_memory_managed(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_memoryManaged(rName, 45),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttr(resourceName, "memory.0.managed_memory_configuration.0.event_expiry_duration", "45"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_memory_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_memoryDisabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttr(resourceName, "memory.0.disabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_memory_managed_encryptionKeyRequiresReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_memoryManagedEncryptionKey(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// encryption_key_arn is not updatable after memory creation, so setting it must
+				// plan a replacement instead of an in-place update that the API would reject.
+				Config: testAccHarnessConfig_memoryManagedEncryptionKey(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+					resource.TestCheckResourceAttrPair(resourceName, "memory.0.managed_memory_configuration.0.encryption_key_arn", "aws_kms_key.test", names.AttrARN),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_memory_invalidUnion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomHarnessName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Two members set.
+				Config: testAccHarnessConfig_memoryRaw(rName, `
+  memory {
+    disabled = true
+    managed_memory_configuration {}
+  }`),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`exactly one of`),
+			},
+			{
+				// Empty memory block (no member).
+				Config: testAccHarnessConfig_memoryRaw(rName, `
+  memory {}`),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`exactly one of`),
+			},
+			{
+				// disabled = false is not a valid "disabled" selection.
+				Config: testAccHarnessConfig_memoryRaw(rName, `
+  memory {
+    disabled = false
+  }`),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`exactly one of`),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_memory_invalidStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomHarnessName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_memoryRaw(rName, `
+  memory {
+    managed_memory_configuration {
+      strategies = ["BOGUS_STRATEGY"]
+    }
+  }`),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`(?i)invalid memory strategy`),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_memory_invalidRelevanceScore(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomHarnessName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccHarnessConfig_memory(rName, 5.0),
+				PlanOnly:    true,
+				ExpectError: regexache.MustCompile(`relevance_score must be between`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -969,6 +1173,114 @@ resource "aws_bedrockagentcore_memory" "test" {
   event_expiry_duration = 7
 }
 `, rName, relevanceScore))
+}
+
+func testAccHarnessConfig_memoryManaged(rName string, eventExpiryDuration int) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    managed_memory_configuration {
+      event_expiry_duration = %[2]d
+      strategies            = ["SEMANTIC", "SUMMARIZATION"]
+    }
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName, eventExpiryDuration))
+}
+
+func testAccHarnessConfig_memoryDisabled(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    disabled = true
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName))
+}
+
+func testAccHarnessConfig_memoryManagedEncryptionKey(rName string, withKey bool) string {
+	encryptionKey := ""
+	kmsResource := ""
+	if withKey {
+		encryptionKey = "encryption_key_arn = aws_kms_key.test.arn"
+		kmsResource = `
+resource "aws_kms_key" "test" {
+  description             = "tf-acc-test harness managed memory"
+  deletion_window_in_days = 7
+}
+`
+	}
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    managed_memory_configuration {
+      event_expiry_duration = 30
+      strategies            = ["SEMANTIC", "SUMMARIZATION"]
+      %[2]s
+    }
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+%[3]s
+`, rName, encryptionKey, kmsResource))
+}
+
+func testAccHarnessConfig_memoryRaw(rName, memoryBlock string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+%[2]s
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName, memoryBlock))
 }
 
 func testAccHarnessConfig_environmentArtifact(rName, imageTag string) string {
