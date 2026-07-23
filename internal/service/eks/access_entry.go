@@ -221,7 +221,7 @@ func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceAccessEntryFlatten(ctx context.Context, accessEntry *types.AccessEntry, d *schema.ResourceData) error {
+func resourceAccessEntryFlatten(ctx context.Context, accessEntry *types.AccessEntry, d *schema.ResourceData) error { //nolint:unparam
 	d.Set("access_entry_arn", accessEntry.AccessEntryArn)
 	d.Set(names.AttrClusterName, accessEntry.ClusterName)
 	d.Set(names.AttrCreatedAt, aws.ToTime(accessEntry.CreatedAt).Format(time.RFC3339))
