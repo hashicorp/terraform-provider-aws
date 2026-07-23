@@ -73,8 +73,8 @@ The following attribute is additionally exported:
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
 * `instance_tenancy` - Allowed tenancy of instances launched into the
   selected VPC. May be any of `"default"`, `"dedicated"`, or `"host"`.
-* `ipv6_association_id` - Association ID for the IPv6 CIDR block.
-* `ipv6_cidr_block` - IPv6 CIDR block.
+* `ipv6_association_id` - (**Deprecated** use `ipv6_cidr_block_associations` instead) Association ID for the IPv6 CIDR block.
+* `ipv6_cidr_block` - (**Deprecated** use `ipv6_cidr_block_associations` instead) IPv6 CIDR block.
 * `main_route_table_id` - ID of the main route table associated with this VPC.
 * `owner_id` - ID of the AWS account that owns the VPC.
 
@@ -82,6 +82,16 @@ The following attribute is additionally exported:
 
 * `association_id` - Association ID for the IPv4 CIDR block.
 * `cidr_block` - CIDR block for the association.
+* `state` - State of the association.
+
+`ipv6_cidr_block_associations` is also exported with the following attributes:
+
+* `association_id` - Association ID for the IPv4 CIDR block.
+* `ipv6_address_attribute` - Indicates whether the address is `public` or `private`.
+* `ipv6_cidr_block` - IPv6 CIDR block for the association.
+* `ipv6_pool` - Name of IPv6 address pool from which the IPv6 CIDR block is allocated.
+* `network_border_group` - Name of association's network border group.
+* `ip_source` - The source that allocated the IP address space. Values: `amazon`, `byoip`, `none`.
 * `state` - State of the association.
 
 ## Timeouts
