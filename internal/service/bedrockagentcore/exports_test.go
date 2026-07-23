@@ -51,6 +51,7 @@ var (
 type (
 	CustomConfigurationModel              = customConfigurationModel
 	CustomJWTAuthorizerConfigurationModel = customJWTAuthorizerConfigurationModel
+	EpisodicReflectionConfigurationModel  = episodicReflectionConfigurationModel
 	ManagedVPCResourceModel               = managedVPCResourceModel
 	MemoryStrategyResourceModel           = memoryStrategyResourceModel
 	OverrideDetailsModel                  = overrideDetailsModel
