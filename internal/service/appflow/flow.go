@@ -7,6 +7,7 @@ package appflow
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"time"
@@ -723,8 +724,10 @@ func resourceFlow() *schema.Resource {
 					},
 				},
 				"flow_status": {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(enum.Slice(types.FlowStatusActive, types.FlowStatusSuspended), false),
 				},
 				"kms_arn": {
 					Type:         schema.TypeString,
@@ -1378,7 +1381,34 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.SetId(name)
 
+	if input.TriggerConfig.TriggerType == types.TriggerTypeScheduled || input.TriggerConfig.TriggerType == types.TriggerTypeEvent {
+		if v, ok := d.GetOk("flow_status"); ok {
+			flowStatus := types.FlowStatus(v.(string))
+			if flowStatus == types.FlowStatusActive {
+				if err := resourceFlowStart(ctx, d, meta); err != nil {
+					return sdkdiag.AppendErrorf(diags, "%s", err)
+				}
+			}
+		}
+	}
+
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
+}
+
+func resourceFlowStart(ctx context.Context, d *schema.ResourceData, meta any) error {
+	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	startFlowInput := &appflow.StartFlowInput{
+		FlowName: aws.String(name),
+	}
+
+	_, err := conn.StartFlow(ctx, startFlowInput)
+	if err != nil {
+		return fmt.Errorf("Activating AppFlow Flow (%s): %w", name, err)
+	}
+
+	return nil
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1399,7 +1429,6 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
@@ -1433,13 +1462,44 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 
 		_, err := conn.UpdateFlow(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
+		}
+
+		if input.TriggerConfig.TriggerType == types.TriggerTypeScheduled || input.TriggerConfig.TriggerType == types.TriggerTypeEvent {
+			if v, ok := d.GetOk("flow_status"); ok && d.HasChange("flow_status") {
+				flowStatus := types.FlowStatus(v.(string))
+				switch flowStatus {
+				case types.FlowStatusActive:
+					if err := resourceFlowStart(ctx, d, meta); err != nil {
+						return sdkdiag.AppendErrorf(diags, "%s", err)
+					}
+				case types.FlowStatusSuspended:
+					if err := resourceFlowStop(ctx, d, meta); err != nil {
+						return sdkdiag.AppendErrorf(diags, "%s", err)
+					}
+				}
+			}
 		}
 	}
 
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
+}
+
+func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta any) error {
+	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	stopFlowInput := &appflow.StopFlowInput{
+		FlowName: aws.String(name),
+	}
+
+	_, err := conn.StopFlow(ctx, stopFlowInput)
+	if err != nil {
+		return fmt.Errorf("Suspending AppFlow Flow (%s): %w", name, err)
+	}
+
+	return nil
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
