@@ -109,24 +109,22 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_backup_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
-			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
-				// warm_throughput can only be increased, not decreased
-				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
-				if old, new := old.(int), new.(int); new != 0 && new < old {
-					return true
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
 				}
 
-				return false
-			}),
-			customdiff.ForceNewIfChange("warm_throughput.0.write_units_per_second", func(_ context.Context, old, new, meta any) bool {
-				// warm_throughput can only be increased, not decreased
-				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
-				if old, new := old.(int), new.(int); new != 0 && new < old {
-					return true
+				for _, attr := range []string{"warm_throughput.0.read_units_per_second", "warm_throughput.0.write_units_per_second"} {
+					if diff.HasChange(attr) {
+						old, new := diff.GetChange(attr)
+						if oldVal, newVal := old.(int), new.(int); newVal != 0 && newVal < oldVal {
+							return fmt.Errorf("%s cannot be decreased (current value: %d, requested value: %d)", attr, oldVal, newVal)
+						}
+					}
 				}
 
-				return false
-			}),
+				return nil
+			},
 			suppressTableWarmThroughputDefaults,
 			customDiffGlobalSecondaryIndex,
 			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
