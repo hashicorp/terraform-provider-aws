@@ -140,7 +140,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/interconnect v1.2.1
