@@ -140,7 +140,7 @@ func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			testAccPreCheckAnomalyDetector(ctx, t)
+			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -170,6 +170,10 @@ func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccAnomalyDetectorImportState(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id")
 }
 
 func testAccCheckAnomalyDetectorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

@@ -71,6 +71,7 @@ import (
 // @Testing(preCheck="testAccPreCheckAnomalyDetector")
 // // @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc="testAccAnomalyDetectorImportState")
 func newAnomalyDetectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 
@@ -344,7 +345,7 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.Updat
 
 	if diff.HasChanges() {
 		var input amp.PutAnomalyDetectorInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("AnomalyDetector")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -357,14 +358,20 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
-		_, err = waitAnomalyDetectorUpdated(ctx, conn, plan.ID.ValueString(), plan.WorkspaceID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+		updated, err := waitAnomalyDetectorUpdated(ctx, conn, plan.ID.ValueString(), plan.WorkspaceID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
+
+		// Re-setting computed values
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, updated, &plan, fwflex.WithFieldNamePrefix("AnomalyDetector")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 	}
 
-	// TIP: -- 6. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
