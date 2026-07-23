@@ -14,6 +14,10 @@ resource "aws_prometheus_anomaly_detector" "test" {
 	}
   }
 
+  missing_data_action{
+    skip = true
+  }
+
   tags = var.resource_tags
 }
 variable "rName" {

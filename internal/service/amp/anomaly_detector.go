@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -196,15 +197,28 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 			"missing_data_action": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorMissingDataActionModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"mark_as_anomaly": schema.BoolAttribute{
 							Optional: true,
+							Validators: []validator.Bool{
+								boolvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("skip"),
+								),
+								boolvalidator.Equals(true),
+							},
 						},
 						"skip": schema.BoolAttribute{
 							Optional: true,
+							Validators: []validator.Bool{
+								boolvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("mark_as_anomaly"),
+								),
+								boolvalidator.Equals(true),
+							},
 						},
 					},
 				},
@@ -662,9 +676,9 @@ func (m anomalyDetectorMissingDataActionModel) Expand(ctx context.Context) (resu
 
 func (m *anomalyDetectorMissingDataActionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
-	case *awstypes.AnomalyDetectorMissingDataActionMemberMarkAsAnomaly:
+	case awstypes.AnomalyDetectorMissingDataActionMemberMarkAsAnomaly:
 		m.MarkAsAnomaly = fwflex.BoolValueToFramework(ctx, t.Value)
-	case *awstypes.AnomalyDetectorMissingDataActionMemberSkip:
+	case awstypes.AnomalyDetectorMissingDataActionMemberSkip:
 		m.Skip = fwflex.BoolValueToFramework(ctx, t.Value)
 	}
 	return diags

@@ -107,24 +107,13 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
-
-					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-					// 	"console_access": "false",
-					// 	"groups.#":       "0",
-					// 	"username":       "Test",
-					// 	"password":       "TestTest1234",
-					// }),
-					// // TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// // value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", regexache.MustCompile(`anomalydetector:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", regexache.MustCompile(`anomalydetector/.+$`)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluation_interval_in_seconds"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluation_interval_in_seconds"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -222,7 +211,10 @@ func testAccCheckAnomalyDetectorExists(ctx context.Context, t *testing.T, name s
 		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		_, err := tfamp.FindAnomalyDetectorByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
-		return create.Error(names.AMP, create.ErrActionCheckingExistence, tfamp.ResNameAnomalyDetector, rs.Primary.ID, err)
+		if err != nil {
+			return create.Error(names.AMP, create.ErrActionCheckingExistence, tfamp.ResNameAnomalyDetector, rs.Primary.ID, err)
+		}
+		return nil
 	}
 }
 
@@ -254,7 +246,7 @@ resource "aws_prometheus_anomaly_detector" "test" {
 	  query = "avg(up)"
 	}
   }
-  
+
   missing_data_action {
     skip = true
   }
