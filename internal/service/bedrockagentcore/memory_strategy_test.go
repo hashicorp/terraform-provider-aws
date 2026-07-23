@@ -48,6 +48,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Episodic strategy"),
 					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_templates.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -81,6 +82,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "default"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_templates.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -260,6 +262,111 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_namespaceTemplates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: Create memory with execution role (needed for EPISODIC step)
+			{
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
+			},
+			// Step 1: Validation - both namespaces and namespace_templates set → error
+			{
+				Config:      testAccMemoryStrategyConfig_bothNamespaces(rName, "SEMANTIC", "Both set", "default"),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			// Step 2: Validation - neither namespaces nor namespace_templates set → error
+			{
+				Config:      testAccMemoryStrategyConfig_noNamespaces(rName, "SEMANTIC", "Neither set"),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			// Step 3: Create SEMANTIC with namespace_templates only; API mirrors into namespaces
+			{
+				Config: testAccMemoryStrategyConfig_namespaceTemplates(rName, "SEMANTIC", "Semantic strategy", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_templates.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "namespace_templates.*", "default"),
+					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "default"),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 4: Update namespace_templates in place; mirrored namespaces follows
+			{
+				Config: testAccMemoryStrategyConfig_namespaceTemplates(rName, "SEMANTIC", "Semantic strategy", "custom"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "namespace_templates.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "namespace_templates.*", "custom"),
+					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "custom"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 5: Migrate config to legacy namespaces with the same value → no-op
+			// (state already mirrors both fields with this value)
+			{
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", "Semantic strategy", "custom"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			// Step 6: EPISODIC with namespace_templates (replacement; exercises the
+			// manual expand path and the reflection-configuration mirror)
+			{
+				Config: testAccMemoryStrategyConfig_namespaceTemplates(rName, "EPISODIC", "Episodic strategy", "/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EPISODIC"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_templates.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "namespaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			// Step 7: Import - both attributes round-trip from the API
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -368,6 +475,45 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   namespaces                = [%[4]q]
 }
 `, rName, strategyType, description, namespace))
+}
+
+func testAccMemoryStrategyConfig_namespaceTemplates(rName, strategyType, description, namespaceTemplate string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = %[3]q
+  namespace_templates       = [%[4]q]
+}
+`, rName, strategyType, description, namespaceTemplate))
+}
+
+func testAccMemoryStrategyConfig_bothNamespaces(rName, strategyType, description, namespace string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = %[3]q
+  namespaces                = [%[4]q]
+  namespace_templates       = [%[4]q]
+}
+`, rName, strategyType, description, namespace))
+}
+
+func testAccMemoryStrategyConfig_noNamespaces(rName, strategyType, description string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = %[3]q
+}
+`, rName, strategyType, description))
 }
 
 func testAccMemoryStrategyConfig_duplicateType(rName string, strategyType string) string {
