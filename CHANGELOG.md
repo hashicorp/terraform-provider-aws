@@ -1,5 +1,10 @@
 ## 6.57.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_bedrock_evaluation_job` ([#49044](https://github.com/hashicorp/terraform-provider-aws/issues/49044))
+* **New Resource:** `aws_bedrock_evaluation_job` ([#49044](https://github.com/hashicorp/terraform-provider-aws/issues/49044))
+
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `ena_queue_count` attribute to `network_interfaces` configuration block ([#48892](https://github.com/hashicorp/terraform-provider-aws/issues/48892))
