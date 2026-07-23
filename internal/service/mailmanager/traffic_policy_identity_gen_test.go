@@ -8,7 +8,6 @@ package mailmanager_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -24,7 +23,6 @@ import (
 func TestAccMailManagerTrafficPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -47,7 +45,7 @@ func TestAccMailManagerTrafficPolicy_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

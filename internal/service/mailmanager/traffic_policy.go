@@ -43,7 +43,6 @@ import (
 // @FrameworkResource("aws_mailmanager_traffic_policy", name="Traffic Policy")
 // @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/mailmanager;mailmanager.GetTrafficPolicyOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckTrafficPolicy")
 // @Testing(skipEmptyTags=true, skipNullTags=true)

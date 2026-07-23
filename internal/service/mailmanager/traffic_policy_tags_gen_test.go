@@ -8,7 +8,6 @@ package mailmanager_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +22,6 @@ import (
 func TestAccMailManagerTrafficPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -48,7 +46,7 @@ func TestAccMailManagerTrafficPolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -92,7 +90,7 @@ func TestAccMailManagerTrafficPolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -140,7 +138,7 @@ func TestAccMailManagerTrafficPolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -181,7 +179,7 @@ func TestAccMailManagerTrafficPolicy_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -214,7 +212,6 @@ func TestAccMailManagerTrafficPolicy_Tags_null(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -239,7 +236,7 @@ func TestAccMailManagerTrafficPolicy_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -283,7 +280,6 @@ func TestAccMailManagerTrafficPolicy_Tags_null(t *testing.T) {
 func TestAccMailManagerTrafficPolicy_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -306,7 +302,7 @@ func TestAccMailManagerTrafficPolicy_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -340,7 +336,6 @@ func TestAccMailManagerTrafficPolicy_Tags_emptyMap(t *testing.T) {
 func TestAccMailManagerTrafficPolicy_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -363,7 +358,7 @@ func TestAccMailManagerTrafficPolicy_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -386,7 +381,7 @@ func TestAccMailManagerTrafficPolicy_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -429,7 +424,6 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -454,7 +448,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -495,7 +489,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -528,7 +522,6 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -553,7 +546,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -585,7 +578,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -633,7 +626,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -676,7 +669,6 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -701,7 +693,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -732,7 +724,7 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -773,7 +765,6 @@ func TestAccMailManagerTrafficPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -799,7 +790,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_providerOnly(t *testing.T)
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -843,7 +834,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_providerOnly(t *testing.T)
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -889,7 +880,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_providerOnly(t *testing.T)
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -929,7 +920,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_providerOnly(t *testing.T)
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -961,7 +952,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_providerOnly(t *testing.T)
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -989,7 +979,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nonOverlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1043,7 +1033,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nonOverlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1096,7 +1086,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nonOverlapping(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1128,7 +1118,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nonOverlapping(t *testing.
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1156,7 +1145,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_overlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1209,7 +1198,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_overlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1266,7 +1255,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_overlapping(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1311,7 +1300,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_overlapping(t *testing.T) 
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1336,7 +1324,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToProviderOnly(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1369,7 +1357,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToProviderOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1408,7 +1396,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToProviderOnly(t *te
 func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1434,7 +1421,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToResourceOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1462,7 +1449,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_updateToResourceOnly(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1506,7 +1493,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyResourceTag(t *testin
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1534,7 +1520,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyResourceTag(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1581,7 +1567,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *te
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1607,7 +1592,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1648,7 +1633,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullOverlappingResourceTag
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1676,7 +1660,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullOverlappingResourceTag
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1726,7 +1710,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullNonOverlappingResource
 
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1754,7 +1737,7 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullNonOverlappingResource
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1804,7 +1787,6 @@ func TestAccMailManagerTrafficPolicy_Tags_DefaultTags_nullNonOverlappingResource
 func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1827,7 +1809,7 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1866,7 +1848,6 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1891,7 +1872,7 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1923,7 +1904,7 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T)
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1970,7 +1951,6 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T)
 func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1995,7 +1975,7 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2025,7 +2005,7 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_replace(t *testin
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2064,7 +2044,6 @@ func TestAccMailManagerTrafficPolicy_Tags_ComputedTag_OnUpdate_replace(t *testin
 func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2096,7 +2075,7 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2145,7 +2124,7 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2194,7 +2173,7 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2233,7 +2212,6 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v mailmanager.GetTrafficPolicyOutput
 	resourceName := "aws_mailmanager_traffic_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2263,7 +2241,7 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *test
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2321,7 +2299,7 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *test
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2378,7 +2356,7 @@ func TestAccMailManagerTrafficPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *test
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

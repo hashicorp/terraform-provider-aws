@@ -24,7 +24,6 @@ import (
 func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var trafficPolicy mailmanager.GetTrafficPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_traffic_policy.test"
 
@@ -40,7 +39,7 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &trafficPolicy),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "ALLOW"),
@@ -69,7 +68,6 @@ func TestAccMailManagerTrafficPolicy_basic(t *testing.T) {
 func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var trafficPolicy mailmanager.GetTrafficPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_traffic_policy.test"
 
@@ -85,7 +83,7 @@ func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &trafficPolicy),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmailmanager.ResourceTrafficPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,7 +100,6 @@ func TestAccMailManagerTrafficPolicy_disappears(t *testing.T) {
 func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var before, after mailmanager.GetTrafficPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_traffic_policy.test"
 
@@ -118,7 +115,7 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfig_update(rName, "ALLOW", 100000, "CIDR_MATCHES", "192.0.2.0/24"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &before),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "100000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -132,8 +129,7 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &after),
-					testAccCheckTrafficPolicyNotRecreated(&before, &after),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size_bytes", "200000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
@@ -153,7 +149,6 @@ func TestAccMailManagerTrafficPolicy_update(t *testing.T) {
 func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var trafficPolicy mailmanager.GetTrafficPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_traffic_policy.test"
 
@@ -169,7 +164,7 @@ func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfig_conditionTypes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrafficPolicyExists(ctx, t, resourceName, &trafficPolicy),
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ipv6_expression.0.evaluate.0.attribute", "SENDER_IPV6"),
 					resource.TestCheckResourceAttr(resourceName, "policy_statement.0.condition.0.ipv6_expression.0.operator", "CIDR_MATCHES"),
@@ -208,7 +203,7 @@ func testAccCheckTrafficPolicyDestroy(ctx context.Context, t *testing.T) resourc
 	}
 }
 
-func testAccCheckTrafficPolicyExists(ctx context.Context, t *testing.T, name string, trafficPolicy *mailmanager.GetTrafficPolicyOutput) resource.TestCheckFunc {
+func testAccCheckTrafficPolicyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -218,19 +213,9 @@ func testAccCheckTrafficPolicyExists(ctx context.Context, t *testing.T, name str
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameTrafficPolicy, name, errors.New("not set"))
 		}
 		conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
-		out, err := tfmailmanager.FindTrafficPolicyByID(ctx, conn, rs.Primary.ID)
+		_, err := tfmailmanager.FindTrafficPolicyByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameTrafficPolicy, rs.Primary.ID, err)
-		}
-		*trafficPolicy = *out
-		return nil
-	}
-}
-
-func testAccCheckTrafficPolicyNotRecreated(before, after *mailmanager.GetTrafficPolicyOutput) resource.TestCheckFunc {
-	return func(*terraform.State) error {
-		if before, after := *before.TrafficPolicyId, *after.TrafficPolicyId; before != after {
-			return create.Error(names.MailManager, create.ErrActionCheckingNotRecreated, tfmailmanager.ResNameTrafficPolicy, before, errors.New("recreated"))
 		}
 		return nil
 	}
