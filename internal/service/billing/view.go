@@ -123,6 +123,24 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
+						"cost_categories": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[costCategoryValuesModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrKey: schema.StringAttribute{
+										Required: true,
+									},
+									names.AttrValues: schema.ListAttribute{
+										CustomType:  fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
+									},
+								},
+							},
+						},
 						"dimensions": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionsModel](ctx),
 							Validators: []validator.List{
@@ -489,9 +507,15 @@ type resourceViewModel struct {
 }
 
 type dataFilterExpressionModel struct {
-	Dimensions fwtypes.ListNestedObjectValueOf[dimensionsModel] `tfsdk:"dimensions"`
-	Tags       fwtypes.ListNestedObjectValueOf[tagValuesModel]  `tfsdk:"tags"`
-	TimeRange  fwtypes.ListNestedObjectValueOf[timeRangeModel]  `tfsdk:"time_range"`
+	CostCategories fwtypes.ListNestedObjectValueOf[costCategoryValuesModel] `tfsdk:"cost_categories"`
+	Dimensions     fwtypes.ListNestedObjectValueOf[dimensionsModel]         `tfsdk:"dimensions"`
+	Tags           fwtypes.ListNestedObjectValueOf[tagValuesModel]          `tfsdk:"tags"`
+	TimeRange      fwtypes.ListNestedObjectValueOf[timeRangeModel]          `tfsdk:"time_range"`
+}
+
+type costCategoryValuesModel struct {
+	Key    types.String         `tfsdk:"key"`
+	Values fwtypes.ListOfString `tfsdk:"values"`
 }
 
 type dimensionsModel struct {
