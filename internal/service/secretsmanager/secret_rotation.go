@@ -126,15 +126,15 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretID := d.Get("secret_id").(string)
-	input := &secretsmanager.RotateSecretInput{
+	input := secretsmanager.RotateSecretInput{
 		ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
-		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]any)),
+		RotationRules:      expandRotationRulesType(d.Get("rotation_rules").([]any)),
 		SecretId:           aws.String(secretID),
 	}
 
 	if v, ok := d.GetOk("external_secret_rotation_metadata"); ok && len(v.([]any)) > 0 {
-		input.ExternalSecretRotationMetadata = expandExternalSecretRotationMetadata(v.([]any))
+		input.ExternalSecretRotationMetadata = expandExternalSecretRotationMetadataItems(v.([]any))
 	}
 
 	if v, ok := d.GetOk("external_secret_rotation_role_arn"); ok {
@@ -148,7 +148,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 	// InvalidRequestException: Secrets Manager is unable to assume role (IAM propagation delay).
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.RotateSecret(ctx, input)
+		return conn.RotateSecret(ctx, &input)
 	}, errCodeAccessDeniedException, errCodeInvalidRequestException)
 
 	if err != nil {
@@ -179,12 +179,12 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 	rotationEnabled := aws.ToBool(output.RotationEnabled)
 	d.Set("rotation_enabled", rotationEnabled)
 	if rotationEnabled {
-		if err := d.Set("external_secret_rotation_metadata", flattenExternalSecretRotationMetadata(output.ExternalSecretRotationMetadata)); err != nil {
+		if err := d.Set("external_secret_rotation_metadata", flattenExternalSecretRotationMetadataItems(output.ExternalSecretRotationMetadata)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting external_secret_rotation_metadata: %s", err)
 		}
 		d.Set("external_secret_rotation_role_arn", output.ExternalSecretRotationRoleArn)
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
+		if err := d.Set("rotation_rules", flattenRotationRulesType(output.RotationRules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
 		}
 	} else {
@@ -204,15 +204,15 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("external_secret_rotation_metadata", "external_secret_rotation_role_arn", "rotation_lambda_arn", "rotation_rules") {
 		secretID := d.Get("secret_id").(string)
-		input := &secretsmanager.RotateSecretInput{
+		input := secretsmanager.RotateSecretInput{
 			ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 			RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
-			RotationRules:      expandRotationRules(d.Get("rotation_rules").([]any)),
+			RotationRules:      expandRotationRulesType(d.Get("rotation_rules").([]any)),
 			SecretId:           aws.String(secretID),
 		}
 
 		if v, ok := d.GetOk("external_secret_rotation_metadata"); ok && len(v.([]any)) > 0 {
-			input.ExternalSecretRotationMetadata = expandExternalSecretRotationMetadata(v.([]any))
+			input.ExternalSecretRotationMetadata = expandExternalSecretRotationMetadataItems(v.([]any))
 		}
 
 		if v, ok := d.GetOk("external_secret_rotation_role_arn"); ok {
@@ -225,7 +225,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.RotateSecret(ctx, input)
+			return conn.RotateSecret(ctx, &input)
 		}, errCodeAccessDeniedException, errCodeInvalidRequestException)
 
 		if err != nil {
@@ -241,9 +241,10 @@ func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret Rotation: %s", d.Id())
-	_, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
+	input := secretsmanager.CancelRotateSecretInput{
 		SecretId: aws.String(d.Get("secret_id").(string)),
-	})
+	}
+	_, err := conn.CancelRotateSecret(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Secret Manager Secret Rotation (%s): %s", d.Id(), err)
@@ -252,7 +253,7 @@ func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandExternalSecretRotationMetadata(tfList []any) []types.ExternalSecretRotationMetadataItem {
+func expandExternalSecretRotationMetadataItems(tfList []any) []types.ExternalSecretRotationMetadataItem {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -281,7 +282,7 @@ func expandExternalSecretRotationMetadata(tfList []any) []types.ExternalSecretRo
 	return apiObjects
 }
 
-func flattenExternalSecretRotationMetadata(apiObjects []types.ExternalSecretRotationMetadataItem) []any {
+func flattenExternalSecretRotationMetadataItems(apiObjects []types.ExternalSecretRotationMetadataItem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -305,45 +306,46 @@ func flattenExternalSecretRotationMetadata(apiObjects []types.ExternalSecretRota
 	return tfList
 }
 
-func expandRotationRules(l []any) *types.RotationRulesType {
-	if len(l) == 0 {
+func expandRotationRulesType(tfList []any) *types.RotationRulesType {
+	if len(tfList) == 0 {
 		return nil
 	}
-	rules := &types.RotationRulesType{}
 
-	tfMap := l[0].(map[string]any)
+	apiObject := &types.RotationRulesType{}
+
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
-		rules.ScheduleExpression = aws.String(v)
+		apiObject.ScheduleExpression = aws.String(v)
 	} else if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
-		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
+		apiObject.AutomaticallyAfterDays = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
-		rules.Duration = aws.String(v)
+		apiObject.Duration = aws.String(v)
 	}
 
-	return rules
+	return apiObject
 }
 
-func flattenRotationRules(rules *types.RotationRulesType) []any {
-	if rules == nil {
+func flattenRotationRulesType(apiObject *types.RotationRulesType) []any {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]any{}
+	tfMap := map[string]any{}
 
 	// If ScheduleExpression is set, AutomaticallyAfterDays will be the result of AWS calculating the number of days between rotations
-	if v := rules.ScheduleExpression; v != nil && aws.ToString(v) != "" {
-		m[names.AttrScheduleExpression] = aws.ToString(v)
-	} else if v := rules.AutomaticallyAfterDays; v != nil && aws.ToInt64(v) != 0 {
+	if v := apiObject.ScheduleExpression; v != nil && aws.ToString(v) != "" {
+		tfMap[names.AttrScheduleExpression] = aws.ToString(v)
+	} else if v := apiObject.AutomaticallyAfterDays; v != nil && aws.ToInt64(v) != 0 {
 		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
-		m["automatically_after_days"] = int(aws.ToInt64(v))
+		tfMap["automatically_after_days"] = aws.ToInt64(v)
 	}
 
-	if v := rules.Duration; v != nil {
-		m[names.AttrDuration] = aws.ToString(v)
+	if v := apiObject.Duration; v != nil {
+		tfMap[names.AttrDuration] = aws.ToString(v)
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }

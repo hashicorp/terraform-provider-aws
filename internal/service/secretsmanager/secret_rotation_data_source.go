@@ -92,13 +92,13 @@ func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(output.ARN))
-	if err := d.Set("external_secret_rotation_metadata", flattenExternalSecretRotationMetadata(output.ExternalSecretRotationMetadata)); err != nil {
+	if err := d.Set("external_secret_rotation_metadata", flattenExternalSecretRotationMetadataItems(output.ExternalSecretRotationMetadata)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_secret_rotation_metadata: %s", err)
 	}
 	d.Set("external_secret_rotation_role_arn", output.ExternalSecretRotationRoleArn)
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
+	if err := d.Set("rotation_rules", flattenRotationRulesType(output.RotationRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
 	}
 
