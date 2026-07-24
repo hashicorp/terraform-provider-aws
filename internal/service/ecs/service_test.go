@@ -1032,6 +1032,90 @@ func TestAccECSService_alarmsUpdate(t *testing.T) {
 	})
 }
 
+func TestAccECSService_monitoring(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_monitoring(rName, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.0.resolution_seconds", "20"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.0.metric_names.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "monitoring.0.metric_configuration.0.metric_names.*", "CPUUtilization"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "monitoring.0.metric_configuration.0.metric_names.*", "MemoryUtilization"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"task_definition", // https://github.com/hashicorp/terraform-provider-aws/issues/42731
+				},
+			},
+			{
+				Config: testAccServiceConfig_monitoring(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.0.resolution_seconds", "60"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_monitoringRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_monitoringMultipleMetricConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_monitoringMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.0.resolution_seconds", "20"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.0.metric_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "monitoring.0.metric_configuration.0.metric_names.*", "CPUUtilization"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.1.resolution_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.0.metric_configuration.1.metric_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "monitoring.0.metric_configuration.1.metric_names.*", "MemoryUtilization"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -6073,6 +6157,82 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 }
 `, rName)
+}
+
+func testAccServiceConfig_monitoringBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+`, rName)
+}
+
+func testAccServiceConfig_monitoring(rName string, resolutionSeconds int) string {
+	return acctest.ConfigCompose(testAccServiceConfig_monitoringBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  monitoring {
+    metric_configuration {
+      metric_names       = ["CPUUtilization", "MemoryUtilization"]
+      resolution_seconds = %[2]d
+    }
+  }
+}
+`, rName, resolutionSeconds))
+}
+
+func testAccServiceConfig_monitoringMultiple(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_monitoringBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  monitoring {
+    metric_configuration {
+      metric_names       = ["CPUUtilization"]
+      resolution_seconds = 20
+    }
+
+    metric_configuration {
+      metric_names       = ["MemoryUtilization"]
+      resolution_seconds = 60
+    }
+  }
+}
+`, rName))
+}
+
+func testAccServiceConfig_monitoringRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_monitoringBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+}
+`, rName))
 }
 
 func testAccServiceConfig_deploymentValues(rName string) string {

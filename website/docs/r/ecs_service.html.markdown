@@ -250,6 +250,7 @@ The following arguments are optional:
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`. Conflicts with `capacity_provider_strategy`.
 * `load_balancer` - (Optional) Configuration block for load balancers. [See below](#load_balancer).
+* `monitoring` - (Optional) Configuration block for the resolution of the service-level `CPUUtilization` and `MemoryUtilization` CloudWatch metrics. When not specified, Amazon ECS uses the default resolution of `60` seconds. [See below](#monitoring).
 * `network_configuration` - (Optional) Network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. [See below](#network_configuration).
 * `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless `force_new_deployment` is enabled. The maximum number of `ordered_placement_strategy` blocks is `5`. [See below](#ordered_placement_strategy).
 * `placement_constraints` - (Optional) Rules that are taken into consideration during task placement. Updates to this configuration will take effect next task deployment unless `force_new_deployment` is enabled. Maximum number of `placement_constraints` is `10`. [See below](#placement_constraints).
@@ -380,6 +381,21 @@ The `advanced_configuration` configuration block supports the following:
 * `production_listener_rule` - (Required) ARN of the listener rule that routes production traffic.
 * `role_arn` - (Required) ARN of the IAM role that allows ECS to manage the target groups.
 * `test_listener_rule` - (Optional) ARN of the listener rule that routes test traffic.
+
+### monitoring
+
+`monitoring` supports the following:
+
+* `metric_configuration` - (Required) List of metric configurations for the service monitoring. [See below](#metric_configuration).
+
+-> **Note:** The monitoring configuration is returned by the [`DescribeServiceRevisions` API](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeServiceRevisions.html) rather than `DescribeServices`, so reading this attribute requires the `ecs:DescribeServiceRevisions` IAM permission.
+
+### metric_configuration
+
+The `metric_configuration` configuration block supports the following:
+
+* `metric_names` - (Required) Set of metric names to configure. The currently supported metric names are `CPUUtilization` and `MemoryUtilization`.
+* `resolution_seconds` - (Required) Resolution, in seconds, at which to collect the metrics. The valid values are `20` and `60`. Publishing metrics at 20-second resolution allows [faster service auto scaling](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/target-tracking-faster-auto-scaling.html) using the `ECSServiceAverageCPUUtilizationHighResolution` and `ECSServiceAverageMemoryUtilizationHighResolution` predefined metric types.
 
 ### network_configuration
 
