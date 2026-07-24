@@ -523,6 +523,19 @@ func resourceCapacityProvider() *schema.Resource {
 											},
 										},
 									},
+									"local_storage_configuration": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"use_local_storage": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
 								},
 							},
 							names.AttrPropagateTags: {
@@ -1045,6 +1058,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 		apiObject.StorageConfiguration = expandManagedInstancesStorageConfiguration(v)
 	}
 
+	if v, ok := tfMap["local_storage_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.LocalStorageConfiguration = expandManagedInstancesLocalStorageConfiguration(v)
+	}
+
 	return apiObject
 }
 
@@ -1074,6 +1091,10 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 
 	if v, ok := tfMap["storage_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.StorageConfiguration = expandManagedInstancesStorageConfiguration(v)
+	}
+
+	if v, ok := tfMap["local_storage_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.LocalStorageConfiguration = expandManagedInstancesLocalStorageConfiguration(v)
 	}
 
 	return apiObject
@@ -1108,6 +1129,21 @@ func expandManagedInstancesStorageConfiguration(tfList []any) *awstypes.ManagedI
 
 	if v, ok := tfMap["storage_size_gib"].(int); ok && v > 0 {
 		apiObject.StorageSizeGiB = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandManagedInstancesLocalStorageConfiguration(tfList []any) *awstypes.ManagedInstancesLocalStorageConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ManagedInstancesLocalStorageConfiguration{}
+
+	if v, ok := tfMap["use_local_storage"].(bool); ok {
+		apiObject.UseLocalStorage = v
 	}
 
 	return apiObject
@@ -1452,6 +1488,12 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 	if template.StorageConfiguration != nil {
 		tfMap["storage_configuration"] = []map[string]any{{
 			"storage_size_gib": aws.ToInt32(template.StorageConfiguration.StorageSizeGiB),
+		}}
+	}
+
+	if template.LocalStorageConfiguration != nil {
+		tfMap["local_storage_configuration"] = []map[string]any{{
+			"use_local_storage": template.LocalStorageConfiguration.UseLocalStorage,
 		}}
 	}
 
