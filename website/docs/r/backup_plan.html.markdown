@@ -55,6 +55,7 @@ This resource supports the following arguments:
 * `completion_window` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
 * `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.
 * `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
+* `index_action` - (Optional) Configuration block for a backup index of Amazon EBS snapshots and/or Amazon S3 backups. Details below.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
 * `recovery_point_tags` - (Optional) Metadata that you can assign to help organize the resources that you create.
 * `scan_action` - (Optional) Block for scanning configuration for the backup rule and includes the malware scanner, and scan mode of either full or incremental.
@@ -69,6 +70,12 @@ This resource supports the following arguments:
 
 * `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
+
+### Index Action Arguments
+
+`index_action` supports the following attributes:
+
+* `resource_types` - (Required) List of resource types to include in the backup index. Valid values are `EBS` and `S3`. At least one of these values must be included in the list.
 
 ### Lifecycle Arguments
 

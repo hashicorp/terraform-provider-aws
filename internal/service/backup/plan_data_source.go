@@ -82,6 +82,21 @@ func dataSourcePlan() *schema.Resource {
 								Type:     schema.TypeBool,
 								Computed: true,
 							},
+							"index_action": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_types": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
 							"lifecycle": {
 								Type:     schema.TypeList,
 								Computed: true,
