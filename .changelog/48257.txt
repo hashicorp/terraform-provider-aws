@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_catalog: Fix `InvalidInputException: Tag operations not supported on root catalog` error when reading the root (account-level) catalog
+```
