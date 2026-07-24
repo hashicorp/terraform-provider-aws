@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Waits for deployment on Update.
+```
+
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Updates `etag` when only `tags` updated.
+```
+
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Sets `etag` on Import.
+```
+
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Correctly taints resource if Create fails.
+```

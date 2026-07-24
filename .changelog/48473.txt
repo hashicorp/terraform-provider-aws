@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_user: Handle `InvalidAction` errors in partitions where access key cleanup operations are not supported
+```

@@ -1,0 +1,16 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: missing-identitytests-generator
+    message: >-
+      Missing the identitytests generator directive. Add:
+      //go:generate go run ../../generate/identitytests/main.go
+    severity: WARNING
+    languages: [generic]
+    paths:
+      include:
+        - /internal/service/*/generate.go
+    patterns:
+      - pattern-regex: "(?s).*servicepackage.*package \\w+"
+      - pattern-not-regex: "(?s).*identitytests.*"

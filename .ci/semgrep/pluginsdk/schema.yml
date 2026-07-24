@@ -1,0 +1,38 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-schema-func
+    languages: [go]
+    message: Prefer schema.Resource.SchemaFunc to schema.Resource.Schema
+    patterns:
+      - pattern: "Schema: $SCHEMA"
+      - metavariable-pattern:
+          metavariable: $SCHEMA
+          pattern: "map[string]*schema.Schema{...}"
+      - pattern-inside: |
+          func $FUNC() *schema.Resource {
+            ...
+            return &schema.Resource{
+              ...,
+            }
+          }
+      - pattern-not-inside: |
+          Elem: &schema.Resource{
+            ...,
+          }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^.*(?<!V\d)$
+    fix: |
+      SchemaFunc: func() map[string]*schema.Schema {
+      	return $SCHEMA
+      }
+    severity: WARNING
+
+  - id: use-schema-map
+    languages: [go]
+    message: Use .SchemaMap() instead of .Schema to access a schema.Resource's schema map
+    pattern: $FUNC().Schema
+    fix: $FUNC().SchemaMap()
+    severity: WARNING

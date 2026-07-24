@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -18,6 +19,8 @@ import (
 )
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -49,6 +52,8 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 }
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -88,6 +93,8 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 }
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -108,6 +115,14 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceAgentKnowledgeBaseAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

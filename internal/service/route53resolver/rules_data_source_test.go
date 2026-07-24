@@ -35,8 +35,8 @@ func TestAccRoute53ResolverRulesDataSource_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName1 := acctest.RandomDomainName()
-	domainName2 := acctest.RandomDomainName()
+	domainName1 := acctest.RandomDomainName(t)
+	domainName2 := acctest.RandomDomainName(t)
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ds1ResourceName := "data.aws_route53_resolver_rules.by_resolver_endpoint_id"

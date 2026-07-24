@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix persistent `automatic_failover_enabled` diff on member replication groups of an `aws_elasticache_global_replication_group`
+```
+```release-note:bug
+resource/aws_elasticache_global_replication_group: Fix persistent `automatic_failover_enabled` diff by reading the value from the primary member
+```

@@ -22,7 +22,7 @@ import (
 func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notifications_channel_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -55,7 +55,7 @@ func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 func TestAccNotificationsChannelAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notifications_channel_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

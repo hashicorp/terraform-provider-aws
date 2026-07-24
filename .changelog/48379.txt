@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_sagemaker_hub_content_reference
+```
+
+```release-note:new-list-resource
+aws_sagemaker_hub_content_reference
+```

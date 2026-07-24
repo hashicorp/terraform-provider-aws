@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -61,7 +62,7 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccProjectImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 		},
@@ -91,6 +92,14 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -133,7 +142,7 @@ func TestAccDataZoneProject_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccProjectImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 			{
@@ -155,7 +164,7 @@ func TestAccDataZoneProject_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccProjectImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 		},
@@ -241,7 +250,7 @@ func testAccCheckProjectNotRecreated(before, after *datazone.GetProjectOutput) r
 	}
 }
 
-func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccProjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

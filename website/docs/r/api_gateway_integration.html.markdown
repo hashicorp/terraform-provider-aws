@@ -55,7 +55,7 @@ EOF
 }
 ```
 
-## Lambda integration
+### Lambda integration
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -130,7 +130,7 @@ resource "aws_iam_role" "role" {
 }
 ```
 
-## Lambda integration with response streaming
+### Lambda integration with response streaming
 
 All other resources and data sources are the same as in [the previous example](#lambda-integration); only the integration configuration differs.
 Note that the `timeout` of the `aws_lambda_function` may need to be adjusted.
@@ -148,7 +148,7 @@ resource "aws_api_gateway_integration" "integration" {
 }
 ```
 
-## VPC Link
+### VPC Link
 
 ```terraform
 variable "name" {}
@@ -213,7 +213,7 @@ resource "aws_api_gateway_integration" "test" {
 }
 ```
 
-## VPC Link V2 with Application Load Balancer
+### VPC Link V2 with Application Load Balancer
 
 ```terraform
 resource "aws_apigatewayv2_vpc_link" "example" {

@@ -30,7 +30,7 @@ import (
 )
 
 // @SDKResource("aws_securityhub_standards_control", name="Standards Control")
-// @ArnIdentity("standards_control_arn", identityDuplicateAttributes="id")
+// @ArnIdentity("standards_control_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsControl")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.42.0")
@@ -43,52 +43,54 @@ func resourceStandardsControl() *schema.Resource {
 		UpdateWithoutTimeout: resourceStandardsControlPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"control_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"control_status": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ControlStatus](),
-			},
-			"control_status_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disabled_reason": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"related_requirements": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"remediation_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"severity_rating": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"standards_control_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"title": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"control_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"control_status": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ControlStatus](),
+				},
+				"control_status_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disabled_reason": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"related_requirements": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"remediation_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"severity_rating": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"standards_control_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"title": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -138,6 +140,14 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceStandardsControlFlatten(ctx, control, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceStandardsControlFlatten(_ context.Context, control *types.StandardsControl, d *schema.ResourceData) error { //nolint:unparam
 	d.Set("control_id", control.ControlId)
 	d.Set("control_status", control.ControlStatus)
 	d.Set("control_status_updated_at", control.ControlStatusUpdatedAt.Format(time.RFC3339))
@@ -149,7 +159,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("standards_control_arn", control.StandardsControlArn)
 	d.Set("title", control.Title)
 
-	return diags
+	return nil
 }
 
 // standardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.

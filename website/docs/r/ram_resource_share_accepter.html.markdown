@@ -70,6 +70,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `share_name` - The name of the resource share.
 * `resources` - A list of the resource ARNs shared via the resource share.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import resource share accepters using the resource share ARN. For example:

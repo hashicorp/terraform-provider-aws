@@ -35,7 +35,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - AWS region where the enrichment is managed.
+* `id` - (Deprecated) AWS region where the enrichment is managed.
 
 ## Timeouts
 

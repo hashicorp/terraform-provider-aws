@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_secretsmanager_secret_version: Deprecates `arn` in favor of `secret_arn`.
+```
+
+```release-note:enhancement
+data-source/aws_secretsmanager_secret_version: Deprecates `arn` in favor of `secret_arn`.
+```

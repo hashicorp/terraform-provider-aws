@@ -37,44 +37,46 @@ func resourceEndpointAuthorization() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"allowed_all_vpcs": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"endpoint_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrForceDelete: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"grantee": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grantor": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"allowed_all_vpcs": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"endpoint_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrForceDelete: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"grantee": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"grantor": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vpc_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

@@ -133,6 +133,10 @@ func TestAccConfigService_serial(t *testing.T) {
 			"ListIncludeResource": testAccRemediationConfiguration_List_includeResource,
 			"ListRegionOverride":  testAccRemediationConfiguration_List_regionOverride,
 		},
+		"ConfigurationAggregator": {
+			"organization": testAccConfigurationAggregator_organization,
+			"switch":       testAccConfigurationAggregator_switch,
+		},
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,
 			acctest.CtDisappears: testAccRetentionConfiguration_disappears,

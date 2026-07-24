@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `ena_queue_count` argument to `network_interfaces` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `ena_queue_count` attribute to `network_interfaces` configuration block
+```

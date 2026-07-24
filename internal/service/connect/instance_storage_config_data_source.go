@@ -23,122 +23,124 @@ func dataSourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceStorageConfigRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAssociationID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrResourceType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.InstanceStorageResourceType](),
-			},
-			"storage_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kinesis_firehose_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"firehose_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"kinesis_stream_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStreamARN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"kinesis_video_stream_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"encryption_config": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"encryption_type": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrKeyID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"retention_period_hours": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"s3_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrBucketPrefix: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"encryption_config": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"encryption_type": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrKeyID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAssociationID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrResourceType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.InstanceStorageResourceType](),
+				},
+				"storage_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kinesis_firehose_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"firehose_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
 									},
 								},
 							},
-						},
-						names.AttrStorageType: {
-							Type:     schema.TypeString,
-							Computed: true,
+							"kinesis_stream_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStreamARN: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"kinesis_video_stream_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"encryption_config": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"encryption_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrKeyID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+										names.AttrPrefix: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"retention_period_hours": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"s3_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrBucketPrefix: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"encryption_config": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"encryption_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrKeyID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							names.AttrStorageType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

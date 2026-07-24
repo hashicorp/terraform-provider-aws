@@ -52,182 +52,184 @@ func resourceBudgetAction() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"action_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"action_threshold": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action_threshold_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
-						},
-						"action_threshold_value": {
-							Type:         schema.TypeFloat,
-							Required:     true,
-							ValidateFunc: validation.FloatBetween(0, 40000000000),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
-			},
-			"action_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ActionType](),
-			},
-			"approval_model": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApprovalModel](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"budget_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
-				),
-			},
-			"definition": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iam_action_definition": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"groups": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 100,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"policy_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"roles": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 100,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"users": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 100,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
+				"action_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"action_threshold": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action_threshold_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
 							},
-						},
-						"scp_action_definition": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"policy_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"target_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MaxItems: 100,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"ssm_action_definition": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action_sub_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ActionSubType](),
-									},
-									"instance_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MaxItems: 100,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							"action_threshold_value": {
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(0, 40000000000),
 							},
 						},
 					},
 				},
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"notification_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subscriber": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MaxItems: 11,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 2147483647),
-								validation.StringMatch(regexache.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
-							)},
-						"subscription_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SubscriptionType](),
+				"action_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ActionType](),
+				},
+				"approval_model": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ApprovalModel](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"budget_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
+					),
+				},
+				"definition": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"iam_action_definition": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"groups": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 100,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"policy_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"roles": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 100,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"users": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 100,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"scp_action_definition": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"policy_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"target_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MaxItems: 100,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"ssm_action_definition": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"action_sub_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ActionSubType](),
+										},
+										"instance_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MaxItems: 100,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"notification_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subscriber": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MaxItems: 11,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 2147483647),
+									validation.StringMatch(regexache.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
+								)},
+							"subscription_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SubscriptionType](),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

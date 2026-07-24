@@ -50,44 +50,46 @@ func resourceResourceShareAccepter() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"invitation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"receiver_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResources: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"invitation_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"share_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sender_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"share_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"receiver_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResources: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"share_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sender_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"share_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

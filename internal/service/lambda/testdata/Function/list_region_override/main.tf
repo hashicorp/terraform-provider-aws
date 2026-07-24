@@ -10,7 +10,7 @@ resource "aws_lambda_function" "test" {
   function_name = "${var.rName}-${count.index}"
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 data "aws_partition" "current" {}

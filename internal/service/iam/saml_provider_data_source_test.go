@@ -15,7 +15,7 @@ import (
 func TestAccIAMSAMLProviderDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
 	dataSourceName := "data.aws_iam_saml_provider.test"
 	resourceName := "aws_iam_saml_provider.test"
 

@@ -40,124 +40,126 @@ func ResourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"add_on": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(flattenAddOnTypeValues(types.AddOnType("").Values()), false),
-						},
-						"snapshot_time": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
-						},
-						names.AttrStatus: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Enabled", "Disabled"}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"add_on": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(flattenAddOnTypeValues(types.AddOnType("").Values()), false),
+							},
+							"snapshot_time": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
+							},
+							names.AttrStatus: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"Enabled", "Disabled"}, false),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with an alphanumeric character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
-				),
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"blueprint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"bundle_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			// Optional attributes
-			"key_pair_name": {
-				// Not compatible with aws_key_pair (yet)
-				// We'll need a new aws_lightsail_key_pair resource
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "LightsailDefaultKeyPair" && new == "" {
-						return true
-					}
-					return false
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with an alphanumeric character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					),
 				},
-			},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"blueprint_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"bundle_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			// cannot be retrieved from the API
-			"user_data": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				// Optional attributes
+				"key_pair_name": {
+					// Not compatible with aws_key_pair (yet)
+					// We'll need a new aws_lightsail_key_pair resource
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == "LightsailDefaultKeyPair" && new == "" {
+							return true
+						}
+						return false
+					},
+				},
 
-			// additional info returned from the API
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cpu_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"ram_size": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "dualstack",
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"is_static_ip": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"private_ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUsername: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				// cannot be retrieved from the API
+				"user_data": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+
+				// additional info returned from the API
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cpu_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"ram_size": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "dualstack",
+				},
+				"ipv6_addresses": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"is_static_ip": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"private_ip_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_ip_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUsername: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 		CustomizeDiff: customdiff.All(
 			customdiff.ValidateChange(names.AttrAvailabilityZone, func(ctx context.Context, old, new, meta any) error {

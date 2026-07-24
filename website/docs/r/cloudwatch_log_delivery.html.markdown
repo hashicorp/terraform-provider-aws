@@ -49,7 +49,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Delivery using the `id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_delivery.example
+  identity = {
+    id = "jsoGVi4Zq8VlYp9n"
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the delivery.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Deliveries using `id`. For example:
 
 ```terraform
 import {
@@ -58,7 +84,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Delivery using the `id`. For example:
+Using `terraform import`, import Deliveries using `id`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_delivery.example jsoGVi4Zq8VlYp9n

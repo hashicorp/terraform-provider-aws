@@ -27,17 +27,19 @@ func resourceVPNGatewayAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPNGatewayAttachmentRead,
 		DeleteWithoutTimeout: resourceVPNGatewayAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpn_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"vpn_gateway_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -38,105 +39,107 @@ func resourceBucketLogging() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketLoggingUpdate,
 		DeleteWithoutTimeout: resourceBucketLoggingDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
-			},
-			"target_bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"target_grant": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"grantee": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDisplayName: {
-										Type:     schema.TypeString,
-										Computed: true,
-										Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
-											"AWS and will be removed in a future major version.",
-									},
-									"email_address": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrID: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.Type](),
-									},
-									names.AttrURI: {
-										Type:     schema.TypeString,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
+				},
+				"target_bucket": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"target_grant": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"grantee": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDisplayName: {
+											Type:     schema.TypeString,
+											Computed: true,
+											Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+												"AWS and will be removed in a future major version.",
+										},
+										"email_address": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.Type](),
+										},
+										names.AttrURI: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"permission": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.BucketLogsPermission](),
+							"permission": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.BucketLogsPermission](),
+							},
 						},
 					},
 				},
-			},
-			"target_object_key_format": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"partitioned_prefix": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"partition_date_source": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.PartitionDateSource](),
+				"target_object_key_format": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"partitioned_prefix": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"partition_date_source": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.PartitionDateSource](),
+										},
 									},
 								},
+								ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
 							},
-							ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
-						},
-						"simple_prefix": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{},
+							"simple_prefix": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{},
+								},
+								ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
 							},
-							ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
 						},
 					},
 				},
-			},
-			"target_prefix": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"target_prefix": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
@@ -241,20 +244,28 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
+	if err := resourceBucketLoggingFlatten(loggingEnabled, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceBucketLoggingFlatten(loggingEnabled *types.LoggingEnabled, d *schema.ResourceData) error {
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
+		return fmt.Errorf("setting target_grant: %w", err)
 	}
 	if loggingEnabled.TargetObjectKeyFormat != nil {
 		if err := d.Set("target_object_key_format", []any{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting target_object_key_format: %s", err)
+			return fmt.Errorf("setting target_object_key_format: %w", err)
 		}
 	} else {
 		d.Set("target_object_key_format", nil)
 	}
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
 
-	return diags
+	return nil
 }
 
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

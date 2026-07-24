@@ -50,79 +50,81 @@ func resourceConfigurationAggregator() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"account_aggregation_source": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"organization_aggregation_source"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account_ids": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_aggregation_source": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"organization_aggregation_source"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_ids": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidAccountID,
+								},
+							},
+							"all_regions": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"regions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"organization_aggregation_source": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"account_aggregation_source"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all_regions": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"regions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrRoleARN: {
 								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidAccountID,
-							},
-						},
-						"all_regions": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"regions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"organization_aggregation_source": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"account_aggregation_source"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"all_regions": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"regions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

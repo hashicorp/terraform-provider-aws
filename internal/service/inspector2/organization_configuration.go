@@ -36,44 +36,46 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"code_repository": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"ec2": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"ecr": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"lambda": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"lambda_code": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"code_repository": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"ec2": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"ecr": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"lambda": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"lambda_code": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"max_account_limit_reached": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"max_account_limit_reached": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

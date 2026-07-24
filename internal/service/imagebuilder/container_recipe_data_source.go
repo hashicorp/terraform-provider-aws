@@ -24,177 +24,179 @@ func dataSourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerRecipeRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"component": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"component_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrParameter: {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"component": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"component_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrParameter: {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"container_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dockerfile_template_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"instance_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"block_device_mapping": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDeviceName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"ebs": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrDeleteOnTermination: {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												names.AttrEncrypted: {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												names.AttrIOPS: {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												names.AttrKMSKeyID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrSnapshotID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrThroughput: {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												names.AttrVolumeSize: {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												names.AttrVolumeType: {
-													Type:     schema.TypeString,
-													Computed: true,
+				"container_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dockerfile_template_data": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"instance_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"block_device_mapping": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDeviceName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"ebs": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrDeleteOnTermination: {
+														Type:     schema.TypeBool,
+														Computed: true,
+													},
+													names.AttrEncrypted: {
+														Type:     schema.TypeBool,
+														Computed: true,
+													},
+													names.AttrIOPS: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													names.AttrKMSKeyID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrSnapshotID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrThroughput: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													names.AttrVolumeSize: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													names.AttrVolumeType: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									"no_device": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrVirtualName: {
-										Type:     schema.TypeString,
-										Computed: true,
+										"no_device": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrVirtualName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"image": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_image": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"target_repository": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRepositoryName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"service": {
-							Type:     schema.TypeString,
-							Computed: true,
+							"image": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"working_directory": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_image": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"target_repository": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRepositoryName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"service": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"working_directory": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

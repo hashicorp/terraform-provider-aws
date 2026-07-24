@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_codebuild_project: Add `host_kernel` argument to the `environment` configuration block
+```
+
+```release-note:enhancement
+action/aws_codebuild_start_build: Add `host_kernel_override` argument
+```

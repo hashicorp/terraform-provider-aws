@@ -182,7 +182,7 @@ var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 200),
 				},
-				"text_transformation": textTransformationSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -291,8 +291,8 @@ var regexMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 						validation.StringIsValidRegExp,
 					),
 				},
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
+				"field_to_match":       fieldToMatchSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -310,8 +310,8 @@ var regexPatternSetReferenceStatementSchema = sync.OnceValue(func() *schema.Sche
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
+				"field_to_match":       fieldToMatchSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -335,7 +335,7 @@ var sizeConstraintSchema = sync.OnceValue(func() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 				},
-				"text_transformation": textTransformationSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -354,7 +354,7 @@ var sqliMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
 				},
-				"text_transformation": textTransformationSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -367,8 +367,8 @@ var xssMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchSchema(),
-				"text_transformation": textTransformationSchema(),
+				"field_to_match":       fieldToMatchSchema(),
+				attrTextTransformation: textTransformationSchema(),
 			},
 		},
 	}
@@ -1095,7 +1095,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1112,7 +1112,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1147,7 +1147,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1157,7 +1157,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},
@@ -1167,7 +1167,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"text_transformation": textTransformationSchema(),
+										attrTextTransformation: textTransformationSchema(),
 									},
 								},
 							},

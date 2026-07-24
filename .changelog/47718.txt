@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appautoscaling_policy: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_appautoscaling_policy
+```

@@ -24,42 +24,44 @@ func dataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrNames: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"recursive": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrValues: {
-				Type:      schema.TypeList,
-				Computed:  true,
-				Sensitive: true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
-			},
-			"with_decryption": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrNames: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"recursive": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"types": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrValues: {
+					Type:      schema.TypeList,
+					Computed:  true,
+					Sensitive: true,
+					Elem:      &schema.Schema{Type: schema.TypeString},
+				},
+				"with_decryption": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_lb_target_group_attachment
+```
+```release-note:new-list-resource
+aws_alb_target_group_attachment
+```

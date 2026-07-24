@@ -27,91 +27,93 @@ func dataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceQuotaRead,
 
-		Schema: map[string]*schema.Schema{
-			"adjustable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultValue: {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"global_quota": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"quota_code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"quota_code", "quota_name"},
-			},
-			"quota_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"quota_code", "quota_name"},
-			},
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_metric": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_dimensions": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"class": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"service": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"adjustable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultValue: {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"global_quota": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"quota_code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"quota_code", "quota_name"},
+				},
+				"quota_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"quota_code", "quota_name"},
+				},
+				"service_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_metric": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric_dimensions": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"class": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"resource": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"service": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrMetricName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_namespace": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metric_statistic_recommendation": {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrMetricName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_namespace": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"metric_statistic_recommendation": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrValue: {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
+				names.AttrValue: {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

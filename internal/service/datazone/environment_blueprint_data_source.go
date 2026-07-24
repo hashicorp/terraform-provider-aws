@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,17 +61,14 @@ func (d *environmentBlueprintDataSource) Read(ctx context.Context, req datasourc
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data environmentBlueprintDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findEnvironmentBlueprintByName(ctx, conn, data.DomainId.ValueString(), data.Name.ValueString(), data.Managed.ValueBool())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameEnvironmentBlueprint, data.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
@@ -80,7 +77,7 @@ func (d *environmentBlueprintDataSource) Read(ctx context.Context, req datasourc
 	data.ID = flex.StringToFramework(ctx, out.Id)
 	data.Name = flex.StringToFramework(ctx, out.Name)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client, domainId, name string, managed bool) (*awstypes.EnvironmentBlueprintSummary, error) {

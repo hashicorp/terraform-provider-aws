@@ -143,3 +143,54 @@ func TestAccS3BucketPublicAccessBlock_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+func TestAccS3BucketPublicAccessBlock_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resourceName1 := "aws_s3_bucket_public_access_block.test[0]"
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_include_resource"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+				},
+			},
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_include_resource"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_public_access_block.test", identity1.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_s3_bucket_public_access_block.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("block_public_acls"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("block_public_policy"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ignore_public_acls"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("restrict_public_buckets"), knownvalue.Bool(true)),
+					}),
+				},
+			},
+		},
+	})
+}

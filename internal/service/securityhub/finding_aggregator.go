@@ -40,7 +40,7 @@ func linkingMode_Values() []string {
 }
 
 // @SDKResource("aws_securityhub_finding_aggregator", name="Finding Aggregator")
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)
@@ -51,24 +51,26 @@ func resourceFindingAggregator() *schema.Resource {
 		UpdateWithoutTimeout: resourceFindingAggregatorUpdate,
 		DeleteWithoutTimeout: resourceFindingAggregatorDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"linking_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(linkingMode_Values(), false),
-			},
-			"specified_regions": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				"linking_mode": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(linkingMode_Values(), false),
+				},
+				"specified_regions": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }

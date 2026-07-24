@@ -48,14 +48,19 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 * `include_deprecated` - (Optional) If true, all deprecated secret versions are included in the response.
-If false, no deprecated secret versions are included in the response. If no value is specified, the default value is `false`.
+  If false, no deprecated secret versions are included in the response.
+  If no value is specified, the default value is `false`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the secret.
-* `id` - Secret id.
+* `arn` - (**Deprecated**) The ARN of the secret.
+  Use `secret_arn` instead.
+* `name` - (**Deprecated**) Name of the secret.
+  Use `secret_name` instead.
+* `secret_arn` - The ARN of the secret.
+* `secret_name` - Name of the secret.
 * `versions` - List of the versions of the secret. Attributes are specified below.
 
 ### versions

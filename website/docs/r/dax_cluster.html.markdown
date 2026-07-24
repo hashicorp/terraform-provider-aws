@@ -35,7 +35,7 @@ lowercase
 an IAM role. At runtime, DAX will assume this role and use the role's
 permissions to access DynamoDB on your behalf
 * `node_type` - (Required) The compute and memory capacity of the nodes. See
-[Nodes][1] for supported node types
+[Nodes](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes) for supported node types
 * `replication_factor` - (Required) The number of nodes in the DAX cluster. A
 replication factor of 1 will create a single-node cluster, without any read
 replicas
@@ -105,5 +105,3 @@ Using `terraform import`, import DAX Clusters using the `cluster_name`. For exam
 ```console
 % terraform import aws_dax_cluster.my_cluster my_cluster
 ```
-
-[1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes

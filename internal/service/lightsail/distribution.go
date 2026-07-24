@@ -48,276 +48,278 @@ func ResourceDistribution() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"alternative_domain_names": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "The alternate domain names of the distribution.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alternative_domain_names": {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "The alternate domain names of the distribution.",
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrARN: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The Amazon Resource Name (ARN) of the distribution.",
-			},
-			"bundle_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The bundle ID to use for the distribution.",
-			},
-			"cache_behavior": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "An array of objects that describe the per-path cache behavior of the distribution.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"behavior": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "The cache behavior for the specified path.",
-							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
-						},
-						names.AttrPath: {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/*), and file types (*.html, *jpg, *js). Directories and file paths are case-sensitive.",
+				names.AttrARN: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The Amazon Resource Name (ARN) of the distribution.",
+				},
+				"bundle_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The bundle ID to use for the distribution.",
+				},
+				"cache_behavior": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "An array of objects that describe the per-path cache behavior of the distribution.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"behavior": {
+								Type:         schema.TypeString,
+								Required:     true,
+								Description:  "The cache behavior for the specified path.",
+								ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
+							},
+							names.AttrPath: {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/*), and file types (*.html, *jpg, *js). Directories and file paths are case-sensitive.",
+							},
 						},
 					},
 				},
-			},
-			"cache_behavior_settings": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				MaxItems:    1,
-				Description: "An object that describes the cache behavior settings of the distribution.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_http_methods": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Description:  "The HTTP methods that are processed and forwarded to the distribution's origin.",
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
-						},
-						"cached_http_methods": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Description:  "The HTTP method responses that are cached by your distribution.",
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
-						},
-						"default_ttl": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The default amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the content has been updated.",
-						},
-						"forwarded_cookies": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							MaxItems:    1,
-							Description: "An object that describes the cookies that are forwarded to the origin. Your content is cached based on the cookies that are forwarded.",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookies_allow_list": {
-										Type:        schema.TypeSet,
-										Optional:    true,
-										Description: "The specific cookies to forward to your distribution's origin.",
-										Elem:        &schema.Schema{Type: schema.TypeString},
-									},
-									"option": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Description:  "Specifies which cookies to forward to the distribution's origin for a cache behavior: all, none, or allow-list to forward only the cookies specified in the cookiesAllowList parameter.",
-										ValidateFunc: validation.StringInSlice(flattenForwardValuesValues(types.ForwardValues("").Values()), false),
-									},
-								},
+				"cache_behavior_settings": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					MaxItems:    1,
+					Description: "An object that describes the cache behavior settings of the distribution.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_http_methods": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Description:  "The HTTP methods that are processed and forwarded to the distribution's origin.",
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
 							},
-						},
-						"forwarded_headers": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							MaxItems:    1,
-							Description: "An object that describes the headers that are forwarded to the origin. Your content is cached based on the headers that are forwarded.",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"headers_allow_list": {
-										Type:        schema.TypeSet,
-										Optional:    true,
-										Description: "The specific headers to forward to your distribution's origin.",
-										Elem: &schema.Schema{
+							"cached_http_methods": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Description:  "The HTTP method responses that are cached by your distribution.",
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+							},
+							"default_ttl": {
+								Type:        schema.TypeInt,
+								Optional:    true,
+								Description: "The default amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the content has been updated.",
+							},
+							"forwarded_cookies": {
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
+								Description: "An object that describes the cookies that are forwarded to the origin. Your content is cached based on the cookies that are forwarded.",
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cookies_allow_list": {
+											Type:        schema.TypeSet,
+											Optional:    true,
+											Description: "The specific cookies to forward to your distribution's origin.",
+											Elem:        &schema.Schema{Type: schema.TypeString},
+										},
+										"option": {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice(flattenHeaderEnumValues(types.HeaderEnum("").Values()), false),
+											Optional:     true,
+											Description:  "Specifies which cookies to forward to the distribution's origin for a cache behavior: all, none, or allow-list to forward only the cookies specified in the cookiesAllowList parameter.",
+											ValidateFunc: validation.StringInSlice(flattenForwardValuesValues(types.ForwardValues("").Values()), false),
 										},
 									},
-									"option": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Description:  "The headers that you want your distribution to forward to your origin and base caching on.",
-										ValidateFunc: validation.StringInSlice(enum.Slice("default", types.ForwardValuesAllowList, types.ForwardValuesAll), false),
+								},
+							},
+							"forwarded_headers": {
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
+								Description: "An object that describes the headers that are forwarded to the origin. Your content is cached based on the headers that are forwarded.",
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"headers_allow_list": {
+											Type:        schema.TypeSet,
+											Optional:    true,
+											Description: "The specific headers to forward to your distribution's origin.",
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringInSlice(flattenHeaderEnumValues(types.HeaderEnum("").Values()), false),
+											},
+										},
+										"option": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Description:  "The headers that you want your distribution to forward to your origin and base caching on.",
+											ValidateFunc: validation.StringInSlice(enum.Slice("default", types.ForwardValuesAllowList, types.ForwardValuesAll), false),
+										},
 									},
 								},
 							},
-						},
-						"forwarded_query_strings": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							MaxItems:    1,
-							Description: "An object that describes the query strings that are forwarded to the origin. Your content is cached based on the query strings that are forwarded.",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"option": {
-										Type:        schema.TypeBool,
-										Optional:    true,
-										Description: "Indicates whether the distribution forwards and caches based on query strings.",
-									},
-									"query_strings_allowed_list": {
-										Type:        schema.TypeSet,
-										Optional:    true,
-										Description: "The specific query strings that the distribution forwards to the origin.",
-										Elem:        &schema.Schema{Type: schema.TypeString},
+							"forwarded_query_strings": {
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
+								Description: "An object that describes the query strings that are forwarded to the origin. Your content is cached based on the query strings that are forwarded.",
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"option": {
+											Type:        schema.TypeBool,
+											Optional:    true,
+											Description: "Indicates whether the distribution forwards and caches based on query strings.",
+										},
+										"query_strings_allowed_list": {
+											Type:        schema.TypeSet,
+											Optional:    true,
+											Description: "The specific query strings that the distribution forwards to the origin.",
+											Elem:        &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"maximum_ttl": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The maximum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.",
-						},
-						"minimum_ttl": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The minimum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.",
-						},
-					},
-				},
-			},
-			"certificate_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
-			},
-			names.AttrCreatedAt: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The timestamp when the distribution was created.",
-			},
-			"default_cache_behavior": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Required:    true,
-				Description: "An object that describes the default cache behavior of the distribution.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"behavior": {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "The cache behavior of the distribution.",
-							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
+							"maximum_ttl": {
+								Type:        schema.TypeInt,
+								Optional:    true,
+								Description: "The maximum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.",
+							},
+							"minimum_ttl": {
+								Type:        schema.TypeInt,
+								Optional:    true,
+								Description: "The minimum amount of time that objects stay in the distribution's cache before the distribution forwards another request to the origin to determine whether the object has been updated.",
+							},
 						},
 					},
 				},
-			},
-			names.AttrDomainName: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The domain name of the distribution.",
-			},
-			names.AttrIPAddressType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The IP address type of the distribution.",
-				ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
-				Default:      "dualstack",
-			},
-			names.AttrLocation: {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
-							Type:         schema.TypeString,
-							Required:     true,
-							Description:  "The Availability Zone.",
-							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
-						},
-						"region_name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The AWS Region name.",
+				"certificate_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
+				},
+				names.AttrCreatedAt: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The timestamp when the distribution was created.",
+				},
+				"default_cache_behavior": {
+					Type:        schema.TypeList,
+					MaxItems:    1,
+					Required:    true,
+					Description: "An object that describes the default cache behavior of the distribution.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"behavior": {
+								Type:         schema.TypeString,
+								Required:     true,
+								Description:  "The cache behavior of the distribution.",
+								ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
+							},
 						},
 					},
 				},
-			},
-			"is_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Indicates whether the distribution is enabled.",
-				Default:     true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The name of the distribution.",
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
-			},
-			"origin": {
-				Type:        schema.TypeList,
-				Required:    true,
-				MaxItems:    1,
-				Description: "An object that describes the origin resource of the distribution, such as a Lightsail instance, bucket, or load balancer.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
-							Description:  "The name of the origin resource.",
-						},
-						"protocol_policy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(flattenOriginProtocolPolicyEnumValues(types.OriginProtocolPolicyEnum("").Values()), false),
-							Description:  "The protocol that your Amazon Lightsail distribution uses when establishing a connection with your origin to pull content.",
-						},
-						"region_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidRegionName,
-							Description:  "The AWS Region name of the origin resource.",
-						},
-						names.AttrResourceType: {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The resource type of the origin resource (e.g., Instance).",
+				names.AttrDomainName: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The domain name of the distribution.",
+				},
+				names.AttrIPAddressType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The IP address type of the distribution.",
+					ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
+					Default:      "dualstack",
+				},
+				names.AttrLocation: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZone: {
+								Type:         schema.TypeString,
+								Required:     true,
+								Description:  "The Availability Zone.",
+								ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
+							},
+							"region_name": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "The AWS Region name.",
+							},
 						},
 					},
 				},
-			},
-			"origin_public_dns": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The public DNS of the origin.",
-			},
-			names.AttrResourceType: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The Lightsail resource type (e.g., Distribution).",
-			},
-			names.AttrStatus: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The status of the distribution.",
-			},
-			"support_code": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The support code. Include this code in your email to support when you have questions about your Lightsail distribution. This code enables our support team to look up your Lightsail information more easily.",
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"is_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Description: "Indicates whether the distribution is enabled.",
+					Default:     true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "The name of the distribution.",
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
+				},
+				"origin": {
+					Type:        schema.TypeList,
+					Required:    true,
+					MaxItems:    1,
+					Description: "An object that describes the origin resource of the distribution, such as a Lightsail instance, bucket, or load balancer.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
+								Description:  "The name of the origin resource.",
+							},
+							"protocol_policy": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(flattenOriginProtocolPolicyEnumValues(types.OriginProtocolPolicyEnum("").Values()), false),
+								Description:  "The protocol that your Amazon Lightsail distribution uses when establishing a connection with your origin to pull content.",
+							},
+							"region_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidRegionName,
+								Description:  "The AWS Region name of the origin resource.",
+							},
+							names.AttrResourceType: {
+								Type:        schema.TypeString,
+								Computed:    true,
+								Description: "The resource type of the origin resource (e.g., Instance).",
+							},
+						},
+					},
+				},
+				"origin_public_dns": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The public DNS of the origin.",
+				},
+				names.AttrResourceType: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The Lightsail resource type (e.g., Distribution).",
+				},
+				names.AttrStatus: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The status of the distribution.",
+				},
+				"support_code": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The support code. Include this code in your email to support when you have questions about your Lightsail distribution. This code enables our support team to look up your Lightsail information more easily.",
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

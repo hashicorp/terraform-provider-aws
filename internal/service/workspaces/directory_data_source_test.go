@@ -17,7 +17,7 @@ import (
 func testAccDirectoryDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandString(t, 8)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	resourceName := "aws_workspaces_directory.test"
 	dataSourceName := "data.aws_workspaces_directory.test"

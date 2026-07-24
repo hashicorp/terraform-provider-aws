@@ -39,53 +39,55 @@ func resourceRegexMatchSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"regex_match_tuple": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      regexMatchSetTupleHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_to_match": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data": {
-										Type:     schema.TypeString,
-										Optional: true,
-										StateFunc: func(v any) string {
-											return strings.ToLower(v.(string))
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"regex_match_tuple": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Set:      regexMatchSetTupleHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_to_match": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data": {
+											Type:     schema.TypeString,
+											Optional: true,
+											StateFunc: func(v any) string {
+												return strings.ToLower(v.(string))
+											},
 										},
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"regex_pattern_set_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"text_transformation": {
-							Type:     schema.TypeString,
-							Required: true,
+							"regex_pattern_set_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"text_transformation": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

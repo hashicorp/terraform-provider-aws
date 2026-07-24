@@ -296,6 +296,14 @@ func TestAccECSService_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -4015,7 +4023,7 @@ resource "aws_lambda_function" "hook_success" {
   function_name    = "%[1]s-hook-success"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/success_lambda_func.zip")
 }
 
@@ -4024,7 +4032,7 @@ resource "aws_lambda_function" "hook_failure" {
   function_name    = "%[1]s-hook-failure"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/failure_lambda_func.zip")
 }
 `, rName))
