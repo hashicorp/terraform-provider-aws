@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix `Provider produced inconsistent result after apply` error on create by marking the service-populated `environment.agentcore_runtime_environment` `agent_runtime_arn`, `agent_runtime_id`, `agent_runtime_name`, and `lifecycle_configuration` values as read-only/computed
+```
