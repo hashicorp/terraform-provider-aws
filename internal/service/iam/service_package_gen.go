@@ -60,6 +60,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
+			Factory:  newOpenIDConnectProviderClientIDResource,
+			TypeName: "aws_iam_openid_connect_provider_client_id",
+			Name:     "Open ID Connect Provider Client ID",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("openid_connect_provider_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrClientID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      openIDConnectProviderClientIDImportID{},
+			},
+		},
+		{
 			Factory:  newOrganizationsFeaturesResource,
 			TypeName: "aws_iam_organizations_features",
 			Name:     "Organizations Features",
