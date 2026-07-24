@@ -21,6 +21,7 @@ var (
 	ResourcePolicy                   = newPolicyResource
 	ResourceTokenVaultCMK            = newTokenVaultCMKResource
 	ResourceHarness                  = newHarnessResource
+	ResourceHarnessEndpoint          = newHarnessEndpointResource
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
 	ResourcePolicyEngine             = newPolicyEngineResource
 	ResourceRegistry                 = newRegistryResource
@@ -28,6 +29,7 @@ var (
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindHarnessByID                      = findHarnessByID
+	FindHarnessEndpointByTwoPartKey      = findHarnessEndpointByTwoPartKey
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
 	FindBrowserByID                      = findBrowserByID
