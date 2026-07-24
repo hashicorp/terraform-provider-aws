@@ -5,6 +5,7 @@ package networkfirewall
 
 // Exports for use in tests only.
 var (
+	ResourceContainerAssociation                     = newContainerAssociationResource
 	ResourceFirewall                                 = resourceFirewall
 	ResourceFirewallPolicy                           = resourceFirewallPolicy
 	ResourceFirewallTransitGatewayAttachmentAccepter = newFirewallTransitGatewayAttachmentAccepterResource
@@ -14,6 +15,7 @@ var (
 	ResourceTLSInspectionConfiguration               = newTLSInspectionConfigurationResource
 	ResourceVPCEndpointAssociation                   = newVPCEndpointAssociationResource
 
+	FindContainerAssociationByARN       = findContainerAssociationByARN
 	FindFirewallByARN                   = findFirewallByARN
 	FindFirewallPolicyByARN             = findFirewallPolicyByARN
 	FindLoggingConfigurationByARN       = findLoggingConfigurationByARN
