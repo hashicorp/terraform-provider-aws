@@ -338,13 +338,13 @@ func catalogDatabaseCreateResourceID(catalogID, name string) string {
 }
 
 func catalogDatabaseParseResourceID(id string) (string, string, error) {
-	parts := strings.SplitN(id, catalogDatabaseResourceIDSeparator, 2)
+	idx := strings.LastIndex(id, catalogDatabaseResourceIDSeparator)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	if idx < 1 || idx == len(id)-1 {
 		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog-id%[2]sdatabase-name", id, catalogDatabaseResourceIDSeparator)
 	}
 
-	return parts[0], parts[1], nil
+	return id[:idx], id[idx+1:], nil
 }
 
 func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string) {
