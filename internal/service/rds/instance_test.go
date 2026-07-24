@@ -7353,6 +7353,15 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
+			{
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 400),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
+				),
+			},
 		},
 	})
 }
@@ -7408,6 +7417,17 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
+				),
+			},
+			{
+				// Crossing the 400 GiB threshold: AWS raises baseline IOPS to 12000 automatically.
+				// The provider must NOT send the old stale IOPS value (3000) in the modify call.
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 400),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
