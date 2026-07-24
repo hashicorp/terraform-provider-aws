@@ -336,19 +336,21 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &sqs.SetQueueAttributesInput{
-			Attributes: flex.ExpandStringyValueMap(attributes),
-			QueueUrl:   aws.String(d.Id()),
-		}
+		if len(attributes) > 0 {
+			input := &sqs.SetQueueAttributesInput{
+				Attributes: flex.ExpandStringyValueMap(attributes),
+				QueueUrl:   aws.String(d.Id()),
+			}
 
-		_, err = conn.SetQueueAttributes(ctx, input)
+			_, err = conn.SetQueueAttributes(ctx, input)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
-		}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
+			}
 
-		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
+			if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
+			}
 		}
 	}
 
