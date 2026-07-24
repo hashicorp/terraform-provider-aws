@@ -115,6 +115,42 @@ func TestAccBedrockAgentAgent_singlePrompt(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentAgent_additionalModelRequestFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_additionalModelRequestFields(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.0.prompt_configurations.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "prompt_override_configuration.0.prompt_configurations.*", map[string]string{
+						"additional_model_request_fields": `{"Key1":"Value1"}`,
+						"prompt_type":                     "POST_PROCESSING",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentAgent_singlePromptUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -807,6 +843,46 @@ resource "aws_bedrockagent_agent" "test" {
     override_lambda = null
     prompt_configurations = [
       {
+        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            top_k          = 250
+            top_p          = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "DISABLED"
+        prompt_type          = "POST_PROCESSING"
+      },
+    ]
+  }
+
+}
+`, rName, model, desc))
+}
+
+func testAccAgentConfig_additionalModelRequestFields(rName, model, desc string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  skip_resource_in_use_check  = true
+
+  prompt_override_configuration {
+    override_lambda = null
+    prompt_configurations = [
+      {
+        additional_model_request_fields = jsonencode({
+          "Key1" = "Value1"
+        })
         base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
         inference_configuration = [
           {
