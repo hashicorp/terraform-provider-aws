@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_osis_pipeline_resource_policy" "test" {
+resource "aws_osis_resource_policy" "test" {
   region = var.region
 
   resource_arn = aws_osis_pipeline.test.pipeline_arn

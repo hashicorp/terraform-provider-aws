@@ -52,9 +52,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newPipelineResourcePolicyResource,
-			TypeName: "aws_osis_pipeline_resource_policy",
-			Name:     "Pipeline Resource Policy",
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_osis_resource_policy",
+			Name:     "Resource Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 			Import: inttypes.FrameworkImport{

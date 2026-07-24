@@ -23,22 +23,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_osis_pipeline_resource_policy", name="Pipeline Resource Policy")
+// @FrameworkResource("aws_osis_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator="randomPipelineName(t)")
-func newPipelineResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &pipelineResourcePolicyResource{}
+func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourcePolicyResource{}
 
 	return r, nil
 }
 
-type pipelineResourcePolicyResource struct {
-	framework.ResourceWithModel[pipelineResourcePolicyResourceModel]
+type resourcePolicyResource struct {
+	framework.ResourceWithModel[resourcePolicyResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *pipelineResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrPolicy: schema.StringAttribute{
@@ -56,8 +56,8 @@ func (r *pipelineResourcePolicyResource) Schema(ctx context.Context, request res
 	}
 }
 
-func (r *pipelineResourcePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data pipelineResourcePolicyResourceModel
+func (r *resourcePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourcePolicyResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -82,8 +82,8 @@ func (r *pipelineResourcePolicyResource) Create(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *pipelineResourcePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data pipelineResourcePolicyResourceModel
+func (r *resourcePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourcePolicyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -93,7 +93,7 @@ func (r *pipelineResourcePolicyResource) Read(ctx context.Context, request resou
 
 	resourceArn := data.ResourceARN.ValueString()
 
-	output, err := findPipelineResourcePolicyByResourceARN(ctx, conn, resourceArn)
+	output, err := findResourcePolicyByResourceARN(ctx, conn, resourceArn)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -102,7 +102,7 @@ func (r *pipelineResourcePolicyResource) Read(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Ingestion Pipeline Resource Policy (%s)", resourceArn), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Ingestion Resource Policy (%s)", resourceArn), err.Error())
 		return
 	}
 
@@ -114,8 +114,8 @@ func (r *pipelineResourcePolicyResource) Read(ctx context.Context, request resou
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *pipelineResourcePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var data pipelineResourcePolicyResourceModel
+func (r *resourcePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var data resourcePolicyResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -140,8 +140,8 @@ func (r *pipelineResourcePolicyResource) Update(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *pipelineResourcePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data pipelineResourcePolicyResourceModel
+func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourcePolicyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -160,20 +160,20 @@ func (r *pipelineResourcePolicyResource) Delete(ctx context.Context, request res
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Ingestion Pipeline Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Ingestion Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
 		return
 	}
 }
 
-type pipelineResourcePolicyResourceModel struct {
+type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
 }
 
-// findPipelineResourcePolicyByResourceARN retrieves a pipeline resource policy by its resource ARN.
+// findResourcePolicyByResourceARN retrieves a resource policy by its resource ARN.
 // Returns a NotFoundError if the policy is empty or the resource is not found.
-func findPipelineResourcePolicyByResourceARN(ctx context.Context, conn *osis.Client, resourceARN string) (*osis.GetResourcePolicyOutput, error) {
+func findResourcePolicyByResourceARN(ctx context.Context, conn *osis.Client, resourceARN string) (*osis.GetResourcePolicyOutput, error) {
 	input := &osis.GetResourcePolicyInput{
 		ResourceArn: aws.String(resourceARN),
 	}

@@ -17,10 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
+func TestAccOpenSearchIngestionResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := randomPipelineName(t)
-	resourceName := "aws_osis_pipeline_resource_policy.test"
+	resourceName := "aws_osis_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -28,12 +28,12 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
@@ -49,10 +49,10 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
+func TestAccOpenSearchIngestionResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := randomPipelineName(t)
-	resourceName := "aws_osis_pipeline_resource_policy.test"
+	resourceName := "aws_osis_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -62,13 +62,13 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipelineResourcePolicy, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -84,10 +84,10 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears_pipeline(t *testing.T) {
+func TestAccOpenSearchIngestionResourcePolicy_disappears_pipeline(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := randomPipelineName(t)
-	resourceName := "aws_osis_pipeline_resource_policy.test"
+	resourceName := "aws_osis_resource_policy.test"
 	pipelineResourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -98,12 +98,12 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears_pipeline(t *tes
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipeline, pipelineResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,10 +112,10 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears_pipeline(t *tes
 	})
 }
 
-func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
+func TestAccOpenSearchIngestionResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := randomPipelineName(t)
-	resourceName := "aws_osis_pipeline_resource_policy.test"
+	resourceName := "aws_osis_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -125,18 +125,18 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
-				Config: testAccPipelineResourcePolicyConfig_updated(rName),
+				Config: testAccResourcePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Sid", "AllowIngestUpdated"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -149,21 +149,21 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_osis_pipeline_resource_policy" {
+			if rs.Type != "aws_osis_resource_policy" {
 				continue
 			}
 
 			resourceArn := rs.Primary.Attributes[names.AttrResourceARN]
 
-			_, err := tfosis.FindPipelineResourcePolicyByResourceARN(ctx, conn, resourceArn)
+			_, err := tfosis.FindResourcePolicyByResourceARN(ctx, conn, resourceArn)
 
 			if err == nil {
-				return fmt.Errorf("OpenSearch Ingestion Pipeline Resource Policy (%s) still exists", resourceArn)
+				return fmt.Errorf("OpenSearch Ingestion Resource Policy (%s) still exists", resourceArn)
 			}
 
 			if !retry.NotFound(err) {
@@ -175,7 +175,7 @@ func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context, t *testing.T
 	}
 }
 
-func testAccCheckPipelineResourcePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -184,22 +184,22 @@ func testAccCheckPipelineResourcePolicyExists(ctx context.Context, t *testing.T,
 
 		resourceArn := rs.Primary.Attributes[names.AttrResourceARN]
 		if resourceArn == "" {
-			return fmt.Errorf("No OpenSearch Ingestion Pipeline Resource Policy resource_arn is set")
+			return fmt.Errorf("No OpenSearch Ingestion Resource Policy resource_arn is set")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
-		_, err := tfosis.FindPipelineResourcePolicyByResourceARN(ctx, conn, resourceArn)
+		_, err := tfosis.FindResourcePolicyByResourceARN(ctx, conn, resourceArn)
 
 		return err
 	}
 }
 
-func testAccPipelineResourcePolicyConfig_basic(rName string) string {
+func testAccResourcePolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccPipelineConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
 
-resource "aws_osis_pipeline_resource_policy" "test" {
+resource "aws_osis_resource_policy" "test" {
   resource_arn = aws_osis_pipeline.test.pipeline_arn
 
   policy = <<EOF
@@ -223,11 +223,11 @@ EOF
 `)
 }
 
-func testAccPipelineResourcePolicyConfig_updated(rName string) string {
+func testAccResourcePolicyConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccPipelineConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
 
-resource "aws_osis_pipeline_resource_policy" "test" {
+resource "aws_osis_resource_policy" "test" {
   resource_arn = aws_osis_pipeline.test.pipeline_arn
 
   policy = <<EOF

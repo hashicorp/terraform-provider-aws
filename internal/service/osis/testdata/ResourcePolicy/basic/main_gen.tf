@@ -1,5 +1,7 @@
-resource "aws_osis_pipeline_resource_policy" "test" {
-{{- template "region" }}
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_osis_resource_policy" "test" {
   resource_arn = aws_osis_pipeline.test.pipeline_arn
 
   policy = <<EOF
@@ -26,7 +28,6 @@ data "aws_caller_identity" "current" {}
 # testAccPipelineConfig_basic
 
 resource "aws_osis_pipeline" "test" {
-{{- template "region" }}
   pipeline_name               = var.rName
   pipeline_configuration_body = <<EOS
             version: "2"
@@ -50,7 +51,6 @@ EOS
 }
 
 data "aws_region" "current" {
-{{- template "region" }}
 }
 
 resource "aws_iam_role" "test" {
@@ -69,4 +69,10 @@ resource "aws_iam_role" "test" {
       },
     ]
   })
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }

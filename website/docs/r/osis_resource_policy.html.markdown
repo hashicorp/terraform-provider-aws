@@ -1,21 +1,21 @@
 ---
 subcategory: "OpenSearch Ingestion (OSIS)"
 layout: "aws"
-page_title: "AWS: aws_osis_pipeline_resource_policy"
+page_title: "AWS: aws_osis_resource_policy"
 description: |-
-  Terraform resource for managing an AWS OpenSearch Ingestion Pipeline Resource Policy.
+  Terraform resource for managing an AWS OpenSearch Ingestion Resource Policy.
 ---
 
-# Resource: aws_osis_pipeline_resource_policy
+# Resource: aws_osis_resource_policy
 
-Terraform resource for managing an AWS OpenSearch Ingestion Pipeline Resource Policy.
+Terraform resource for managing an AWS OpenSearch Ingestion Resource Policy.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_osis_pipeline_resource_policy" "example" {
+resource "aws_osis_resource_policy" "example" {
   resource_arn = aws_osis_pipeline.example.pipeline_arn
   policy = jsonencode({
     Version = "2012-10-17"
@@ -79,13 +79,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_osis_pipeline_resource_policy.example
+  to = aws_osis_resource_policy.example
   identity = {
     resource_arn = "arn:aws:osis:us-east-1:123456789012:pipeline/example"
   }
 }
 
-resource "aws_osis_pipeline" "example" {
+resource "aws_osis_resource_policy" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -101,21 +101,21 @@ resource "aws_osis_pipeline" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline Resource Policy using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Resource Policy using the `resource_arn`. For example:
 
 ```terraform
 import {
-  to = aws_osis_pipeline_resource_policy.example
+  to = aws_osis_resource_policy.example
   identity = {
     resource_arn = "arn:aws:osis:us-east-1:123456789012:pipeline/example"
   }
 }
 ```
 
-Using `terraform import`, import OpenSearch Ingestion Pipeline Resource Policy using the `resource_arn`. For example:
+Using `terraform import`, import OpenSearch Ingestion Resource Policy using the `resource_arn`. For example:
 
 ```console
-% terraform import aws_osis_pipeline_resource_policy.example arn:aws:osis:us-east-1:123456789012:pipeline/example
+% terraform import aws_osis_resource_policy.example arn:aws:osis:us-east-1:123456789012:pipeline/example
 ```
 
 ### Identity Schema

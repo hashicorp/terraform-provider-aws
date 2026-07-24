@@ -19,10 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_basic(t *testing.T) {
+func TestAccOpenSearchIngestionResourcePolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_osis_pipeline_resource_policy.test"
+	resourceName := "aws_osis_resource_policy.test"
 	rName := randomPipelineName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -31,17 +31,17 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_basic(t *testing.
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
-		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -54,7 +54,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_basic(t *testing.
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -68,7 +68,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_basic(t *testing.
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -86,7 +86,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_basic(t *testing.
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -104,10 +104,10 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_basic(t *testing.
 	})
 }
 
-func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t *testing.T) {
+func TestAccOpenSearchIngestionResourcePolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_osis_pipeline_resource_policy.test"
+	resourceName := "aws_osis_resource_policy.test"
 	rName := randomPipelineName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t 
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -137,7 +137,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t 
 
 			// Step 2: Import command with appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -152,7 +152,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t 
 
 			// Step 3: Import command without appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -167,7 +167,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t 
 
 			// Step 4: Import block with Import ID and appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -186,7 +186,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t 
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -205,7 +205,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_Identity_regionOverride(t 
 
 			// Step 6: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PipelineResourcePolicy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
