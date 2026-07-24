@@ -370,11 +370,13 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The local node storage allocated to the VM cluster, in gigabytes (GB).",
 			},
 			"system_version": schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "The operating system version of the image chosen for the VM cluster.",
+				Description: "The operating system version of the image for the VM cluster. To get the list of valid values, use the ListSystemVersions operation, specifying the GI version and Exadata infrastructure shape. If not specified, the default system version is used. Changing this will create a new resource.",
 			},
 			"scan_listener_port_tcp": schema.Int32Attribute{
 				Computed: true,
