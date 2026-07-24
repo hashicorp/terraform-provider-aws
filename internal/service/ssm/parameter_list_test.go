@@ -124,7 +124,7 @@ func TestAccSSMParameter_List_regionOverride(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_List_includeResource_basic(t *testing.T) {
+func TestAccSSMParameter_List_IncludeResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -191,7 +191,7 @@ func TestAccSSMParameter_List_includeResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_List_includeResource_insecure(t *testing.T) {
+func TestAccSSMParameter_List_IncludeResource_insecure(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -258,7 +258,7 @@ func TestAccSSMParameter_List_includeResource_insecure(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_List_includeResource_writeOnly(t *testing.T) {
+func TestAccSSMParameter_List_IncludeResource_writeOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
