@@ -12,7 +12,6 @@ resource "aws_eks_access_entry" "test" {
   tags = var.resource_tags
 }
 
-
 resource "aws_iam_role" "test" {
   count = var.resource_count
 

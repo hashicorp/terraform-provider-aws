@@ -11,7 +11,6 @@ resource "aws_eks_access_entry" "test" {
   type = "EC2_LINUX"
 }
 
-
 resource "aws_iam_role" "test" {
   count = var.resource_count
 
