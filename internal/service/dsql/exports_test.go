@@ -5,7 +5,9 @@ package dsql
 
 // Exports for use in tests only.
 var (
-	ResourceCluster = newClusterResource
+	ResourceCluster       = newClusterResource
+	ResourceClusterPolicy = newClusterPolicyResource
 
-	FindClusterByID = findClusterByID
+	FindClusterByID       = findClusterByID
+	FindClusterPolicyByID = findClusterPolicyByID
 )
