@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `map_boolean_as_boolean` argument to `redshift_settings`
+```
+
+```release-note:enhancement
+data-source/aws_dms_endpoint: Add `map_boolean_as_boolean` attribute to `redshift_settings`
+```

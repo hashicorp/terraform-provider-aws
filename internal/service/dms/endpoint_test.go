@@ -2147,6 +2147,7 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.service_access_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.map_boolean_as_boolean", acctest.CtTrue),
 				),
 			},
 			{
@@ -4268,6 +4269,7 @@ resource "aws_dms_endpoint" "test" {
     bucket_name             = "bucket_name"
     bucket_folder           = "bucket_folder"
     encryption_mode         = "SSE_S3"
+    map_boolean_as_boolean  = true
   }
 
   tags = {
