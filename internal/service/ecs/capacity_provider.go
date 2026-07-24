@@ -663,11 +663,19 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
+	const (
+		timeout = 20 * time.Minute
+	)
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider: %s", d.Id())
 	input := ecs.DeleteCapacityProviderInput{
 		CapacityProvider: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteCapacityProvider(ctx, &input)
+	// The capacity provider may still be associated with a cluster after the
+	// association is removed, as disassociation is eventually consistent. Retry
+	// while the capacity provider is reported as in use.
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteCapacityProvider(ctx, &input)
+	})
 
 	// "An error occurred (ClientException) when calling the DeleteCapacityProvider operation: The specified capacity provider does not exist. Specify a valid name or ARN and try again."
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "capacity provider does not exist") {
@@ -678,9 +686,6 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Capacity Provider (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 20 * time.Minute
-	)
 	if _, err := waitCapacityProviderDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) delete: %s", d.Id(), err)
 	}
