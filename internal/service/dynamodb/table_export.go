@@ -42,125 +42,127 @@ func resourceTableExport() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"billed_size_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"end_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"export_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ExportFormatDynamodbJson,
-				ValidateDiagFunc: enum.Validate[awstypes.ExportFormat](),
-			},
-			"export_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"export_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidUTCTimestamp,
-			},
-			"export_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ExportType](),
-			},
-			"incremental_export_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"export_from_time": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-						},
-						"export_to_time": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-						},
-						"export_view_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ExportViewType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"billed_size_in_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"end_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"export_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ExportFormatDynamodbJson,
+					ValidateDiagFunc: enum.Validate[awstypes.ExportFormat](),
+				},
+				"export_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"export_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidUTCTimestamp,
+				},
+				"export_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ExportType](),
+				},
+				"incremental_export_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"export_from_time": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+							},
+							"export_to_time": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+							},
+							"export_view_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ExportViewType](),
+							},
 						},
 					},
 				},
-			},
-			"item_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"manifest_files_s3_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrS3Bucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"s3_bucket_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"s3_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"s3_sse_algorithm": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.S3SseAlgorithm](),
-			},
-			"s3_sse_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"table_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"item_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"manifest_files_s3_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrS3Bucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"s3_bucket_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"s3_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"s3_sse_algorithm": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.S3SseAlgorithm](),
+				},
+				"s3_sse_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				names.AttrStartTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"table_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -268,7 +270,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func expandIncrementalExportSpecification(d any) *awstypes.IncrementalExportSpecification {
-	if d.([]any) == nil || len(d.([]any)) == 0 {
+	if len(d.([]any)) == 0 {
 		return nil
 	}
 

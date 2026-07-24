@@ -40,80 +40,82 @@ func resourceReportGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceReportGroupUpdate,
 		DeleteWithoutTimeout: resourceReportGroupDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delete_reports": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"export_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"encryption_disabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"encryption_key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"packaging": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.ReportPackagingTypeNone,
-										ValidateDiagFunc: enum.Validate[types.ReportPackagingType](),
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"delete_reports": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"export_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"encryption_disabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"encryption_key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"packaging": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.ReportPackagingTypeNone,
+											ValidateDiagFunc: enum.Validate[types.ReportPackagingType](),
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ReportExportConfigType](),
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ReportExportConfigType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 128),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ReportType](),
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(2, 128),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ReportType](),
+				},
+			}
 		},
 	}
 }

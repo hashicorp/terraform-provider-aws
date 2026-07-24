@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl_rule: Fix `Unable to unmarshal DynamicValue` error when `statement.managed_rule_group_statement.rule_action_override` block is specified
+```

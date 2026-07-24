@@ -7,7 +7,6 @@ package costoptimizationhub
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
@@ -31,13 +30,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newEnrollmentStatusResource,
 			TypeName: "aws_costoptimizationhub_enrollment_status",
 			Name:     "Enrollment Status",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newPreferencesResource,
 			TypeName: "aws_costoptimizationhub_preferences",
 			Name:     "Preferences",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

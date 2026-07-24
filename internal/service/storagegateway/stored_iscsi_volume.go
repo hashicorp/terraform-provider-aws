@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -38,93 +37,95 @@ func resourceStorediSCSIVolume() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"chap_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"disk_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				RequiredWith: []string{"kms_encrypted"},
-			},
-			"lun_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			// Poor API naming: this accepts the IP address of the network interface.
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"network_interface_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preserve_existing_data": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrSnapshotID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"volume_attachment_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_size_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"volume_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVolumeType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"chap_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"disk_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"kms_encrypted": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					RequiredWith: []string{"kms_encrypted"},
+				},
+				"lun_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				// Poor API naming: this accepts the IP address of the network interface.
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"network_interface_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preserve_existing_data": {
+					Type:     schema.TypeBool,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrSnapshotID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"volume_attachment_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_size_in_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"volume_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVolumeType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -263,9 +264,7 @@ func findStorediSCSIVolumeByARN(ctx context.Context, conn *storagegateway.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.VolumeARN) != arn {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -285,9 +284,8 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeStorediSCSIVolumes(ctx, input)
 
 	if isVolumeNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -302,8 +300,8 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 	return output.StorediSCSIVolumes, nil
 }
 
-func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, volumeARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStorediSCSIVolume(conn *storagegateway.Client, volumeARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStorediSCSIVolumeByARN(ctx, conn, volumeARN)
 
 		if retry.NotFound(err) {
@@ -322,10 +320,10 @@ func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.Cl
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"BOOTSTRAPPING", "CREATING", "RESTORING"},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusStorediSCSIVolume(ctx, conn, volumeARN),
+		Refresh: statusStorediSCSIVolume(conn, volumeARN),
 		Timeout: timeout,
 	}
 

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,7 +34,7 @@ func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "interface_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
-					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
@@ -48,9 +47,9 @@ func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
 func TestAccVPCNetworkInterfaceDataSource_filters(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_network_interface.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,9 +73,9 @@ func TestAccVPCNetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 	eipAssociationResourceName := "aws_eip_association.test"
 	securityGroupResourceName := "aws_security_group.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWavelengthZoneAvailable(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -98,7 +97,7 @@ func TestAccVPCNetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
-					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
@@ -123,9 +122,9 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 	eipAssociationResourceName := "aws_eip_association.test"
 	securityGroupResourceName := "aws_security_group.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -148,7 +147,7 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
-					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
@@ -170,9 +169,9 @@ func TestAccVPCNetworkInterfaceDataSource_attachment(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	instanceResourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -191,7 +190,7 @@ func TestAccVPCNetworkInterfaceDataSource_attachment(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
-					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),

@@ -23,32 +23,34 @@ import (
 func dataSourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserSSHKeyRead,
-		Schema: map[string]*schema.Schema{
-			"encoding": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
-			},
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ssh_public_key_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUsername: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"encoding": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
+				},
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ssh_public_key_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUsername: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -10,8 +10,8 @@ import (
 
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -82,6 +82,14 @@ func testAccVirtualNode_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualNode(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -96,7 +104,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 
 	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
@@ -454,7 +462,7 @@ func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	// Avoid 'config is invalid: last character of "name" must be a letter' for aws_service_discovery_http_namespace.
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(t, 20, acctest.CharSetAlpha))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
@@ -914,7 +922,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 
 	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	vnName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },

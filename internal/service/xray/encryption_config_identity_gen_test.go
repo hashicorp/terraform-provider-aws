@@ -56,7 +56,7 @@ func testAccXRayEncryptionConfig_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/EncryptionConfig/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -240,7 +240,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/EncryptionConfig/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -252,7 +252,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/EncryptionConfig/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -318,7 +318,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource_noRefreshNoChange(t *
 				ConfigDirectory: config.StaticDirectory("testdata/EncryptionConfig/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -331,7 +331,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource_noRefreshNoChange(t *
 				ConfigDirectory:          config.StaticDirectory("testdata/EncryptionConfig/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
+					testAccCheckEncryptionConfigExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

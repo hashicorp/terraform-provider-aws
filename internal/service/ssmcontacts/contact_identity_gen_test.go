@@ -45,7 +45,7 @@ func testAccSSMContactsContact_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -55,7 +55,7 @@ func testAccSSMContactsContact_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -131,7 +131,7 @@ func testAccSSMContactsContact_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -140,7 +140,7 @@ func testAccSSMContactsContact_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -186,7 +186,7 @@ func testAccSSMContactsContact_Identity_ExistingResource_noRefreshNoChange(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -200,7 +200,7 @@ func testAccSSMContactsContact_Identity_ExistingResource_noRefreshNoChange(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

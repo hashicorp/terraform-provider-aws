@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9"
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -42,74 +42,76 @@ func resourceEnvironmentEC2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic_stop_time_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtMost(20160),
-			},
-			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.ConnectionTypeConnectSsh,
-				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"amazonlinux-1-x86_64",
-					"amazonlinux-2-x86_64",
-					"amazonlinux-2023-x86_64",
-					"ubuntu-18.04-x86_64",
-					"ubuntu-22.04-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
-					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
-				}, false),
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 60),
-			},
-			"owner_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automatic_stop_time_minutes": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtMost(20160),
+				},
+				"connection_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.ConnectionTypeConnectSsh,
+					ValidateDiagFunc: enum.Validate[types.ConnectionType](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"amazonlinux-1-x86_64",
+						"amazonlinux-2-x86_64",
+						"amazonlinux-2023-x86_64",
+						"ubuntu-18.04-x86_64",
+						"ubuntu-22.04-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+						"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
+					}, false),
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 60),
+				},
+				"owner_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -120,7 +122,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
 		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),

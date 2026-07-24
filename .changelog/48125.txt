@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearchserverless_collection_group: Add `generation` argument
+```
+
+```release-note:enhancement
+data-source/aws_opensearchserverless_collection_group: Add `generation` attribute
+```

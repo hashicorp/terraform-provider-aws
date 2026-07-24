@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSlice",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]",
-    "source_type": "flex.awsInterfaceSlice"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
   },
   {
     "@level": "info",

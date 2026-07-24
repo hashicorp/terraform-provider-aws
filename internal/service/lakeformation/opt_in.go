@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -147,14 +146,18 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				names.AttrValue: schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthBetween(1, 255),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+				names.AttrValues: schema.SetAttribute{
+					CustomType: fwtypes.SetOfStringType,
+					Required:   true,
+					Validators: []validator.Set{
+						setvalidator.SizeAtLeast(1),
+						setvalidator.ValueStringsAre(
+							stringvalidator.LengthBetween(1, 255),
+							stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+						),
 					},
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
+					PlanModifiers: []planmodifier.Set{
+						setplanmodifier.RequiresReplace(),
 					},
 				},
 			},
@@ -334,6 +337,8 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -535,7 +540,7 @@ func (r *optInResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if _, err := conn.DeleteLakeFormationOptIn(ctx, in); err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -569,10 +574,9 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		if err != nil {
@@ -892,9 +896,9 @@ type dataLocationOptIn struct {
 }
 
 type lfTagOptIn struct {
-	CatalogID types.String `tfsdk:"catalog_id"`
-	Key       types.String `tfsdk:"key"`
-	Value     types.String `tfsdk:"value"`
+	CatalogID types.String                     `tfsdk:"catalog_id"`
+	TagKey    types.String                     `tfsdk:"key"`
+	TagValues fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type lfTagExpressionOptIn struct {

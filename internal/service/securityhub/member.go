@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -27,41 +26,44 @@ import (
 )
 
 // @SDKResource("aws_securityhub_member", name="Member")
+// @IdentityAttribute("member_account_id", resourceAttributeName="account_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.Member")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
 func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,
 		DeleteWithoutTimeout: resourceMemberDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"invite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"master_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"member_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"invite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"master_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"member_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -71,7 +73,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	accountID := d.Get(names.AttrAccountID).(string)
-	input := &securityhub.CreateMembersInput{
+	input := securityhub.CreateMembersInput{
 		AccountDetails: []types.AccountDetails{{
 			AccountId: aws.String(accountID),
 		}},
@@ -81,7 +83,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.AccountDetails[0].Email = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateMembers(ctx, input)
+	output, err := conn.CreateMembers(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unprocessedAccountsError(output.UnprocessedAccounts)
@@ -94,11 +96,11 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	d.SetId(accountID)
 
 	if d.Get("invite").(bool) {
-		input := &securityhub.InviteMembersInput{
+		input := securityhub.InviteMembersInput{
 			AccountIds: []string{d.Id()},
 		}
 
-		output, err := conn.InviteMembers(ctx, input)
+		output, err := conn.InviteMembers(ctx, &input)
 
 		if err == nil && output != nil {
 			err = unprocessedAccountsError(output.UnprocessedAccounts)
@@ -129,17 +131,18 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrAccountID, member.AccountId)
-	d.Set(names.AttrEmail, member.Email)
+	// Only set email if returned by AWS API.
+	// For organization members, email is optional and not returned.
+	if member.Email != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrEmail, member.Email)
+	}
 	status := aws.ToString(member.MemberStatus)
-	const (
-		// Associated is the member status naming for Regions that do not support Organizations.
-		memberStatusAssociated = "Associated"
-		memberStatusInvited    = "Invited"
-		memberStatusEnabled    = "Enabled"
-		memberStatusResigned   = "Resigned"
-	)
-	invited := status == memberStatusInvited || status == memberStatusEnabled || status == memberStatusAssociated || status == memberStatusResigned
-	d.Set("invite", invited)
+	// Don't recompute invite from member_status. The invite attribute is a create-time
+	// input parameter (ForceNew: true) that controls whether to send an invitation.
+	// It should not be derived from the API response, as this causes drift for
+	// organization members (status="Enabled" but invite=false).
+	// The invite value from the configuration is already in state and should be preserved.
+	d.Set("invite", d.Get("invite"))
 	d.Set("master_id", member.MasterId)
 	d.Set("member_status", status)
 
@@ -150,9 +153,10 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	_, err := conn.DisassociateMembers(ctx, &securityhub.DisassociateMembersInput{
+	inputDis := securityhub.DisassociateMembersInput{
 		AccountIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.DisassociateMembers(ctx, &inputDis)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
@@ -163,9 +167,10 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[DEBUG] Deleting Security Hub Member: %s", d.Id())
-	output, err := conn.DeleteMembers(ctx, &securityhub.DeleteMembersInput{
+	inputDel := securityhub.DeleteMembersInput{
 		AccountIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.DeleteMembers(ctx, &inputDel)
 
 	if err == nil && output != nil {
 		err = unprocessedAccountsError(output.UnprocessedAccounts)
@@ -184,11 +189,11 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func findMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
-	input := &securityhub.GetMembersInput{
+	input := securityhub.GetMembersInput{
 		AccountIds: []string{accountID},
 	}
 
-	return findMember(ctx, conn, input)
+	return findMember(ctx, conn, &input)
 }
 
 func findMember(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) (*types.Member, error) {
@@ -205,9 +210,8 @@ func findMembers(ctx context.Context, conn *securityhub.Client, input *securityh
 	output, err := conn.GetMembers(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") || tfawserr.ErrMessageContains(err, errCodeBadRequestException, "The request is rejected since no such resource found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

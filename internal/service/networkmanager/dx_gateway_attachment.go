@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -41,7 +41,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.DirectConnectGatewayAttachment")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(importIgnore="state")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 
@@ -152,7 +151,7 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateDirectConnectGatewayAttachment(ctx, &input)
@@ -220,7 +219,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 
 	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), id))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id); err != nil && !retry.NotFound(err) {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", id), err.Error())
 		return
 	} else {

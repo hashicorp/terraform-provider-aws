@@ -1,4 +1,5 @@
 resource "aws_dynamodb_table" "test" {
+{{- template "region" }}
   hash_key       = "TestTableHashKey"
   name           = var.rName
   read_capacity  = 1

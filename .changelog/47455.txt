@@ -1,0 +1,15 @@
+```release-note:bug
+list-resource/aws_lb: Fixes error when no results are returned
+```
+
+```release-note:bug
+list-resource/aws_lb_listener: Fixes error when no results are returned
+```
+
+```release-note:bug
+list-resource/aws_lb_listener_rule: Fixes error when no results are returned
+```
+
+```release-note:bug
+list-resource/aws_lb_target_group: Fixes error when no results are returned
+```

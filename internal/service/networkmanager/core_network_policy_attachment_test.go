@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,7 +27,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 	updatedSegmentValue := "segmentValue2"
 	expectedJSONUpdated := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,7 +36,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(originalSegmentValue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
 					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", expectedJSONOriginal),
@@ -52,7 +51,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(updatedSegmentValue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", expectedJSONUpdated),
 				),
 			},
@@ -67,7 +66,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 	segmentValue := "segmentValue"
 	expectedJSON := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), segmentValue)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,7 +76,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 				// Step 1: Create core network, policy, and VPC attachment (no create-route yet)
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentStep1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
 				),
@@ -86,7 +85,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 				// Step 2: Update policy to add create-route with VPC attachment destination
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentStep2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"action":"create-route"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"destinations":\["attachment-.+"\]`)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
@@ -101,7 +100,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(segmentValue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", expectedJSON),
 				),
 			},
@@ -114,7 +113,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 	var providers []*schema.Provider
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -126,7 +125,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentMultiRegionCreate(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"attachment-policies":\[{"action":{"association-method":"constant","segment":"segment"},"condition-logic":"or","conditions":\[{"operator":"equals","type":"resource-id","value":"attachment-.+"}\],"rule-number":1},{"action":{"association-method":"constant","segment":"segment2"},"condition-logic":"or","conditions":\[{"operator":"equals","type":"resource-id","value":"attachment-.+"}\],"rule-number":2}\],"core-network-configuration":{"asn-ranges":\["64512-65534"\],"dns-support":true,"edge-locations":\[{"location":"%s"},{"location":"%s"}\],"security-group-referencing-support":false,"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["10.0.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment"},{"action":"create-route","destination-cidr-blocks":\["10.1.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment2"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":false},{"isolate-attachments":false,"name":"segment2","require-attachment-acceptance":false}\],"version":"2021.12"}`, acctest.Region(), acctest.AlternateRegion()))),
 					// use test below if the order of locations is unordered
 					// resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"},{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"description\":\"base-policy\",\"isolate-attachments\":false,\"name\":\"segment\",\"require-attachment-acceptance\":false}],\"version\":\"2021.12\"}", acctest.AlternateRegion(), acctest.Region())),
@@ -148,7 +147,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidASNRange(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -166,7 +165,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPolicies(t *testing
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -175,7 +174,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPolicies(t *testing
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPolicies(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policies":`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"testpolicy"`)),
@@ -196,7 +195,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_attachmentRoutingPolicyRul
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -205,7 +204,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_attachmentRoutingPolicyRul
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRules(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"attachment-routing-policy-rules":`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-label"`)),
@@ -225,7 +224,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_attachmentRoutingPolicyRul
 func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorRoutingPoliciesWrongVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -242,7 +241,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorRoutingPolicies
 func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorAttachmentRoutingPolicyRulesWrongVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -261,7 +260,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllConditio
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -270,7 +269,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllConditio
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllConditionTypes(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-equals"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-cidr"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"asn-in-as-path"`)),
@@ -287,7 +286,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllActionTy
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -296,7 +295,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllActionTy
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllActionTypes(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"drop"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"allow"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prepend-asn-list"`)),
@@ -314,7 +313,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLo
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -323,7 +322,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLo
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicAnd(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"and"`)),
 				),
 			},
@@ -336,7 +335,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLo
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -345,7 +344,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLo
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicOr(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"or"`)),
 				),
 			},
@@ -358,7 +357,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesMultiplePol
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -367,7 +366,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesMultiplePol
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesMultiplePolicies(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"inboundpolicy"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"outboundpolicy"`)),
 				),
@@ -381,7 +380,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesOutbound(t 
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -390,7 +389,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesOutbound(t 
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesOutbound(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-direction":"outbound"`)),
 				),
 			},
@@ -403,7 +402,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesWithDescrip
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -412,7 +411,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesWithDescrip
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWithDescription(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-description":"Filter and control inbound routes"`)),
 				),
 			},
@@ -424,7 +423,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesWithDescrip
 func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRoutingPolicyName(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -442,7 +441,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRoutin
 func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRuleNumber(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -456,14 +455,14 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRuleNu
 	})
 }
 
-func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		// pass in latestPolicyVersionID to get the latest version id by default
 		const latestPolicyVersionID = -1

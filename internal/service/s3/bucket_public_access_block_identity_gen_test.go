@@ -35,7 +35,7 @@ func TestAccS3BucketPublicAccessBlock_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccS3BucketPublicAccessBlock_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckBucketPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -208,7 +208,7 @@ func TestAccS3BucketPublicAccessBlock_Identity_ExistingResource_basic(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPublicAccessBlockDestroy(ctx),
+		CheckDestroy: testAccCheckBucketPublicAccessBlockDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -217,7 +217,7 @@ func TestAccS3BucketPublicAccessBlock_Identity_ExistingResource_basic(t *testing
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckBucketPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func TestAccS3BucketPublicAccessBlock_Identity_ExistingResource_noRefreshNoChang
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPublicAccessBlockDestroy(ctx),
+		CheckDestroy: testAccCheckBucketPublicAccessBlockDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccS3BucketPublicAccessBlock_Identity_ExistingResource_noRefreshNoChang
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckBucketPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

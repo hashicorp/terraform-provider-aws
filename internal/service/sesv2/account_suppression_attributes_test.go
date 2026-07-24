@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,7 +34,7 @@ func testAccAccountSuppressionAttributes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_suppression_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,7 +43,7 @@ func testAccAccountSuppressionAttributes_basic(t *testing.T) {
 			{
 				Config: testAccAccountSuppressionAttributesConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSuppressionAttributesExists(ctx, resourceName),
+					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suppressed_reasons"), knownvalue.SetSizeExact(1)),
@@ -68,7 +67,7 @@ func testAccAccountSuppressionAttributes_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sesv2_account_suppression_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,7 +76,7 @@ func testAccAccountSuppressionAttributes_update(t *testing.T) {
 			{
 				Config: testAccAccountSuppressionAttributesConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSuppressionAttributesExists(ctx, resourceName),
+					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suppressed_reasons"), knownvalue.SetSizeExact(1)),
@@ -91,7 +90,7 @@ func testAccAccountSuppressionAttributes_update(t *testing.T) {
 			{
 				Config: testAccAccountSuppressionAttributesConfig_updated,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSuppressionAttributesExists(ctx, resourceName),
+					testAccCheckAccountSuppressionAttributesExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("suppressed_reasons"), knownvalue.SetSizeExact(0)),
@@ -101,14 +100,14 @@ func testAccAccountSuppressionAttributes_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountSuppressionAttributesExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccountSuppressionAttributesExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindAccountSuppressionAttributes(ctx, conn)
 

@@ -32,7 +32,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -88,7 +88,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -137,7 +137,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -179,7 +179,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -221,7 +221,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -232,7 +232,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -291,7 +291,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -300,7 +300,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -357,7 +357,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -366,7 +366,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -389,7 +389,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -443,7 +443,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_onCreate(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -454,7 +454,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_onCreate(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -495,7 +495,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_onCreate(t *testing.T)
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -539,7 +539,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_add(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -550,7 +550,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_add(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -581,7 +581,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_add(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -628,7 +628,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_add(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -682,7 +682,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_replace(t *te
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -693,7 +693,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_replace(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -723,7 +723,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_EmptyTag_OnUpdate_replace(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -774,7 +774,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_providerOnly(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -786,7 +786,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_providerOnly(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -831,7 +831,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_providerOnly(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -878,7 +878,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_providerOnly(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -919,7 +919,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_providerOnly(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -962,7 +962,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nonOverlapping(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -976,7 +976,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nonOverlapping(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1031,7 +1031,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nonOverlapping(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1085,7 +1085,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nonOverlapping(t *t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1128,7 +1128,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_overlapping(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1142,7 +1142,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_overlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1196,7 +1196,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_overlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1254,7 +1254,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_overlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1310,7 +1310,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_updateToProviderOnl
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1321,7 +1321,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_updateToProviderOnl
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1353,7 +1353,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_updateToProviderOnl
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1403,7 +1403,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_updateToResourceOnl
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1415,7 +1415,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_updateToResourceOnl
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1442,7 +1442,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_updateToResourceOnl
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1497,7 +1497,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_emptyResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1511,7 +1511,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_emptyResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1568,7 +1568,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_emptyProviderOnlyTa
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1580,7 +1580,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_emptyProviderOnlyTa
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1629,7 +1629,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nullOverlappingReso
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1643,7 +1643,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nullOverlappingReso
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1695,7 +1695,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nullNonOverlappingR
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1709,7 +1709,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_DefaultTags_nullNonOverlappingR
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1761,7 +1761,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_onCreate(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1770,7 +1770,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_onCreate(t *testing
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1820,7 +1820,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_OnUpdate_add(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1831,7 +1831,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_OnUpdate_add(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1862,7 +1862,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_OnUpdate_add(t *tes
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1920,7 +1920,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_OnUpdate_replace(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1931,7 +1931,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_OnUpdate_replace(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1960,7 +1960,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_ComputedTag_OnUpdate_replace(t 
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2010,7 +2010,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_defaultTag(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2028,7 +2028,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_defaultTag(t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2076,7 +2076,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_defaultTag(t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2124,7 +2124,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_defaultTag(t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2172,7 +2172,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_resourceTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2188,7 +2188,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_resourceTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2250,7 +2250,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_resourceTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2312,7 +2312,7 @@ func TestAccNetworkManagerConnectAttachment_Tags_IgnoreTags_Overlap_resourceTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

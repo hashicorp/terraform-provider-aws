@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_eip: Gracefully handle `UnsupportedOperation` errors in isolated regions
+```
+```release-note:note
+resource/aws_eip: Because we cannot easily test this behavior in isolated regions, it is best effort and we ask for community help in testing
+```

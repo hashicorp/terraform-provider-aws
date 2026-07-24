@@ -1,0 +1,16 @@
+```release-note:new-resource
+aws_pinpointsmsvoicev2_pool
+```
+
+```release-note:new-list-resource
+aws_pinpointsmsvoicev2_pool
+```
+
+```release-note:enhancement
+resource/aws_pinpointsmsvoicev2_phone_number: Add `force_disassociate` argument
+```
+
+```release-note:breaking-change
+resource/aws_pinpointsmsvoicev2_phone_number: Remove provider-side defaults for `opt_out_list_name` and `two_way_channel_enabled` in favor of AWS server-side defaults (`Default` and `false` respectively). Configurations that omit these attributes will now show `(known after apply)` on first plan instead of the previous static value; the post-apply state is unchanged. This change mitigates persistent drift when the phone number is managed by an `aws_pinpointsmsvoicev2_pool`.
+```
+

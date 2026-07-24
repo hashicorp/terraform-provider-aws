@@ -1,0 +1,12 @@
+```release-note:enhancement
+resource/aws_auditmanager_assessment: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_auditmanager_control: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_auditmanager_framework: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_auditmanager_framework_share: Add resource identity support
+```

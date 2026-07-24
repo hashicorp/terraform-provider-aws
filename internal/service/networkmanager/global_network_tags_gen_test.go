@@ -30,7 +30,7 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +41,7 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -83,7 +83,7 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -129,7 +129,7 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -168,7 +168,7 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -206,7 +206,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +217,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -272,7 +272,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -334,7 +334,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -343,7 +343,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -366,7 +366,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -416,7 +416,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_onCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -427,7 +427,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -465,7 +465,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -505,7 +505,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_add(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -516,7 +516,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -547,7 +547,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -591,7 +591,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -641,7 +641,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_replace(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -652,7 +652,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -682,7 +682,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_EmptyTag_OnUpdate_replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -729,7 +729,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_providerOnly(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -741,7 +741,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -783,7 +783,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -827,7 +827,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -865,7 +865,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -904,7 +904,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nonOverlapping(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -918,7 +918,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nonOverlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -970,7 +970,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nonOverlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1021,7 +1021,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nonOverlapping(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1060,7 +1060,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_overlapping(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1074,7 +1074,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1125,7 +1125,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1180,7 +1180,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1232,7 +1232,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_updateToProviderOnly(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1243,7 +1243,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_updateToProviderOnly(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1275,7 +1275,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_updateToProviderOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1321,7 +1321,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_updateToResourceOnly(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1333,7 +1333,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_updateToResourceOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1360,7 +1360,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_updateToResourceOnly(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1411,7 +1411,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_emptyResourceTag(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1425,7 +1425,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_emptyResourceTag(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1478,7 +1478,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_emptyProviderOnlyTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1490,7 +1490,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_emptyProviderOnlyTag(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1535,7 +1535,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nullOverlappingResource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1549,7 +1549,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nullOverlappingResource
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1597,7 +1597,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nullNonOverlappingResou
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1611,7 +1611,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_DefaultTags_nullNonOverlappingResou
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1659,7 +1659,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_onCreate(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1668,7 +1668,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_onCreate(t *testing.T) 
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1714,7 +1714,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_OnUpdate_add(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1725,7 +1725,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_OnUpdate_add(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1756,7 +1756,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_OnUpdate_add(t *testing
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1810,7 +1810,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_OnUpdate_replace(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1821,7 +1821,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_OnUpdate_replace(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1850,7 +1850,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_ComputedTag_OnUpdate_replace(t *tes
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1896,7 +1896,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_defaultTag(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1914,7 +1914,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_defaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1962,7 +1962,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_defaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2010,7 +2010,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_defaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2057,7 +2057,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_resourceTag(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx),
+		CheckDestroy: testAccCheckGlobalNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2073,7 +2073,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_resourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2135,7 +2135,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_resourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2197,7 +2197,7 @@ func TestAccNetworkManagerGlobalNetwork_Tags_IgnoreTags_Overlap_resourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGlobalNetworkExists(ctx, resourceName),
+					testAccCheckGlobalNetworkExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

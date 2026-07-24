@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,9 +22,9 @@ import (
 func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -38,7 +36,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_basic(t *testing.T
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.path", "/"),
@@ -58,9 +56,9 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_basic(t *testing.T
 func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -72,7 +70,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_multiple(t *testin
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "2"),
 				),
 			},
@@ -90,9 +88,9 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_multiple(t *testin
 func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -104,7 +102,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_empty(t *testing.T
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "0"),
 				),
 			},
@@ -122,9 +120,9 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_empty(t *testing.T
 func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -136,15 +134,15 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandRemoval(t
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckCustomerManagedPolicyDetach(ctx, resourceName, rName, "/"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
+					testAccCheckCustomerManagedPolicyDetach(ctx, t, resourceName, rName, "/"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
 				),
 			},
@@ -155,9 +153,9 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandRemoval(t
 func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -169,15 +167,15 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckCustomerManagedPolicyAttach(ctx, resourceName, fmt.Sprintf("%s-2", rName), "/"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
+					testAccCheckCustomerManagedPolicyAttach(ctx, t, resourceName, fmt.Sprintf("%s-2", rName), "/"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
 				),
 			},
@@ -185,14 +183,14 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(
 	})
 }
 
-func testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err := tfssoadmin.FindCustomerManagedPolicyAttachmentsByTwoPartKey(ctx, conn, rs.Primary.Attributes["permission_set_arn"], rs.Primary.Attributes["instance_arn"])
 
@@ -200,14 +198,14 @@ func testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx context.Con
 	}
 }
 
-func testAccCheckCustomerManagedPolicyDetach(ctx context.Context, n, policyName, policyPath string) resource.TestCheckFunc {
+func testAccCheckCustomerManagedPolicyDetach(ctx context.Context, t *testing.T, n, policyName, policyPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err := conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(ctx, &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
 			InstanceArn:      aws.String(rs.Primary.Attributes["instance_arn"]),
@@ -222,14 +220,14 @@ func testAccCheckCustomerManagedPolicyDetach(ctx context.Context, n, policyName,
 	}
 }
 
-func testAccCheckCustomerManagedPolicyAttach(ctx context.Context, n, policyName, policyPath string) resource.TestCheckFunc {
+func testAccCheckCustomerManagedPolicyAttach(ctx context.Context, t *testing.T, n, policyName, policyPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err := conn.AttachCustomerManagedPolicyReferenceToPermissionSet(ctx, &ssoadmin.AttachCustomerManagedPolicyReferenceToPermissionSetInput{
 			InstanceArn:      aws.String(rs.Primary.Attributes["instance_arn"]),

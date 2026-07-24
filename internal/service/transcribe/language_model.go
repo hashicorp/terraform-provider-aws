@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,57 +47,59 @@ func ResourceLanguageModel() *schema.Resource {
 			Create: schema.DefaultTimeout(600 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_model_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.BaseModelName](),
-			},
-			"input_data_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_access_role_arn": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-						},
-						"s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"tuning_data_s3_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_model_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.BaseModelName](),
+				},
+				"input_data_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_access_role_arn": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+							},
+							"s3_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"tuning_data_s3_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrLanguageCode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.LanguageCode](),
-			},
-			"model_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrLanguageCode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.LanguageCode](),
+				},
+				"model_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -215,10 +216,10 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
-		Refresh:                   statusLanguageModel(ctx, conn, id),
+		Refresh:                   statusLanguageModel(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -232,8 +233,8 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLanguageModel(conn *transcribe.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -256,9 +257,8 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	var bre *types.BadRequestException
 	if errors.As(err, &bre) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

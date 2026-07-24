@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -47,57 +46,59 @@ func resourceEventSubscription() *schema.Resource {
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_aws_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"event_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validEventSubscriptionName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validEventSubscriptionNamePrefix,
-			},
-			names.AttrSNSTopicARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"source_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSourceType: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_aws_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validEventSubscriptionName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validEventSubscriptionNamePrefix,
+				},
+				names.AttrSNSTopicARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"source_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSourceType: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -291,9 +292,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *neptune.Client, name
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -317,9 +316,8 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Client, input *ne
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -333,8 +331,8 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Client, input *ne
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *neptune.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEventSubscription(conn *neptune.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -350,10 +348,10 @@ func statusEventSubscription(ctx context.Context, conn *neptune.Client, name str
 }
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -369,10 +367,10 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Client, nam
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -388,10 +386,10 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Client, nam
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

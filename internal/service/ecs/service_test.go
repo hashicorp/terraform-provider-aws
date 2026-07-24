@@ -9,11 +9,13 @@ import (
 	"math"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -158,6 +160,7 @@ func TestAccECSService_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", "aws_ecs_task_definition.test", names.AttrARN),
@@ -293,6 +296,14 @@ func TestAccECSService_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1553,6 +1564,7 @@ func TestAccECSService_clusterName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1562,10 +1574,11 @@ func TestAccECSService_clusterName(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_clusterName(rName),
+				Config: testAccServiceConfig_clusterName(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "cluster", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "cluster", clusterName),
 				),
 			},
 		},
@@ -2422,6 +2435,45 @@ func TestAccECSService_ServiceConnect_outOfBandRemoval(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceConnect_accessLogConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectAccessLogConfiguration(rName, "TEXT", "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.format", "TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.include_query_parameters", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectAccessLogConfiguration(rName, "JSON", "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.include_query_parameters", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -3190,6 +3242,32 @@ func TestAccECSService_CanaryDeployment_waitServiceActive(t *testing.T) {
 	})
 }
 
+func testAccServiceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		cluster := rs.Primary.Attributes["cluster"]
+		if arn.IsARN(cluster) {
+			clusterArn, err := arn.Parse(cluster)
+			if err != nil {
+				return "", err
+			}
+
+			clusterParts := strings.Split(clusterArn.Resource, "/")
+			if len(clusterParts) != 2 {
+				return "", fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", clusterArn)
+			}
+
+			cluster = clusterParts[1]
+		}
+
+		return fmt.Sprintf("%s/%s", cluster, rs.Primary.Attributes[names.AttrName]), nil
+	}
+}
+
 func testAccCheckServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -3348,7 +3426,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
+  cluster         = aws_ecs_cluster.test.arn
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
@@ -3945,7 +4023,7 @@ resource "aws_lambda_function" "hook_success" {
   function_name    = "%[1]s-hook-success"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/success_lambda_func.zip")
 }
 
@@ -3954,7 +4032,7 @@ resource "aws_lambda_function" "hook_failure" {
   function_name    = "%[1]s-hook-failure"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/failure_lambda_func.zip")
 }
 `, rName))
@@ -6210,14 +6288,14 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_clusterName(rName string) string {
+func testAccServiceConfig_clusterName(rName, clusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = %[2]q
 
   container_definitions = <<DEFINITION
 [
@@ -6238,7 +6316,7 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
-`, rName)
+`, rName, clusterName)
 }
 
 func testAccServiceConfig_alb(rName string) string {
@@ -8462,4 +8540,117 @@ resource "aws_ecs_service" "test" {
   availability_zone_rebalancing = %[2]s
 }
   `, rName, val)
+}
+
+func testAccServiceConfig_serviceConnectAccessLogConfiguration(rName, format, includeQueryParams string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/ecs/%[1]s"
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "test"
+      image     = "public.ecr.aws/docker/library/nginx:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+          protocol      = "tcp"
+          name          = "http"
+          appProtocol   = "http"
+        }
+      ]
+    }
+  ])
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.test.name
+        "awslogs-region"        = data.aws_region.current.name
+        "awslogs-stream-prefix" = "sc"
+      }
+    }
+
+    access_log_configuration {
+      format                   = %[2]q
+      include_query_parameters = %[3]q
+    }
+
+    service {
+      port_name      = "http"
+      discovery_name = "test"
+
+      client_alias {
+        dns_name = "test"
+        port     = 8080
+      }
+    }
+  }
+}
+
+data "aws_region" "current" {}
+`, rName, format, includeQueryParams))
 }

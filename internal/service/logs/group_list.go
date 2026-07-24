@@ -5,7 +5,6 @@ package logs
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -49,20 +48,21 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input cloudwatchlogs.DescribeLogGroupsInput
-		for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
+		for output, err := range listLogGroups(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
+			logGroupName := aws.ToString(output.LogGroupName)
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.LogGroupName))
+			rd.SetId(logGroupName)
 			resourceGroupFlatten(ctx, rd, output)
 
-			result.DisplayName = aws.ToString(output.LogGroupName)
+			result.DisplayName = logGroupName
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -75,23 +75,6 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 	}
 }
 
-func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) iter.Seq2[awstypes.LogGroup, error] {
-	return func(yield func(awstypes.LogGroup, error) bool) {
-		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.LogGroup{}, fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
-				return
-			}
-
-			for _, v := range page.LogGroups {
-				if filter(&v) {
-					if !yield(v, nil) {
-						return
-					}
-				}
-			}
-		}
-	}
+func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogGroup, error] {
+	return tfiter.ConcatValuesWithError(listLogGroupPages(ctx, conn, input, optFns...))
 }

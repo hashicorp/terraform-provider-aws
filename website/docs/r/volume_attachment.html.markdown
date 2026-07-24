@@ -44,13 +44,13 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_name` - (Required) The device name to expose to the instance (for
-example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances][1] and [Device Naming on Windows Instances][2] for more information.
+example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names) and [Device Naming on Windows Instances](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names) for more information.
 * `instance_id` - (Required) ID of the Instance to attach to
 * `volume_id` - (Required) ID of the Volume to be attached
 * `force_detach` - (Optional, Boolean) Set to `true` if you want to force the
 volume to detach. Useful if previous attempts failed, but use this option only
 as a last resort, as this can result in **data loss**. See
-[Detaching an Amazon EBS Volume from an Instance][3] for more information.
+[Detaching an Amazon EBS Volume from an Instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-detaching-volume.html) for more information.
 * `skip_destroy` - (Optional, Boolean) Set this to true if you do not wish
 to detach the volume from the instance to which it is attached at destroy
 time, and instead just remove the attachment from Terraform state. This is
@@ -67,7 +67,44 @@ This resource exports the following attributes in addition to the arguments abov
 * `instance_id` - ID of the Instance
 * `volume_id` - ID of the Volume
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_volume_attachment.example
+  identity = {
+    device_name = "/dev/sdh"
+    volume_id   = "vol-049df61146c4d7901"
+    instance_id = "i-12345678"
+  }
+}
+
+resource "aws_volume_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `device_name` (String) Device name exposed to the instance.
+* `instance_id` (String) ID of the Instance.
+* `volume_id` (String) ID of the Volume.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
 
@@ -83,7 +120,3 @@ Using `terraform import`, import EBS Volume Attachments using `DEVICE_NAME:VOLUM
 ```console
 % terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
 ```
-
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
-[2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names
-[3]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-detaching-volume.html

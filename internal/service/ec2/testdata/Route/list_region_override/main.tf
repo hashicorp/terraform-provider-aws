@@ -1,14 +1,12 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {}
-
 resource "aws_route" "test" {
   count = 2
 
   region                 = var.region
   route_table_id         = aws_route_table.test.id
-  destination_cidr_block = "172.${16 + count.index}.0.0/16"
+  destination_cidr_block = cidrsubnet("172.16.0.0/12", 12, count.index)
   gateway_id             = aws_internet_gateway.test.id
 }
 

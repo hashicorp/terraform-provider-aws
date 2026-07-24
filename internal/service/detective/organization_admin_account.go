@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_detective_organization_admin_account", name="Organization Admin Account")
-func ResourceOrganizationAdminAccount() *schema.Resource {
+func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
@@ -36,28 +36,29 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+			}
 		},
 	}
 }
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	accountID := d.Get(names.AttrAccountID).(string)
-	input := &detective.EnableOrganizationAdminAccountInput{
+	input := detective.EnableOrganizationAdminAccountInput{
 		AccountId: aws.String(accountID),
 	}
 
-	_, err := conn.EnableOrganizationAdminAccount(ctx, input)
+	_, err := conn.EnableOrganizationAdminAccount(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Detective Organization Admin Account (%s): %s", accountID, err)
@@ -65,7 +66,10 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
@@ -78,7 +82,6 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	administrator, err := findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
@@ -100,7 +103,6 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	input := detective.DisableOrganizationAdminAccountInput{}
@@ -117,7 +119,10 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
@@ -129,7 +134,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 }
 
 func findOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Client, accountID string) (*awstypes.Administrator, error) {
-	input := detective.ListOrganizationAdminAccountsInput{}
+	var input detective.ListOrganizationAdminAccountsInput
 
 	return findOrganizationAdminAccount(ctx, conn, &input, func(v awstypes.Administrator) bool {
 		return aws.ToString(v.AccountId) == accountID
@@ -150,7 +155,6 @@ func findOrganizationAdminAccounts(ctx context.Context, conn *detective.Client, 
 	var output []awstypes.Administrator
 
 	pages := detective.NewListOrganizationAdminAccountsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

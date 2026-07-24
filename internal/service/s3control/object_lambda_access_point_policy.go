@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -38,33 +37,35 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"has_public_access_policy": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
 				},
-			},
+				"has_public_access_policy": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrPolicy: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+			}
 		},
 	}
 }
@@ -204,9 +205,8 @@ func findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context,
 	outputGAPPFOL, err := conn.GetAccessPointPolicyForObjectLambda(ctx, inputGAPPFOL)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: inputGAPPFOL,
+		return "", nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -232,9 +232,8 @@ func findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context,
 	outputGAPPSFOL, err := conn.GetAccessPointPolicyStatusForObjectLambda(ctx, inputGAPPSFOL)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: inputGAPPSFOL,
+		return "", nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

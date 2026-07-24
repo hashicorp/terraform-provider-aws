@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagentcore_online_evaluation_config
+```
+
+```release-note:new-list-resource
+aws_bedrockagentcore_online_evaluation_config
+```

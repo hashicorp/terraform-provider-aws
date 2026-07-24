@@ -15,10 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -42,119 +41,121 @@ func resourceService() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"dns_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dns_records": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ttl": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RecordType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"dns_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dns_records": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ttl": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RecordType](),
+										},
 									},
 								},
 							},
-						},
-						"namespace_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"routing_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.RoutingPolicyMultivalue,
-							ValidateDiagFunc: enum.Validate[awstypes.RoutingPolicy](),
-						},
-					},
-				},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"health_check_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_threshold": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"resource_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
+							"namespace_id": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"routing_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.RoutingPolicyMultivalue,
+								ValidateDiagFunc: enum.Validate[awstypes.RoutingPolicy](),
+							},
 						},
 					},
 				},
-			},
-			"health_check_custom_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_threshold": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Deprecated: "failure_threshold is deprecated. The argument is no longer supported by AWS and the " +
-								"value is always set to 1. The attribute will be removed in a future major version.",
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"health_check_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_threshold": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"resource_path": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"namespace_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ServiceTypeOption](),
-			},
+				"health_check_custom_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_threshold": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Deprecated: "failure_threshold is deprecated. The argument is no longer supported by AWS and the " +
+									"value is always set to 1. The attribute will be removed in a future major version.",
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"namespace_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ServiceTypeOption](),
+				},
+			}
 		},
 	}
 }
@@ -165,7 +166,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateServiceInput{
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -391,9 +392,8 @@ func findServiceByID(ctx context.Context, conn *servicediscovery.Client, id stri
 	output, err := conn.GetService(ctx, input)
 
 	if errs.IsA[*awstypes.ServiceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

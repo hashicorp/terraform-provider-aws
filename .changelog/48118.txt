@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_api_gateway_rest_api: Fix OpenAPI body-managed `x-amazon-apigateway-policy` updates being overwritten by prior policy state
+```

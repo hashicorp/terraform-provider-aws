@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,51 +33,53 @@ func resourceAPNSVoIPChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"bundle_id": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			names.AttrCertificate: {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"default_authentication_method": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrPrivateKey: {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"team_id": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"token_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"token_key_id": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"bundle_id": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				names.AttrCertificate: {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"default_authentication_method": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrPrivateKey: {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"team_id": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"token_key": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"token_key_id": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }
@@ -121,7 +122,7 @@ func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := conn.UpdateApnsVoipChannel(ctx, &req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint APNs VoIP Channel for Application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating End User Messaging APNs VoIP Channel for Application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -133,18 +134,18 @@ func resourceAPNSVoIPChannelRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[INFO] Reading Pinpoint APNs VoIP Channel for Application %s", d.Id())
+	log.Printf("[INFO] Reading End User Messaging APNs VoIP Channel for Application %s", d.Id())
 
 	output, err := findAPNSVoIPChannelByApplicationId(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint APNS VoIP Channel (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging APNS VoIP Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint APNS VoIP Channel (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging APNS VoIP Channel (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
@@ -159,7 +160,7 @@ func resourceAPNSVoIPChannelDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint APNs VoIP Channel: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging APNs VoIP Channel: %s", d.Id())
 	_, err := conn.DeleteApnsVoipChannel(ctx, &pinpoint.DeleteApnsVoipChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -169,7 +170,7 @@ func resourceAPNSVoIPChannelDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint APNs VoIP Channel for Application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging APNs VoIP Channel for Application %s: %s", d.Id(), err)
 	}
 	return diags
 }
@@ -181,9 +182,8 @@ func findAPNSVoIPChannelByApplicationId(ctx context.Context, conn *pinpoint.Clie
 
 	output, err := conn.GetApnsVoipChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_server_side_encryption_configuration: Change `rule.apply_server_side_encryption_by_default.kms_master_key_id`, `rule.blocked_encryption_types`, and `rule.bucket_key_enabled` to Optional and Computed, preventings diffs once SSE-C is disabled for all new general purpose buckets
+```

@@ -13,6 +13,10 @@ import (
 
 func testAccWorkspaceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	dataSourceName := "data.aws_grafana_workspace.test"
@@ -35,6 +39,7 @@ func testAccWorkspaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, dataSourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "grafana_version", dataSourceName, "grafana_version"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrLastUpdatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, dataSourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "notification_destinations.#", dataSourceName, "notification_destinations.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "organization_role_name", dataSourceName, "organization_role_name"),

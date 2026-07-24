@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -21,7 +21,7 @@ var regionalSingletonSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 type mockClient struct {

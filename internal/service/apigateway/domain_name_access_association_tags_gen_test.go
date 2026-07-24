@@ -25,7 +25,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -229,7 +229,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_null(t *testing.T) {
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -301,7 +301,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_emptyMap(t *testing.T) {
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -361,7 +361,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_addOnUpdate(t *testing.T)
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -453,7 +453,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_EmptyTag_onCreate(t *test
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -557,7 +557,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_EmptyTag_OnUpdate_add(t *
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -712,7 +712,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_EmptyTag_OnUpdate_replace
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -814,7 +814,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_providerOnly(
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1017,7 +1017,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_nonOverlappin
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1195,7 +1195,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_overlapping(t
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1389,7 +1389,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_updateToProvi
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1491,7 +1491,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_updateToResou
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1592,7 +1592,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_emptyResource
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1668,7 +1668,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_emptyProvider
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1736,7 +1736,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_nullOverlappi
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1815,7 +1815,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_DefaultTags_nullNonOverla
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1896,7 +1896,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_ComputedTag_onCreate(t *t
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1961,7 +1961,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_ComputedTag_OnUpdate_add(
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -2070,7 +2070,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_ComputedTag_OnUpdate_repl
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -2169,7 +2169,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_IgnoreTags_Overlap_defaul
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -2343,7 +2343,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Tags_IgnoreTags_Overlap_resour
 
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 

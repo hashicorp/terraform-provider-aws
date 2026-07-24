@@ -13,8 +13,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -338,7 +338,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	desc := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(8))
+	desc := fmt.Sprintf("Terraform Acceptance Test %s", acctest.RandString(t, 8))
 
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
@@ -633,6 +633,14 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

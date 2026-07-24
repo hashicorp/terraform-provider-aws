@@ -323,7 +323,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 		if err != nil {
 			// Outputting a NotFoundError does not include the original error.
 			// Retrieve it to give the user an actionalble error message.
-			if nfe, ok := errs.As[*retry.NotFoundError](err); ok {
+			if nfe, ok := errors.AsType[*retry.NotFoundError](err); ok {
 				if nfe.LastError != nil {
 					err = nfe.LastError
 				}

@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_grafana_workspace: Fix perpetual diff when `network_access_control` is configured with empty `prefix_list_ids` and `vpce_ids`
+```
+

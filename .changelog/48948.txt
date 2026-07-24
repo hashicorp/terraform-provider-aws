@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_rds_cluster
+```
+```release-note:enhancement
+resource/aws_rds_cluster: Add resource identity support
+```

@@ -18,8 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,7 +40,6 @@ import (
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 // @ArnIdentity
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -50,115 +47,116 @@ func resourceSecret() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecretUpdate,
 		DeleteWithoutTimeout: resourceSecretDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"force_overwrite_replica_secret": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validSecretName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validSecretNamePrefix,
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"recovery_window_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  30,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(7, 30),
-					validation.IntInSlice([]int{0}),
-				),
-			},
-			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ForceNew:     true, // Type cannot be changed after secret creation
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Set: func(v any) int {
-					var buf bytes.Buffer
-
-					m := v.(map[string]any)
-
-					if v, ok := m[names.AttrKMSKeyID].(string); ok {
-						fmt.Fprintf(&buf, "%s-", v)
-					}
-
-					if v, ok := m[names.AttrRegion].(string); ok {
-						fmt.Fprintf(&buf, "%s-", v)
-					}
-
-					return create.StringHashcode(buf.String())
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"last_accessed_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"force_overwrite_replica_secret": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validSecretName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validSecretNamePrefix,
+				},
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					Computed:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"recovery_window_in_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  30,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(7, 30),
+						validation.IntInSlice([]int{0}),
+					),
+				},
+				"replica": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Set: func(v any) int {
+						var buf bytes.Buffer
+
+						m := v.(map[string]any)
+
+						if v, ok := m[names.AttrKMSKeyID].(string); ok {
+							fmt.Fprintf(&buf, "%s-", v)
+						}
+
+						if v, ok := m[names.AttrRegion].(string); ok {
+							fmt.Fprintf(&buf, "%s-", v)
+						}
+
+						return create.StringHashcode(buf.String())
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"last_accessed_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+			}
 		},
 	}
 }
@@ -169,7 +167,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &secretsmanager.CreateSecretInput{
-		ClientRequestToken:          aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken:          aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		ForceOverwriteReplicaSecret: d.Get("force_overwrite_replica_secret").(bool),
 		Name:                        aws.String(name),
@@ -184,7 +182,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.AddReplicaRegions = expandReplicaRegionTypes(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrType); ok {
 		input.Type = aws.String(v.(string))
 	}
 
@@ -253,18 +251,24 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
 	}
 
+	return resourceSecretFlatten(ctx, conn, d, output)
+}
+
+func resourceSecretFlatten(ctx context.Context, conn *secretsmanager.Client, d *schema.ResourceData, output *secretsmanager.DescribeSecretOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, output.ARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set(names.AttrType, output.Type)
 	if err := d.Set("replica", flattenReplicationStatusTypes(output.ReplicationStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
 	}
+	d.Set(names.AttrType, output.Type)
 
 	var policy *secretsmanager.GetResourcePolicyOutput
-	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -332,7 +336,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChanges(names.AttrDescription, names.AttrKMSKeyID) {
 		input := &secretsmanager.UpdateSecretInput{
-			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			SecretId:           aws.String(d.Id()),
 		}
@@ -492,9 +496,8 @@ func findSecret(ctx context.Context, conn *secretsmanager.Client, input *secrets
 	output, err := conn.DescribeSecret(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -521,7 +524,7 @@ func findSecretByID(ctx context.Context, conn *secretsmanager.Client, id string)
 	}
 
 	if output.DeletedDate != nil {
-		return nil, &sdkretry.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

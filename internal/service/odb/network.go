@@ -15,17 +15,20 @@ import (
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -33,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -162,6 +166,20 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				Description: "Specifies the endpoint policy for Amazon S3 access from the ODB network.",
 			},
+			"cross_region_s3_restore_sources_access": schema.SetAttribute{
+				Optional:    true,
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						fwvalidators.AWSRegion()),
+				},
+				Description: "The list of regions enabled for cross-region restore in the ODB network.",
+			},
 			"oci_dns_forwarding_configs": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigResourceModel](ctx),
 				Computed:    true,
@@ -205,6 +223,11 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 			"percent_progress": schema.Float32Attribute{
 				Computed:    true,
 				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
+			},
+			"ec2_placement_group_ids": schema.ListAttribute{
+				Computed:    true,
+				CustomType:  fwtypes.ListOfStringType,
+				Description: "A list of EC2 placement group IDs associated with the ODB network.",
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,
@@ -280,6 +303,17 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	if !plan.CrossRegionS3RestoreSourcesAccess.IsNull() && !plan.CrossRegionS3RestoreSourcesAccess.IsUnknown() {
+		var regions []string
+		resp.Diagnostics.Append(
+			plan.CrossRegionS3RestoreSourcesAccess.ElementsAs(ctx, &regions, false)...,
+		)
+		if len(regions) > 0 {
+			input.CrossRegionS3RestoreSourcesToEnable = regions
+		}
+	}
+
 	out, err := conn.CreateOdbNetwork(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -372,6 +406,34 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 	plan.KmsAccess = fwtypes.StringEnumValue(readKMSAccessStatus)
 	plan.KmsPolicyDocument = types.StringPointerValue(createdOdbNetwork.ManagedServices.KmsAccess.KmsPolicyDocument)
 
+	if createdOdbNetwork.ManagedServices.CrossRegionS3RestoreSourcesAccess != nil && len(input.CrossRegionS3RestoreSourcesToEnable) > 0 {
+		crossRegionErr := waitForCrossRegionRestoreSourcesStatus(ctx, conn, *out.OdbNetworkId, &input.CrossRegionS3RestoreSourcesToEnable, managedServiceTimeout)
+		if crossRegionErr != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, plan.OdbNetworkId.String(), crossRegionErr),
+				crossRegionErr.Error(),
+			)
+			return
+		}
+	}
+
+	if createdOdbNetwork.ManagedServices != nil && createdOdbNetwork.ManagedServices.CrossRegionS3RestoreSourcesAccess != nil && len(createdOdbNetwork.ManagedServices.CrossRegionS3RestoreSourcesAccess) > 0 {
+		elements := enabledCrossRegionRestoreElements(createdOdbNetwork.ManagedServices.CrossRegionS3RestoreSourcesAccess)
+		setVal, diagnostics := fwtypes.NewSetValueOf[types.String](ctx, elements)
+		resp.Diagnostics.Append(diagnostics...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.CrossRegionS3RestoreSourcesAccess = setVal
+	} else {
+		setVal, diagnostics := fwtypes.NewSetValueOf[types.String](ctx, nil)
+		resp.Diagnostics.Append(diagnostics...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.CrossRegionS3RestoreSourcesAccess = setVal
+	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdOdbNetwork, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -449,6 +511,16 @@ func (r *resourceNetwork) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 		state.KmsAccess = fwtypes.StringEnumValue(readKmsAccessStatus)
 		state.KmsPolicyDocument = types.StringPointerValue(out.ManagedServices.KmsAccess.KmsPolicyDocument)
+
+		if out.ManagedServices.CrossRegionS3RestoreSourcesAccess != nil {
+			elements := enabledCrossRegionRestoreElements(out.ManagedServices.CrossRegionS3RestoreSourcesAccess)
+			setVal, diagnostics := fwtypes.NewSetValueOf[types.String](ctx, elements)
+			resp.Diagnostics.Append(diagnostics...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			state.CrossRegionS3RestoreSourcesAccess = setVal
+		}
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -471,9 +543,28 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	var enableCrossRegion *[]string
 	if diff.HasChanges() {
 		var input odb.UpdateOdbNetworkInput
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		toEnable, toDisable, diagnostics := diffCrossRegionRestoreSources(ctx, plan.CrossRegionS3RestoreSourcesAccess, state.CrossRegionS3RestoreSourcesAccess)
+		resp.Diagnostics.Append(diagnostics...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(toEnable) > 0 {
+			input.CrossRegionS3RestoreSourcesToEnable = toEnable
+			enableCrossRegion = &toEnable
+		}
+		if len(toDisable) > 0 {
+			input.CrossRegionS3RestoreSourcesToDisable = toDisable
+		}
+
 		out, err := conn.UpdateOdbNetwork(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -537,7 +628,7 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 	plan.S3PolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.S3Access.S3PolicyDocument)
 
 	//sts access
-	_, err = waitForManagedService(ctx, plan.ZeroEtlAccess.ValueEnum(), conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+	_, err = waitForManagedService(ctx, plan.StsAccess.ValueEnum(), conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 		return managedService.StsAccess.Status
 	})
 	if err != nil {
@@ -579,7 +670,38 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 	}
 	plan.ZeroEtlAccess = fwtypes.StringEnumValue(readZeroEtlAccessStatus)
 
+	crossRegionErr := waitForCrossRegionRestoreSourcesStatus(ctx, conn, plan.OdbNetworkId.ValueString(), enableCrossRegion, managedServiceTimeout)
+	if crossRegionErr != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameNetwork, plan.OdbNetworkId.String(), crossRegionErr),
+			crossRegionErr.Error(),
+		)
+		return
+	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNwk, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	//crossRegionRestore
+	if updatedOdbNwk.ManagedServices != nil && updatedOdbNwk.ManagedServices.CrossRegionS3RestoreSourcesAccess != nil {
+		elements := enabledCrossRegionRestoreElements(updatedOdbNwk.ManagedServices.CrossRegionS3RestoreSourcesAccess)
+		setVal, diagnostics := fwtypes.NewSetValueOf[types.String](ctx, elements)
+		resp.Diagnostics.Append(diagnostics...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.CrossRegionS3RestoreSourcesAccess = setVal
+	} else {
+		setVal, diagnostics := fwtypes.NewSetValueOf[types.String](ctx, nil)
+		resp.Diagnostics.Append(diagnostics...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.CrossRegionS3RestoreSourcesAccess = setVal
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -625,10 +747,10 @@ func (r *resourceNetwork) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh: statusNetwork(ctx, conn, id),
+		Refresh: statusNetwork(conn, id),
 		Timeout: timeout,
 	}
 
@@ -643,10 +765,10 @@ func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeou
 func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, conn *odb.Client, id string, timeout time.Duration, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) (*odbtypes.OdbNetwork, error) {
 	switch targetStatus {
 	case odbtypes.AccessEnabled:
-		stateConf := &sdkretry.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusEnabling),
 			Target:  enum.Slice(odbtypes.ManagedResourceStatusEnabled),
-			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
+			Refresh: statusManagedService(conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
 		outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -655,10 +777,10 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 		}
 		return nil, err
 	case odbtypes.AccessDisabled:
-		stateConf := &sdkretry.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusDisabling),
 			Target:  enum.Slice(odbtypes.ManagedResourceStatusDisabled),
-			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
+			Refresh: statusManagedService(conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
 		outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -671,15 +793,41 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 	}
 }
 
-func statusManagedService(ctx context.Context, conn *odb.Client, id string, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func waitForSingleCrossRegionRestoreSourcesStatus(ctx context.Context, conn *odb.Client, id string, crossRegionRestore string, status odbtypes.ManagedResourceStatus, timeout time.Duration) error {
+	_, err := waitForManagedService(ctx, odbtypes.Access(status), conn, id, timeout,
+		func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+			for _, src := range managedService.CrossRegionS3RestoreSourcesAccess {
+				if aws.ToString(src.Region) == crossRegionRestore {
+					return src.Status
+				}
+			}
+			return ""
+		},
+	)
+	return err
+}
+
+func waitForCrossRegionRestoreSourcesStatus(ctx context.Context, conn *odb.Client, id string, toEnable *[]string, timeout time.Duration) error {
+	if toEnable != nil {
+		for _, src := range *toEnable {
+			err := waitForSingleCrossRegionRestoreSourcesStatus(ctx, conn, id, src, odbtypes.ManagedResourceStatusEnabled, timeout)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func statusManagedService(conn *odb.Client, id string, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindOracleDBNetworkResourceByID(ctx, conn, id)
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if out.ManagedServices == nil {
+		if out == nil || out.ManagedServices == nil {
 			return nil, "", nil
 		}
 
@@ -688,10 +836,10 @@ func statusManagedService(ctx context.Context, conn *odb.Client, id string, mana
 }
 
 func waitNetworkUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh: statusNetwork(ctx, conn, id),
+		Refresh: statusNetwork(conn, id),
 		Timeout: timeout,
 	}
 
@@ -704,10 +852,10 @@ func waitNetworkUpdated(ctx context.Context, conn *odb.Client, id string, timeou
 }
 
 func waitNetworkDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
-		Refresh: statusNetwork(ctx, conn, id),
+		Refresh: statusNetwork(conn, id),
 		Timeout: timeout,
 	}
 
@@ -719,8 +867,8 @@ func waitNetworkDeleted(ctx context.Context, conn *odb.Client, id string, timeou
 	return nil, err
 }
 
-func statusNetwork(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNetwork(conn *odb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindOracleDBNetworkResourceByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -728,6 +876,10 @@ func statusNetwork(ctx context.Context, conn *odb.Client, id string) sdkretry.St
 
 		if err != nil {
 			return nil, "", err
+		}
+
+		if out == nil {
+			return nil, "", nil
 		}
 
 		return out, string(out.Status), nil
@@ -752,9 +904,8 @@ func FindOracleDBNetworkResourceByID(ctx context.Context, conn *odb.Client, id s
 	out, err := conn.GetOdbNetwork(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -768,40 +919,87 @@ func FindOracleDBNetworkResourceByID(ctx context.Context, conn *odb.Client, id s
 	return out.OdbNetwork, nil
 }
 
+func diffCrossRegionRestoreSources(ctx context.Context, plan fwtypes.SetValueOf[types.String], state fwtypes.SetValueOf[types.String]) (toEnable, toDisable []string, diags diag.Diagnostics) {
+	if plan.Equal(state) {
+		return nil, nil, nil
+	}
+
+	var planSet, stateSet []string
+	diags.Append(plan.ElementsAs(ctx, &planSet, false)...)
+	diags.Append(state.ElementsAs(ctx, &stateSet, false)...)
+	if diags.HasError() {
+		return nil, nil, diags
+	}
+
+	planMap := make(map[string]struct{}, len(planSet))
+	stateMap := make(map[string]struct{}, len(stateSet))
+
+	for _, r := range planSet {
+		planMap[r] = struct{}{}
+	}
+	for _, r := range stateSet {
+		stateMap[r] = struct{}{}
+	}
+
+	for r := range planMap {
+		if _, exists := stateMap[r]; !exists {
+			toEnable = append(toEnable, r)
+		}
+	}
+	for r := range stateMap {
+		if _, exists := planMap[r]; !exists {
+			toDisable = append(toDisable, r)
+		}
+	}
+	return toEnable, toDisable, diags
+}
+
+func enabledCrossRegionRestoreElements(sources []odbtypes.CrossRegionS3RestoreSourcesAccess) []attr.Value {
+	elements := make([]attr.Value, 0, len(sources))
+	for _, src := range sources {
+		if src.Status == odbtypes.ManagedResourceStatusEnabled && src.Region != nil {
+			elements = append(elements, types.StringValue(aws.ToString(src.Region)))
+		}
+	}
+	return elements
+}
+
 type odbNetworkResourceModel struct {
 	framework.WithRegionModel
-	DisplayName               types.String                                                               `tfsdk:"display_name"`
-	AvailabilityZone          types.String                                                               `tfsdk:"availability_zone"`
-	AvailabilityZoneId        types.String                                                               `tfsdk:"availability_zone_id"`
-	ClientSubnetCidr          types.String                                                               `tfsdk:"client_subnet_cidr"`
-	BackupSubnetCidr          types.String                                                               `tfsdk:"backup_subnet_cidr"`
-	CustomDomainName          types.String                                                               `tfsdk:"custom_domain_name"`
-	DefaultDnsPrefix          types.String                                                               `tfsdk:"default_dns_prefix"`
-	S3Access                  fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"s3_access" autoflex:",noflatten"`
-	ZeroEtlAccess             fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"zero_etl_access" autoflex:",noflatten"`
-	StsAccess                 fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"sts_access" autoflex:",noflatten"`
-	StsPolicyDocument         types.String                                                               `tfsdk:"sts_policy_document" autoflex:",noflatten"`
-	KmsAccess                 fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"kms_access" autoflex:",noflatten"`
-	KmsPolicyDocument         types.String                                                               `tfsdk:"kms_policy_document" autoflex:",noflatten"`
-	S3PolicyDocument          types.String                                                               `tfsdk:"s3_policy_document" autoflex:",noflatten"`
-	OdbNetworkId              types.String                                                               `tfsdk:"id"`
-	PeeredCidrs               fwtypes.SetValueOf[types.String]                                           `tfsdk:"peered_cidrs"`
-	OciDnsForwardingConfigs   fwtypes.ListNestedObjectValueOf[odbNwkOciDnsForwardingConfigResourceModel] `tfsdk:"oci_dns_forwarding_configs"`
-	OciNetworkAnchorId        types.String                                                               `tfsdk:"oci_network_anchor_id"`
-	OciNetworkAnchorUrl       types.String                                                               `tfsdk:"oci_network_anchor_url"`
-	OciResourceAnchorName     types.String                                                               `tfsdk:"oci_resource_anchor_name"`
-	OciVcnId                  types.String                                                               `tfsdk:"oci_vcn_id"`
-	OciVcnUrl                 types.String                                                               `tfsdk:"oci_vcn_url"`
-	OdbNetworkArn             types.String                                                               `tfsdk:"arn"`
-	PercentProgress           types.Float32                                                              `tfsdk:"percent_progress"`
-	Status                    fwtypes.StringEnum[odbtypes.ResourceStatus]                                `tfsdk:"status"`
-	StatusReason              types.String                                                               `tfsdk:"status_reason"`
-	Timeouts                  timeouts.Value                                                             `tfsdk:"timeouts"`
-	ManagedServices           fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
-	CreatedAt                 timetypes.RFC3339                                                          `tfsdk:"created_at"`
-	DeleteAssociatedResources types.Bool                                                                 `tfsdk:"delete_associated_resources"`
-	Tags                      tftags.Map                                                                 `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                                 `tfsdk:"tags_all"`
+	DisplayName                       types.String                                                               `tfsdk:"display_name"`
+	AvailabilityZone                  types.String                                                               `tfsdk:"availability_zone"`
+	AvailabilityZoneId                types.String                                                               `tfsdk:"availability_zone_id"`
+	ClientSubnetCidr                  types.String                                                               `tfsdk:"client_subnet_cidr"`
+	BackupSubnetCidr                  types.String                                                               `tfsdk:"backup_subnet_cidr"`
+	CustomDomainName                  types.String                                                               `tfsdk:"custom_domain_name"`
+	DefaultDnsPrefix                  types.String                                                               `tfsdk:"default_dns_prefix"`
+	S3Access                          fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"s3_access" autoflex:",noflatten"`
+	ZeroEtlAccess                     fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"zero_etl_access" autoflex:",noflatten"`
+	StsAccess                         fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"sts_access" autoflex:",noflatten"`
+	StsPolicyDocument                 types.String                                                               `tfsdk:"sts_policy_document" autoflex:",noflatten"`
+	KmsAccess                         fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"kms_access" autoflex:",noflatten"`
+	KmsPolicyDocument                 types.String                                                               `tfsdk:"kms_policy_document" autoflex:",noflatten"`
+	S3PolicyDocument                  types.String                                                               `tfsdk:"s3_policy_document" autoflex:",noflatten"`
+	CrossRegionS3RestoreSourcesAccess fwtypes.SetValueOf[types.String]                                           `tfsdk:"cross_region_s3_restore_sources_access" autoflex:",noexpand,noflatten"`
+	OdbNetworkId                      types.String                                                               `tfsdk:"id"`
+	PeeredCidrs                       fwtypes.SetValueOf[types.String]                                           `tfsdk:"peered_cidrs"`
+	OciDnsForwardingConfigs           fwtypes.ListNestedObjectValueOf[odbNwkOciDnsForwardingConfigResourceModel] `tfsdk:"oci_dns_forwarding_configs"`
+	OciNetworkAnchorId                types.String                                                               `tfsdk:"oci_network_anchor_id"`
+	OciNetworkAnchorUrl               types.String                                                               `tfsdk:"oci_network_anchor_url"`
+	OciResourceAnchorName             types.String                                                               `tfsdk:"oci_resource_anchor_name"`
+	OciVcnId                          types.String                                                               `tfsdk:"oci_vcn_id"`
+	OciVcnUrl                         types.String                                                               `tfsdk:"oci_vcn_url"`
+	OdbNetworkArn                     types.String                                                               `tfsdk:"arn"`
+	PercentProgress                   types.Float32                                                              `tfsdk:"percent_progress"`
+	Status                            fwtypes.StringEnum[odbtypes.ResourceStatus]                                `tfsdk:"status"`
+	StatusReason                      types.String                                                               `tfsdk:"status_reason"`
+	Timeouts                          timeouts.Value                                                             `tfsdk:"timeouts"`
+	ManagedServices                   fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
+	CreatedAt                         timetypes.RFC3339                                                          `tfsdk:"created_at"`
+	DeleteAssociatedResources         types.Bool                                                                 `tfsdk:"delete_associated_resources"`
+	Ec2PlacementGroupIds              fwtypes.ListOfString                                                       `tfsdk:"ec2_placement_group_ids"`
+	Tags                              tftags.Map                                                                 `tfsdk:"tags"`
+	TagsAll                           tftags.Map                                                                 `tfsdk:"tags_all"`
 }
 
 type odbNwkOciDnsForwardingConfigResourceModel struct {
@@ -809,15 +1007,16 @@ type odbNwkOciDnsForwardingConfigResourceModel struct {
 	OciDnsListenerIp types.String `tfsdk:"oci_dns_listener_ip"`
 }
 type odbNetworkManagedServicesResourceModel struct {
-	ServiceNetworkArn        types.String                                                                   `tfsdk:"service_network_arn"`
-	ResourceGatewayArn       types.String                                                                   `tfsdk:"resource_gateway_arn"`
-	ManagedServicesIpv4Cidrs fwtypes.SetOfString                                                            `tfsdk:"managed_service_ipv4_cidrs"`
-	ServiceNetworkEndpoint   fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkResourceModel] `tfsdk:"service_network_endpoint"`
-	ManagedS3BackupAccess    fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkResourceModel]  `tfsdk:"managed_s3_backup_access"`
-	ZeroEtlAccess            fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkResourceModel]          `tfsdk:"zero_etl_access"`
-	S3Access                 fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkResourceModel]               `tfsdk:"s3_access"`
-	StsAccess                fwtypes.ListNestedObjectValueOf[StsAccessOdbNetworkResourceModel]              `tfsdk:"sts_access"`
-	KmsAccess                fwtypes.ListNestedObjectValueOf[KmsAccessOdbNetworkResourceModel]              `tfsdk:"kms_access"`
+	ServiceNetworkArn                 types.String                                                                              `tfsdk:"service_network_arn"`
+	ResourceGatewayArn                types.String                                                                              `tfsdk:"resource_gateway_arn"`
+	ManagedServicesIpv4Cidrs          fwtypes.SetOfString                                                                       `tfsdk:"managed_service_ipv4_cidrs"`
+	ServiceNetworkEndpoint            fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkResourceModel]            `tfsdk:"service_network_endpoint"`
+	ManagedS3BackupAccess             fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkResourceModel]             `tfsdk:"managed_s3_backup_access"`
+	ZeroEtlAccess                     fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkResourceModel]                     `tfsdk:"zero_etl_access"`
+	S3Access                          fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkResourceModel]                          `tfsdk:"s3_access"`
+	StsAccess                         fwtypes.ListNestedObjectValueOf[StsAccessOdbNetworkResourceModel]                         `tfsdk:"sts_access"`
+	KmsAccess                         fwtypes.ListNestedObjectValueOf[KmsAccessOdbNetworkResourceModel]                         `tfsdk:"kms_access"`
+	CrossRegionS3RestoreSourcesAccess fwtypes.ListNestedObjectValueOf[crossRegionS3RestoreSourcesAccessOdbNetworkResourceModel] `tfsdk:"cross_region_s3_restore_sources_access"`
 }
 
 type serviceNetworkEndpointOdbNetworkResourceModel struct {
@@ -854,4 +1053,10 @@ type StsAccessOdbNetworkResourceModel struct {
 	Ipv4Addresses     fwtypes.SetOfString                                `tfsdk:"ipv4_addresses"`
 	DomainName        types.String                                       `tfsdk:"domain_name"`
 	StsPolicyDocument types.String                                       `tfsdk:"sts_policy_document"`
+}
+
+type crossRegionS3RestoreSourcesAccessOdbNetworkResourceModel struct {
+	Ipv4Addresses fwtypes.SetOfString                                `tfsdk:"ipv4_addresses"`
+	Region        types.String                                       `tfsdk:"region"`
+	Status        fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
 }

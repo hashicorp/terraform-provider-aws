@@ -26,7 +26,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAuthorizationTokenEphemeralResource,
 			TypeName: "aws_ecrpublic_authorization_token",
 			Name:     "AuthorizationToken",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -37,7 +37,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceImages,
 			TypeName: "aws_ecrpublic_images",
 			Name:     "Images",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -52,7 +52,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  DataSourceAuthorizationToken,
 			TypeName: "aws_ecrpublic_authorization_token",
 			Name:     "Authorization Token",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -66,13 +66,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourceRepositoryPolicy,
 			TypeName: "aws_ecrpublic_repository_policy",
 			Name:     "Repository Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `nested_virtualization` attribute to `cpu_options` configuration block
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `nested_virtualization` attribute to `cpu_options` configuration block
+```

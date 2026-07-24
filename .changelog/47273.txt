@@ -1,0 +1,9 @@
+```release-note:breaking-change
+resource/aws_mq_configuration: Destruction of this resource will now delete the configuration. Previously delete was a no-op due to missing API operations, leaving resources in an unmanaged state. For this reason a breaking change was deemed acceptable in a minor version. This functionality requires the `mq:DeleteConfiguration` IAM permission. To restore the previous no-op behavior, set `skip_destroy` to `true`.
+```
+```release-note:enhancement
+resource/aws_mq_configuration: Implement resource deletion
+```
+```release-note:enhancement
+resource/aws_mq_configuration: Add `skip_destroy` argument
+```

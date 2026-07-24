@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_agent: Increase maximum value of `idle_session_ttl_in_seconds` from `3600` to `5400` to match the AWS API limit
+```

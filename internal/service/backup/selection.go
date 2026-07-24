@@ -40,151 +40,153 @@ func resourceSelection() *schema.Resource {
 			StateContext: resourceSelectionImportState,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, hyphen, underscore, and period characters"),
-				),
-			},
-			names.AttrCondition: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"string_equals": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"string_like": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 50),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, hyphen, underscore, and period characters"),
+					),
+				},
+				names.AttrCondition: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"string_equals": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"string_not_equals": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+							"string_like": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"string_not_like": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+							"string_not_equals": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+								},
+							},
+							"string_not_like": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrIAMRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"not_resources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"plan_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"selection_tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConditionType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+				names.AttrIAMRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"not_resources": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"plan_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"selection_tag": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConditionType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrResources: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrResources: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -54,20 +55,25 @@ func (d *standardsControlAssociationsDataSource) Read(ctx context.Context, reque
 
 	conn := d.Meta().SecurityHubClient(ctx)
 
-	input := &securityhub.ListStandardsControlAssociationsInput{
-		SecurityControlId: data.SecurityControlID.ValueStringPointer(),
+	securityControlID := fwflex.StringValueFromFramework(ctx, data.SecurityControlID)
+	input := securityhub.ListStandardsControlAssociationsInput{
+		SecurityControlId: aws.String(securityControlID),
 	}
 
-	out, err := findStandardsControlAssociations(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StandardsControlAssociationSummary]())
+	out, err := findStandardsControlAssociations(ctx, conn, &input, tfslices.PredicateTrue[awstypes.StandardsControlAssociationSummary]())
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Associations (%s)", data.SecurityControlID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SecurityHub Standards Control Associations (%s)", securityControlID), err.Error())
 
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region(ctx))
+	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data.StandardsControlAssociations)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 

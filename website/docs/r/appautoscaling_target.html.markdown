@@ -113,6 +113,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_appautoscaling_target.example
+  identity = {
+    service_namespace  = "ecs"
+    resource_id        = "service/cluster-name/service-name"
+    scalable_dimension = "ecs:service:DesiredCount"
+  }
+}
+
+resource "aws_appautoscaling_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `resource_id` - (String) Resource type and unique identifier string for the resource associated with the scalable target.
+* `scalable_dimension` - (String) Scalable dimension of the scalable target.
+* `service_namespace` - (String) AWS service namespace of the scalable target.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
 
 ```terraform

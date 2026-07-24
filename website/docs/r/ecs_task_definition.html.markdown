@@ -255,6 +255,7 @@ The following arguments are optional:
 * `configure_at_launch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
+* `s3files_volume_configuration` - (Optional) Configuration block for an [S3 Files volume](#s3files_volume_configuration). Detailed below.
 
 ### docker_volume_configuration
 
@@ -299,6 +300,15 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 * `credentials_parameter` - (Required) The authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
 * `domain` - (Required) A fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
 
+### s3files_volume_configuration
+
+For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-files-mounting-ecs.html).
+
+* `access_point_arn` - (Required) Full ARN of the S3 Files access point to use. If configured, `root_directory` must either be omitted or set to `"/"`.
+* `file_system_arn` - (Required) Full ARN of the S3 Files file system to mount.
+* `root_directory` - (Optional) Directory within the Amazon S3 Files file system to mount as the root directory.
+* `transit_encryption_port` - (Optional) Port to use for sending encrypted data between the ECS host and the S3 Files file system.
+
 ### placement_constraints
 
 * `expression` -  (Optional) Cluster Query Language expression to apply to the constraint. For more information, see [Cluster Query Language in the Amazon EC2 Container Service Developer Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
@@ -324,6 +334,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecs_task_definition.example
+  identity = {
+    family   = "mytaskfamily"
+    revision = 123
+  }
+}
+
+resource "aws_ecs_task_definition" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `family` (String) The unique name for your task definition.
+* `revision` (Integer) The revision of the task in a particular family.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Task Definitions using their ARNs. For example:
 

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_express_gateway_service: Prevents errors when value of `current_deployment` changes.
+```
+
+```release-note:enhancement
+resource/aws_ecs_express_gateway_service: Deprecates `current_deployment`.
+```

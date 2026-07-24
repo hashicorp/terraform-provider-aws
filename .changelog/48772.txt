@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_bedrock_guardrail: Prevents "inconsistent result" error when adding `content_policy_config` block.
+```
+
+```release-note:bug
+resource/aws_bedrock_guardrail: Prevents "inconsistent result" error when adding `topic_policy_config` block.
+```
+
+```release-note:bug
+resource/aws_bedrock_guardrail: Prevents "inconsistent result" error with multiple `content_policy_config.filters_config.input_modalities` values.
+```
+
+```release-note:bug
+resource/aws_bedrock_guardrail: Prevents "inconsistent result" error with multiple `content_policy_config.filters_config.output_modalities` values.
+```

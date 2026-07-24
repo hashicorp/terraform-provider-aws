@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3files_synchronization_configuration: Fix `Delete` to use the file system prefix when resetting the synchronization configuration
+```

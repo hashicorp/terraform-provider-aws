@@ -40,107 +40,109 @@ func resourceUsagePlan() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_stages": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"api_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStage: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"throttle": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"burst_limit": {
-										Type:     schema.TypeInt,
-										Default:  0,
-										Optional: true,
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"rate_limit": {
-										Type:     schema.TypeFloat,
-										Default:  0,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_stages": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"api_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStage: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"throttle": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"burst_limit": {
+											Type:     schema.TypeInt,
+											Default:  0,
+											Optional: true,
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"rate_limit": {
+											Type:     schema.TypeFloat,
+											Default:  0,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true, // Required since not addable nor removable afterwards
-			},
-			"product_code": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"quota_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"limit": {
-							Type:     schema.TypeInt,
-							Required: true, // Required as not removable singularly
-						},
-						"offset": {
-							Type:     schema.TypeInt,
-							Default:  0,
-							Optional: true,
-						},
-						"period": {
-							Type:             schema.TypeString,
-							Required:         true, // Required as not removable
-							ValidateDiagFunc: enum.Validate[types.QuotaPeriodType](),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true, // Required since not addable nor removable afterwards
+				},
+				"product_code": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"quota_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"limit": {
+								Type:     schema.TypeInt,
+								Required: true, // Required as not removable singularly
+							},
+							"offset": {
+								Type:     schema.TypeInt,
+								Default:  0,
+								Optional: true,
+							},
+							"period": {
+								Type:             schema.TypeString,
+								Required:         true, // Required as not removable
+								ValidateDiagFunc: enum.Validate[types.QuotaPeriodType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throttle_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"burst_limit": {
-							Type:         schema.TypeInt,
-							Default:      0,
-							Optional:     true,
-							AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
-						},
-						"rate_limit": {
-							Type:         schema.TypeFloat,
-							Default:      0,
-							Optional:     true,
-							AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"throttle_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"burst_limit": {
+								Type:         schema.TypeInt,
+								Default:      0,
+								Optional:     true,
+								AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+							},
+							"rate_limit": {
+								Type:         schema.TypeFloat,
+								Default:      0,
+								Optional:     true,
+								AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

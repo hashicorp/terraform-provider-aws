@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,43 +46,45 @@ func ResourceVocabulary() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"download_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLanguageCode: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
-			},
-			"phrases": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     256,
-				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vocabulary_file_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-			},
-			"vocabulary_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLanguageCode: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
+				},
+				"phrases": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     256,
+					ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
+					Elem:         &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vocabulary_file_uri": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
+				"vocabulary_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+			}
 		},
 	}
 }
@@ -220,10 +221,10 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
-		Refresh:                   statusVocabulary(ctx, conn, id),
+		Refresh:                   statusVocabulary(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -242,10 +243,10 @@ func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
-		Refresh:                   statusVocabulary(ctx, conn, id),
+		Refresh:                   statusVocabulary(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -264,10 +265,10 @@ func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: vocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
-		Refresh: statusVocabulary(ctx, conn, id),
+		Refresh: statusVocabulary(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -283,8 +284,8 @@ func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id stri
 	return nil, err
 }
 
-func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVocabulary(conn *transcribe.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindVocabularyByName(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -307,9 +308,8 @@ func FindVocabularyByName(ctx context.Context, conn *transcribe.Client, id strin
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

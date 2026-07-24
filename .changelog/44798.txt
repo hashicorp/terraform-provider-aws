@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_default_network_acl: Prevents error on creation when tag-based authorization in use.
+```

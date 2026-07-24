@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3files_file_system_policy
+```
+
+```release-note:new-list-resource
+aws_s3files_file_system_policy
+```

@@ -14,6 +14,8 @@ Provides an ECS cluster capacity provider. More information can be found on the 
 
 ~> **NOTE:** You must specify exactly one of `auto_scaling_group_provider` or `managed_instances_provider`. When using `managed_instances_provider`, the `cluster` parameter is required. When using `auto_scaling_group_provider`, the `cluster` parameter must not be set.
 
+~> **NOTE:** AWS cannot delete a capacity provider that is still associated with a cluster through [`aws_ecs_cluster_capacity_providers`](ecs_cluster_capacity_providers.html). When a change forces replacement, add a [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) lifecycle rule to the `aws_ecs_cluster_capacity_providers` resource so the association is recreated before the old capacity provider is deleted.
+
 ## Example Usage
 
 ### Auto Scaling Group Provider
@@ -59,7 +61,7 @@ resource "aws_ecs_capacity_provider" "example" {
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.ecs_instance.arn
-      monitoring               = "ENABLED"
+      monitoring               = "DETAILED"
 
       network_configuration {
         subnets         = [aws_subnet.example.id]

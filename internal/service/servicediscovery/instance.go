@@ -16,11 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -41,33 +40,35 @@ func resourceInstance() *schema.Resource {
 			StateContext: resourceInstanceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAttributes: {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 255),
-					validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z!-~]+$`), ""),
-					validation.MapValueLenBetween(0, 1024),
-					validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!-~][0-9A-Za-z \t!-~]*){0,1}[0-9A-Za-z!-~]{0,1}$`), ""),
-				),
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
-				),
-			},
-			"service_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAttributes: {
+					Type:     schema.TypeMap,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ValidateDiagFunc: validation.AllDiag(
+						validation.MapKeyLenBetween(1, 255),
+						validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z!-~]+$`), ""),
+						validation.MapValueLenBetween(0, 1024),
+						validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!-~][0-9A-Za-z \t!-~]*){0,1}[0-9A-Za-z!-~]{0,1}$`), ""),
+					),
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
+					),
+				},
+				"service_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
@@ -79,7 +80,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta any) 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &servicediscovery.RegisterInstanceInput{
 		Attributes:       flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]any)),
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
 	}
@@ -189,9 +190,8 @@ func findInstanceByTwoPartKey(ctx context.Context, conn *servicediscovery.Client
 	output, err := conn.GetInstance(ctx, input)
 
 	if errs.IsA[*awstypes.InstanceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

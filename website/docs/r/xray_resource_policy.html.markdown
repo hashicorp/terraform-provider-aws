@@ -26,7 +26,7 @@ resource "aws_xray_resource_policy" "test" {
 
 The following arguments are required:
 
-* `policy_name` - (Required) name of the resource policy. Must be unique within a specific Amazon Web Services account.
+* `policy_name` - (Required) Name of the resource policy. Must be unique within a specific Amazon Web Services account.
 * `policy_document` - (Required) JSON string of the resource policy or resource policy document, which can be up to 5kb in size.
 
 The following arguments are optional:
@@ -44,17 +44,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import X-Ray Resource Policy using the `policy_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_xray_resource_policy.example
-  id = "resource_policy-name"
+  identity = {
+    policy_name = "example-policy"
+  }
+}
+
+resource "aws_xray_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import X-Ray Resource Policy using the `policy_name`. For example:
+### Identity Schema
+
+#### Required
+
+* `policy_name` (String) Resource policy name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import X-Ray Resource Policies using `policy_name`. For example:
+
+```terraform
+import {
+  to = aws_xray_resource_policy.example
+  id = "example-policy"
+}
+```
+
+Using `terraform import`, import X-Ray Resource Policies using `policy_name`. For example:
 
 ```console
-% terraform import aws_xray_resource_policy.example resource_policy-name
+% terraform import aws_xray_resource_policy.example example-policy
 ```

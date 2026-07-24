@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_directory_service_directory: Fix `UnsupportedOperationException` error when reading `enable_directory_data_access` in regions where Directory Service Data is not available (e.g. GovCloud)
+```

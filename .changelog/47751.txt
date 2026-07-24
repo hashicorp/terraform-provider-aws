@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_vpc_endpoint_route_table_association
+```
+```release-note:enhancement
+resource/aws_vpc_endpoint_route_table_association: Add resource identity support
+```

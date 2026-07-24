@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_odb_cloud_vm_cluster: Attempt to read GI Version from resource tags to avoid failures due to new API response values
+```

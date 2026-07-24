@@ -13,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,29 +26,31 @@ func dataSourceActivity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceActivityRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrARN,
-					names.AttrName,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrARN,
+						names.AttrName,
+					},
 				},
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrARN,
-					names.AttrName,
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrARN,
+						names.AttrName,
+					},
+				},
+			}
 		},
 	}
 }
@@ -104,9 +106,8 @@ func findActivityByName(ctx context.Context, conn *sfn.Client, name string) ([]a
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ActivityDoesNotExist](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: name,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

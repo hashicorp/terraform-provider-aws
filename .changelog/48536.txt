@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Add `customer_action_status` attribute
+```
+
+```release-note:enhancement
+data-source/aws_msk_cluster: Add `customer_action_status` attribute
+```

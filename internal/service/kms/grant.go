@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,90 +57,92 @@ func resourceGrant() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"constraints": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_context_equals": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							// ConflictsWith encryption_context_subset handled in Create, see grantConstraintsIsValid
-						},
-						"encryption_context_subset": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							// ConflictsWith encryption_context_equals handled in Create, see grantConstraintsIsValid
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"constraints": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_context_equals": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// ConflictsWith encryption_context_subset handled in Create, see grantConstraintsIsValid
+							},
+							"encryption_context_subset": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// ConflictsWith encryption_context_equals handled in Create, see grantConstraintsIsValid
+							},
 						},
 					},
+					Set: resourceGrantConstraintsHash,
 				},
-				Set: resourceGrantConstraintsHash,
-			},
-			"grant_creation_tokens": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"grant_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grant_token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"grantee_principal": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					verify.ValidServicePrincipal,
-				),
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validGrantName,
-			},
-			"operations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.GrantOperation](),
+				"grant_creation_tokens": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"retire_on_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"retiring_principal": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					verify.ValidServicePrincipal,
-				),
-			},
+				"grant_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"grant_token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"grantee_principal": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						verify.ValidServicePrincipal,
+					),
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validGrantName,
+				},
+				"operations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.GrantOperation](),
+					},
+				},
+				"retire_on_delete": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"retiring_principal": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						verify.ValidServicePrincipal,
+					),
+				},
+			}
 		},
 	}
 }
@@ -297,9 +298,8 @@ func findGrants(ctx context.Context, conn *kms.Client, input *kms.ListGrantsInpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

@@ -69,6 +69,10 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
 				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,

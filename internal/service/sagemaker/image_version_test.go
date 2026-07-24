@@ -6,47 +6,100 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// imageVersionBaseImageEnvVar is the environment variable which must be
-// set to an ECR image URI for certain acceptance tests to run
-//
-// Follow this guide to set up a private ECR repository and push a simple
-// "hello world" image to it:
-// https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
-const imageVersionBaseImageEnvVar = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+func TestImageVersionFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want int32
+	}{
+		{
+			name: "valid ARN with version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/42", //lintignore:AWSAT003,AWSAT005
+			want: 42,
+		},
+		{
+			name: "valid ARN with large version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/999999", //lintignore:AWSAT003,AWSAT005
+			want: 999999,
+		},
+		{
+			name: "invalid ARN - too few parts",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012", //lintignore:AWSAT003,AWSAT005
+			want: 0,
+		},
+		{
+			name: "invalid ARN - non-numeric version",
+			arn:  "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/latest", //lintignore:AWSAT003,AWSAT005
+			want: 0,
+		},
+		{
+			name: "empty ARN",
+			arn:  "",
+			want: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfsagemaker.ImageVersionFromARN(tt.arn); got != tt.want {
+				t.Errorf("ImageVersionFromARN(%q) = %d, want %d", tt.arn, got, tt.want)
+			}
+		})
+	}
+}
+
+const (
+	// imageVersionBaseImageEnvVar is the environment variable which must be
+	// set to an ECR image URI for certain acceptance tests to run
+	//
+	// Follow this guide to set up a private ECR repository and push a simple
+	// "hello world" image to it:
+	// https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
+	imageVersionBaseImageEnvVar = "SAGEMAKER_IMAGE_VERSION_BASE_IMAGE"
+
+	// imageVersionConcurrentCountEnvVar is the environment variable which can be
+	// set to control the number of concurrent image versions created in the test.
+	//
+	// Defaults to 10 if not set.
+	imageVersionConcurrentCountEnvVar = "SAGEMAKER_IMAGE_VERSION_CONCURRENT_COUNT"
+)
 
 func TestAccSageMakerImageVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
@@ -69,21 +122,21 @@ func TestAccSageMakerImageVersion_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdate := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionConfig_full(rName, baseImage, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
@@ -107,7 +160,7 @@ func TestAccSageMakerImageVersion_update(t *testing.T) {
 			{
 				Config: testAccImageVersionConfig_full(rName, baseImage, rNameUpdate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
@@ -136,20 +189,20 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -167,21 +220,21 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	imageResourceName := "aws_sagemaker_image.test"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImage(), imageResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -204,25 +257,25 @@ func TestAccSageMakerImageVersion_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image, imageV2 sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	resourceNameV2 := "aws_sagemaker_image_version.test_v2"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionConfig_multiple(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					testAccCheckImageVersionExists(ctx, resourceNameV2, &imageV2),
+					testAccCheckImageVersionExists(ctx, t, resourceNameV2, &imageV2),
 					resource.TestCheckResourceAttr(resourceNameV2, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceNameV2, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceNameV2, names.AttrVersion, "2"),
@@ -241,20 +294,20 @@ func TestAccSageMakerImageVersion_aliases(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageVersionConfig_aliases(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
@@ -270,7 +323,7 @@ func TestAccSageMakerImageVersion_aliases(t *testing.T) {
 			{
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
@@ -279,7 +332,7 @@ func TestAccSageMakerImageVersion_aliases(t *testing.T) {
 			{
 				Config: testAccImageVersionConfig_aliases(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
@@ -295,14 +348,14 @@ func TestAccSageMakerImageVersion_upgrade_V5_98_0(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var image sagemaker.DescribeImageVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_image_version.test"
 	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy: testAccCheckImageVersionDestroy(ctx),
+		CheckDestroy: testAccCheckImageVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// After v5.97.0, id was change to a multi-part key
@@ -314,7 +367,7 @@ func TestAccSageMakerImageVersion_upgrade_V5_98_0(t *testing.T) {
 				},
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
@@ -324,7 +377,7 @@ func TestAccSageMakerImageVersion_upgrade_V5_98_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageVersionExists(ctx, resourceName, &image),
+					testAccCheckImageVersionExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
@@ -339,9 +392,41 @@ func TestAccSageMakerImageVersion_upgrade_V5_98_0(t *testing.T) {
 	})
 }
 
-func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+// Testing behavior during highly concurrent image version creation operations
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/44693
+func TestAccSageMakerImageVersion_concurrentCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
+
+	count := 10
+	if v := os.Getenv(imageVersionConcurrentCountEnvVar); v != "" {
+		if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {
+			count = parsed
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageVersionConfig_concurrent(rName, baseImage, count),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test.0", "image_name", rName),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckImageVersionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_image_version" {
@@ -367,14 +452,14 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckImageVersionExists(ctx context.Context, n string, v *sagemaker.DescribeImageVersionOutput) resource.TestCheckFunc {
+func testAccCheckImageVersionExists(ctx context.Context, t *testing.T, n string, v *sagemaker.DescribeImageVersionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		name := rs.Primary.Attributes["image_name"]
 		version := flex.StringValueToInt32Value(rs.Primary.Attributes[names.AttrVersion])
@@ -478,4 +563,16 @@ resource "aws_sagemaker_image_version" "test" {
   aliases    = ["latest", "stable"]
 }
 `, baseImage))
+}
+
+func testAccImageVersionConfig_concurrent(rName, baseImage string, count int) string {
+	return acctest.ConfigCompose(
+		testAccImageVersionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_image_version" "test" {
+  count      = %[3]d
+  image_name = aws_sagemaker_image.test.image_name
+  base_image = %[2]q
+}
+`, rName, baseImage, count))
 }

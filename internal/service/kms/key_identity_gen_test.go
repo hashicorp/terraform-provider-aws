@@ -35,7 +35,7 @@ func TestAccKMSKey_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccKMSKey_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -222,7 +222,7 @@ func TestAccKMSKey_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -231,7 +231,7 @@ func TestAccKMSKey_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -280,7 +280,7 @@ func TestAccKMSKey_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -294,7 +294,7 @@ func TestAccKMSKey_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

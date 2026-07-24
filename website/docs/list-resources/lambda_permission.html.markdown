@@ -14,8 +14,10 @@ Lists Lambda permissions for a function.
 
 ```terraform
 list "aws_lambda_permission" "example" {
-  provider      = aws
-  function_name = aws_lambda_function.example.function_name
+  provider = aws
+  config {
+    function_name = aws_lambda_function.example.function_name
+  }
 }
 ```
 

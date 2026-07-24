@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -185,7 +185,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -227,6 +227,14 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1586,7 +1594,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -3066,7 +3074,7 @@ func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -3323,7 +3331,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -4685,9 +4693,9 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	domain := acctest.RandomDomain()
-	domain1 := domain.RandomSubdomain().String()
-	domain2 := domain.RandomSubdomain().String()
+	domain := acctest.RandomDomain(t)
+	domain1 := domain.RandomSubdomain(t).String()
+	domain2 := domain.RandomSubdomain(t).String()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4732,7 +4740,7 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4768,9 +4776,9 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 	var vBefore, vAfter types.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
-	domain1 := acctest.RandomDomain().String()
+	domain1 := acctest.RandomDomain(t).String()
 	domain1Ou := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain1, ".")[0], strings.Split(domain1, ".")[1])
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -4817,7 +4825,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomain().String()
+	domain := acctest.RandomDomain(t).String()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -4857,7 +4865,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -10,17 +10,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func retryCreateCanary(ctx context.Context, conn *synthetics.Client, d *schema.ResourceData, input *synthetics.CreateCanaryInput) (*awstypes.Canary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CanaryStateCreating, awstypes.CanaryStateUpdating),
 		Target:  enum.Slice(awstypes.CanaryStateReady),
-		Refresh: statusCanaryState(ctx, conn, d.Id()),
+		Refresh: statusCanaryState(conn, d.Id()),
 		Timeout: canaryCreatedTimeout,
 	}
 

@@ -16,6 +16,7 @@ resource "aws_config_config_rule" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_config_configuration_recorder" "test" {
+{{- template "region" }}
   name     = var.rName
   role_arn = aws_iam_role.test.arn
 }

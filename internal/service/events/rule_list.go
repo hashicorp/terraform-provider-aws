@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -65,22 +64,24 @@ func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, s
 			rd.SetId(id)
 
 			tflog.Info(ctx, "Reading EventBridge Rule")
-			diags := resourceRuleRead(ctx, rd, l.Meta())
-			if diags.HasError() {
+			output, err := findRuleByTwoPartKey(ctx, conn, eventBusName, name)
+			if err != nil {
 				tflog.Error(ctx, "Reading EventBridge Rule", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+					"error": err.Error(),
 				})
 				continue
 			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+
+			diags := resourceRuleFlatten(ctx, eventBusName, rd, output)
+			if diags.HasError() {
+				result = fwdiag.NewListResultSDKDiagnostics(diags)
+				yield(result)
+				return
 			}
 
 			result.DisplayName = name
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -99,16 +100,21 @@ type listRuleModel struct {
 
 func listRules(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListRulesInput) iter.Seq2[awstypes.Rule, error] {
 	return func(yield func(awstypes.Rule, error) bool) {
+		var stopped bool
 		err := listRulesPages(ctx, conn, input, func(page *eventbridge.ListRulesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 			for _, item := range page.Rules {
 				if !yield(item, nil) {
-					return !lastPage
+					stopped = true
+					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			yield(awstypes.Rule{}, fmt.Errorf("listing EventBridge Rule resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Rule](), fmt.Errorf("listing EventBridge Rules: %w", err))
 			return
 		}
 	}

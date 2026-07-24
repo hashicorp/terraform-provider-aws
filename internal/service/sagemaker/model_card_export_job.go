@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -201,9 +200,8 @@ func findModelCardExportJob(ctx context.Context, conn *sagemaker.Client, input *
 	output, err := conn.DescribeModelCardExportJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -218,8 +216,8 @@ func findModelCardExportJob(ctx context.Context, conn *sagemaker.Client, input *
 	return output, nil
 }
 
-func statusModelCardExportJob(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusModelCardExportJob(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findModelCardExportJobByARN(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -235,10 +233,10 @@ func statusModelCardExportJob(ctx context.Context, conn *sagemaker.Client, name 
 }
 
 func waitModelCardExportJobCompleted(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeModelCardExportJobOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCardExportJobStatusInProgress),
 		Target:  enum.Slice(awstypes.ModelCardExportJobStatusCompleted),
-		Refresh: statusModelCardExportJob(ctx, conn, arn),
+		Refresh: statusModelCardExportJob(conn, arn),
 		Timeout: timeout,
 	}
 

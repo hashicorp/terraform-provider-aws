@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -36,57 +35,59 @@ func resourceGrantAccepter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_operations": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_operations": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "Allowed operations for the grant.",
 				},
-				Description: "Allowed operations for the grant.",
-			},
-			"grant_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "Amazon Resource Name (ARN) of the grant.",
-			},
-			"home_region": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Home Region of the grant.",
-			},
-			"license_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "License ARN.",
-			},
-			names.AttrName: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Name of the grant.",
-			},
-			"parent_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Parent ARN.",
-			},
-			names.AttrPrincipal: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The grantee principal ARN.",
-			},
-			names.AttrStatus: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "GrantAccepter status.",
-			},
-			names.AttrVersion: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "GrantAccepter version.",
-			},
+				"grant_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "Amazon Resource Name (ARN) of the grant.",
+				},
+				"home_region": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Home Region of the grant.",
+				},
+				"license_arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "License ARN.",
+				},
+				names.AttrName: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Name of the grant.",
+				},
+				"parent_arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Parent ARN.",
+				},
+				names.AttrPrincipal: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The grantee principal ARN.",
+				},
+				names.AttrStatus: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "GrantAccepter status.",
+				},
+				names.AttrVersion: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "GrantAccepter version.",
+				},
+			}
 		},
 	}
 }
@@ -199,9 +200,8 @@ func findReceivedGrants(ctx context.Context, conn *licensemanager.Client, input 
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

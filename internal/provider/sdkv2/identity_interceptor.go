@@ -122,14 +122,18 @@ func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) 
 	return true
 }
 
-func getAttributeOk(d schemaResourceData, name string) (string, bool) {
+func getAttributeOk(d schemaResourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
+		// check for zero value bool (false), which is a valid value
+		if _, okBool := v.(bool); okBool {
+			return v, true
+		}
 		return "", false
 	} else {
-		return v.(string), true
+		return v, true
 	}
 }
 

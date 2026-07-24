@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,9 +31,9 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrTitle:           sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 							"display_options":   dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
-							names.AttrType:      stringEnumSchema[awstypes.SheetControlDateTimePickerType](attrOptional),
+							names.AttrType:      sdkschema.StringEnumSchema[awstypes.SheetControlDateTimePickerType](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -45,11 +46,11 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id":               idSchema(),
 							"source_filter_id":                idSchema(),
-							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrTitle:                         sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
+							names.AttrType:                    sdkschema.StringEnumSchema[awstypes.SheetControlListType](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -62,11 +63,11 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id":               idSchema(),
 							"source_filter_id":                idSchema(),
-							"title":                           stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrTitle:                         sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							names.AttrType:                    stringEnumSchema[awstypes.SheetControlListType](attrOptional),
+							names.AttrType:                    sdkschema.StringEnumSchema[awstypes.SheetControlListType](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -79,7 +80,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrTitle:           sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 							"display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -87,7 +88,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"date_time_format": stringLenBetweenSchema(attrOptional, 1, 128),
+										"date_time_format": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 										"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 									},
 								},
@@ -104,7 +105,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrTitle:           sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 							"maximum_value": {
 								Type:     schema.TypeFloat,
 								Required: true,
@@ -118,7 +119,7 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 								Required: true,
 							},
 							"display_options": sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							names.AttrType:    stringEnumSchema[awstypes.SheetControlSliderType](attrOptional),
+							names.AttrType:    sdkschema.StringEnumSchema[awstypes.SheetControlSliderType](sdkschema.AttrOptional),
 						},
 					},
 				},
@@ -131,8 +132,8 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringLenBetweenSchema(attrRequired, 1, 2048),
-							"delimiter":         stringLenBetweenSchema(attrOptional, 1, 2048),
+							attrTitle:           sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
+							"delimiter":         sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 							"display_options":   textAreaControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 						},
 					},
@@ -146,8 +147,124 @@ var filterControlsSchema = sync.OnceValue(func() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"filter_control_id": idSchema(),
 							"source_filter_id":  idSchema(),
-							"title":             stringLenBetweenSchema(attrRequired, 1, 2048),
+							attrTitle:           sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 							"display_options":   textFieldControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var filterControlsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_picker": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterDateTimePickerControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							attrTitle:           stringComputedOnly(),
+							"display_options":   dateTimePickerControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
+							names.AttrType:      sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlDateTimePickerType](),
+						},
+					},
+				},
+				"dropdown": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterDropDownControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id":               idDataSourceSchema(),
+							"source_filter_id":                idDataSourceSchema(),
+							attrTitle:                         stringComputedOnly(),
+							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+							"display_options":                 dropDownControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
+							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
+							names.AttrType:                    sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlListType](),
+						},
+					},
+				},
+				"list": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterListControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id":               idDataSourceSchema(),
+							"source_filter_id":                idDataSourceSchema(),
+							attrTitle:                         stringComputedOnly(),
+							"cascading_control_configuration": cascadingControlConfigurationDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+							"display_options":                 listControlDisplayOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
+							"selectable_values":               filterSelectableValuesDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
+							names.AttrType:                    sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlListType](),
+						},
+					},
+				},
+				"relative_date_time": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterRelativeDateTimeControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							attrTitle:           stringComputedOnly(),
+							"display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RelativeDateTimeControlDisplayOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date_time_format": stringComputedOnly(),
+										"title_options":    labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+									},
+								},
+							},
+						},
+					},
+				},
+				"slider": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSliderControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							attrTitle:           stringComputedOnly(),
+							"maximum_value":     floatComputedOnly(),
+							"minimum_value":     floatComputedOnly(),
+							"step_size":         floatComputedOnly(),
+							"display_options":   sliderControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+							names.AttrType:      sdkschema.StringEnumDataSourceSchema[awstypes.SheetControlSliderType](),
+						},
+					},
+				},
+				"text_area": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterTextAreaControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							attrTitle:           stringComputedOnly(),
+							"delimiter":         stringComputedOnly(),
+							"display_options":   textAreaControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
+						},
+					},
+				},
+				"text_field": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterTextFieldControl.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_control_id": idDataSourceSchema(),
+							"source_filter_id":  idDataSourceSchema(),
+							attrTitle:           stringComputedOnly(),
+							"display_options":   textFieldControlDisplayOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
 						},
 					},
 				},
@@ -171,6 +288,19 @@ var textFieldControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema 
 	}
 })
 
+var textFieldControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextFieldControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"placeholder_options": placeholderOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
+				"title_options":       labelOptionsDataSourceSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
 var textAreaControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
 		Type:     schema.TypeList,
@@ -181,6 +311,19 @@ var textAreaControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"placeholder_options": placeholderOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
 				"title_options":       labelOptionsSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var textAreaControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextAreaControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"placeholder_options": placeholderOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
+				"title_options":       labelOptionsDataSourceSchema(),       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -200,6 +343,18 @@ var sliderControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var sliderControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"title_options": labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
 var dateTimePickerControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
 		Type:     schema.TypeList,
@@ -208,8 +363,21 @@ var dateTimePickerControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Sc
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"date_time_format": stringLenBetweenSchema(attrOptional, 1, 128),
+				"date_time_format": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 128),
 				"title_options":    labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var dateTimePickerControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_time_format": stringComputedOnly(),
+				"title_options":    labelOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -230,12 +398,34 @@ var listControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 						},
 					},
 				},
 				"select_all_options": selectAllOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
 				"title_options":      labelOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
+var listControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"search_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSearchOptions.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+						},
+					},
+				},
+				"select_all_options": selectAllOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
+				"title_options":      labelOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 			},
 		},
 	}
@@ -269,6 +459,27 @@ var cascadingControlConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var cascadingControlConfigurationDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"source_controls": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlSource.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column_to_match":         columnDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"source_sheet_control_id": stringComputedOnly(),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
 var selectAllOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
 		Type:     schema.TypeList,
@@ -277,7 +488,19 @@ var selectAllOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+			},
+		},
+	}
+})
+
+var selectAllOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -298,6 +521,19 @@ var dropDownControlDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var dropDownControlDisplayOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"select_all_options": selectAllOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlSelectAllOptions.html
+				"title_options":      labelOptionsDataSourceSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
+			},
+		},
+	}
+})
+
 var placeholderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
 		Type:     schema.TypeList,
@@ -306,7 +542,19 @@ var placeholderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+			},
+		},
+	}
+})
+
+var placeholderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextControlPlaceholderOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -362,7 +610,7 @@ func expandFilterDateTimePickerControl(tfList []any) *awstypes.FilterDateTimePic
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -415,7 +663,7 @@ func expandFilterDropDownControl(tfList []any) *awstypes.FilterDropDownControl {
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -528,7 +776,7 @@ func expandListControlSelectAllOptions(tfList []any) *awstypes.ListControlSelect
 
 	apiObject := &awstypes.ListControlSelectAllOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -572,7 +820,7 @@ func expandFilterListControl(tfList []any) *awstypes.FilterListControl {
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -628,7 +876,7 @@ func expandListControlSearchOptions(tfList []any) *awstypes.ListControlSearchOpt
 
 	apiObject := &awstypes.ListControlSearchOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -653,7 +901,7 @@ func expandFilterRelativeDateTimeControl(tfList []any) *awstypes.FilterRelativeD
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["display_options"].([]any); ok && len(v) > 0 {
@@ -703,7 +951,7 @@ func expandFilterSliderControl(tfList []any) *awstypes.FilterSliderControl {
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -762,7 +1010,7 @@ func expandFilterTextAreaControl(tfList []any) *awstypes.FilterTextAreaControl {
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["delimiter"].(string); ok && v != "" {
@@ -809,7 +1057,7 @@ func expandTextControlPlaceholderOptions(tfList []any) *awstypes.TextControlPlac
 
 	apiObject := &awstypes.TextControlPlaceholderOptions{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -834,7 +1082,7 @@ func expandFilterTextFieldControl(tfList []any) *awstypes.FilterTextFieldControl
 	if v, ok := tfMap["source_filter_id"].(string); ok && v != "" {
 		apiObject.SourceFilterId = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["display_options"].([]any); ok && len(v) > 0 {
@@ -913,7 +1161,7 @@ func expandParameterDateTimePickerControl(tfList []any) *awstypes.ParameterDateT
 	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["display_options"].([]any); ok && len(v) > 0 {
@@ -941,7 +1189,7 @@ func expandParameterDropDownControl(tfList []any) *awstypes.ParameterDropDownCon
 	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -978,7 +1226,7 @@ func expandParameterListControl(tfList []any) *awstypes.ParameterListControl {
 	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -1015,7 +1263,7 @@ func expandParameterSliderControl(tfList []any) *awstypes.ParameterSliderControl
 	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["maximum_value"].(float64); ok {
@@ -1052,7 +1300,7 @@ func expandParameterTextAreaControl(tfList []any) *awstypes.ParameterTextAreaCon
 	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["delimiter"].(string); ok && v != "" {
@@ -1083,7 +1331,7 @@ func expandParameterTextFieldControl(tfList []any) *awstypes.ParameterTextFieldC
 	if v, ok := tfMap["source_parameter_name"].(string); ok && v != "" {
 		apiObject.SourceParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["title"].(string); ok && v != "" {
+	if v, ok := tfMap[attrTitle].(string); ok && v != "" {
 		apiObject.Title = aws.String(v)
 	}
 	if v, ok := tfMap["display_options"].([]any); ok && len(v) > 0 {
@@ -1139,7 +1387,7 @@ func flattenFilterDateTimePickerControl(apiObject *awstypes.FilterDateTimePicker
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.DisplayOptions != nil {
@@ -1180,7 +1428,7 @@ func flattenLabelOptions(apiObject *awstypes.LabelOptions) []any {
 	if apiObject.FontConfiguration != nil {
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
-	tfMap["visibility"] = apiObject.Visibility
+	tfMap[attrVisibility] = apiObject.Visibility
 
 	return []any{tfMap}
 }
@@ -1239,7 +1487,7 @@ func flattenFilterDropDownControl(apiObject *awstypes.FilterDropDownControl) []a
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
@@ -1316,7 +1564,7 @@ func flattenListControlSelectAllOptions(apiObject *awstypes.ListControlSelectAll
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}
@@ -1344,7 +1592,7 @@ func flattenFilterListControl(apiObject *awstypes.FilterListControl) []any {
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.CascadingControlConfiguration != nil {
@@ -1387,7 +1635,7 @@ func flattenListControlSearchOptions(apiObject *awstypes.ListControlSearchOption
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}
@@ -1401,7 +1649,7 @@ func flattenFilterRelativeDateTimeControl(apiObject *awstypes.FilterRelativeDate
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.DisplayOptions != nil {
@@ -1436,7 +1684,7 @@ func flattenFilterSliderControl(apiObject *awstypes.FilterSliderControl) []any {
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 		"maximum_value":     apiObject.MaximumValue,
 		"minimum_value":     apiObject.MinimumValue,
 		"step_size":         apiObject.StepSize,
@@ -1472,7 +1720,7 @@ func flattenFilterTextAreaControl(apiObject *awstypes.FilterTextAreaControl) []a
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.Delimiter != nil {
@@ -1508,7 +1756,7 @@ func flattenTextControlPlaceholderOptions(apiObject *awstypes.TextControlPlaceho
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}
@@ -1522,7 +1770,7 @@ func flattenFilterTextFieldControl(apiObject *awstypes.FilterTextFieldControl) [
 	tfMap := map[string]any{
 		"filter_control_id": aws.ToString(apiObject.FilterControlId),
 		"source_filter_id":  aws.ToString(apiObject.SourceFilterId),
-		"title":             aws.ToString(apiObject.Title),
+		attrTitle:           aws.ToString(apiObject.Title),
 	}
 
 	if apiObject.DisplayOptions != nil {

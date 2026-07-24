@@ -34,7 +34,7 @@ func sweepPlans(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 
 		for _, plan := range page.Plans {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePlan, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(plan.Arn)),
+				framework.NewAttribute(names.AttrARN, aws.ToString(plan.Arn)),
 			))
 		}
 	}

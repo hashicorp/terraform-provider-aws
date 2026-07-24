@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_rds_cluster_endpoint
 
 Manages an RDS Aurora Cluster Custom Endpoint.
-You can refer to the [User Guide][1].
+You can refer to the [User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster).
 
 ## Example Usage
 
@@ -114,5 +114,3 @@ Using `terraform import`, import RDS Clusters Endpoint using the `cluster_endpoi
 ```console
 % terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
 ```
-
-[1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster

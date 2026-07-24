@@ -10,9 +10,9 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,14 +22,14 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -37,12 +37,12 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "certificate/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "certificate_id"),
@@ -68,7 +68,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -76,12 +76,12 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_certificate(caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -102,14 +102,14 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -117,12 +117,12 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_certificateChain(certificate, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -144,9 +144,9 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -154,12 +154,12 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_certificatePrivateKey(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -181,9 +181,9 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -191,15 +191,23 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_certificate(certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -210,9 +218,9 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -220,12 +228,12 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_tags1(certificate, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -239,7 +247,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_tags2(certificate, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -248,7 +256,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_tags1(certificate, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -262,9 +270,9 @@ func TestAccTransferCertificate_description(t *testing.T) {
 	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -272,12 +280,12 @@ func TestAccTransferCertificate_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_description(certificate, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 				),
 			},
@@ -290,7 +298,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_description(certificate, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					testAccCheckCertificateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 				),
 			},
@@ -298,7 +306,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateExists(ctx context.Context, n string, v *awstypes.DescribedCertificate) resource.TestCheckFunc {
+func testAccCheckCertificateExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -309,7 +317,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *awstypes.De
 			return fmt.Errorf("No Transfer Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		output, err := tftransfer.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -323,9 +331,9 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *awstypes.De
 	}
 }
 
-func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCertificateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_certificate" {

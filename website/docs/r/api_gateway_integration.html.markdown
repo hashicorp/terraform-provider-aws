@@ -55,7 +55,7 @@ EOF
 }
 ```
 
-## Lambda integration
+### Lambda integration
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -130,7 +130,7 @@ resource "aws_iam_role" "role" {
 }
 ```
 
-## Lambda integration with response streaming
+### Lambda integration with response streaming
 
 All other resources and data sources are the same as in [the previous example](#lambda-integration); only the integration configuration differs.
 Note that the `timeout` of the `aws_lambda_function` may need to be adjusted.
@@ -148,7 +148,7 @@ resource "aws_api_gateway_integration" "integration" {
 }
 ```
 
-## VPC Link
+### VPC Link
 
 ```terraform
 variable "name" {}
@@ -213,7 +213,7 @@ resource "aws_api_gateway_integration" "test" {
 }
 ```
 
-## VPC Link V2 with Application Load Balancer
+### VPC Link V2 with Application Load Balancer
 
 ```terraform
 resource "aws_apigatewayv2_vpc_link" "example" {
@@ -320,6 +320,36 @@ The `tls_config` configuration block supports the following arguments:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_integration.example
+  identity = {
+    rest_api_id = "12345abcde"
+    resource_id = "67890fghij"
+    http_method = "GET"
+  }
+}
+
+resource "aws_api_gateway_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `rest_api_id` (String) - ID of the associated REST API.
+* `resource_id` (String) - API resource ID.
+* `http_method` (String) - HTTP Method.
+
+#### Optional
+
+* `account_id` (String) - AWS Account where this resource is managed.
+* `region` (String) - Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_integration` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
 

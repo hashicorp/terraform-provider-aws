@@ -4,20 +4,30 @@
 package sdkv2
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"iter"
 	"os"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider
+// To run this benchmark:
+// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=^$ -v ./internal/provider/sdkv2
 func BenchmarkSDKProviderInitialization(b *testing.B) {
 	ctx := b.Context()
 	for b.Loop() {
@@ -28,11 +38,16 @@ func BenchmarkSDKProviderInitialization(b *testing.B) {
 	}
 }
 
-func TestProvider(t *testing.T) {
+func TestProviderInit(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
 	p, err := NewProvider(ctx)
+	if err != nil {
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	err = validateResourceSchemas(ctx, slices.All(servicePackages(ctx)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +56,7 @@ func TestProvider(t *testing.T) {
 
 	err = p.InternalValidate()
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("Validating resource schemas: %s", err)
 	}
 }
 
@@ -425,6 +440,200 @@ func TestExpandIgnoreTags(t *testing.T) { //nolint:paralleltest
 	}
 }
 
+func TestExpandAssumeRoleWithWebIdentity(t *testing.T) { //nolint:paralleltest
+	ctx := t.Context()
+	testcases := map[string]struct {
+		tfMap          map[string]any
+		envvars        map[string]string
+		expectedConfig *awsbase.AssumeRoleWithWebIdentity
+		expectErr      bool
+	}{
+		"nil": {
+			tfMap:          nil,
+			envvars:        map[string]string{},
+			expectedConfig: nil,
+		},
+		"token config": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "my-token",
+			},
+			envvars: map[string]string{},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
+		},
+		"token envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "my-token",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "my-token",
+			},
+		},
+		"token envvar and config": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "token2",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "token1",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:         1 * time.Hour,
+				Policy:           "my-policy",
+				SessionName:      "my-session",
+				WebIdentityToken: "token2",
+			},
+		},
+		"token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars: map[string]string{},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
+		},
+		"token_file envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "my-token-file",
+			},
+		},
+		"token_file envvar and config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "token-file2",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "token-file1",
+			},
+			expectedConfig: &awsbase.AssumeRoleWithWebIdentity{
+				Duration:             1 * time.Hour,
+				Policy:               "my-policy",
+				SessionName:          "my-session",
+				WebIdentityTokenFile: "token-file2",
+			},
+		},
+		"no token or token_file": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars:   map[string]string{},
+			expectErr: true,
+		},
+		"token config token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token":      "my-token",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars:   map[string]string{},
+			expectErr: true,
+		},
+		"token envvar token_file config": {
+			tfMap: map[string]any{
+				"duration":                "1h",
+				"policy":                  "my-policy",
+				"session_name":            "my-session",
+				"web_identity_token_file": "my-token-file",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar: "my-token",
+			},
+			expectErr: true,
+		},
+		"token config token_file envvar": {
+			tfMap: map[string]any{
+				"duration":           "1h",
+				"policy":             "my-policy",
+				"session_name":       "my-session",
+				"web_identity_token": "my-token",
+			},
+			envvars: map[string]string{
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectErr: true,
+		},
+		"token envvar token_file envvar": {
+			tfMap: map[string]any{
+				"duration":     "1h",
+				"policy":       "my-policy",
+				"session_name": "my-session",
+			},
+			envvars: map[string]string{
+				tfWebIdentityTokenEnvVar:      "my-token",
+				awsWebIdentityTokenFileEnvVar: "my-token-file",
+			},
+			expectErr: true,
+		},
+	}
+
+	for name, testcase := range testcases { //nolint:paralleltest
+		t.Run(name, func(t *testing.T) {
+			oldEnv := stashEnv()
+			defer popEnv(oldEnv)
+
+			for k, v := range testcase.envvars {
+				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
+			}
+
+			results, err := expandAssumeRoleWithWebIdentity(ctx, testcase.tfMap)
+
+			if got, want := err != nil, testcase.expectErr; !cmp.Equal(got, want) {
+				t.Errorf("expandAssumeRoleWithWebIdentity() err %t, want %t", got, want)
+			}
+			if err == nil {
+				if results == nil && testcase.expectedConfig != nil {
+					t.Errorf("Expected assume_role_with_web_identity config to be %v, got nil", testcase.expectedConfig)
+				}
+
+				if diff := cmp.Diff(testcase.expectedConfig, results); diff != "" {
+					t.Errorf("Unexpected assume_role_with_web_identity diff: %s", diff)
+				}
+			}
+		})
+	}
+}
+
 func stashEnv() []string {
 	env := os.Environ()
 	os.Clearenv()
@@ -438,4 +647,108 @@ func popEnv(env []string) {
 		k, v, _ := strings.Cut(e, "=")
 		os.Setenv(k, v)
 	}
+}
+
+// validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
+func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int, conns.ServicePackage]) error {
+	var errs []error
+
+	for _, sp := range servicePackages {
+		for _, v := range sp.SDKDataSources(ctx) {
+			typeName := v.TypeName
+			r := v.Factory()
+
+			// Ensure that the correct CRUD handler variants are used.
+			if r.Read != nil || r.ReadContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s data source", typeName))
+				continue
+			}
+
+			s := r.SchemaMap()
+
+			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
+					continue
+				}
+			}
+
+			if !tfunique.IsHandleNil(v.Tags) {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := s[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
+					continue
+				}
+			}
+		}
+
+		for _, resource := range sp.SDKResources(ctx) {
+			typeName := resource.TypeName
+			r := resource.Factory()
+
+			// Ensure that the correct CRUD handler variants are used.
+			if r.Create != nil || r.CreateContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s resource", typeName))
+				continue
+			}
+			if r.Read != nil || r.ReadContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s resource", typeName))
+				continue
+			}
+			if r.Update != nil || r.UpdateContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s resource", typeName))
+				continue
+			}
+			if r.Delete != nil || r.DeleteContext != nil {
+				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s resource", typeName))
+				continue
+			}
+			s := r.SchemaMap()
+
+			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if _, ok := s[names.AttrRegion]; ok {
+					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
+					continue
+				}
+			}
+
+			if !tfunique.IsHandleNil(resource.Tags) {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := s[names.AttrTags]; ok {
+					if v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := s[names.AttrTagsAll]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+
+			if resource.Identity.IsCustomInherentRegion {
+				if resource.Identity.IsGlobalResource {
+					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
+					continue
+				}
+			}
+		}
+	}
+
+	return errors.Join(errs...)
 }

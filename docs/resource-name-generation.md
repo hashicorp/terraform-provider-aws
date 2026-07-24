@@ -93,27 +93,26 @@ Implementing name generation requires modifying the following:
 
 ## Resource Acceptance Tests
 
-- In the resource test file (e.g., `internal/service/{service}/{thing}_test.go`), add the following import: `"github.com/hashicorp/terraform-provider-aws/internal/create"`.
+- In the resource test file (e.g., `internal/service/{service}/{thing}_test.go`), add the following import: `sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"`.
 - Implement two new tests named `_nameGenerated` and `_namePrefix` which verify the creation of the resource without `name` and `name_prefix` arguments, and with only the `name_prefix` argument, respectively.
 
 ```go
 func TestAccServiceThing_nameGenerated(t *testing.T) {
   ctx := acctest.Context(t)
-  var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ServiceServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckThingDestroy(ctx),
+    CheckDestroy:             testAccCheckThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_nameGenerated(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckThingExists(ctx, resourceName, &thing),
+          testAccCheckThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-          resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", sdkid.UniqueIdPrefix),
         ),
       },
       // If the resource supports import:
@@ -128,19 +127,18 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
 
 func TestAccServiceThing_namePrefix(t *testing.T) {
   ctx := acctest.Context(t)
-  var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ServiceServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckThingDestroy(ctx),
+    CheckDestroy:             testAccCheckThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_namePrefix("tf-acc-test-prefix-"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckThingExists(ctx, resourceName, &thing),
+          testAccCheckThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
         ),

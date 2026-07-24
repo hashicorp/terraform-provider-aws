@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,22 +27,22 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
 	protocol := awstypes.TunnelProtocolGre
 	asn := "65501"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -83,22 +81,22 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
 	protocol := awstypes.TunnelProtocolGre
 	asn := "65501"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectPeerConfig_noDependsOn(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -119,22 +117,22 @@ func TestAccNetworkManagerConnectPeer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
 	protocol := awstypes.TunnelProtocolGre
 	asn := "65501"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -155,20 +153,20 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	peerAddress := "10.0.2.100" // Must be an address inside the subnet CIDR range.
 	protocol := awstypes.TunnelProtocolNoEncap
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectPeerConfig_subnetARN(rName, peerAddress, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -196,22 +194,22 @@ func TestAccNetworkManagerConnectPeer_4BytePeerASN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
 	protocol := awstypes.TunnelProtocolGre
 	asn := "4294967290"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -232,16 +230,16 @@ func TestAccNetworkManagerConnectPeer_upgradeFromV6_26_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
 	protocol := awstypes.TunnelProtocolGre
 	asn := "65501"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectPeerDestroy(ctx),
+		CheckDestroy: testAccCheckConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -252,7 +250,7 @@ func TestAccNetworkManagerConnectPeer_upgradeFromV6_26_0(t *testing.T) {
 				},
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -264,7 +262,7 @@ func TestAccNetworkManagerConnectPeer_upgradeFromV6_26_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckConnectPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -279,14 +277,14 @@ func TestAccNetworkManagerConnectPeer_upgradeFromV6_26_0(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectPeerExists(ctx context.Context, n string, v *awstypes.ConnectPeer) resource.TestCheckFunc {
+func testAccCheckConnectPeerExists(ctx context.Context, t *testing.T, n string, v *awstypes.ConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -300,9 +298,9 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *awstypes.Co
 	}
 }
 
-func testAccCheckConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectPeerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_peer" {

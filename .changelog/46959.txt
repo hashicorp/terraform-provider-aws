@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_savingsplan_savingsplan: Properly set `savings_plan_offering_id` during read to prevent forced replacement following import
+```
+```release-note:bug
+data-source/aws_savingsplan_savingsplan: Properly set `savings_plan_offering_id` during read
+```
+```release-note:note
+resource/aws_savingsplan_savingsplan: The `offering_id` attribute is deprecated. Use `savings_plan_offering_id` instead.
+```
+```release-note:note
+data-source/aws_savingsplan_savingsplan: The `offering_id` attribute is deprecated. Use `savings_plan_offering_id` instead.
+```
+```release-note:note
+resource/aws_savingsplan_savingsplan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing 
+```

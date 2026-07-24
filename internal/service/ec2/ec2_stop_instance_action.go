@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
@@ -23,6 +22,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,14 +93,11 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	// Get AWS client
 	conn := a.Meta().EC2Client(ctx)
 
-	instanceID := config.InstanceID.ValueString()
-	force := config.Force.ValueBool()
+	instanceID := fwflex.StringValueFromFramework(ctx, config.InstanceID)
+	force := fwflex.BoolValueFromFramework(ctx, config.Force)
 
 	// Set default timeout if not provided
-	timeout := 600 * time.Second
-	if !config.Timeout.IsNull() {
-		timeout = time.Duration(config.Timeout.ValueInt64()) * time.Second
-	}
+	timeout := fwactions.TimeoutOr(config.Timeout, 600*time.Second)
 
 	tflog.Info(ctx, "Starting EC2 stop instance action", map[string]any{
 		names.AttrInstanceID: instanceID,
@@ -107,20 +106,19 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	})
 
 	// Send initial progress update
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Starting stop operation for EC2 instance %s...", instanceID),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting stop operation for EC2 instance %s...", instanceID)
 
 	// Check current instance state first
 	instance, err := findInstanceByID(ctx, conn, instanceID)
+	if retry.NotFound(err) {
+		resp.Diagnostics.AddError(
+			"Instance Not Found",
+			fmt.Sprintf("EC2 instance %s was not found", instanceID),
+		)
+		return
+	}
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
-			resp.Diagnostics.AddError(
-				"Instance Not Found",
-				fmt.Sprintf("EC2 instance %s was not found", instanceID),
-			)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Failed to Describe Instance",
 			fmt.Sprintf("Could not describe EC2 instance %s: %s", instanceID, err),
@@ -128,17 +126,15 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		return
 	}
 
-	currentState := string(instance.State.Name)
+	currentState := instance.State.Name
 	tflog.Debug(ctx, "Current instance state", map[string]any{
 		names.AttrInstanceID: instanceID,
 		names.AttrState:      currentState,
 	})
 
 	// Check if instance is already stopped
-	if instance.State.Name == awstypes.InstanceStateNameStopped {
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("EC2 instance %s is already stopped", instanceID),
-		})
+	if currentState == awstypes.InstanceStateNameStopped {
+		cb(ctx, "EC2 instance %s is already stopped", instanceID)
 		tflog.Info(ctx, "Instance already stopped", map[string]any{
 			names.AttrInstanceID: instanceID,
 		})
@@ -146,7 +142,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	}
 
 	// Check if instance is in a state that can be stopped
-	if !canStopInstance(instance.State.Name) {
+	if !canStopInstance(currentState) {
 		resp.Diagnostics.AddError(
 			"Cannot Stop Instance",
 			fmt.Sprintf("EC2 instance %s is in state '%s' and cannot be stopped. Instance must be in 'running' or 'stopping' state.", instanceID, currentState),
@@ -155,15 +151,11 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	}
 
 	// If instance is already stopping, just wait for it
-	if instance.State.Name == awstypes.InstanceStateNameStopping {
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("EC2 instance %s is already stopping, waiting for completion...", instanceID),
-		})
+	if currentState == awstypes.InstanceStateNameStopping {
+		cb(ctx, "EC2 instance %s is already stopping, waiting for completion...", instanceID)
 	} else {
 		// Stop the instance
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("Sending stop command to EC2 instance %s...", instanceID),
-		})
+		cb(ctx, "Sending stop command to EC2 instance %s...", instanceID)
 
 		input := ec2.StopInstancesInput{
 			Force:       aws.Bool(force),
@@ -179,9 +171,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 			return
 		}
 
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: fmt.Sprintf("Stop command sent to EC2 instance %s, waiting for instance to stop...", instanceID),
-		})
+		cb(ctx, "Stop command sent to EC2 instance %s, waiting for instance to stop...", instanceID)
 	}
 
 	// Wait for instance to stop with periodic progress updates using actionwait
@@ -205,7 +195,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 			actionwait.Status(awstypes.InstanceStateNameShuttingDown),
 		},
 		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
-			resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("EC2 instance %s is currently in state '%s', continuing to wait for 'stopped'...", instanceID, fr.Status)})
+			cb(ctx, "EC2 instance %s is currently in state '%s', continuing to wait for 'stopped'...", instanceID, fr.Status)
 		},
 	})
 	if err != nil {
@@ -231,9 +221,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	}
 
 	// Final success message
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("EC2 instance %s has been successfully stopped", instanceID),
-	})
+	cb(ctx, "EC2 instance %s has been successfully stopped", instanceID)
 
 	tflog.Info(ctx, "EC2 stop instance action completed successfully", map[string]any{
 		names.AttrInstanceID: instanceID,

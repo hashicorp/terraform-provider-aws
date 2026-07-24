@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -31,7 +30,6 @@ import (
 // @ArnFormat(global=true)
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(v60RefreshError=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
 }
@@ -182,9 +180,8 @@ func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoad
 	out, err := conn.GetApplicationAssignmentConfiguration(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

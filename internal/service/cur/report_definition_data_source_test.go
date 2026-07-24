@@ -82,50 +82,7 @@ func testAccReportDefinitionDataSource_additional(t *testing.T) {
 }
 
 func testAccReportDefinitionDataSourceConfig_basic(reportName, s3BucketName, s3Prefix string) string {
-	return fmt.Sprintf(`
-data "aws_billing_service_account" "test" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_billing_service_account.test.arn}"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "${aws_s3_bucket.test.arn}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_billing_service_account.test.arn}"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(s3BucketName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -135,7 +92,7 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = %[3]q
+  s3_prefix                  = %[2]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
   tags = {
@@ -146,54 +103,11 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, s3BucketName, s3Prefix)
+`, reportName, s3Prefix))
 }
 
 func testAccReportDefinitionDataSourceConfig_additional(reportName, s3BucketName, s3Prefix string) string {
-	return fmt.Sprintf(`
-data "aws_billing_service_account" "test" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_billing_service_account.test.arn}"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "${aws_s3_bucket.test.arn}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_billing_service_account.test.arn}"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(s3BucketName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -203,7 +117,7 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = %[3]q
+  s3_prefix                  = %[2]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
   refresh_closed_reports     = true
@@ -217,5 +131,5 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, s3BucketName, s3Prefix)
+`, reportName, s3Prefix))
 }

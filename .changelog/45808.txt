@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `metadata_configuration` block for HTTP header and query parameter propagation
+```

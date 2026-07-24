@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,189 +49,191 @@ func resourceWorkgroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"config_parameter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parameter_key": {
-							Type: schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{
-								// https://docs.aws.amazon.com/redshift-serverless/latest/APIReference/API_CreateWorkgroup.html#redshiftserverless-CreateWorkgroup-request-configParameters
-								"auto_mv",
-								"datestyle",
-								"enable_case_sensitive_identifier", // "ValidationException: The parameter key enable_case_sensitivity_identifier isn't supported. Supported values: [[max_query_cpu_usage_percent, max_join_row_count, auto_mv, max_query_execution_time, max_query_queue_time, max_query_blocks_read, max_return_row_count, search_path, datestyle, max_query_cpu_time, max_io_skew, max_scan_row_count, query_group, enable_user_activity_logging, enable_case_sensitive_identifier, max_nested_loop_join_row_count, max_query_temp_blocks_to_disk, max_cpu_skew]]"
-								"enable_user_activity_logging",
-								"query_group",
-								"search_path",
-								// https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless
-								"max_query_cpu_time",
-								"max_query_blocks_read",
-								"max_scan_row_count",
-								"max_query_execution_time",
-								"max_query_queue_time",
-								"max_query_cpu_usage_percent",
-								"max_query_temp_blocks_to_disk",
-								"max_join_row_count",
-								"max_nested_loop_join_row_count",
-								// default SSL parameters automatically added by AWS
-								// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
-								"require_ssl",
-								"use_fips_ssl",
-							}, false),
-							Required: true,
-						},
-						"parameter_value": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"config_parameter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"parameter_key": {
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									// https://docs.aws.amazon.com/redshift-serverless/latest/APIReference/API_CreateWorkgroup.html#redshiftserverless-CreateWorkgroup-request-configParameters
+									"auto_mv",
+									"datestyle",
+									"enable_case_sensitive_identifier", // "ValidationException: The parameter key enable_case_sensitivity_identifier isn't supported. Supported values: [[max_query_cpu_usage_percent, max_join_row_count, auto_mv, max_query_execution_time, max_query_queue_time, max_query_blocks_read, max_return_row_count, search_path, datestyle, max_query_cpu_time, max_io_skew, max_scan_row_count, query_group, enable_user_activity_logging, enable_case_sensitive_identifier, max_nested_loop_join_row_count, max_query_temp_blocks_to_disk, max_cpu_skew]]"
+									"enable_user_activity_logging",
+									"query_group",
+									"search_path",
+									// https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless
+									"max_query_cpu_time",
+									"max_query_blocks_read",
+									"max_scan_row_count",
+									"max_query_execution_time",
+									"max_query_queue_time",
+									"max_query_cpu_usage_percent",
+									"max_query_temp_blocks_to_disk",
+									"max_join_row_count",
+									"max_nested_loop_join_row_count",
+									// default SSL parameters automatically added by AWS
+									// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+									"require_ssl",
+									"use_fips_ssl",
+								}, false),
+								Required: true,
+							},
+							"parameter_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"vpc_endpoint": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"network_interface": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAvailabilityZone: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrNetworkInterfaceID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"private_ip_address": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrSubnetID: {
-													Type:     schema.TypeString,
-													Computed: true,
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"vpc_endpoint": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"network_interface": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAvailabilityZone: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrNetworkInterfaceID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"private_ip_address": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrSubnetID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									names.AttrVPCEndpointID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrVPCID: {
-										Type:     schema.TypeString,
-										Computed: true,
+										names.AttrVPCEndpointID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrVPCID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"enhanced_vpc_routing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
-			},
-			"price_performance_target": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"level": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+				"enhanced_vpc_routing": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+					Optional: true,
+				},
+				"price_performance_target": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"level": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+							},
 						},
 					},
 				},
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"track_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
-				),
-			},
-			"workgroup_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"track_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
+					),
+				},
+				"workgroup_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -649,9 +650,8 @@ func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, n
 	output, err := conn.GetWorkgroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -666,8 +666,8 @@ func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, n
 	return output.Workgroup, nil
 }
 
-func statusWorkgroup(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkgroup(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkgroupByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -683,10 +683,10 @@ func statusWorkgroup(ctx context.Context, conn *redshiftserverless.Client, name 
 }
 
 func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.Client, name string, wait time.Duration) (*awstypes.Workgroup, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkgroupStatusCreating, awstypes.WorkgroupStatusModifying),
 		Target:  enum.Slice(awstypes.WorkgroupStatusAvailable),
-		Refresh: statusWorkgroup(ctx, conn, name),
+		Refresh: statusWorkgroup(conn, name),
 		Timeout: wait,
 	}
 
@@ -700,10 +700,10 @@ func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.Client
 }
 
 func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, name string, wait time.Duration) (*awstypes.Workgroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkgroupStatusAvailable, awstypes.WorkgroupStatusModifying, awstypes.WorkgroupStatusDeleting),
 		Target:  []string{},
-		Refresh: statusWorkgroup(ctx, conn, name),
+		Refresh: statusWorkgroup(conn, name),
 		Timeout: wait,
 	}
 

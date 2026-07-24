@@ -85,7 +85,7 @@ The following arguments are optional:
 * `runtime_platform` - Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
 * `status` - Status of the task definition.
 * `task_role_arn` - ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
-* `volume` - Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
+* `volume` - Attributes corresponding to the `volume` argument of the [`aws_ecs_task_definition`](/docs/providers/aws/r/ecs_task_definition.html) resource.
 
 ### ephemeral_storage
 
@@ -106,51 +106,3 @@ The following arguments are optional:
 
 * `operating_system_family` - If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
 * `cpu_architecture` - Must be set to either `X86_64` or `ARM64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
-
-### volume
-
-* `configure_at_launch` - Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
-* `docker_volume_configuration` - Configuration block to configure a [docker volume](#docker_volume_configuration). Detailed below.
-* `efs_volume_configuration` - Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
-* `fsx_windows_file_server_volume_configuration` - Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
-* `host_path` - Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
-* `name` - Name of the volume. This name is referenced in the `sourceVolume`
-parameter of container definition in the `mountPoints` section.
-
-### docker_volume_configuration
-
-For more information, see [Specifying a Docker volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-volumes.html#specify-volume-config)
-
-* `autoprovision` - If this value is `true`, the Docker volume is created if it does not already exist. *Note*: This field is only used if the scope is `shared`.
-* `driver_opts` - Map of Docker driver specific options.
-* `driver` - Docker volume driver to use. The driver value must match the driver name provided by Docker because it is used for task placement.
-* `labels` - Map of custom metadata to add to your Docker volume.
-* `scope` - Scope for the Docker volume, which determines its lifecycle, either `task` or `shared`.  Docker volumes that are scoped to a `task` are automatically provisioned when the task starts and destroyed when the task stops. Docker volumes that are scoped as `shared` persist after the task stops.
-
-### efs_volume_configuration
-
-For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
-
-* `authorization_config` - Configuration block for [authorization](#efs_volume_configuration-authorization_config) for the Amazon EFS file system. Detailed below.
-* `file_system_id` - ID of the EFS File System.
-* `root_directory` - Directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter. This argument is ignored when using `authorization_config`.
-* `transit_encryption` - Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
-* `transit_encryption_port` - Port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
-
-#### efs_volume_configuration authorization_config
-
-* `access_point_id` - Access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration.
-* `iam` - Whether or not to use the Amazon ECS task IAM role defined in a task definition when mounting the Amazon EFS file system. If enabled, transit encryption must be enabled in the EFSVolumeConfiguration. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
-
-### fsx_windows_file_server_volume_configuration
-
-For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
-
-* `file_system_id` - The Amazon FSx for Windows File Server file system ID to use.
-* `root_directory` - The directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
-* `authorization_config` - Configuration block for [authorization](#fsx_windows_file_server_volume_configuration-authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
-
-#### fsx_windows_file_server_volume_configuration authorization_config
-
-* `credentials_parameter` - The authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
-* `domain` - A fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.

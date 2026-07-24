@@ -38,7 +38,6 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the virtual gateway.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual gateway exists.
-* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
 ## Attribute Reference
 
@@ -47,6 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the virtual gateway.
 * `created_date` - Creation date of the virtual gateway.
 * `last_updated_date` - Last update date of the virtual gateway.
+* `mesh_owner` - AWS account ID of the service mesh's owner.
 * `resource_owner` - Resource owner's AWS account ID.
 * `spec` - Virtual gateway specification. See the [`aws_appmesh_virtual_gateway`](/docs/providers/aws/r/appmesh_virtual_gateway.html#spec) resource for details.
 * `tags` - Map of tags.

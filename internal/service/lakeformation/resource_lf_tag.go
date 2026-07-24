@@ -34,9 +34,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -408,6 +408,11 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if outputTag.IsNull() {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	state.LFTag = outputTag
 
@@ -514,9 +519,8 @@ func findResourceLFTagByID(ctx context.Context, conn *lakeformation.Client, cata
 	out, err := conn.GetResourceLFTags(ctx, in)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -584,6 +588,9 @@ func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagOnDatabase {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -632,6 +639,9 @@ func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagsOnTable {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -677,6 +687,9 @@ func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourc
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
+	if tag == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
 

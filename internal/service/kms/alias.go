@@ -28,7 +28,6 @@ import (
 // @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.AliasListEntry")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
@@ -36,36 +35,38 @@ func resourceAlias() *schema.Resource {
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validNameForResource,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validNameForResource,
-			},
-			"target_key_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_key_id": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppressEquivalentKeyARNOrID,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validNameForResource,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validNameForResource,
+				},
+				"target_key_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_key_id": {
+					Type:             schema.TypeString,
+					Required:         true,
+					DiffSuppressFunc: suppressEquivalentKeyARNOrID,
+				},
+			}
 		},
 	}
 }
@@ -115,20 +116,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
 	}
 
-	aliasARN := aws.ToString(alias.AliasArn)
-	targetKeyID := aws.ToString(alias.TargetKeyId)
-	targetKeyARN, err := aliasARNToKeyARN(aliasARN, targetKeyID)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
-	}
-
-	d.Set(names.AttrARN, aliasARN)
-	d.Set(names.AttrName, alias.AliasName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(alias.AliasName)))
-	d.Set("target_key_arn", targetKeyARN)
-	d.Set("target_key_id", targetKeyID)
-
-	return diags
+	return append(diags, resourceAliasFlatten(ctx, d, alias)...)
 }
 
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -212,4 +200,23 @@ func findAliases(ctx context.Context, conn *kms.Client, input *kms.ListAliasesIn
 
 func suppressEquivalentKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
 	return keyARNOrIDEqual(old, new)
+}
+
+func resourceAliasFlatten(_ context.Context, d *schema.ResourceData, alias *awstypes.AliasListEntry) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	aliasARN := aws.ToString(alias.AliasArn)
+	targetKeyID := aws.ToString(alias.TargetKeyId)
+	targetKeyARN, err := aliasARNToKeyARN(aliasARN, targetKeyID)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, aliasARN)
+	d.Set(names.AttrName, alias.AliasName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(alias.AliasName)))
+	d.Set("target_key_arn", targetKeyARN)
+	d.Set("target_key_id", targetKeyID)
+
+	return diags
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -40,51 +39,53 @@ func resourceLoggingConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"enable_monitoring_dashboard": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"firewall_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrLoggingConfiguration: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_destination_config": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: len(enum.Values[awstypes.LogType]()),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"log_destination": {
-										Type:     schema.TypeMap,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"log_destination_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
-									},
-									"log_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"enable_monitoring_dashboard": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"firewall_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"log_destination_config": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: len(enum.Values[awstypes.LogType]()),
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"log_destination": {
+											Type:     schema.TypeMap,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"log_destination_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
+										},
+										"log_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
@@ -299,9 +300,8 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *networkfirewall.Cl
 	output, err := conn.DescribeLoggingConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

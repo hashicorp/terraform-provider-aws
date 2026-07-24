@@ -1,0 +1,7 @@
+```release-note:enhancement
+listresource/aws_s3_bucket: No longer returns values for deprecated parameters
+```
+
+```release-note:bug
+listresource/aws_s3_bucket: No longer appears to hang when buckets are deleted concurrently with listing
+```

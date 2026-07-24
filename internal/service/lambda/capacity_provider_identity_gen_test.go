@@ -38,7 +38,7 @@ func TestAccLambdaCapacityProvider_Identity_basic(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccLambdaCapacityProvider_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -221,7 +221,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource_basic(t *testing.T)
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -230,7 +230,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource_basic(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -282,7 +282,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource_noRefreshNoChange(t
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -296,7 +296,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource_noRefreshNoChange(t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -9,11 +9,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,17 +33,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,6 +64,7 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 	r := &dataSourceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -173,10 +181,30 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.AtMostOneOfChildren(
+							path.MatchRelative().AtName("confluence_configuration"),
+							path.MatchRelative().AtName("managed_knowledge_base_connector_configuration"),
+							path.MatchRelative().AtName("s3_configuration"),
+							path.MatchRelative().AtName("salesforce_configuration"),
+							path.MatchRelative().AtName("share_point_configuration"),
+							path.MatchRelative().AtName("web_configuration"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.DataSourceType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.DataSourceType]path.Expression{
+									awstypes.DataSourceTypeConfluence:                    path.MatchRelative().AtParent().AtName("confluence_configuration"),
+									awstypes.DataSourceTypeManagedKnowledgeBaseConnector: path.MatchRelative().AtParent().AtName("managed_knowledge_base_connector_configuration"),
+									awstypes.DataSourceTypeS3:                            path.MatchRelative().AtParent().AtName("s3_configuration"),
+									awstypes.DataSourceTypeSalesforce:                    path.MatchRelative().AtParent().AtName("salesforce_configuration"),
+									awstypes.DataSourceTypeSharepoint:                    path.MatchRelative().AtParent().AtName("share_point_configuration"),
+									awstypes.DataSourceTypeWeb:                           path.MatchRelative().AtParent().AtName("web_configuration"),
+								}),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -217,6 +245,94 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"managed_knowledge_base_connector_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[managedKnowledgeBaseConnectorConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"connector_parameters": schema.StringAttribute{
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"deletion_protection_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[deletionProtectionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"deletion_protection_status": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+													Required:   true,
+												},
+												"deletion_protection_threshold": schema.Int32Attribute{
+													Optional: true,
+													Validators: []validator.Int32{
+														int32validator.Between(0, 100),
+													},
+												},
+											},
+										},
+									},
+									"media_extraction_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mediaExtractionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"audio_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[audioExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"audio_extraction_status": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
+													},
+												},
+												"image_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[imageExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"image_extraction_status": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
+													},
+												},
+												"video_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[videoExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"video_extraction_status": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
 													},
 												},
 											},
@@ -492,6 +608,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 			"vector_ingestion_configuration": schema.ListNestedBlock{
@@ -513,10 +630,24 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtMostOneOfChildren(
+										path.MatchRelative().AtName("fixed_size_chunking_configuration"),
+										path.MatchRelative().AtName("hierarchical_chunking_configuration"),
+										path.MatchRelative().AtName("semantic_chunking_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"chunking_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ChunkingStrategy](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ChunkingStrategy]path.Expression{
+												awstypes.ChunkingStrategyFixedSize:    path.MatchRelative().AtParent().AtName("fixed_size_chunking_configuration"),
+												awstypes.ChunkingStrategyHierarchical: path.MatchRelative().AtParent().AtName("hierarchical_chunking_configuration"),
+												awstypes.ChunkingStrategySemantic:     path.MatchRelative().AtParent().AtName("semantic_chunking_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -737,10 +868,22 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtMostOneOfChildren(
+										path.MatchRelative().AtName("bedrock_data_automation_configuration"),
+										path.MatchRelative().AtName("bedrock_foundation_model_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"parsing_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ParsingStrategy](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ParsingStrategy]path.Expression{
+												awstypes.ParsingStrategyBedrockDataAutomation:  path.MatchRelative().AtParent().AtName("bedrock_data_automation_configuration"),
+												awstypes.ParsingStrategyBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -837,9 +980,9 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*bedrockagent.CreateDataSourceOutput, error) {
 		return conn.CreateDataSource(ctx, &input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -849,22 +992,19 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	ds := outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource
-	dataSourceID := aws.ToString(ds.DataSourceId)
+	ds := output.DataSource
+	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
+	id := dataSourceCreateResourceID(dataSourceID, knowledgeBaseID)
 	data.DataSourceID = fwflex.StringValueToFramework(ctx, dataSourceID)
-	id, err := data.setID()
-	if err != nil {
-		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Data Source", err.Error())
-		return
-	}
 	data.ID = fwflex.StringValueToFramework(ctx, id)
 
-	knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
 	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
-
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), id)
+		response.State.SetAttribute(ctx, path.Root("data_source_id"), dataSourceID)
+		response.State.SetAttribute(ctx, path.Root("knowledge_base_id"), knowledgeBaseID)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) create", dataSourceID, knowledgeBaseID), err.Error())
-
 		return
 	}
 
@@ -880,15 +1020,15 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	dataSourceID, knowledgeBaseID, err := dataSourceParseResourceID(id)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.DataSourceID), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
 	ds, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
 	if retry.NotFound(err) {
@@ -938,6 +1078,12 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
+
+		return
+	}
+
+	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, new.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) update", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
@@ -1025,7 +1171,26 @@ func statusDataSource(conn *bedrockagent.Client, dataSourceID, knowledgeBaseID s
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
+		Pending: enum.Slice(awstypes.DataSourceStatusCreating),
+		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataSourceStatusUpdating),
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
 		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
 		Timeout: timeout,
@@ -1079,34 +1244,158 @@ const (
 	dataSourceResourceIDPartCount = 2
 )
 
-func (m *dataSourceResourceModel) InitFromID() error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), dataSourceResourceIDPartCount, false)
-	if err != nil {
-		return err
-	}
-
-	m.DataSourceID = types.StringValue(parts[0])
-	m.KnowledgeBaseID = types.StringValue(parts[1])
-
-	return nil
+func dataSourceCreateResourceID(dataSourceID, knowledgeBaseID string) string {
+	id, _ := intflex.FlattenResourceId([]string{dataSourceID, knowledgeBaseID}, dataSourceResourceIDPartCount, false)
+	return id
 }
 
-func (m *dataSourceResourceModel) setID() (string, error) {
-	parts := []string{
-		m.DataSourceID.ValueString(),
-		m.KnowledgeBaseID.ValueString(),
+func dataSourceParseResourceID(id string) (string, string, error) {
+	parts, err := intflex.ExpandResourceId(id, dataSourceResourceIDPartCount, false)
+	if err != nil {
+		return "", "", err
 	}
 
-	return flex.FlattenResourceId(parts, dataSourceResourceIDPartCount, false)
+	return parts[0], parts[1], nil
 }
 
 type dataSourceConfigurationModel struct {
-	ConfluenceConfiguration fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel] `tfsdk:"confluence_configuration"`
-	S3Configuration         fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]         `tfsdk:"s3_configuration"`
-	SalesforceConfiguration fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel] `tfsdk:"salesforce_configuration"`
-	SharePointConfiguration fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel] `tfsdk:"share_point_configuration"`
-	Type                    fwtypes.StringEnum[awstypes.DataSourceType]                             `tfsdk:"type"`
-	WebConfiguration        fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]        `tfsdk:"web_configuration"`
+	ConfluenceConfiguration                    fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel]          `tfsdk:"confluence_configuration"`
+	ManagedKnowledgeBaseConnectorConfiguration fwtypes.ListNestedObjectValueOf[managedKnowledgeBaseConnectorConfigurationModel] `tfsdk:"managed_knowledge_base_connector_configuration"`
+	S3Configuration                            fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]                  `tfsdk:"s3_configuration"`
+	SalesforceConfiguration                    fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel]          `tfsdk:"salesforce_configuration"`
+	SharePointConfiguration                    fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel]          `tfsdk:"share_point_configuration"`
+	Type                                       fwtypes.StringEnum[awstypes.DataSourceType]                                      `tfsdk:"type"`
+	WebConfiguration                           fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]                 `tfsdk:"web_configuration"`
+}
+
+type managedKnowledgeBaseConnectorConfigurationModel struct {
+	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters"`
+	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
+	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
+}
+
+var (
+	_ fwflex.Expander  = managedKnowledgeBaseConnectorConfigurationModel{}
+	_ fwflex.Flattener = &managedKnowledgeBaseConnectorConfigurationModel{}
+)
+
+func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ManagedKnowledgeBaseConnectorConfiguration
+
+	if !m.ConnectorParameters.IsNull() {
+		v, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ConnectorParameters), document.NewLazyDocument)
+		if err != nil {
+			diags.AddError("creating Smithy document", err.Error())
+			return nil, diags
+		}
+		r.ConnectorParameters = v
+	}
+
+	if !m.DeletionProtectionConfiguration.IsNull() {
+		data, d := m.DeletionProtectionConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var v awstypes.DeletionProtectionConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &v)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.DeletionProtectionConfiguration = &v
+	}
+
+	if !m.MediaExtractionConfiguration.IsNull() {
+		data, d := m.MediaExtractionConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var v awstypes.MediaExtractionConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &v)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.MediaExtractionConfiguration = &v
+	}
+
+	return &r, diags
+}
+
+func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.ManagedKnowledgeBaseConnectorConfiguration:
+		if v := t.ConnectorParameters; v != nil {
+			v, err := tfsmithy.DocumentToJSONString(v)
+			if err != nil {
+				diags.AddError("reading Smithy document", err.Error())
+				return diags
+			}
+
+			// The Smithy document comes back as a string containing the JSON document (double quoted).
+			if strings.HasPrefix(v, `"{`) && strings.HasSuffix(v, `}"`) {
+				var inner string
+				if err := tfjson.DecodeFromString(v, &inner); err != nil {
+					diags.AddError("Decoding", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %s", err))
+				}
+				v = inner
+			}
+
+			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
+		} else {
+			m.ConnectorParameters = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
+
+		if v := t.DeletionProtectionConfiguration; v != nil {
+			var data deletionProtectionConfigurationModel
+			diags.Append(fwflex.Flatten(ctx, v, &data)...)
+			if diags.HasError() {
+				return diags
+			}
+			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		} else {
+			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[deletionProtectionConfigurationModel](ctx)
+		}
+
+		if v := t.MediaExtractionConfiguration; v != nil {
+			var data mediaExtractionConfigurationModel
+			diags.Append(fwflex.Flatten(ctx, v, &data)...)
+			if diags.HasError() {
+				return diags
+			}
+			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		} else {
+			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfNull[mediaExtractionConfigurationModel](ctx)
+		}
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %T", v))
+	}
+	return diags
+}
+
+type deletionProtectionConfigurationModel struct {
+	DeletionProtectionStatus    fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"deletion_protection_status"`
+	DeletionProtectionThreshold types.Int32                                         `tfsdk:"deletion_protection_threshold"`
+}
+
+type mediaExtractionConfigurationModel struct {
+	AudioExtractionConfiguration fwtypes.ListNestedObjectValueOf[audioExtractionConfigurationModel] `tfsdk:"audio_extraction_configuration"`
+	ImageExtractionConfiguration fwtypes.ListNestedObjectValueOf[imageExtractionConfigurationModel] `tfsdk:"image_extraction_configuration"`
+	VideoExtractionConfiguration fwtypes.ListNestedObjectValueOf[videoExtractionConfigurationModel] `tfsdk:"video_extraction_configuration"`
+}
+
+type audioExtractionConfigurationModel struct {
+	AudioExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"audio_extraction_status"`
+}
+
+type imageExtractionConfigurationModel struct {
+	ImageExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"image_extraction_status"`
+}
+
+type videoExtractionConfigurationModel struct {
+	VideoExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"video_extraction_status"`
 }
 
 type confluenceDataSourceConfigurationModel struct {

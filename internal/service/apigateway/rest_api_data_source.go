@@ -31,67 +31,77 @@ func dataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,
 
-		Schema: map[string]*schema.Schema{
-			"api_key_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"binary_media_types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddressType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"types": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"vpc_endpoint_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_key_source": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"binary_media_types": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_access_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddressType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"types": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"vpc_endpoint_ids": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"minimum_compression_size": {
-				Type:     nullable.TypeNullableInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"minimum_compression_size": {
+					Type:     nullable.TypeNullableInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -117,6 +127,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 	d.Set(names.AttrDescription, match.Description)
+	d.Set("endpoint_access_mode", match.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
@@ -127,6 +138,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
 	d.Set(names.AttrPolicy, match.Policy)
+	d.Set("security_policy", match.SecurityPolicy)
 
 	inputGRs := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),

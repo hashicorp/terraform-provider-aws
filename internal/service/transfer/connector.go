@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,136 +49,138 @@ func resourceConnector() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_role": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"as2_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compression": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CompressionEnum](),
-						},
-						"encryption_algorithm": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.EncryptionAlg](),
-						},
-						"local_profile_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"mdn_response": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MdnResponse](),
-						},
-						"mdn_signing_algorithm": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MdnSigningAlg](),
-						},
-						"message_subject": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"partner_profile_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"signing_algorithm": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SigningAlg](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_role": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"as2_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compression": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CompressionEnum](),
+							},
+							"encryption_algorithm": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.EncryptionAlg](),
+							},
+							"local_profile_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"mdn_response": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MdnResponse](),
+							},
+							"mdn_signing_algorithm": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MdnSigningAlg](),
+							},
+							"message_subject": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"partner_profile_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"signing_algorithm": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SigningAlg](),
+							},
 						},
 					},
 				},
-			},
-			"connector_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"egress_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vpc_lattice": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"port_number": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 65535),
-									},
-									"resource_configuration_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				"connector_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"egress_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"vpc_lattice": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"port_number": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 65535),
+										},
+										"resource_configuration_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"logging_role": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"security_policy_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 100),
-					validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
-				),
-			},
-			"sftp_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"trusted_host_keys": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 10,
-							Elem: &schema.Schema{
+				"logging_role": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"security_policy_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 100),
+						validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
+					),
+				},
+				"sftp_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"trusted_host_keys": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 10,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 2028),
+								},
+							},
+							"user_secret_id": {
 								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 2028),
 							},
 						},
-						"user_secret_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2028),
-						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -357,9 +358,8 @@ func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.D
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -543,8 +543,8 @@ func flattenDescribedConnectorVPCLatticeEgressConfig(apiObject *awstypes.Describ
 	return []any{tfMap}
 }
 
-func statusConnector(ctx context.Context, conn *transfer.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnector(conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectorByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -560,10 +560,10 @@ func statusConnector(ctx context.Context, conn *transfer.Client, id string) sdkr
 }
 
 func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusPending),
 		Target:  enum.Slice(awstypes.ConnectorStatusActive),
-		Refresh: statusConnector(ctx, conn, id),
+		Refresh: statusConnector(conn, id),
 		Timeout: timeout,
 	}
 
@@ -581,10 +581,10 @@ func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string,
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusPending),
 		Target:  enum.Slice(awstypes.ConnectorStatusActive),
-		Refresh: statusConnector(ctx, conn, id),
+		Refresh: statusConnector(conn, id),
 		Timeout: timeout,
 	}
 
@@ -602,10 +602,10 @@ func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string,
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusActive, awstypes.ConnectorStatusPending),
 		Target:  []string{},
-		Refresh: statusConnector(ctx, conn, id),
+		Refresh: statusConnector(conn, id),
 		Timeout: timeout,
 	}
 

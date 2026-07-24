@@ -7,7 +7,6 @@ package elastictranscoder
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elastictranscoder"
@@ -38,13 +37,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourcePipeline,
 			TypeName: "aws_elastictranscoder_pipeline",
 			Name:     "Pipeline",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourcePreset,
 			TypeName: "aws_elastictranscoder_preset",
 			Name:     "Preset",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

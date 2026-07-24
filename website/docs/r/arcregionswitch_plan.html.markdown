@@ -189,6 +189,7 @@ The following arguments are optional:
 * `primary_region` - (Optional) Primary region for the plan.
 * `recovery_time_objective_minutes` - (Optional) Recovery time objective in minutes.
 * `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `report_configuration` - (Optional) Configuration for automated execution reports. See [Report Configuration](#report-configuration) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `triggers` - (Optional) Set of triggers that can initiate the plan execution. See [Triggers](#triggers) below.
 
@@ -209,10 +210,12 @@ The following arguments are optional:
 * `ecs_capacity_increase_config` - Configuration for ECS service capacity increase. See [ECS Capacity Increase Config](#ecs-capacity-increase-config) below.
 * `eks_resource_scaling_config` - Configuration for EKS resource scaling. See [EKS Resource Scaling Config](#eks-resource-scaling-config) below.
 * `execution_approval_config` - Configuration for manual approval steps. See [Execution Approval Config](#execution-approval-config) below.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `Route53HealthCheck`.
 * `global_aurora_config` - Configuration for Aurora Global Database operations. See [Global Aurora Config](#global-aurora-config) below.
 * `name` - (Required) Name of the step.
 * `parallel_config` - Configuration for parallel execution of multiple steps. See [Parallel Config](#parallel-config) below.
+* `rds_create_cross_region_read_replica_config` - Configuration for creating cross-region RDS read replicas. See [RDS Create Cross Region Read Replica Config](#rds-create-cross-region-read-replica-config) below.
+* `rds_promote_read_replica_config` - Configuration for promoting RDS read replicas. See [RDS Promote Read Replica Config](#rds-promote-read-replica-config) below.
 * `route53_health_check_config` - Configuration for Route53 health check operations. See [Route53 Health Check Config](#route53-health-check-config) below.
 
 ### ARC Routing Control Config
@@ -394,6 +397,33 @@ The following arguments are optional:
 
 * `step` - (Required) List of steps to execute in parallel. Uses the same schema as [Step](#step) but without `parallel_config` to prevent infinite nesting.
 
+### RDS Create Cross Region Read Replica Config
+
+* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+
+### RDS Promote Read Replica Config
+
+* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+
+### Report Configuration
+
+* `report_output` - (Required) Output destination for the report. See [Report Output](#report-output) below.
+
+### Report Output
+
+* `s3_configuration` - (Required) S3 output configuration. See [S3 Configuration](#s3-configuration) below.
+
+### S3 Configuration
+
+* `bucket_path` - (Required) S3 bucket path where reports will be stored.
+* `bucket_owner` - (Required) Account ID of the S3 bucket owner.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -410,6 +440,27 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_arcregionswitch_plan.example
+  identity = {
+    "arn" = "arn:aws:arcregionswitch:us-east-1:123456789012:plan/example-plan"
+  }
+}
+
+resource "aws_arcregionswitch_plan" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the ARC Region Switch Plan.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application Recovery Controller Region Switch Plan using the `arn`. For example:
 

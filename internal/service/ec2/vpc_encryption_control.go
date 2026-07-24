@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -481,7 +480,7 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 	}
 
 	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), timeout)
-	if use, ok := errs.As[*retry.UnexpectedStateError](err); ok && use.State == string(awstypes.VpcEncryptionControlStateEnforceFailed) {
+	if use, ok := errors.AsType[*retry.UnexpectedStateError](err); ok && use.State == string(awstypes.VpcEncryptionControlStateEnforceFailed) {
 		// Ignore errors here and fall through to the outer error
 		blockers, _ := encryptionEnforcementBlockers(ctx, conn, plan.VPCID.ValueString())
 		if len(blockers) > 0 {

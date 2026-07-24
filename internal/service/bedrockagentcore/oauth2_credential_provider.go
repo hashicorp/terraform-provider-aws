@@ -33,6 +33,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,6 +44,8 @@ var (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
+// @Tags(identifierAttribute="credential_provider_arn")
+// @Testing(tagsTest=false)
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &oauth2CredentialProviderResource{}
 	return r, nil
@@ -160,6 +163,8 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"oauth2_provider_config": schema.ListNestedBlock{
@@ -270,6 +275,8 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateOauth2CredentialProvider(ctx, &input)
 	if err != nil {
@@ -469,6 +476,8 @@ type oauth2CredentialProviderResourceModel struct {
 	CredentialProviderVendor fwtypes.StringEnum[awstypes.CredentialProviderVendorType]  `tfsdk:"credential_provider_vendor"`
 	Name                     types.String                                               `tfsdk:"name"`
 	OAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigModel] `tfsdk:"oauth2_provider_config"`
+	Tags                     tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                 `tfsdk:"tags_all"`
 }
 
 type oauth2ProviderConfigModel struct {

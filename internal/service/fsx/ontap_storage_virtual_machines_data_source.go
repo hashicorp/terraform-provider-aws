@@ -24,13 +24,15 @@ func dataSourceONTAPStorageVirtualMachines() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachinesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: storageVirtualMachineFiltersSchema(),
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: storageVirtualMachineFiltersSchema(),
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

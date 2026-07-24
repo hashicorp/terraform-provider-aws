@@ -11,12 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,22 +22,22 @@ import (
 func TestAccVPCSecurityGroupRulesExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 	securityGroupResourceName := "aws_security_group.test"
 	ingressRuleResourceName := "aws_vpc_security_group_ingress_rule.test"
 	egressRuleResourceName := "aws_vpc_security_group_egress_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "1"),
@@ -61,20 +59,20 @@ func TestAccVPCSecurityGroupRulesExclusive_basic(t *testing.T) {
 func TestAccVPCSecurityGroupRulesExclusive_disappears_SecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 	securityGroupResourceName := "aws_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroup(), securityGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,19 +92,19 @@ func TestAccVPCSecurityGroupRulesExclusive_disappears_SecurityGroup(t *testing.T
 func TestAccVPCSecurityGroupRulesExclusive_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "2"),
 				),
@@ -121,7 +119,7 @@ func TestAccVPCSecurityGroupRulesExclusive_multiple(t *testing.T) {
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "1"),
 				),
@@ -133,19 +131,19 @@ func TestAccVPCSecurityGroupRulesExclusive_multiple(t *testing.T) {
 func TestAccVPCSecurityGroupRulesExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "0"),
 				),
@@ -157,28 +155,28 @@ func TestAccVPCSecurityGroupRulesExclusive_empty(t *testing.T) {
 func TestAccVPCSecurityGroupRulesExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 	securityGroupResourceName := "aws_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
-					testAccCheckSecurityGroupRulesExclusiveAddOutOfBandIngressRule(ctx, securityGroupResourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveAddOutOfBandIngressRule(ctx, t, securityGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "1"),
 				),
@@ -190,19 +188,19 @@ func TestAccVPCSecurityGroupRulesExclusive_outOfBandAddition(t *testing.T) {
 func TestAccVPCSecurityGroupRulesExclusive_ingressOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_ingressOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "0"),
 				),
@@ -214,19 +212,19 @@ func TestAccVPCSecurityGroupRulesExclusive_ingressOnly(t *testing.T) {
 func TestAccVPCSecurityGroupRulesExclusive_egressOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupRulesExclusiveConfig_egressOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRulesExclusiveExists(ctx, resourceName),
+					testAccCheckSecurityGroupRulesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_rule_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress_rule_ids.#", "1"),
 				),
@@ -235,14 +233,14 @@ func TestAccVPCSecurityGroupRulesExclusive_egressOnly(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityGroupRulesExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRulesExclusiveExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		ingressRuleIDs, egressRuleIDs, err := tfec2.FindSecurityGroupRuleIDsBySecurityGroupID(ctx, conn, rs.Primary.Attributes["security_group_id"])
 		if err != nil {
@@ -260,14 +258,14 @@ func testAccCheckSecurityGroupRulesExclusiveExists(ctx context.Context, n string
 	}
 }
 
-func testAccCheckSecurityGroupRulesExclusiveAddOutOfBandIngressRule(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRulesExclusiveAddOutOfBandIngressRule(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		// Add an out-of-band ingress rule
 		input := ec2.AuthorizeSecurityGroupIngressInput{

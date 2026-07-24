@@ -10,8 +10,6 @@ description: |-
 
 Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html) resource.
 
--> This resource cannot be used with S3 directory buckets.
-
 ## Example Usage
 
 ### Add inventory configuration
@@ -84,7 +82,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
+* `bucket` - (Required) Name of the source bucket that inventory lists the objects for. Both general purpose and directory buckets are supported.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
 * `included_object_versions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.
 * `schedule` - (Required) Specifies the schedule for generating inventory results (documented below).
@@ -107,7 +105,7 @@ The `destination` configuration supports the following:
 
 The `bucket` configuration supports the following:
 
-* `bucket_arn` - (Required) Amazon S3 bucket ARN of the destination.
+* `bucket_arn` - (Required) Amazon S3 bucket ARN of the destination. Only general purpose buckets are supported.
 * `format` - (Required) Specifies the output format of the inventory results. Can be `CSV`, [`ORC`](https://orc.apache.org/) or [`Parquet`](https://parquet.apache.org/).
 * `account_id` - (Optional) ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes.
 * `prefix` - (Optional) Prefix that is prepended to all inventory results.

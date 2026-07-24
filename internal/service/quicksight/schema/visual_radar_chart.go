@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,18 +20,18 @@ func radarChartVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"alternate_band_colors_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-							"alternate_band_even_color":        hexColorSchema(attrOptional),
-							"alternate_band_odd_color":         hexColorSchema(attrOptional),
+							"alternate_band_colors_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+							"alternate_band_even_color":        hexColorSchema(sdkschema.AttrOptional),
+							"alternate_band_odd_color":         hexColorSchema(sdkschema.AttrOptional),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -45,7 +46,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -56,7 +57,7 @@ func radarChartVisualSchema() *schema.Schema {
 							"category_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_axis":             axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"color_label_options":    chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -71,7 +72,7 @@ func radarChartVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"category":       dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"color":          dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													attrColor:        dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrValues: measureFieldSchema(measureFieldsMaxItems20), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -80,8 +81,8 @@ func radarChartVisualSchema() *schema.Schema {
 								},
 							},
 							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  stringEnumSchema[awstypes.RadarChartShape](attrOptional),
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
+							"shape":  sdkschema.StringEnumSchema[awstypes.RadarChartShape](sdkschema.AttrOptional),
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -96,14 +97,97 @@ func radarChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"start_angle":    floatBetweenSchema(attrOptional, -360, 360),
+							"start_angle":    sdkschema.FloatBetweenSchema(sdkschema.AttrOptional, -360, 360),
 							"visual_palette": visualPaletteSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func radarChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisualID:      idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alternate_band_colors_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+							"alternate_band_even_color":        stringComputedOnly(),
+							"alternate_band_odd_color":         stringComputedOnly(),
+							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"area_style_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartAreaStyleSettings.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+												},
+											},
+										},
+									},
+								},
+							},
+							"category_axis":          axisDisplayOptionsDataSourceSchema(),
+							"category_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"color_axis":             axisDisplayOptionsDataSourceSchema(),
+							"color_label_options":    chartAxisLabelOptionsDataSourceSchema(),
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"radar_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":       dimensionFieldDataSourceSchema(),
+													attrColor:        dimensionFieldDataSourceSchema(),
+													names.AttrValues: measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend": legendOptionsDataSourceSchema(),
+							"shape":  sdkschema.StringEnumDataSourceSchema[awstypes.RadarChartShape](),
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit": itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":        fieldSortOptionsDataSourceSchema(),
+										"color_items_limit":    itemsLimitConfigurationDataSourceSchema(),
+										"color_sort":           fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"start_angle":    floatComputedOnly(),
+							"visual_palette": visualPaletteDataSourceSchema(),
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -121,7 +205,7 @@ func expandRadarChartVisual(tfList []any) *awstypes.RadarChartVisual {
 
 	apiObject := &awstypes.RadarChartVisual{}
 
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -130,13 +214,13 @@ func expandRadarChartVisual(tfList []any) *awstypes.RadarChartVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandRadarChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -191,7 +275,7 @@ func expandRadarChartConfiguration(tfList []any) *awstypes.RadarChartConfigurati
 	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandRadarChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
@@ -304,7 +388,7 @@ func expandRadarChartAreaStyleSettings(tfList []any) *awstypes.RadarChartAreaSty
 
 	apiObject := &awstypes.RadarChartAreaStyleSettings{}
 
-	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisibility].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
 
@@ -317,7 +401,7 @@ func flattenRadarChartVisual(apiObject *awstypes.RadarChartVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
@@ -326,13 +410,13 @@ func flattenRadarChartVisual(apiObject *awstypes.RadarChartVisual) []any {
 		tfMap["chart_configuration"] = flattenRadarChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -376,7 +460,7 @@ func flattenRadarChartConfiguration(apiObject *awstypes.RadarChartConfiguration)
 	}
 	tfMap["shape"] = apiObject.Shape
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenRadarChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenRadarChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.StartAngle != nil {
 		tfMap["start_angle"] = aws.ToFloat64(apiObject.StartAngle)
@@ -408,7 +492,7 @@ func flattenRadarChartAreaStyleSettings(apiObject *awstypes.RadarChartAreaStyleS
 	}
 
 	tfMap := map[string]any{
-		"visibility": apiObject.Visibility,
+		attrVisibility: apiObject.Visibility,
 	}
 
 	return []any{tfMap}
@@ -439,7 +523,7 @@ func flattenRadarChartAggregatedFieldWells(apiObject *awstypes.RadarChartAggrega
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Color != nil {
-		tfMap["color"] = flattenDimensionFields(apiObject.Color)
+		tfMap[attrColor] = flattenDimensionFields(apiObject.Color)
 	}
 	if apiObject.Values != nil {
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)

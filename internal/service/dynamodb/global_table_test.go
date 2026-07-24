@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -35,11 +34,11 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
+				Config:      testAccGlobalTableConfig_invalidName(acctest.RandString(t, 2)),
 				ExpectError: regexache.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
-				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(256)),
+				Config:      testAccGlobalTableConfig_invalidName(acctest.RandString(t, 256)),
 				ExpectError: regexache.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{

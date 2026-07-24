@@ -13,9 +13,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -44,83 +44,85 @@ func resourceReportDefinition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"additional_artifacts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{Type: schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.AdditionalArtifact](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_artifacts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{Type: schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.AdditionalArtifact](),
+					},
 				},
-			},
-			"additional_schema_elements": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				"additional_schema_elements": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.SchemaElement](),
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compression": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.SchemaElement](),
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compression": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
-			},
-			names.AttrFormat: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ReportFormat](),
-			},
-			"refresh_closed_reports": {
-				Type:     schema.TypeBool,
-				Default:  true,
-				Optional: true,
-			},
-			"report_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
-				),
-			},
-			"report_versioning": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Default:          types.ReportVersioningCreateNewReport,
-				ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
-			},
-			names.AttrS3Bucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_prefix": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 256),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*'()]*`), ""),
-				),
-			},
-			"s3_region": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.AWSRegion](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"time_unit": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.TimeUnit](),
-			},
+				names.AttrFormat: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ReportFormat](),
+				},
+				"refresh_closed_reports": {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
+				},
+				"report_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
+					),
+				},
+				"report_versioning": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Default:          types.ReportVersioningCreateNewReport,
+					ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
+				},
+				names.AttrS3Bucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"s3_prefix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 256),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*'()]*`), ""),
+					),
+				},
+				"s3_region": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"time_unit": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.TimeUnit](),
+				},
+			}
 		},
 	}
 }
@@ -146,7 +148,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &cur.PutReportDefinitionInput{
+	input := cur.PutReportDefinitionInput{
 		ReportDefinition: &types.ReportDefinition{
 			AdditionalArtifacts:      additionalArtifacts,
 			AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -163,7 +165,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		Tags: getTagsIn(ctx),
 	}
 
-	_, err := conn.PutReportDefinition(ctx, input)
+	_, err := conn.PutReportDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cost And Usage Report Definition (%s): %s", reportName, err)
@@ -176,7 +178,8 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.CURClient(ctx)
 
 	reportDefinition, err := findReportDefinitionByName(ctx, conn, d.Id())
 
@@ -194,14 +197,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(reportName)
 	d.Set("additional_artifacts", reportDefinition.AdditionalArtifacts)
 	d.Set("additional_schema_elements", reportDefinition.AdditionalSchemaElements)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.CUR,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "definition/" + reportName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, c.RegionalARN(ctx, "cur", "definition/"+reportName))
 	d.Set("compression", reportDefinition.Compression)
 	d.Set(names.AttrFormat, reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
@@ -236,7 +232,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &cur.ModifyReportDefinitionInput{
+		input := cur.ModifyReportDefinitionInput{
 			ReportDefinition: &types.ReportDefinition{
 				AdditionalArtifacts:      additionalArtifacts,
 				AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -253,7 +249,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			ReportName: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyReportDefinition(ctx, input)
+		_, err := conn.ModifyReportDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
@@ -350,9 +346,9 @@ func checkReportDefinitionPropertyCombination(additionalArtifacts []types.Additi
 }
 
 func findReportDefinitionByName(ctx context.Context, conn *cur.Client, name string) (*types.ReportDefinition, error) {
-	input := &cur.DescribeReportDefinitionsInput{}
+	var input cur.DescribeReportDefinitionsInput
 
-	return findReportDefinition(ctx, conn, input, func(v *types.ReportDefinition) bool {
+	return findReportDefinition(ctx, conn, &input, func(v *types.ReportDefinition) bool {
 		return aws.ToString(v.ReportName) == name
 	})
 }
@@ -386,4 +382,8 @@ func findReportDefinitions(ctx context.Context, conn *cur.Client, input *cur.Des
 	}
 
 	return output, nil
+}
+
+func awsRegion_Values() []string { // nosemgrep:ci.aws-in-func-name
+	return tfslices.AppendUnique(enum.Values[types.AWSRegion](), endpoints.ApSoutheast5RegionID, endpoints.EuscDeEast1RegionID)
 }

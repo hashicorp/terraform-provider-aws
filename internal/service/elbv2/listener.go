@@ -59,258 +59,213 @@ func resourceListener() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"alpn_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(alpnPolicyEnum_Values(), true),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDefaultAction: {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authenticate_cognito": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_request_extra_params": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"on_unauthenticated_request": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"session_cookie_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"session_timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									"user_pool_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"user_pool_client_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"user_pool_domain": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"authenticate_oidc": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_request_extra_params": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"authorization_endpoint": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrClientID: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrClientSecret: {
-										Type:      schema.TypeString,
-										Required:  true,
-										Sensitive: true,
-									},
-									names.AttrIssuer: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"on_unauthenticated_request": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"session_cookie_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"session_timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									"token_endpoint": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"user_info_endpoint": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"fixed_response": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrContentType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"text/plain",
-											"text/css",
-											"text/html",
-											"application/javascript",
-											"application/json",
-										}, false),
-									},
-									"message_body": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									names.AttrStatusCode: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
-									},
-								},
-							},
-						},
-						"forward": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_group": {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 5,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												names.AttrWeight: {
-													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
-													Default:      1,
-													Optional:     true,
-												},
-											},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alpn_policy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(alpnPolicyEnum_Values(), true),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDefaultAction: {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authenticate_cognito": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_request_extra_params": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
-									},
-									"stickiness": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrDuration: {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 604800),
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
-												},
-											},
+										"on_unauthenticated_request": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
+										},
+										names.AttrScope: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"session_cookie_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"session_timeout": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"user_pool_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"user_pool_client_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"user_pool_domain": {
+											Type:     schema.TypeString,
+											Required: true,
 										},
 									},
 								},
 							},
-						},
-						"jwt_validation": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrIssuer: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+							"authenticate_oidc": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_request_extra_params": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"authorization_endpoint": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrClientID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrClientSecret: {
+											Type:      schema.TypeString,
+											Required:  true,
+											Sensitive: true,
+										},
+										names.AttrIssuer: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"on_unauthenticated_request": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
+										},
+										names.AttrScope: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"session_cookie_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"session_timeout": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"token_endpoint": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"user_info_endpoint": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
-									"jwks_endpoint": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+								},
+							},
+							"fixed_response": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrContentType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"text/plain",
+												"text/css",
+												"text/html",
+												"application/javascript",
+												"application/json",
+											}, false),
+										},
+										"message_body": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										names.AttrStatusCode: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
+										},
 									},
-									"additional_claim": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrFormat: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeSet,
-													Required: true,
-													MaxItems: 10,
-													Elem: &schema.Schema{
+								},
+							},
+							"forward": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_group": {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											MaxItems: 5,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrARN: {
 														Type:         schema.TypeString,
-														ValidateFunc: validation.StringLenBetween(1, 256),
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													names.AttrWeight: {
+														Type:         schema.TypeInt,
+														ValidateFunc: validation.IntBetween(0, 999),
+														Default:      1,
+														Optional:     true,
+													},
+												},
+											},
+										},
+										"stickiness": {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MaxItems:         1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrDuration: {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(1, 604800),
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Default:  false,
 													},
 												},
 											},
@@ -318,271 +273,318 @@ func resourceListener() *schema.Resource {
 									},
 								},
 							},
-						},
-						"order": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
-						},
-						"redirect": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumRedirect),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "#{host}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									names.AttrPath: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/#{path}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									names.AttrPort: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{port}",
-									},
-									names.AttrProtocol: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{protocol}",
-										ValidateFunc: validation.StringInSlice([]string{
-											"#{protocol}",
-											"HTTP",
-											"HTTPS",
-										}, false),
-									},
-									"query": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "#{query}",
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-									names.AttrStatusCode: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
+							"jwt_validation": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIssuer: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"jwks_endpoint": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"additional_claim": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFormat: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeSet,
+														Required: true,
+														MaxItems: 10,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(1, 256),
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
-						},
-						"target_group_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
-							ValidateFunc:     verify.ValidARN,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
+							"order": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
+							},
+							"redirect": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumRedirect),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"host": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "#{host}",
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrPath: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "/#{path}",
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrPort: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "#{port}",
+										},
+										names.AttrProtocol: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "#{protocol}",
+											ValidateFunc: validation.StringInSlice([]string{
+												"#{protocol}",
+												"HTTP",
+												"HTTPS",
+											}, false),
+										},
+										"query": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "#{query}",
+											ValidateFunc: validation.StringLenBetween(0, 128),
+										},
+										names.AttrStatusCode: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
+										},
+									},
+								},
+							},
+							"target_group_arn": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
+								ValidateFunc:     verify.ValidARN,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
+							},
 						},
 					},
 				},
-			},
-			"load_balancer_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"mutual_authentication": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"advertise_trust_store_ca_names": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AdvertiseTrustStoreCaNamesEnum](),
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrMode: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
-						},
-						"trust_store_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				"load_balancer_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"mutual_authentication": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"advertise_trust_store_ca_names": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AdvertiseTrustStoreCaNamesEnum](),
+							},
+							"ignore_client_certificate_expiry": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrMode: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
+							},
+							"trust_store_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrPort: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			names.AttrProtocol: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_subject_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_mtls_clientcert_validity_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_request_x_amzn_tls_version_header_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_access_control_allow_credentials_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_access_control_allow_headers_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_access_control_allow_methods_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_access_control_allow_origin_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_access_control_expose_headers_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_access_control_max_age_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_content_security_policy_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_server_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_strict_transport_security_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_x_content_type_options_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"routing_http_response_x_frame_options_header_value": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				// Attribute only valid for HTTP and HTTPS (ALB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
-			},
-			"ssl_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tcp_idle_timeout_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(60, 6000),
-				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
-				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
-			},
+				names.AttrPort: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				names.AttrProtocol: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
+				},
+				"routing_http_request_x_amzn_mtls_clientcert_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_mtls_clientcert_subject_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_mtls_clientcert_validity_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_tls_cipher_suite_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_request_x_amzn_tls_version_header_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_access_control_allow_credentials_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_access_control_allow_headers_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_access_control_allow_methods_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_access_control_allow_origin_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_access_control_expose_headers_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_access_control_max_age_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_content_security_policy_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_server_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_strict_transport_security_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_x_content_type_options_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"routing_http_response_x_frame_options_header_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for HTTP and HTTPS (ALB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
+				},
+				"ssl_policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tcp_idle_timeout_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(60, 6000),
+					// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -735,6 +737,14 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceListenerFlatten(ctx, meta.(*conns.AWSClient), listener, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceListenerFlatten(ctx context.Context, awsClient *conns.AWSClient, listener *awstypes.Listener, d *schema.ResourceData) error {
 	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
@@ -746,11 +756,11 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	sortListenerActions(listener.DefaultActions)
 
 	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
+		return fmt.Errorf("setting default_action: %w", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
 	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
+		return fmt.Errorf("setting mutual_authentication: %w", err)
 	}
 	d.Set(names.AttrPort, listener.Port)
 	d.Set(names.AttrProtocol, listener.Protocol)
@@ -758,16 +768,16 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// DescribeListenerAttributes is not supported for 'TLS' protocol listeners.
 	if listener.Protocol != awstypes.ProtocolEnumTls {
-		attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
+		attributes, err := findListenerAttributesByARN(ctx, awsClient.ELBV2Client(ctx), d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+			return fmt.Errorf("reading ELBv2 Listener (%s) attributes: %w", d.Id(), err)
 		}
 
 		listenerAttributes.flatten(d, attributes)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

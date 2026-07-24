@@ -38,7 +38,7 @@ func TestAccKinesisResourcePolicy_Identity_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KinesisServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -48,7 +48,7 @@ func TestAccKinesisResourcePolicy_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
@@ -278,7 +278,7 @@ func TestAccKinesisResourcePolicy_Identity_ExistingResource_basic(t *testing.T) 
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KinesisServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -288,7 +288,7 @@ func TestAccKinesisResourcePolicy_Identity_ExistingResource_basic(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -303,7 +303,7 @@ func TestAccKinesisResourcePolicy_Identity_ExistingResource_basic(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -363,7 +363,7 @@ func TestAccKinesisResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t 
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KinesisServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -378,7 +378,7 @@ func TestAccKinesisResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsComplexValue",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfComplexValue",
-    "source_type": "flex.awsComplexValue"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfComplexValue"
   },
   {
     "@level": "info",
@@ -163,9 +162,7 @@
     "autoflex.source.size": 3,
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleInt64Value",
     "autoflex.target.path": "Field4",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]",
-    "source_type": "[]flex.awsSingleInt64Value",
-    "target_type": "SetNestedObjectTypeOf[flex.tfSingleInt64Field]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]"
   },
   {
     "@level": "debug",
@@ -174,8 +171,7 @@
     "autoflex.source.path": "Field4",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleInt64Value",
     "autoflex.target.path": "Field4",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]",
-    "element_type": "flex.awsSingleInt64Value"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]"
   },
   {
     "@level": "debug",

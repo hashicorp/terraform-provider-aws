@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `secondary_interfaces` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `cpu_options.nested_virtualization` and `network_performance_options` attributes
+```

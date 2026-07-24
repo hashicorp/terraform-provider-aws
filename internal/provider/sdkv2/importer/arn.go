@@ -131,9 +131,9 @@ func GlobalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttypes
 	return nil
 }
 
-func setAttribute(rd *schema.ResourceData, name string, value string) {
+func setAttribute(rd *schema.ResourceData, name string, value any) {
 	if name == "id" {
-		rd.SetId(value)
+		rd.SetId(value.(string))
 		return
 	}
 	rd.Set(name, value)

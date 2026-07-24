@@ -1,0 +1,3 @@
+```release-note:note
+provider: Update Go version to v1.25.8. Addresses `GO-2026-4602, FileInfo can escape from a Root in os`, `GO-2026-4603, URLs in meta content attribute actions are not escaped in html/template`, and `GO-2026-4601, Incorrect parsing of IPv6 host literals in net/url`
+```

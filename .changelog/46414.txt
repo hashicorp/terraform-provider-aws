@@ -1,3 +1,7 @@
-```release-note:note
-resource/aws_secretsmanager_secret: Add support for managed external secrets for automated rotation by third parties.
+```release-note:enhancement
+resource/aws_secretsmanager_secret: Add `type` argument in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html)
+```
+
+```release-note:enhancement
+resource/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` arguments in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html)
 ```

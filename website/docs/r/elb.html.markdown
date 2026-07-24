@@ -124,13 +124,7 @@ Health Check (`health_check`) supports the following:
 * `interval` - (Required) The interval between checks.
 * `timeout` - (Required) The length of time before the check times out.
 
-## Note on ECDSA Key Algorithm
-
-If the ARN of the `ssl_certificate_id` that is pointed to references a
-certificate that was signed by an ECDSA key, note that ELB only supports the
-P256 and P384 curves.  Using a certificate signed by a key using a different
-curve could produce the error `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` in your
-browser.
+~> **Note:** If the ARN of the `ssl_certificate_id` references a certificate signed by an ECDSA key, ELB only supports the P256 and P384 curves. Using a certificate signed by a different curve could produce `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` in your browser.
 
 ## Attribute Reference
 
@@ -150,13 +144,46 @@ This resource exports the following attributes in addition to the arguments abov
 * `zone_id` - The canonical hosted zone ID of the ELB (to be used in a Route 53 Alias record)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_elb.example
+  identity = {
+    name = "example-name"
+  }
+}
+
+resource "aws_elb" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the ELB.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ELBs using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_elb.bar
+  to = aws_elb.example
   id = "elb-production-12345"
 }
 ```
@@ -164,5 +191,5 @@ import {
 Using `terraform import`, import ELBs using the `name`. For example:
 
 ```console
-% terraform import aws_elb.bar elb-production-12345
+% terraform import aws_elb.example elb-production-12345
 ```

@@ -163,7 +163,7 @@ The following arguments are optional:
 The following arguments are required:
 
 * `name` - (Required) The name of an Image Builder recipe that the lifecycle policy uses for resource selection.
-* `semantic_version` - (Required) The version of the Image Builder recipe specified by the name field.
+* `semantic_version` - (Required) The version of the Image Builder recipe specified by the `name` field. Wildcard semantic version is supported (e.g. `1.0.x`, `1.x.x`, `x.x.x`).
 
 ## Attribute Reference
 

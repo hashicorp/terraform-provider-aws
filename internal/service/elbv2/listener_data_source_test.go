@@ -81,12 +81,12 @@ func TestAccELBV2ListenerDataSource_mutualAuthentication(t *testing.T) {
 func testAccListenerDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 

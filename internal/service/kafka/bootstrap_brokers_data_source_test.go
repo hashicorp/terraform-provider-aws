@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccKafkaBootstrapBrokersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_bootstrap_brokers.test"
 	resourceName := "aws_msk_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,6 +36,10 @@ func TestAccKafkaBootstrapBrokersDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_vpc_connectivity_sasl_iam", resourceName, "bootstrap_brokers_vpc_connectivity_sasl_iam"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_vpc_connectivity_sasl_scram", resourceName, "bootstrap_brokers_vpc_connectivity_sasl_scram"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_vpc_connectivity_tls", resourceName, "bootstrap_brokers_vpc_connectivity_tls"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_ipv6", resourceName, "bootstrap_brokers_ipv6"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_sasl_iam_ipv6", resourceName, "bootstrap_brokers_sasl_iam_ipv6"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_sasl_scram_ipv6", resourceName, "bootstrap_brokers_sasl_scram_ipv6"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_tls_ipv6", resourceName, "bootstrap_brokers_tls_ipv6"),
 				),
 			},
 		},

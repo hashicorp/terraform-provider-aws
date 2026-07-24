@@ -128,6 +128,38 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_method_response.example
+  identity = {
+    rest_api_id = "12345abcde"
+    resource_id = "67890fghij"
+    http_method = "GET"
+    status_code = "200"
+  }
+}
+
+resource "aws_api_gateway_method_response" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `rest_api_id` (String) The string identifier of the associated REST API.
+* `resource_id` (String) The Resource identifier for the method resource.
+* `http_method` (String) The HTTP verb of the method resource.
+* `status_code` (String) The method response's status code.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_method_response` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`. For example:
 
 ```terraform

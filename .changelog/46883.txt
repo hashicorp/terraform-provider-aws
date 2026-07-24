@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_mq_broker: Change `user` block to Optional
+```
+
+```release-note:bug
+resource/aws_mq_broker: Fix non-idempotent behavior for RabbitMQ brokers with `user` block
+```

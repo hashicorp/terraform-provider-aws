@@ -1,0 +1,3 @@
+```release-note:note
+documentation: CDKTF documentation has been removed from the provider
+```

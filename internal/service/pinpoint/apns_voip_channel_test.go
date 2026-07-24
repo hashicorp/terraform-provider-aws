@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -62,7 +61,7 @@ func testAccAPNSVoIPChannelCertConfigurationFromEnv(t *testing.T) *testAccAPNSVo
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -95,23 +94,36 @@ func testAccAPNSVoIPChannelTokenConfigurationFromEnv(t *testing.T) *testAccAPNSV
 	return &conf
 }
 
-func TestAccPinpointAPNSVoIPChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSVoIPChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSVoIPChannel_basicCertificate,
+		"basicToken":       testAccAPNSVoIPChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSVoIPChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
 	configuration := testAccAPNSVoIPChannelCertConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSVoIPChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckAPNSVoIPChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSVoIPChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 			{
@@ -123,30 +135,30 @@ func TestAccPinpointAPNSVoIPChannel_basicCertificate(t *testing.T) {
 			{
 				Config: testAccAPNSVoIPChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func TestAccPinpointAPNSVoIPChannel_basicToken(t *testing.T) {
+func testAccAPNSVoIPChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
 	configuration := testAccAPNSVoIPChannelTokenConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSVoIPChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckAPNSVoIPChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSVoIPChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 			{
@@ -158,14 +170,14 @@ func TestAccPinpointAPNSVoIPChannel_basicToken(t *testing.T) {
 			{
 				Config: testAccAPNSVoIPChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSVoIPChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAPNSVoIPChannelExists(ctx context.Context, n string, channel *awstypes.APNSVoipChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSVoIPChannelExists(ctx context.Context, t *testing.T, n string, channel *awstypes.APNSVoipChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -173,10 +185,10 @@ func testAccCheckAPNSVoIPChannelExists(ctx context.Context, n string, channel *a
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNs VoIP Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNs VoIP Channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindAPNSVoIPChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
@@ -190,9 +202,9 @@ func testAccCheckAPNSVoIPChannelExists(ctx context.Context, n string, channel *a
 	}
 }
 
-func testAccCheckAPNSVoIPChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPNSVoIPChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_apns_voip_channel" {
@@ -209,7 +221,7 @@ func testAccCheckAPNSVoIPChannelDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS VoIP Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS VoIP Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

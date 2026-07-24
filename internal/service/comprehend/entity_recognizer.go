@@ -22,7 +22,6 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,198 +61,200 @@ func resourceEntityRecognizer() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_access_role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"input_data_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"annotations": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"input_data_config.0.annotations", "input_data_config.0.entity_list"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"test_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"augmented_manifests": {
-							Type:         schema.TypeSet,
-							Optional:     true,
-							ExactlyOneOf: []string{"input_data_config.0.augmented_manifests", "input_data_config.0.documents"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"annotation_data_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"attribute_names": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"document_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.AugmentedManifestsDocumentTypeFormat](),
-										Default:          types.AugmentedManifestsDocumentTypeFormatPlainTextDocument,
-									},
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"source_documents_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"split": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.Split](),
-										Default:          types.SplitTrain,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_access_role_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"input_data_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"annotations": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								ExactlyOneOf: []string{"input_data_config.0.annotations", "input_data_config.0.entity_list"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"test_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"data_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.EntityRecognizerDataFormat](),
-							Default:          types.EntityRecognizerDataFormatComprehendCsv,
-						},
-						"documents": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"input_data_config.0.documents", "input_data_config.0.augmented_manifests"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"input_format": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.InputFormat](),
-										Default:          types.InputFormatOneDocPerLine,
-									},
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"test_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"entity_list": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"input_data_config.0.entity_list", "input_data_config.0.annotations"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
+							"augmented_manifests": {
+								Type:         schema.TypeSet,
+								Optional:     true,
+								ExactlyOneOf: []string{"input_data_config.0.augmented_manifests", "input_data_config.0.documents"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"annotation_data_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"attribute_names": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"document_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.AugmentedManifestsDocumentTypeFormat](),
+											Default:          types.AugmentedManifestsDocumentTypeFormatPlainTextDocument,
+										},
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"source_documents_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"split": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Split](),
+											Default:          types.SplitTrain,
+										},
 									},
 								},
 							},
-						},
-						"entity_types": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 25,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringIsNotEmpty,
-											validation.StringDoesNotContainAny("\n\r\t,"),
-										),
+							"data_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.EntityRecognizerDataFormat](),
+								Default:          types.EntityRecognizerDataFormatComprehendCsv,
+							},
+							"documents": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								ExactlyOneOf: []string{"input_data_config.0.documents", "input_data_config.0.augmented_manifests"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"input_format": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InputFormat](),
+											Default:          types.InputFormatOneDocPerLine,
+										},
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"test_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"entity_list": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								ExactlyOneOf: []string{"input_data_config.0.entity_list", "input_data_config.0.annotations"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"entity_types": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: 25,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringIsNotEmpty,
+												validation.StringDoesNotContainAny("\n\r\t,"),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrLanguageCode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
-			},
-			"model_kms_key_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: tfkms.DiffSuppressKey,
-				ValidateFunc:     tfkms.ValidateKey,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validModelName,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validModelVersionName,
-				ConflictsWith: []string{"version_name_prefix"},
-			},
-			"version_name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validModelVersionNamePrefix,
-				ConflictsWith: []string{"version_name"},
-			},
-			"volume_kms_key_id": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: tfkms.DiffSuppressKey,
-				ValidateFunc:     tfkms.ValidateKey,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrLanguageCode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
+				},
+				"model_kms_key_id": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					DiffSuppressFunc: tfkms.DiffSuppressKey,
+					ValidateFunc:     tfkms.ValidateKey,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validModelName,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"version_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validModelVersionName,
+					ConflictsWith: []string{"version_name_prefix"},
+				},
+				"version_name_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validModelVersionNamePrefix,
+					ConflictsWith: []string{"version_name"},
+				},
+				"volume_kms_key_id": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					DiffSuppressFunc: tfkms.DiffSuppressKey,
+					ValidateFunc:     tfkms.ValidateKey,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -504,7 +505,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		RecognizerName:     aws.String(d.Get(names.AttrName).(string)),
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		Tags:               getTagsIn(ctx),
 	}
 

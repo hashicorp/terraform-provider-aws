@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +33,7 @@ func TestAccShieldSubscription_basic(t *testing.T) {
 	var subscription shield.DescribeSubscriptionOutput
 	resourceName := "aws_shield_subscription.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
@@ -45,7 +44,7 @@ func TestAccShieldSubscription_basic(t *testing.T) {
 			{
 				Config: testAccSubscriptionConfig_basic(string(awstypes.AutoRenewEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "auto_renew", string(awstypes.AutoRenewEnabled)),
 				),
 			},
@@ -58,7 +57,7 @@ func TestAccShieldSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSubscriptionExists(ctx context.Context, name string, subscription *shield.DescribeSubscriptionOutput) resource.TestCheckFunc {
+func testAccCheckSubscriptionExists(ctx context.Context, t *testing.T, name string, subscription *shield.DescribeSubscriptionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -69,7 +68,7 @@ func testAccCheckSubscriptionExists(ctx context.Context, name string, subscripti
 			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameSubscription, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 		resp, err := conn.DescribeSubscription(ctx, &shield.DescribeSubscriptionInput{})
 
 		if err != nil {

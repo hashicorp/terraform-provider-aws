@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -224,8 +223,8 @@ func findConnectionAliases(ctx context.Context, conn *workspaces.Client, input *
 	return output, nil
 }
 
-func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnectionAlias(conn *workspaces.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionAliasByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -241,10 +240,10 @@ func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id stri
 }
 
 func waitConnectionAliasCreated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.ConnectionAlias, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionAliasStateCreating),
 		Target:  enum.Slice(awstypes.ConnectionAliasStateCreated),
-		Refresh: statusConnectionAlias(ctx, conn, id),
+		Refresh: statusConnectionAlias(conn, id),
 		Timeout: timeout,
 	}
 
@@ -258,10 +257,10 @@ func waitConnectionAliasCreated(ctx context.Context, conn *workspaces.Client, id
 }
 
 func waitConnectionAliasDeleted(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.ConnectionAlias, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionAliasStateDeleting),
 		Target:  []string{},
-		Refresh: statusConnectionAlias(ctx, conn, id),
+		Refresh: statusConnectionAlias(conn, id),
 		Timeout: timeout,
 	}
 

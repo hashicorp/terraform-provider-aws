@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,19 +19,19 @@ import (
 func TestAccRoute53CIDRLocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_cidr_location.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	locationName := sdkacctest.RandString(16)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	locationName := acctest.RandString(t, 16)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCIDRLocation_basic(rName, locationName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCIDRLocationExists(ctx, resourceName),
+					testAccCheckCIDRLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
@@ -78,6 +76,14 @@ func TestAccRoute53CIDRLocation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfroute53.ResourceCIDRLocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -87,19 +93,19 @@ func TestAccRoute53CIDRLocation_disappears(t *testing.T) {
 func TestAccRoute53CIDRLocation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_cidr_location.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	locationName := sdkacctest.RandString(16)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	locationName := acctest.RandString(t, 16)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckCIDRLocationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCIDRLocation_basic(rName, locationName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCIDRLocationExists(ctx, resourceName),
+					testAccCheckCIDRLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
@@ -114,7 +120,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 			{
 				Config: testAccCIDRLocation_updated(rName, locationName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCIDRLocationExists(ctx, resourceName),
+					testAccCheckCIDRLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.2.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
@@ -126,9 +132,9 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckCIDRLocationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCIDRLocationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_cidr_location" {
@@ -152,14 +158,14 @@ func testAccCheckCIDRLocationDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckCIDRLocationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCIDRLocationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes[names.AttrName])
 

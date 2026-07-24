@@ -129,7 +129,6 @@ The following arguments are required:
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) Version of the broker engine.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
-* `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
 The following arguments are optional:
 
@@ -146,10 +145,12 @@ The following arguments are optional:
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_share_arns` - (Optional) Set of [AWS RAM](https://docs.aws.amazon.com/ram/latest/userguide/what-is.html) resource share ARNs that grant the broker access to shared resources for [private networking](https://aws.amazon.com/blogs/big-data/introducing-private-networking-for-amazon-mq-for-rabbitmq/). Applies to `engine_type` of `RabbitMQ` only. Because Amazon MQ applies resource shares during a reboot, set `apply_immediately` to `true` for changes to take effect without waiting for the next maintenance window.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
 * `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, valid values are `efs` and `ebs` (AWS-default is `efs`). For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
 * `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user` - (Optional) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
 ### configuration
 
@@ -218,16 +219,24 @@ This resource exports the following attributes in addition to the arguments abov
 * `instances` - List of information about allocated brokers (both active & standby).
     * `instances.0.console_url` - URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
     * `instances.0.ip_address` - IP Address of the broker.
-    * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances.0.endpoints.0` (SSL):
+    * `instances.0.endpoints` - Broker's wire-level protocol endpoints referenceable e.g., as `instances.0.endpoints.0`. Known endpoints are returned in the deterministic order below, based on protocol prefix and port number; any additional endpoint types introduced in the future are appended afterward in the order returned by the API.
         * For `ActiveMQ`:
-            * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
-            * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
-            * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
-            * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
-            * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
-        * For `RabbitMQ`:
-            * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `instances.0.endpoints.0` - `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
+            * `instances.0.endpoints.1` - `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `instances.0.endpoints.2` - `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
+            * `instances.0.endpoints.3` - `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
+            * `instances.0.endpoints.4` - `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
+        * For `RabbitMQ` prior to version 4.2:
+            * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+        * For `RabbitMQ` 4.2 and later, an additional [Prometheus metrics](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/rabbitmq-prometheus-metrics.html) endpoint is appended after the AMQP endpoint to keep `instances.0.endpoints.0` stable across versions:
+            * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `instances.0.endpoints.1` - `https://broker-id.mq.us-west-2.amazonaws.com:16001`
 * `pending_data_replication_mode` - Data replication mode that will be applied after reboot.
+* `shared_resources` - List of resources shared with the broker via `resource_share_arns`. Only populated for `engine_type` of `RabbitMQ`.
+    * `shared_resources.0.dns_names` - DNS names through which the broker reaches the shared resource.
+    * `shared_resources.0.resource_arn` - ARN of the shared resource.
+    * `shared_resources.0.status` - Status of the shared resource.
+    * `shared_resources.0.type` - Type of the shared resource, either `RESOURCE_SHARE` or `RESOURCE`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

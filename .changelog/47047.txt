@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_budgets_budget: Add `metrics` attribute
+```
+
+```release-note:bug
+resource/aws_budgets_budget: Add missing metrics attribute required for filter_expression
+```

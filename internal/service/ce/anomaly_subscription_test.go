@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -23,7 +24,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -59,7 +60,7 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -75,6 +76,14 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceAnomalySubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -85,7 +94,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -123,7 +132,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -161,7 +170,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 
@@ -229,7 +238,7 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

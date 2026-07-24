@@ -76,3 +76,30 @@ func TestToLowercasePrefix(t *testing.T) {
 		})
 	}
 }
+
+func TestToAWSCapitalization(t *testing.T) {
+	tests := map[string]struct {
+		s    string
+		want string
+	}{
+		"unchanged": {
+			s:    "ThisWillNotChange",
+			want: "ThisWillNotChange",
+		},
+		"empty": {
+			s:    "",
+			want: "",
+		},
+		"VPC": {
+			s:    "VPCThing",
+			want: "VpcThing",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := ToAWSCapitalization(tt.s); got != tt.want {
+				t.Errorf("ToAWSCapitalization() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,54 +45,56 @@ func resourceKeyPair() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  keyPairMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255),
-				ConflictsWith: []string{"key_name_prefix"},
-			},
-			"key_name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
-				ConflictsWith: []string{"key_name"},
-			},
-			"key_pair_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return strings.TrimSpace(v)
-					default:
-						return ""
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255),
+					ConflictsWith: []string{"key_name_prefix"},
+				},
+				"key_name_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
+					ConflictsWith: []string{"key_name"},
+				},
+				"key_pair_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						switch v := v.(type) {
+						case string:
+							return strings.TrimSpace(v)
+						default:
+							return ""
+						}
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

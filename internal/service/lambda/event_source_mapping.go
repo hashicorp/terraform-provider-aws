@@ -53,7 +53,12 @@ var kafkaOrARNPattern = `$|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-
 
 // @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("uuid")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetEventSourceMappingOutput")
+// @Testing(importIgnore="last_modified")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.42.0")
 func resourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSourceMappingCreate,
@@ -61,8 +66,10 @@ func resourceEventSourceMapping() *schema.Resource {
 		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
 		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -442,6 +449,10 @@ func resourceEventSourceMapping() *schema.Resource {
 					Optional:     true,
 					ValidateFunc: validation.IntBetween(0, 900),
 				},
+				"use_resource_timeout_for_propagation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
 				"uuid": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -631,13 +642,19 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.TumblingWindowInSeconds = aws.Int32(int32(v.(int)))
 	}
 
+	createTimeout := d.Timeout(schema.TimeoutCreate)
+	propagationTimeout := lambdaPropagationTimeout
+	if d.Get("use_resource_timeout_for_propagation").(bool) {
+		propagationTimeout = createTimeout
+	}
+
 	// IAM profiles and roles can take some time to propagate in AWS:
 	//  http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	// Error creating Lambda function: InvalidParameterValueException: The
 	// function defined for the task cannot be assumed by Lambda.
 	//
 	// The role may exist, but the permissions may not have propagated, so we retry.
-	output, err := retryEventSourceMapping(ctx, func(ctx context.Context) (*lambda.CreateEventSourceMappingOutput, error) {
+	output, err := retryEventSourceMapping(ctx, propagationTimeout, func(ctx context.Context) (*lambda.CreateEventSourceMappingOutput, error) {
 		return conn.CreateEventSourceMapping(ctx, &input)
 	})
 
@@ -645,7 +662,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		output, err = retryEventSourceMapping(ctx, func(ctx context.Context) (*lambda.CreateEventSourceMappingOutput, error) {
+		output, err = retryEventSourceMapping(ctx, propagationTimeout, func(ctx context.Context) (*lambda.CreateEventSourceMappingOutput, error) {
 			return conn.CreateEventSourceMapping(ctx, &input)
 		})
 	}
@@ -656,7 +673,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(output.UUID))
 
-	if _, err := waitEventSourceMappingCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingCreated(ctx, conn, d.Id(), createTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) create: %s", d.Id(), err)
 	}
 
@@ -678,6 +695,12 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
+
+	return append(diags, resourceEventSourceMappingFlatten(d, output)...)
+}
+
+func resourceEventSourceMappingFlatten(d *schema.ResourceData, output *lambda.GetEventSourceMappingOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	if output.AmazonManagedKafkaEventSourceConfig != nil {
 		if err := d.Set("amazon_managed_kafka_event_source_config", []any{flattenAmazonManagedKafkaEventSourceConfig(output.AmazonManagedKafkaEventSourceConfig)}); err != nil {
@@ -895,7 +918,12 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			input.TumblingWindowInSeconds = aws.Int32(int32(d.Get("tumbling_window_in_seconds").(int)))
 		}
 
-		_, err := retryEventSourceMapping(ctx, func(ctx context.Context) (*lambda.UpdateEventSourceMappingOutput, error) {
+		updateTimeout := d.Timeout(schema.TimeoutUpdate)
+		propagationTimeout := lambdaPropagationTimeout
+		if d.Get("use_resource_timeout_for_propagation").(bool) {
+			propagationTimeout = updateTimeout
+		}
+		_, err := retryEventSourceMapping(ctx, propagationTimeout, func(ctx context.Context) (*lambda.UpdateEventSourceMappingOutput, error) {
 			return conn.UpdateEventSourceMapping(ctx, &input)
 		})
 
@@ -903,7 +931,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id(), updateTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -916,13 +944,17 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
-	const (
-		timeout = 5 * time.Minute
-	)
+
+	deleteTimeout := d.Timeout(schema.TimeoutDelete)
+	propagationTimeout := lambdaPropagationTimeout
+	if d.Get("use_resource_timeout_for_propagation").(bool) {
+		propagationTimeout = deleteTimeout
+	}
+
 	input := lambda.DeleteEventSourceMappingInput{
 		UUID: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteEventSourceMapping(ctx, &input)
 	})
 
@@ -934,7 +966,7 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEventSourceMappingDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingDeleted(ctx, conn, d.Id(), deleteTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) delete: %s", d.Id(), err)
 	}
 
@@ -945,8 +977,8 @@ type eventSourceMappingCU interface {
 	lambda.CreateEventSourceMappingOutput | lambda.UpdateEventSourceMappingOutput
 }
 
-func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func(context.Context) (*T, error)) (*T, error) {
-	outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
+func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, timeout time.Duration, f func(context.Context) (*T, error)) (*T, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			return f(ctx)
 		},
@@ -1018,10 +1050,7 @@ func statusEventSourceMapping(conn *lambda.Client, id string) retry.StateRefresh
 	}
 }
 
-func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
-	const (
-		timeout = 10 * time.Minute
-	)
+func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetEventSourceMappingOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
@@ -1040,10 +1069,7 @@ func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id 
 	return nil, err
 }
 
-func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
-	const (
-		timeout = 10 * time.Minute
-	)
+func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetEventSourceMappingOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
@@ -1062,10 +1088,7 @@ func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id 
 	return nil, err
 }
 
-func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*lambda.GetEventSourceMappingOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},

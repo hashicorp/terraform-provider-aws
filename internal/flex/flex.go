@@ -5,6 +5,7 @@ package flex
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -441,17 +442,16 @@ func ResourceIdPartCount(id string) int {
 	return len(idParts)
 }
 
-// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// DiffMaps returns the set of keys and values that must be created, the set of keys
 // and values that must be destroyed, and the set of keys and values that are unchanged.
-func DiffStringValueMaps(oldMap, newMap map[string]any) (map[string]string, map[string]string, map[string]string) {
+func DiffMaps[Map ~map[K]V, K, V comparable](old, new Map) (Map, Map, Map) {
 	// First, we're creating everything we have.
-	add := ExpandStringValueMap(newMap)
+	add := maps.Clone(new)
 
 	// Build the maps of what to remove and what is unchanged.
-	remove := make(map[string]string)
-	unchanged := make(map[string]string)
-	for k, v := range oldMap {
-		v := v.(string)
+	remove := make(Map)
+	unchanged := make(Map)
+	for k, v := range old {
 		if old, ok := add[k]; !ok || old != v {
 			// Delete it!
 			remove[k] = v
@@ -465,9 +465,20 @@ func DiffStringValueMaps(oldMap, newMap map[string]any) (map[string]string, map[
 	return add, remove, unchanged
 }
 
-func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringValueMaps(old, new map[string]any) (map[string]string, map[string]string, map[string]string) {
+	return DiffMaps(ExpandStringValueMap(old), ExpandStringValueMap(new))
+}
+
+// Equal can be used with `DiffSlices` to compare slice elements for equality.
+func Equal[T comparable](t1, t2 T) bool {
+	return t1 == t2
+}
+
+func DiffSlices[S ~[]E, E any](old, new S, eq func(E, E) bool) (S, S, S) {
 	// First, we're creating everything we have.
-	add := new
+	add := slices.Clone(new)
 
 	// Build the slices of what to remove and what is unchanged.
 	remove := make([]E, 0)
@@ -490,9 +501,9 @@ func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
 // DiffSlicesWithModify is a variant of DiffSlices which can account for
 // cases when a partially equal item should be modified, rather than
 // deleted and re-created
-func DiffSlicesWithModify[E any](old []E, new []E, eq func(E, E) bool, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
+func DiffSlicesWithModify[S ~[]E, E any](old, new S, eq, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
 	// First, we're creating everything we have.
-	add := new
+	add := slices.Clone(new)
 
 	// Build the slices of what to remove, modify, and what is unchanged.
 	remove := make([]E, 0)

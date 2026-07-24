@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_api_gateway_method: Add resource identity support
+```

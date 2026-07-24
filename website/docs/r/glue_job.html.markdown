@@ -276,17 +276,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_job.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_glue_job" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the Glue Job.
+
+#### Optional
+
+* `account_id` (String) AWS account ID.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Jobs using `name`. For example:
 
 ```terraform
 import {
-  to = aws_glue_job.MyJob
-  id = "MyJob"
+  to = aws_glue_job.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import Glue Jobs using `name`. For example:
 
 ```console
-% terraform import aws_glue_job.MyJob MyJob
+% terraform import aws_glue_job.example example
 ```

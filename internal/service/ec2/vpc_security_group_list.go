@@ -105,22 +105,15 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 
 			result := request.NewListResult(ctx)
 			tags := keyValueTags(ctx, item.Tags)
-			setTagsOut(ctx, item.Tags)
 
 			rd := l.ResourceData()
 			rd.SetId(groupID)
 
-			tflog.Info(ctx, "Reading resource")
-			diags := resourceSecurityGroupRead(ctx, rd, awsClient)
+			diags := resourceSecurityGroupFlatten(ctx, awsClient, rd, &item)
 			if diags.HasError() {
 				tflog.Error(ctx, "Reading resource", map[string]any{
-					names.AttrID: groupID,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+					"diags": sdkdiag.DiagnosticsString(diags),
 				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
 				continue
 			}
 
@@ -130,7 +123,7 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 				result.DisplayName = aws.ToString(item.GroupName)
 			}
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting result", map[string]any{
 					names.AttrID: groupID,

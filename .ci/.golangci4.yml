@@ -108,6 +108,10 @@ linters:
         text: 'SA1019: tfresource.\w+ is deprecated: \w+ is an alias to a function of the same name in internal/retry which handles both Plugin SDK V2 and internal error types. For net-new usage, prefer calling retry.\w+ directly.'
       - linters:
           - staticcheck
+        path: internal/service/acm/
+        text: 'SA1019: apiObject.CertificateTransparencyLoggingPreference is deprecated'
+      - linters:
+          - staticcheck
         path: internal/service/appsync/
         text: 'SA1019: \w+\.\w+ is deprecated: (\w+) attribute is deprecated'
       - linters:
@@ -120,16 +124,20 @@ linters:
         text: 'SA1019: apiObject.ImageId is deprecated: This field is deprecated'
       - linters:
           - staticcheck
+        path: internal/service/bedrockagentcore/
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
+      - linters:
+          - staticcheck
         path: internal/service/budgets/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/chime/
-        text: 'SA1019: conn.\w+ is deprecated: Replaced by \w+ in the Amazon Chime SDK Voice Namespace'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: Replaced by \w+ in the Amazon Chime SDK Voice Namespace'
       - linters:
           - staticcheck
         path: internal/service/cloudfront/
-        text: 'SA1019: \w+\.\w+ is deprecated: This member has been deprecated'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: This member has been deprecated'
       - linters:
           - staticcheck
         path: internal/service/detective/
@@ -137,7 +145,7 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/ecr/
-        text: 'SA1019: \w+\.\w+ is deprecated: This field is deprecated.'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: This field is deprecated.'
       - linters:
           - staticcheck
         path: internal/service/elastictranscoder/
@@ -145,11 +153,11 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/elastictranscoder/
-        text: 'SA1019: \w+\.\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
       - linters:
           - staticcheck
         path: internal/service/elastictranscoder/
-        text: 'SA1019: \w+\.\w+\.\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
       - linters:
           - staticcheck
         path: internal/service/evidently/
@@ -157,19 +165,15 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/evidently/
-        text: 'SA1019: \w+\.\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
-      - linters:
-          - staticcheck
-        path: internal/service/evidently/
-        text: 'SA1019: \w+\.\w+\.\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
       - linters:
           - staticcheck
         path: internal/service/firehose/
-        text: 'SA1019: \w+\.\w+ is deprecated: (\w+) has been deprecated'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: (\w+) has been deprecated'
       - linters:
           - staticcheck
         path: internal/service/fsx/
-        text: 'SA1019: \w+\.\w+ is deprecated: This property is deprecated'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: This property is deprecated'
       - linters:
           - staticcheck
         path: internal/service/globalaccelerator/
@@ -177,15 +181,19 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/guardduty/
-        text: 'SA1019: \w+\.\w+ is deprecated. This (input|operation|parameter|field) is deprecated'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated. This (input|operation|parameter|field) is deprecated'
       - linters:
           - staticcheck
         path: internal/service/identitystore/
         text: 'SA1019: \w+.Filters is deprecated: Using filters with List\w+ API is deprecated'
       - linters:
           - staticcheck
+        path: internal/service/lexmodels/
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: Amazon Lex V1 is deprecated. Use Amazon Lex V2 instead.'
+      - linters:
+          - staticcheck
         path: internal/service/neptune/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/qldb/
@@ -193,35 +201,35 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/qldb/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/quicksight/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/s3/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/s3control/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/securityhub/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/servicediscovery/
-        text: 'SA1019: \w+\.\w+ is deprecated:'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/wafv2/
-        text: 'SA1019: \w+\.\w+ is deprecated: Deprecated. Use'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: Deprecated. Use'
       - linters:
           - staticcheck
         path: internal/service/worklink/
-        text: 'SA1019: \w+\.\w+ is deprecated: Amazon WorkLink is no longer supported. This will be removed in a future version of the SDK.'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated: Amazon WorkLink is no longer supported. This will be removed in a future version of the SDK.'
 issues:
   max-issues-per-linter: 20
   max-same-issues: 10

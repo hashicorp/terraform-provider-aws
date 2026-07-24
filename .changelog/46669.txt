@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_network_interface: Add `ena_srd_specification` argument to support ENA Express
+```
+
+```release-note:enhancement
+data-source/aws_network_interface: Add `ena_srd_specification` attribute
+```

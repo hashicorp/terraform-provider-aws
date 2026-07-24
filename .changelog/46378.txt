@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Fix `function_association` and `lambda_function_association` block ordering producing inconsistent result after apply when multiple associations are configured
+```

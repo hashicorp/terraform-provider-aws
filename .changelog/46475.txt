@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cur_report_definition: Support `ap-southeast-5` and `eusc-de-east-1` as valid values for `s3_region`
+```

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,8 +22,8 @@ import (
 func TestAccDataPipelinePipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2 awstypes.PipelineDescription
-	rName1 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
-	rName2 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
+	rName1 := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(t, 5))
+	rName2 := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(t, 5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -60,7 +59,7 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 func TestAccDataPipelinePipeline_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf1, conf2 awstypes.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(t, 5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -96,7 +95,7 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(t, 5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

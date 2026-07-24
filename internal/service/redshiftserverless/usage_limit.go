@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -37,39 +36,41 @@ func resourceUsageLimit() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"amount": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"breach_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.UsageLimitBreachActionLog,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
-			},
-			"period": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.UsageLimitPeriodMonthly,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
-			},
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"usage_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitUsageType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"amount": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"breach_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.UsageLimitBreachActionLog,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
+				},
+				"period": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.UsageLimitPeriodMonthly,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
+				},
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"usage_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitUsageType](),
+				},
+			}
 		},
 	}
 }
@@ -180,9 +181,8 @@ func findUsageLimitByName(ctx context.Context, conn *redshiftserverless.Client, 
 	output, err := conn.GetUsageLimit(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

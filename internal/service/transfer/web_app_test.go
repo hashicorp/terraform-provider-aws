@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,10 +27,10 @@ import (
 func TestAccTransferWebApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -40,12 +38,12 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -78,10 +76,10 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 func TestAccTransferWebApp_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -89,12 +87,12 @@ func TestAccTransferWebApp_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tftransfer.ResourceWebApp, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,10 +112,10 @@ func TestAccTransferWebApp_disappears(t *testing.T) {
 func TestAccTransferWebApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -125,12 +123,12 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -153,7 +151,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 			{
 				Config: testAccWebAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -170,7 +168,7 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 			{
 				Config: testAccWebAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -190,10 +188,10 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -201,12 +199,12 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebAppConfig_webAppUnits(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -231,7 +229,7 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 			{
 				Config: testAccWebAppConfig_webAppUnits(rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -253,10 +251,10 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -264,12 +262,12 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebAppConfig_accessEndPoint(rName, "https://example.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -290,7 +288,7 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 			{
 				Config: testAccWebAppConfig_accessEndPoint(rName, "https://example.net"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -308,10 +306,10 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 func TestAccTransferWebApp_VPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -319,12 +317,12 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebAppConfig_VPC(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -351,7 +349,7 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 			{
 				Config: testAccWebAppConfig_VPC(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &v),
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -372,9 +370,9 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 	})
 }
 
-func testAccCheckWebAppDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWebAppDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_web_app" {
@@ -396,14 +394,14 @@ func testAccCheckWebAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWebAppExists(ctx context.Context, n string, v *awstypes.DescribedWebApp) resource.TestCheckFunc {
+func testAccCheckWebAppExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedWebApp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		resp, err := tftransfer.FindWebAppByID(ctx, conn, rs.Primary.Attributes["web_app_id"])
 		if err != nil {

@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,18 +19,18 @@ import (
 func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT1H"),
 				),
@@ -49,18 +47,18 @@ func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -73,7 +71,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 			{
 				Config: testAccPermissionSetConfig_tags2(rName, acctest.CtKey1, "updatedvalue1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "updatedvalue1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -87,7 +85,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 			{
 				Config: testAccPermissionSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -104,25 +102,25 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 func TestAccSSOAdminPermissionSet_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccPermissionSetConfig_updateDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
@@ -138,25 +136,25 @@ func TestAccSSOAdminPermissionSet_updateDescription(t *testing.T) {
 func TestAccSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", ""),
 				),
 			},
 			{
 				Config: testAccPermissionSetConfig_updateRelayState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
 				),
 			},
@@ -172,24 +170,24 @@ func TestAccSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 func TestAccSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccPermissionSetConfig_updateSessionDuration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT2H"),
 				),
 			},
@@ -208,18 +206,18 @@ func TestAccSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_relayState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
@@ -229,7 +227,7 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 			{
 				Config: testAccPermissionSetConfig_relayStateUpdateSessionDuration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
@@ -248,24 +246,24 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 func TestAccSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccPermissionSetConfig_mixedPolicyAttachments(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -277,9 +275,9 @@ func TestAccSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 	})
 }
 
-func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPermissionSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_permission_set" {
@@ -308,7 +306,7 @@ func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckSOAdminPermissionSetExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSOAdminPermissionSetExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -320,7 +318,7 @@ func testAccCheckSOAdminPermissionSetExists(ctx context.Context, n string) resou
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err = tfssoadmin.FindPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 

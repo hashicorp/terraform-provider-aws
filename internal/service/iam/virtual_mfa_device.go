@@ -33,7 +33,6 @@ import (
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
 // @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
@@ -45,49 +44,51 @@ func resourceVirtualMFADevice() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_32_string_seed": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPath: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			"qr_code_png": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"serial_number": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"virtual_mfa_device_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[\w+=,.@-]+`),
-					"must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-",
-				),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_32_string_seed": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPath: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "/",
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"qr_code_png": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"serial_number": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"virtual_mfa_device_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`[\w+=,.@-]+`),
+						"must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-",
+					),
+				},
+			}
 		},
 	}
 }

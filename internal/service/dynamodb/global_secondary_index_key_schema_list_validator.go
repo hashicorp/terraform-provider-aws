@@ -31,11 +31,6 @@ func (v globalSecondaryIndexKeySchemaListValidator) MarkdownDescription(_ contex
 
 func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Context, request validator.ListRequest, response *validator.ListResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
-		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
-			request.Path,
-			fmt.Sprintf(`must contain at least %d and at most %d elements with "key_type" %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
-			"0",
-		))
 		return
 	}
 
@@ -44,7 +39,16 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 
 	keySchemas := fwdiag.Must(keySchemaAttr.ToSlice(ctx))
 
-	if keySchemas[0].KeyType.ValueEnum() != awstypes.KeyTypeHash {
+	// Empty value is handled by `Required` on element attributes and `listvalidator.SizeAtLeast(1)`
+	if len(keySchemas) == 0 {
+		return
+	}
+
+	firstKeySchema := keySchemas[0]
+	if firstKeySchema.KeyType.IsUnknown() {
+		return
+	}
+	if firstKeySchema.KeyType.ValueEnum() != awstypes.KeyTypeHash {
 		elementPath := request.Path.AtListIndex(0)
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			elementPath,
@@ -57,8 +61,11 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
 	for i, v := range keySchemas {
-		switch v.KeyType.ValueEnum() {
-		case awstypes.KeyTypeHash:
+		switch {
+		case v.KeyType.IsUnknown():
+			return
+
+		case v.KeyType.ValueEnum() == awstypes.KeyTypeHash:
 			if lastKeyType == awstypes.KeyTypeRange {
 				elementPath := request.Path.AtListIndex(i)
 				response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
@@ -69,7 +76,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 			}
 			hashCount++
 
-		case awstypes.KeyTypeRange:
+		case v.KeyType.ValueEnum() == awstypes.KeyTypeRange:
 			rangeCount++
 		}
 		lastKeyType = v.KeyType.ValueEnum()

@@ -1,4 +1,5 @@
 resource "aws_timestreaminfluxdb_db_instance" "test" {
+{{- template "region" }}
   name                   = var.rName
   allocated_storage      = 20
   username               = "admin"
@@ -15,5 +16,6 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 {{ template "acctest.ConfigVPCWithSubnets" 1 }}
 
 resource "aws_security_group" "test" {
+{{- template "region" }}
   vpc_id = aws_vpc.test.id
 }

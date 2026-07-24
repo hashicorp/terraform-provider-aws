@@ -27,7 +27,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -35,7 +35,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -101,7 +101,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -157,7 +157,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -206,7 +206,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -247,7 +247,7 @@ func TestAccIAMServerCertificate_Tags_null(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -255,7 +255,7 @@ func TestAccIAMServerCertificate_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -269,7 +269,7 @@ func TestAccIAMServerCertificate_Tags_null(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -330,7 +330,7 @@ func TestAccIAMServerCertificate_Tags_emptyMap(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -338,7 +338,7 @@ func TestAccIAMServerCertificate_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -350,7 +350,7 @@ func TestAccIAMServerCertificate_Tags_emptyMap(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -409,7 +409,7 @@ func TestAccIAMServerCertificate_Tags_addOnUpdate(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -417,7 +417,7 @@ func TestAccIAMServerCertificate_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -429,7 +429,7 @@ func TestAccIAMServerCertificate_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -455,7 +455,7 @@ func TestAccIAMServerCertificate_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -506,7 +506,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -514,7 +514,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -528,7 +528,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -576,7 +576,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -617,7 +617,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -625,7 +625,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -639,7 +639,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -673,7 +673,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -727,7 +727,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -778,7 +778,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -786,7 +786,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -800,7 +800,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -833,7 +833,7 @@ func TestAccIAMServerCertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -883,7 +883,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -891,7 +891,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -906,7 +906,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -958,7 +958,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1012,7 +1012,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1060,7 +1060,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1102,7 +1102,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1110,7 +1110,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1127,7 +1127,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1189,7 +1189,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1250,7 +1250,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1292,7 +1292,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1300,7 +1300,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1317,7 +1317,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1378,7 +1378,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1443,7 +1443,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1498,7 +1498,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToProviderOnly(t *testin
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1506,7 +1506,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToProviderOnly(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1520,7 +1520,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1555,7 +1555,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1604,7 +1604,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToResourceOnly(t *testin
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1612,7 +1612,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToResourceOnly(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1627,7 +1627,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1657,7 +1657,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1709,7 +1709,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1717,7 +1717,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1734,7 +1734,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1788,7 +1788,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1796,7 +1796,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1811,7 +1811,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1859,7 +1859,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nullOverlappingResourceTag(t *
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1867,7 +1867,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nullOverlappingResourceTag(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1884,7 +1884,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1935,7 +1935,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nullNonOverlappingResourceTag(
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1943,7 +1943,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nullNonOverlappingResourceTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1960,7 +1960,7 @@ func TestAccIAMServerCertificate_Tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -2011,7 +2011,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_onCreate(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2019,7 +2019,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_onCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2031,7 +2031,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_onCreate(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2080,7 +2080,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2088,7 +2088,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2102,7 +2102,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2136,7 +2136,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2193,7 +2193,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2201,7 +2201,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2215,7 +2215,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2247,7 +2247,7 @@ func TestAccIAMServerCertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2296,7 +2296,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2304,7 +2304,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2325,7 +2325,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2376,7 +2376,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2427,7 +2427,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2470,7 +2470,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 	resourceName := "aws_iam_server_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
+	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain(t).String())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2478,7 +2478,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckServerCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckServerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2497,7 +2497,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2562,7 +2562,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2627,7 +2627,7 @@ func TestAccIAMServerCertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerCertificateExists(ctx, resourceName, &v),
+					testAccCheckServerCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

@@ -24,7 +24,7 @@ func TestAccSecretsManagerRandomPasswordEphemeral_basic(t *testing.T) {
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)

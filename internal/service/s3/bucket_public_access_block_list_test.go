@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -26,7 +25,7 @@ func TestAccS3BucketPublicAccessBlock_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_s3_bucket_public_access_block.test[0]"
 	resourceName2 := "aws_s3_bucket_public_access_block.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -38,13 +37,13 @@ func TestAccS3BucketPublicAccessBlock_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPublicAccessBlockDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPublicAccessBlock/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -59,9 +58,8 @@ func TestAccS3BucketPublicAccessBlock_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPublicAccessBlock/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -93,7 +91,7 @@ func TestAccS3BucketPublicAccessBlock_List_regionOverride(t *testing.T) {
 
 	resourceName1 := "aws_s3_bucket_public_access_block.test[0]"
 	resourceName2 := "aws_s3_bucket_public_access_block.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -106,13 +104,13 @@ func TestAccS3BucketPublicAccessBlock_List_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPublicAccessBlockDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPublicAccessBlock/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -130,9 +128,8 @@ func TestAccS3BucketPublicAccessBlock_List_regionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPublicAccessBlock/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -141,6 +138,57 @@ func TestAccS3BucketPublicAccessBlock_List_regionOverride(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_public_access_block.test", identity1.Checks()),
 					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_public_access_block.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3BucketPublicAccessBlock_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resourceName1 := "aws_s3_bucket_public_access_block.test[0]"
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_include_resource"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+				},
+			},
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPublicAccessBlock/list_include_resource"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_public_access_block.test", identity1.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_s3_bucket_public_access_block.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("block_public_acls"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("block_public_policy"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ignore_public_acls"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("restrict_public_buckets"), knownvalue.Bool(true)),
+					}),
 				},
 			},
 		},

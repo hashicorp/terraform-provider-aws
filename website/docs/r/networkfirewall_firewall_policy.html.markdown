@@ -37,7 +37,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a HOME_NET Override
+### Policy with a HOME_NET Override
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -67,7 +67,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a Custom Action for Stateless Inspection
+### Policy with a Custom Action for Stateless Inspection
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -91,7 +91,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Action Order
+### Policy with Active Threat Defense in Action Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -112,7 +112,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Strict Order
+### Policy with Active Threat Defense in Strict Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -159,6 +159,8 @@ This resource supports the following arguments:
 ### Firewall Policy
 
 The `firewall_policy` block supports the following arguments:
+
+* `enable_tls_session_holding` - (Optional) Boolean indicating whether to prevent TCP and TLS packets from reaching destination servers until TLS Inspection has evaluated Server Name Indication (SNI) rules. If `true`, `tls_inspection_configuration_arn` is required. Default value: `false`.
 
 * `policy_variables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
 

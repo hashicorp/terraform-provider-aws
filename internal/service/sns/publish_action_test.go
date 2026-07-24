@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,7 +21,7 @@ func TestAccSNSPublishAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, "sns"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -34,7 +33,7 @@ func TestAccSNSPublishAction_basic(t *testing.T) {
 			{
 				Config: testAccPublishActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublishActionDelivered(ctx, "aws_sqs_queue.test"),
+					testAccCheckPublishActionDelivered(ctx, t, "aws_sqs_queue.test"),
 				),
 			},
 		},
@@ -45,7 +44,7 @@ func TestAccSNSPublishAction_withAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, "sns"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,21 +56,21 @@ func TestAccSNSPublishAction_withAttributes(t *testing.T) {
 			{
 				Config: testAccPublishActionConfig_withAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublishActionDelivered(ctx, "aws_sqs_queue.test"),
+					testAccCheckPublishActionDelivered(ctx, t, "aws_sqs_queue.test"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPublishActionDelivered(ctx context.Context, queueResourceName string) resource.TestCheckFunc {
+func testAccCheckPublishActionDelivered(ctx context.Context, t *testing.T, queueResourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[queueResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", queueResourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SQSClient(ctx)
 		queueURL := rs.Primary.Attributes[names.AttrURL]
 
 		// Poll for message with timeout - adjusted for 20min test
