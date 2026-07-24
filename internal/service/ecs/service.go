@@ -2189,9 +2189,13 @@ func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN 
 				}
 			}
 
+			// Use the parent wait context, not this refresh's context. Each poll
+			// wraps Refresh in context.WithTimeout + defer cancel(); if the
+			// rollback goroutine watched that child context it would treat every
+			// successful poll return as SIGINT and call StopServiceDeployment.
 			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
-				go rollbackRoutine(ctx, conn, sigintConfig, primaryDeploymentArn)
+				go rollbackRoutine(sigintConfig.waitCtx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
 			}
 
@@ -2336,6 +2340,8 @@ type rollbackState struct {
 	rollbackRoutineStarted bool
 	rollbackRoutineStopped chan struct{}
 	waitGroup              sync.WaitGroup
+	// waitCtx is the parent context for waitServiceStable (not per-refresh).
+	waitCtx context.Context
 }
 
 func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollbackState, primaryDeploymentArn *string) {
@@ -2343,7 +2349,7 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 
 	select {
 	case <-ctx.Done():
-		log.Printf("[INFO] SIGINT detected. Initiating rollback for deployment: %s", *primaryDeploymentArn)
+		log.Printf("[INFO] Wait context cancelled. Checking whether deployment %s should be rolled back", *primaryDeploymentArn)
 		ctx, cancel := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
 		defer cancel()
 
@@ -2359,12 +2365,14 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 }
 
 func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeploymentArn *string) error {
-	// Check if deployment is already in terminal state, meaning rollback is not needed
-	deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
+	// Check raw AWS deployment status. findDeploymentStatus maps SUCCESSFUL to
+	// the non-AWS sentinel "tfSTABLE", so it cannot be used with deploymentTerminalStates.
+	status, err := findRawServiceDeploymentStatus(ctx, conn, *primaryDeploymentArn)
 	if err != nil {
 		return err
 	}
-	if slices.Contains(deploymentTerminalStates, deploymentStatus) {
+	if slices.Contains(deploymentTerminalStates, status) {
+		log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
 		return nil
 	}
 
@@ -2381,6 +2389,22 @@ func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeployment
 	}
 
 	return waitForDeploymentTerminalStatus(ctx, conn, *primaryDeploymentArn)
+}
+
+func findRawServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentARN string) (string, error) {
+	input := ecs.DescribeServiceDeploymentsInput{
+		ServiceDeploymentArns: []string{deploymentARN},
+	}
+
+	output, err := findServiceDeployments(ctx, conn, &input)
+	if err != nil {
+		return "", err
+	}
+	if len(output) == 0 {
+		return "", nil
+	}
+
+	return string(output[0].Status), nil
 }
 
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, primaryDeploymentArn string) error {
@@ -2411,6 +2435,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 		rollbackRoutineStarted: false,
 		rollbackRoutineStopped: make(chan struct{}),
 		waitGroup:              sync.WaitGroup{},
+		waitCtx:                ctx,
 	}
 
 	stateConf := &retry.StateChangeConf{
