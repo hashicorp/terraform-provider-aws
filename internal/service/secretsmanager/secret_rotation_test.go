@@ -159,7 +159,7 @@ func TestAccSecretsManagerSecretRotation_disappears(t *testing.T) {
 				Config: testAccSecretRotationConfig_basic(rName, days),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, t, resourceName, &secret),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretRotation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretRotation(), resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
