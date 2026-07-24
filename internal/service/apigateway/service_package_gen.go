@@ -55,6 +55,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newDomainNameShareResource,
+			TypeName: "aws_api_gateway_domain_name_share",
+			Name:     "Domain Name Share",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_name_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newRestAPIPutResource,
 			TypeName: "aws_api_gateway_rest_api_put",
 			Name:     "Rest API Put",

@@ -13,6 +13,7 @@ var (
 	ResourceDocumentationPart           = resourceDocumentationPart
 	ResourceDocumentationVersion        = resourceDocumentationVersion
 	ResourceDomainName                  = resourceDomainName
+	ResourceDomainNameShare             = newDomainNameShareResource
 	ResourceDomainNameAccessAssociation = newDomainNameAccessAssociationResource
 	ResourceGatewayResponse             = resourceGatewayResponse
 	ResourceIntegration                 = resourceIntegration
@@ -42,6 +43,7 @@ var (
 	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
 	FindDomainNameAccessAssociationByARN = findDomainNameAccessAssociationByARN
 	FindDomainNameByTwoPartKey           = findDomainNameByTwoPartKey
+	FindDomainNameShareByDomainNameID    = findDomainNameShareByDomainNameID
 	FindGatewayResponseByTwoPartKey      = findGatewayResponseByTwoPartKey
 	FindIntegrationByThreePartKey        = findIntegrationByThreePartKey
 	FindIntegrationResponseByFourPartKey = findIntegrationResponseByFourPartKey
