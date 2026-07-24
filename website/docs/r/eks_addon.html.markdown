@@ -139,6 +139,8 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resolve_conflicts_on_create` - (Optional) How to resolve field value conflicts when migrating a self-managed add-on to an Amazon EKS add-on. Valid values are `NONE` and `OVERWRITE`. For more details see the [CreateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html) API Documentation.
 * `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Documentation.
+
+  ~> **Note:** If Amazon EKS times out an add-on update (which can happen on large or high-churn clusters), the update is marked as failed but the new configuration remains applied and the add-on transitions to a `DEGRADED` status. In this case the resource waits for the add-on to self-heal to an `ACTIVE` status within the remaining [update timeout](#timeouts) instead of returning an error.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
   existing IAM role to bind to the add-on's service account. The role must be
   assigned the IAM permissions required by the add-on. If you don't specify
