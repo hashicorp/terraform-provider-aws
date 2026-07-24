@@ -3,12 +3,12 @@ subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_custom_db_engine_version"
 description: |-
-  Provides an custom engine version (CEV) resource for Amazon RDS Custom.
+  Provides an custom engine version (CEV) resource for Amazon RDS Custom and RDS for SQL Server Developer Edition.
 ---
 
 # Resource: aws_rds_custom_db_engine_version
 
-Provides an custom engine version (CEV) resource for Amazon RDS Custom. For additional information, see [Working with CEVs for RDS Custom for Oracle](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev.html) and [Working with CEVs for RDS Custom for SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev-sqlserver.html) in the the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html).
+Provides an custom engine version (CEV) resource for Amazon RDS Custom. For additional information, see [Working with CEVs for RDS Custom for Oracle](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev.html), [Working with CEVs for RDS Custom for SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev-sqlserver.html), and [Preparing a CEV for RDS for SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/sqlserver-dev-edition.preparing.html) in the the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html).
 
 ## Example Usage
 
@@ -20,7 +20,7 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_rds_custom_db_engine_version" "example" {
-  database_installation_files_s3_bucket_name = "DOC-EXAMPLE-BUCKET"
+  database_installation_files_s3_bucket_name = "EXAMPLE-BUCKET"
   database_installation_files_s3_prefix      = "1915_GI/"
   engine                                     = "custom-oracle-ee-cdb"
   engine_version                             = "19.cdb_cev1"
@@ -46,7 +46,7 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_rds_custom_db_engine_version" "example" {
-  database_installation_files_s3_bucket_name = "DOC-EXAMPLE-BUCKET"
+  database_installation_files_s3_bucket_name = "EXAMPLE-BUCKET"
   database_installation_files_s3_prefix      = "1915_GI/"
   engine                                     = "custom-oracle-ee-cdb"
   engine_version                             = "19.cdb_cev1"
@@ -81,11 +81,27 @@ resource "aws_ami_copy" "example" {
   source_ami_id     = "ami-xxxxxxxx"
   source_ami_region = "us-east-1"
 }
+
 # CEV creation requires an AMI owned by the operator
 resource "aws_rds_custom_db_engine_version" "test" {
   engine          = "custom-sqlserver-se"
   engine_version  = "15.00.4249.2.cev-1"
   source_image_id = aws_ami_copy.example.id
+}
+```
+
+### SQL Server Developer Edition on RDS for SQL Server Usage
+
+```terraform
+resource "aws_rds_custom_db_engine_version" "example" {
+  engine                                     = "sqlserver-dev-ee"
+  engine_version                             = "16.00.4215.2.sql-server-dev-ed-cev"
+  database_installation_files_s3_bucket_name = "EXAMPLE-BUCKET"
+  database_installation_files_s3_prefix      = "sqlserver-dev-media"
+  database_installation_files = [
+    "SQLServer2022-x64-ENU-Dev.iso",
+    "SQLServer2022-KB5065865-x64.exe"
+  ]
 }
 ```
 
@@ -96,9 +112,10 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_installation_files_s3_bucket_name` - (Required) The name of the Amazon S3 bucket that contains the database installation files.
 * `database_installation_files_s3_prefix` - (Required) The prefix for the Amazon S3 bucket that contains the database installation files.
+* `database_installation_files` - (Optional) A list of database installation files (ISO and EXE) uploaded to Amazon S3 for your database engine version to import to Amazon RDS. This field is an alternative to specifying the files in the `manifest` JSON.
 * `description` - (Optional) The description of the CEV.
-* `engine` - (Required) The name of the database engine. Valid values are `custom-oracle*`, `custom-sqlserver*`.
-* `engine_version` - (Required) The version of the database engine.
+* `engine` - (Required) The name of the database engine. For a list of valid values, see [CreateCustomDBEngineVersion](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateCustomDBEngineVersion.html) in the Amazon Relational Database Service API Reference.
+* `engine_version` - (Required) The version of the database engine. For the CEV name format, see [CreateCustomDBEngineVersion](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateCustomDBEngineVersion.html) in the Amazon Relational Database Service API Reference.
 * `filename` - (Optional) The name of the manifest file within the local filesystem. Conflicts with `manifest`.
 * `kms_key_id` - (Optional) The ARN of the AWS KMS key that is used to encrypt the database installation files. Required for RDS Custom for Oracle.
 * `manifest` - (Optional) The manifest file, in JSON format, that contains the list of database installation files. Conflicts with `filename`.
