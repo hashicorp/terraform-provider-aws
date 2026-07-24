@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_ecs_daemon
+```
+
+```release-note:new-resource
+aws_ecs_daemon_task_definition
+```
+
+```release-note:new-list-resource
+aws_ecs_daemon
+```
+
+```release-note:new-list-resource
+aws_ecs_daemon_task_definition
+```

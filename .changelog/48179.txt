@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway: Add `protocol_configuration.mcp.session_configuration` block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway: Add `protocol_configuration.mcp.streaming_configuration` block
+```

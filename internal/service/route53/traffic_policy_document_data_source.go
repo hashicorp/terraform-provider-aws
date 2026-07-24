@@ -24,246 +24,248 @@ func dataSourceTrafficPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrEndpoint: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[trafficPolicyDocEndpointType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEndpoint: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[trafficPolicyDocEndpointType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"record_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"geo_proximity_location": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bias": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrHealthCheck: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"latitude": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"longitude": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"items": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrHealthCheck: {
-										Type:     schema.TypeString,
-										Optional: true,
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"record_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"geo_proximity_location": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bias": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"endpoint_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"evaluate_target_health": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrHealthCheck: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"latitude": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"longitude": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"rule_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"continent": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"country": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrHealthCheck: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"is_default": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"subdivision": {
-										Type:     schema.TypeString,
-										Optional: true,
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"items": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"endpoint_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrHealthCheck: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"primary": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrHealthCheck: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrHealthCheck: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
+							names.AttrLocation: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"continent": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"country": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"endpoint_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"evaluate_target_health": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrHealthCheck: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"is_default": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"rule_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"subdivision": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						"secondary": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrHealthCheck: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
+							"primary": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"endpoint_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"evaluate_target_health": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrHealthCheck: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"rule_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Optional: true,
+							names.AttrRegion: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"endpoint_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"evaluate_target_health": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrHealthCheck: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"rule_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"secondary": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"endpoint_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"evaluate_target_health": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrHealthCheck: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"rule_reference": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"start_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"start_rule": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2015-10-01",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2015-10-01",
-				}, false),
-			},
+				"start_endpoint": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"start_rule": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "2015-10-01",
+					ValidateFunc: validation.StringInSlice([]string{
+						"2015-10-01",
+					}, false),
+				},
+			}
 		},
 	}
 }

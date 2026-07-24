@@ -3,6 +3,11 @@
 
 package bedrockagentcore
 
-const (
-	errCodeValidationException = "ValidationException"
+import (
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+)
+
+var (
+	errCodeResourceNotFoundException = (*awstypes.ResourceNotFoundException)(nil).ErrorCode()
+	errCodeValidationException       = (*awstypes.ValidationException)(nil).ErrorCode()
 )

@@ -169,7 +169,7 @@ func resourceTable() *schema.Resource {
 							},
 						},
 					},
-					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName, names.AttrType),
 				},
 				"billing_mode": {
 					Type:             schema.TypeString,
@@ -1179,11 +1179,23 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// will signal the problems.
 	var gsiUpdates []awstypes.GlobalSecondaryIndexUpdate
 
-	if d.HasChange("global_secondary_index") {
-		var err error
-		o, n := d.GetChange("global_secondary_index")
-		gsiUpdates, err = updateDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), newBillingMode)
+	if d.HasChanges("global_secondary_index", "attribute") {
+		oldGSI, newGSI := d.GetChange("global_secondary_index")
+		oldAttr, newAttr := d.GetChange("attribute")
 
+		oldAttrTypes := map[string]string{}
+		for _, a := range oldAttr.(*schema.Set).List() {
+			attr := a.(map[string]any)
+			oldAttrTypes[attr[names.AttrName].(string)] = attr[names.AttrType].(string)
+		}
+		newAttrTypes := map[string]string{}
+		for _, a := range newAttr.(*schema.Set).List() {
+			attr := a.(map[string]any)
+			newAttrTypes[attr[names.AttrName].(string)] = attr[names.AttrType].(string)
+		}
+
+		var err error
+		gsiUpdates, err = updateDiffGSI(oldGSI.(*schema.Set).List(), newGSI.(*schema.Set).List(), newBillingMode, oldAttrTypes, newAttrTypes)
 		if err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("computing GSI difference: %w", err))
 		}
@@ -2093,7 +2105,7 @@ func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList [
 	return nil
 }
 
-func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
+func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode, oldAttrTypes, newAttrTypes map[string]string) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]any)
 	for _, gsidata := range oldGsi {
@@ -2198,7 +2210,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
 
-			recreateAttributesChanged := checkIfGSIRecreateAttributesChanged(oldMap, newMap)
+			recreateAttributesChanged := checkIfGSIRecreateAttributesChanged(oldMap, newMap, oldAttrTypes, newAttrTypes)
 
 			gsiNeedsRecreate := nonKeyAttributesChanged || recreateAttributesChanged || warmThroughPutDecreased
 
@@ -2286,7 +2298,7 @@ func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]any) bool {
 	return oldNkaExists != newNkaExists
 }
 
-func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
+func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any, oldAttrTypes, newAttrTypes map[string]string) bool {
 	oldAttributes := stripGSIUpdatableAttributes(oldMap)
 
 	newAttributes := stripGSIUpdatableAttributes(newMap)
@@ -2313,7 +2325,21 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
 		delete(newAttributes, "range_key")
 	}
 
-	return !reflect.DeepEqual(oldAttributes, newAttributes)
+	if !reflect.DeepEqual(oldAttributes, newAttributes) {
+		return true
+	}
+
+	// Check if the type of any key attribute used by this GSI changed.
+	for _, keyAttr := range []string{oldMap["hash_key"].(string), oldMap["range_key"].(string)} {
+		if keyAttr == "" {
+			continue
+		}
+		if oldAttrTypes[keyAttr] != newAttrTypes[keyAttr] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) error {

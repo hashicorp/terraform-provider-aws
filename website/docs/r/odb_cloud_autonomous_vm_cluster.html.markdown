@@ -36,7 +36,6 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
 
 }
 
-
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_all_params" {
   description                           = "my first avmc"
   time_zone                             = "UTC"

@@ -52,16 +52,3 @@ rules:
             },
             ...,
           }
-    # To roll out gradually, only fully-compliant services are included in the
-    # paths list below. As each service is updated, add its path to the list.
-    paths:
-      include:
-        - "/internal/service/a*/*_test.go"
-        - "/internal/service/b*/*_test.go"
-        - "/internal/service/c*/*_test.go"
-        - "/internal/service/networkflowmonitor/*_test.go"
-        - "/internal/service/notifications/*_test.go"
-        - "/internal/service/notificationscontacts/*_test.go"
-        - "/internal/service/observabilityadmin/*_test.go"
-        - "/internal/service/timestreaminfluxdb/*_test.go"
-        - "/internal/service/workmail/*_test.go"

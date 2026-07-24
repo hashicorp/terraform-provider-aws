@@ -83,12 +83,12 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 	ctx := acctest.Context(t)
 	var example service.ExampleResourceOutput
 	resourceName := "aws_example_resource.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),
-		CheckDestroy: testAccCheckExampleResourceDestroy(ctx),
+		CheckDestroy: testAccCheckExampleResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -99,7 +99,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 				},
 				Config: testAccExampleResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExampleResourceExists(ctx, resourceName, &example),
+					testAccCheckExampleResourceExists(ctx, t, resourceName, &example),
 				),
 			},
 			{

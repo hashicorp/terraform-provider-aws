@@ -34,6 +34,7 @@ import (
 )
 
 // @FrameworkResource("aws_osis_pipeline_endpoint", name="Pipeline Endpoint")
+// @Testing(identityTest=false)
 func newPipelineEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineEndpointResource{}
 

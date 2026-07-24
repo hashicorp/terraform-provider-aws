@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_acmpca_certificate_authority: Prevents hang when trying to create resources over the quota limit.
+```

@@ -36,13 +36,24 @@ For example, an ELB Listener (`aws_lb_listener`) can only be returned in a list 
 
 #### Property Entity
 
-A property entity is a resource type that models a property of an associated resource in a 1:1 or 1:[0,1] relationship.
+A **property entity** is a resource type that models a property of an associated resource in a 1:1 or 1:[0,1] relationship.
 Property entities with a 1:[0,1] relationship can be called an **optional property entity**.
 This is a special case of a **weak entity**.
 Note that this is not a concept from the Entity-Relationship model.
 
 For example, the S3 Bucket (`aws_s3_bucket`) has many properties modelled as separate resources, such as Bucket ACLs (`aws_s3_bucket_acl`), and Bucket Policies (`aws_s3_bucket_policy`).
 A Bucket Policy is only created if the user requests one, so it is an **optional property entity**.
+
+#### Waiter Resource
+
+A **waiter resource** superficially resembles a **property entity** as it has a 1:1 or 1:[0,1] relationship with an associated resource.
+However, it exists only to allow the provider to carry out a multi-step process and wait for or create dependencies up completion.
+
+For example, an ACM certificate (`aws_acm_certificate`) can be validated using DNS records in Route 53 (`aws_route53_record`). This requires several steps:
+creating the certificate in a pending state,
+using the validation fields from the certificate to create DNS records,
+waiting for DNS resolution to validate the certificate.
+The resource type `aws_acm_certificate_validation` implements the waiting step, so that other resources can depend on the validated certificate.
 
 ### AWS API Patterns
 

@@ -10,16 +10,7 @@ description: |-
 
 Provides an AWS App Mesh virtual node resource.
 
-## Breaking Changes
-
-Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), `aws_appmesh_virtual_node` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
-
-* Rename the `service_name` attribute of the `dns` object to `hostname`.
-
-* Replace the `backends` attribute of the `spec` object with one or more `backend` configuration blocks,
-setting `virtual_service_name` to the name of the service.
-
-The Terraform state associated with existing resources will automatically be migrated.
+~> **Note:** Because of backward incompatible API changes ([see issue](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), resource definitions created with provider versions earlier than v2.3.0 must be modified: rename the `service_name` attribute of the `dns` object to `hostname`; replace the `backends` attribute of the `spec` object with one or more `backend` configuration blocks, setting `virtual_service_name` to the name of the service. Existing Terraform state is automatically migrated.
 
 ## Example Usage
 
@@ -176,7 +167,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the virtual node. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
 * `spec` - (Required) Virtual node specification to apply.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -476,5 +467,3 @@ Using `terraform import`, import App Mesh virtual nodes using `mesh_name` togeth
 ```console
 % terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
 ```
-
-[1]: /docs/providers/aws/index.html

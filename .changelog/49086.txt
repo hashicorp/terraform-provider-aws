@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_flow_log
+```
+```release-note:enhancement
+resource/aws_flow_log: Add resource identity support
+```

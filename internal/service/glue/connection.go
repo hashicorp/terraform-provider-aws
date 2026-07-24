@@ -43,215 +43,217 @@ func resourceConnection() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"athena_properties": {
-				Type:      schema.TypeMap,
-				Optional:  true,
-				Sensitive: true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
-			},
-			"authentication_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"basic_authentication_credentials": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrPassword: {
-										Type:      schema.TypeString,
-										Required:  true,
-										Sensitive: true,
-									},
-									names.AttrUsername: {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"athena_properties": {
+					Type:      schema.TypeMap,
+					Optional:  true,
+					Sensitive: true,
+					Elem:      &schema.Schema{Type: schema.TypeString},
+				},
+				"authentication_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_type": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"basic_authentication_credentials": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrPassword: {
+											Type:      schema.TypeString,
+											Required:  true,
+											Sensitive: true,
+										},
+										names.AttrUsername: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"custom_authentication_credentials": {
-							Type:      schema.TypeMap,
-							Optional:  true,
-							Sensitive: true,
-							Elem:      &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"oauth2_properties": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorization_code_properties": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"authorization_code": {
-													Type:      schema.TypeString,
-													Required:  true,
-													Sensitive: true,
-												},
-												"redirect_uri": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									"oauth2_client_application": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"aws_managed_client_application_reference": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"user_managed_client_application_client_id": {
-													Type:     schema.TypeString,
-													Optional: true,
+							"custom_authentication_credentials": {
+								Type:      schema.TypeMap,
+								Optional:  true,
+								Sensitive: true,
+								Elem:      &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"oauth2_properties": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authorization_code_properties": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"authorization_code": {
+														Type:      schema.TypeString,
+														Required:  true,
+														Sensitive: true,
+													},
+													"redirect_uri": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"oauth2_credentials": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_token": {
-													Type:      schema.TypeString,
-													Optional:  true,
-													Sensitive: true,
-												},
-												"jwt_token": {
-													Type:      schema.TypeString,
-													Optional:  true,
-													Sensitive: true,
-												},
-												"refresh_token": {
-													Type:      schema.TypeString,
-													Optional:  true,
-													Sensitive: true,
-												},
-												"user_managed_client_application_client_secret": {
-													Type:      schema.TypeString,
-													Optional:  true,
-													Sensitive: true,
+										"oauth2_client_application": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"aws_managed_client_application_reference": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"user_managed_client_application_client_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
-									},
-									"oauth2_grant_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"token_url": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"token_url_parameters_map": {
-										Type:      schema.TypeMap,
-										Optional:  true,
-										Sensitive: true,
-										Elem:      &schema.Schema{Type: schema.TypeString},
+										"oauth2_credentials": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"access_token": {
+														Type:      schema.TypeString,
+														Optional:  true,
+														Sensitive: true,
+													},
+													"jwt_token": {
+														Type:      schema.TypeString,
+														Optional:  true,
+														Sensitive: true,
+													},
+													"refresh_token": {
+														Type:      schema.TypeString,
+														Optional:  true,
+														Sensitive: true,
+													},
+													"user_managed_client_application_client_secret": {
+														Type:      schema.TypeString,
+														Optional:  true,
+														Sensitive: true,
+													},
+												},
+											},
+										},
+										"oauth2_grant_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"token_url": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"token_url_parameters_map": {
+											Type:      schema.TypeMap,
+											Optional:  true,
+											Sensitive: true,
+											Elem:      &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"secret_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							"secret_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			"connection_properties": {
-				Type:             schema.TypeMap,
-				Optional:         true,
-				Sensitive:        true,
-				ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(connectionPropertyKey_Values(), false))),
-				Elem:             &schema.Schema{Type: schema.TypeString},
-			},
-			"connection_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.ConnectionTypeJdbc,
-				ValidateFunc: validation.StringInSlice(connectionType_Values(), false),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			"match_criteria": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 10,
-				Elem: &schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				"connection_properties": {
+					Type:             schema.TypeMap,
+					Optional:         true,
+					Sensitive:        true,
+					ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(connectionPropertyKey_Values(), false))),
+					Elem:             &schema.Schema{Type: schema.TypeString},
+				},
+				"connection_type": {
 					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      awstypes.ConnectionTypeJdbc,
+					ValidateFunc: validation.StringInSlice(connectionType_Values(), false),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				"match_criteria": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 10,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 255),
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"physical_connection_requirements": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"security_group_id_list": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Optional: true,
+				"physical_connection_requirements": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"security_group_id_list": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

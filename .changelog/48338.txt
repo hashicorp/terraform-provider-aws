@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_msk_replicator: Fix `runtime error: index out of range [0] with length 0` panic when importing a replicator with no replication configurations
+```
+
+```release-note:enhancement
+resource/aws_msk_replicator: Add Resource Identity support
+```

@@ -7,7 +7,9 @@ package pinpointsmsvoicev2
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,8 +33,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	// After a referencing pool is deleted, opt-out list may continue
+	// to be reported as in-use for a short period of time.
+	optOutListResourceNotEmptyTimeout = 5 * time.Minute
+)
+
 // @FrameworkResource("aws_pinpointsmsvoicev2_opt_out_list", name="Opt-out List")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &optOutListResource{}
 
@@ -143,9 +152,19 @@ func (r *optOutListResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	_, err := conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
-		OptOutListName: data.ID.ValueStringPointer(),
-	})
+	_, err := tfresource.RetryWhen(ctx, optOutListResourceNotEmptyTimeout,
+		func(ctx context.Context) (*pinpointsmsvoicev2.DeleteOptOutListOutput, error) {
+			return conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
+				OptOutListName: data.ID.ValueStringPointer(),
+			})
+		},
+		func(err error) (bool, error) {
+			if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok && ce.Reason == awstypes.ConflictExceptionReasonResourceNotEmpty {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

@@ -45,46 +45,48 @@ func resourceIntegrationResponse() *schema.Resource {
 		UpdateWithoutTimeout: resourceIntegrationResponsePut,
 		DeleteWithoutTimeout: resourceIntegrationResponseDelete,
 
-		Schema: map[string]*schema.Schema{
-			"content_handling": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validIntegrationContentHandling(),
-			},
-			"http_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validHTTPMethod(),
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"response_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"response_templates": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"selection_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatusCode: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"content_handling": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validIntegrationContentHandling(),
+				},
+				"http_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validHTTPMethod(),
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"response_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"response_templates": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"selection_pattern": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatusCode: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

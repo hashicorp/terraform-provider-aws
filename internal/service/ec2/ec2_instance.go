@@ -776,7 +776,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			},
 			Deprecated: "network_interface is deprecated. To specify the primary network interface, use primary_network_interface instead. To attach additional network interfaces, use the aws_network_interface_attachment resource.",
 		},
-		"outpost_arn": {
+		names.AttrOutpostARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -1201,7 +1201,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var output *ec2.RunInstancesOutput
-	for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+	for l := backoff.NewLoop(ctx, iamPropagationTimeout); l.Continue(ctx); {
 		output, err = conn.RunInstances(ctx, &input)
 
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -3269,7 +3269,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	rd.Set("public_ip", instance.PublicIpAddress)
 	rd.Set("private_dns", instance.PrivateDnsName)
 	rd.Set("private_ip", instance.PrivateIpAddress)
-	rd.Set("outpost_arn", instance.OutpostArn)
+	rd.Set(names.AttrOutpostARN, instance.OutpostArn)
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
@@ -3576,6 +3576,16 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		if err := rd.Set("instance_market_options", []any{map[string]any{
 			"market_type":  awstypes.MarketTypeSpot,
 			"spot_options": []any{tfMap},
+		}}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+		}
+	} else if instance.InstanceLifecycle == awstypes.InstanceLifecycleTypeCapacityBlock {
+		rd.Set("instance_lifecycle", instance.InstanceLifecycle)
+		rd.Set("spot_instance_request_id", nil)
+
+		if err := rd.Set("instance_market_options", []any{map[string]any{
+			"market_type":  awstypes.MarketTypeCapacityBlock,
+			"spot_options": nil,
 		}}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
 		}

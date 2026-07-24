@@ -48,7 +48,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name to use for the gateway route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the gateway route. Must be between 1 and 255 characters in length.
 * `virtual_gateway_name` - (Required) Name of the [virtual gateway](/docs/providers/aws/r/appmesh_virtual_gateway.html) to associate the gateway route with. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
 * `spec` - (Required) Gateway route specification to apply.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -187,5 +187,3 @@ Using `terraform import`, import App Mesh gateway routes using `mesh_name` and `
 ```console
 % terraform import aws_appmesh_gateway_route.example mesh/gw1/example-gateway-route
 ```
-
-[1]: /docs/providers/aws/index.html

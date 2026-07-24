@@ -173,7 +173,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Action Target",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID), inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -205,7 +205,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Finding Aggregator",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID), inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -217,7 +217,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Insight",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID), inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -275,7 +275,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Standards Control",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("standards_control_arn",
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID), inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -287,7 +287,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Standards Subscription",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID), inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -303,14 +303,14 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_securityhub_insight",
 			Name:     "Insight",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
 			Factory:  newStandardsControlResourceAsListResource,
 			TypeName: "aws_securityhub_standards_control",
 			Name:     "Standards Control",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalARNIdentityNamed("standards_control_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentityNamed("standards_control_arn"),
 		},
 	})
 }

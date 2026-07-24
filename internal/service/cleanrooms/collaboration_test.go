@@ -10,14 +10,17 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,21 +42,38 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
-					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "data_encryption_metadata.*", map[string]string{
-						"allow_clear_text": acctest.CtTrue,
-						"allow_duplicates": acctest.CtTrue,
-						"allow_joins_on_columns_with_different_names": acctest.CtTrue,
-						"preserve_nulls": acctest.CtFalse,
-					}),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cleanrooms", regexache.MustCompile(`collaboration:*`)),
 					testCheckCreatorMember(ctx, t, resourceName),
-					testAccCollaborationTags(ctx, t, resourceName, map[string]string{
-						"Project": TEST_TAG,
-					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cleanrooms", "collaboration/{id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytics_engine"), knownvalue.StringExact("SPARK")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreateTime), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("creator_display_name"), knownvalue.StringExact(TEST_CREATOR_DISPLAY_NAME)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("creator_member_abilities"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("CAN_QUERY"),
+						knownvalue.StringExact("CAN_RECEIVE_RESULTS"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_encryption_metadata"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"allow_clear_text": knownvalue.Bool(true),
+							"allow_duplicates": knownvalue.Bool(true),
+							"allow_joins_on_columns_with_different_names": knownvalue.Bool(true),
+							"preserve_nulls": knownvalue.Bool(false),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(TEST_DESCRIPTION)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("member"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(TEST_NAME)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("query_log_status"), knownvalue.StringExact(TEST_QUERY_LOG_STATUS)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Project": knownvalue.StringExact(TEST_TAG),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Project": knownvalue.StringExact(TEST_TAG),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("update_time"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,

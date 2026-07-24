@@ -13,11 +13,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -86,14 +90,56 @@ func (r *telemetryRuleForOrganizationResource) Schema(ctx context.Context, reque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"all_regions": schema.BoolAttribute{
+							Optional: true,
+						},
+						"allow_field_updates": schema.BoolAttribute{
+							Optional: true,
+						},
+						// regions is treated as an unordered set because the AWS API does
+						// not preserve the input order on GET (returns sorted). Using a
+						// SetAttribute avoids "provider produced inconsistent result"
+						// errors when the planned order differs from the API-returned
+						// order. Marked Computed with UseStateForUnknown so that when the
+						// field is omitted from config, state retains the API-returned
+						// value across refreshes.
+						"regions": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Computed:    true,
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
+							},
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.UseStateForUnknown(),
+							},
+						},
 						names.AttrResourceType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.ResourceType](),
 							Optional:   true,
+						},
+						names.AttrScope: schema.StringAttribute{
+							Optional: true,
+						},
+						"selection_criteria": schema.StringAttribute{
+							Optional: true,
+						},
+						"telemetry_source_types": schema.ListAttribute{
+							CustomType: fwtypes.ListOfStringEnumType[awstypes.TelemetrySourceType](),
+							Optional:   true,
+							Computed:   true,
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
 						},
 						"telemetry_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.TelemetryType](),
 							Required:   true,
 						},
+					},
+					Blocks: map[string]schema.Block{
+						"destination_configuration": telemetryRuleDestinationConfigurationBlock(ctx),
 					},
 				},
 			},
@@ -133,6 +179,19 @@ func (r *telemetryRuleForOrganizationResource) Create(ctx context.Context, reque
 
 	// Set values for unknowns.
 	data.RuleARN = fwflex.StringToFramework(ctx, output.RuleArn)
+
+	// Read back to populate computed fields (e.g. API-derived telemetry_source_types,
+	// regions when all_regions is true).
+	out, err := findTelemetryRuleForOrganizationByName(ctx, conn, ruleName)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -197,6 +256,18 @@ func (r *telemetryRuleForOrganizationResource) Update(ctx context.Context, reque
 		_, err := conn.UpdateTelemetryRuleForOrganization(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+			return
+		}
+
+		// Read back to refresh computed fields after the update.
+		out, err := findTelemetryRuleForOrganizationByName(ctx, conn, ruleName)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &new))
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}

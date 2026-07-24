@@ -3,6 +3,7 @@
  */
 
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
+import jetbrains.buildServer.configs.kotlin.buildFeatures.buildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -15,7 +16,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2024.03"
+version = "2025.11"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -39,6 +40,8 @@ val awsSecretAccessKey = if (accTestRoleARN != "") { DslContext.getParameter("aw
 val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn", "")
 val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
+
+val defaultTerraformVersion = "1.15.8"
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
@@ -113,6 +116,16 @@ project {
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
+
+        if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+            // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/go-mod-cache")
+            // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/go-build-cache")
+            text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
+            text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+            // set variable to false by default
+            text("POST_GITHUB_COMMENT", "false")
+            password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
+        }
     }
 
     subProject(Services)
@@ -136,12 +149,39 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
+            name = "Install Terraform Core"
+            scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
+        }
+        script {
+            name = "Install Github CLI"
+            scriptContent = File("./scripts/pullrequest_tests/install_gh_cli.sh").readText()
+        }
+        script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
+        }
+        script {
+            name = "Fetch Test Results"
+            // executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
+            scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
         }
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
+        // buildCache {
+        //     name = "terraform-provider-aws-build-cache"
+        //     use = true
+        //     publish = true
+        //     rules = """
+        //         go-mod-cache
+        //         go-build-cache
+        //     """.trimIndent()
+        // }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
@@ -180,6 +220,12 @@ object PullRequest : BuildType({
                 firstBuildErrorOccurs = true
                 buildProbablyHanging = false
             }
+        }
+    }
+    
+    cleanup {
+        baseRule {
+            artifacts(days = 7, artifactPatterns = "+:**/*")
         }
     }
 })

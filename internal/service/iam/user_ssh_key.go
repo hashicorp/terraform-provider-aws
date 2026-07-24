@@ -37,43 +37,45 @@ func resourceUserSSHKey() *schema.Resource {
 			StateContext: resourceUserSSHKeyImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"encoding": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
-			},
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("encoding").(string) == "SSH" {
-						old = cleanSSHKey(old)
-						new = cleanSSHKey(new)
-					}
-					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"encoding": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
 				},
-			},
-			"ssh_public_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrUsername: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.Get("encoding").(string) == "SSH" {
+							old = cleanSSHKey(old)
+							new = cleanSSHKey(new)
+						}
+						return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+					},
+				},
+				"ssh_public_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrUsername: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

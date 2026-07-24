@@ -28,17 +28,19 @@ func resourceVPNConnectionRoute() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPNConnectionRouteRead,
 		DeleteWithoutTimeout: resourceVPNConnectionRouteDelete,
 
-		Schema: map[string]*schema.Schema{
-			"destination_cidr_block": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpn_connection_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"destination_cidr_block": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"vpn_connection_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

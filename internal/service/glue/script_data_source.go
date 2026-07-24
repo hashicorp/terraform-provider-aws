@@ -25,82 +25,84 @@ func dataSourceScript() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceScriptRead,
 
-		Schema: map[string]*schema.Schema{
-			"dag_edge": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSource: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrTarget: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"target_parameter": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"dag_edge": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSource: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrTarget: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"target_parameter": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"dag_node": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"args": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"param": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
+				"dag_node": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"args": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"param": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"line_number": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"node_type": {
-							Type:     schema.TypeString,
-							Required: true,
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"line_number": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"node_type": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"language": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.LanguagePython,
-				ValidateDiagFunc: enum.Validate[awstypes.Language](),
-			},
-			"python_script": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"scala_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"language": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.LanguagePython,
+					ValidateDiagFunc: enum.Validate[awstypes.Language](),
+				},
+				"python_script": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"scala_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

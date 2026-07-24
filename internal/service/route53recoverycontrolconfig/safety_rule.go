@@ -38,88 +38,90 @@ func resourceSafetyRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asserted_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ExactlyOneOf: []string{
-					"asserted_controls",
-					"gating_controls",
+				"asserted_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					ExactlyOneOf: []string{
+						"asserted_controls",
+						"gating_controls",
+					},
 				},
-			},
-			"control_panel_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"gating_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"control_panel_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-				ExactlyOneOf: []string{
-					"asserted_controls",
-					"gating_controls",
+				"gating_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					ExactlyOneOf: []string{
+						"asserted_controls",
+						"gating_controls",
+					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"rule_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"inverted": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"threshold": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RuleType](),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"rule_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inverted": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"threshold": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RuleType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				RequiredWith: []string{
-					"gating_controls",
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_controls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					RequiredWith: []string{
+						"gating_controls",
+					},
 				},
-			},
-			"wait_period_ms": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
+				"wait_period_ms": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+			}
 		},
 	}
 }

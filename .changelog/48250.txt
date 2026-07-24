@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_uxc_account_customizations: Fixes inconsistent result errors

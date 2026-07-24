@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_mq_broker: Add `resource_share_arns` argument and `shared_resources` attribute
+```
+
+```release-note:enhancement
+data-source/aws_mq_broker: Add `resource_share_arns` and `shared_resources` attributes
+```

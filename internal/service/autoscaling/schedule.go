@@ -44,58 +44,60 @@ func resourceSchedule() *schema.Resource {
 		UpdateWithoutTimeout: resourceSchedulePut,
 		DeleteWithoutTimeout: resourceScheduleDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"autoscaling_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"desired_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"end_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validScheduleTimestamp,
-			},
-			"max_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"min_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"recurrence": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"scheduled_action_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStartTime: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validScheduleTimestamp,
-			},
-			"time_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"autoscaling_group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"desired_capacity": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"end_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validScheduleTimestamp,
+				},
+				"max_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"min_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"recurrence": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"scheduled_action_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStartTime: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validScheduleTimestamp,
+				},
+				"time_zone": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

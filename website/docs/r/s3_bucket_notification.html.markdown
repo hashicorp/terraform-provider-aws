@@ -10,7 +10,7 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration resource. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. This resource will overwrite any existing event notifications configured for the S3 bucket it's associated with. See the example "Trigger multiple Lambda functions" for an option of how to configure multiple triggers within this resource.
+~> **NOTE:** The S3 [`PutBucketNotificationConfiguration`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotificationConfiguration.html) API is atomic — it replaces the bucket's entire notification configuration on every call. Only one `aws_s3_bucket_notification` resource can manage a bucket; declaring more than one causes a perpetual diff, and applying this resource will overwrite any notifications already on the bucket. To configure multiple destinations on the same bucket, declare them all as nested blocks within a single resource (see [Trigger multiple Lambda functions](#trigger-multiple-lambda-functions) below). To let independent teams or Terraform configurations subscribe to the same bucket without stepping on each other, prefer the [Emit events to EventBridge](#emit-events-to-eventbridge) pattern below. To bring existing notifications under management without losing them, see the [`aws_s3_bucket_notification` data source](../d/s3_bucket_notification.html.markdown#read-existing-notifications-and-re-emit-them).
 
 -> This resource cannot be used with S3 directory buckets.
 
@@ -311,16 +311,57 @@ For Terraform's [JSON syntax](https://www.terraform.io/docs/configuration/syntax
 
 ### Emit events to EventBridge
 
+For a bucket shared by multiple independent consumers — different teams, different Terraform configurations, different applications — EventBridge is the recommended pattern. Each consumer subscribes to the bucket through its own [`aws_cloudwatch_event_rule`](cloudwatch_event_rule.html), so they cannot overwrite one another the way notification configurations would.
+
 ```terraform
-resource "aws_s3_bucket" "bucket" {
-  bucket = "your-bucket-name"
+resource "aws_s3_bucket" "shared" {
+  bucket = "shared-bucket"
 }
 
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket      = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "shared" {
+  bucket      = aws_s3_bucket.shared.id
   eventbridge = true
 }
+
+# Team A: process new uploads under uploads/
+resource "aws_cloudwatch_event_rule" "team_a" {
+  name = "team-a-uploads"
+  event_pattern = jsonencode({
+    source        = ["aws.s3"]
+    "detail-type" = ["Object Created"]
+    detail = {
+      bucket = { name = [aws_s3_bucket.shared.bucket] }
+      object = { key = [{ prefix = "uploads/" }] }
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "team_a" {
+  rule = aws_cloudwatch_event_rule.team_a.name
+  arn  = aws_lambda_function.team_a_processor.arn
+}
+
+# Team B: archive deletions under archive/, declared in a separate
+# Terraform configuration that knows nothing about Team A.
+resource "aws_cloudwatch_event_rule" "team_b" {
+  name = "team-b-deletions"
+  event_pattern = jsonencode({
+    source        = ["aws.s3"]
+    "detail-type" = ["Object Deleted"]
+    detail = {
+      bucket = { name = [aws_s3_bucket.shared.bucket] }
+      object = { key = [{ prefix = "archive/" }] }
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "team_b" {
+  rule = aws_cloudwatch_event_rule.team_b.name
+  arn  = aws_sqs_queue.team_b_archive.arn
+}
 ```
+
+For sharing a bucket between Terraform configurations when EventBridge is not an option, use the [`aws_s3_bucket_notification` data source](../d/s3_bucket_notification.html.markdown#read-existing-notifications-and-re-emit-them) to read existing notifications and re-emit them in your own resource.
 
 ## Argument Reference
 
@@ -365,6 +406,32 @@ The following arguments are optional:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_notification.bucket_notification
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) Name of the bucket.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket notification using the `bucket`. For example:
 

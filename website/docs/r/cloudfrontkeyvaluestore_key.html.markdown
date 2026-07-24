@@ -41,7 +41,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Combination of attributes separated by a `,` to create a unique id: `key_value_store_arn`,`key`
+* `id` - (Deprecated) Combination of attributes separated by a `,` to create a unique id: `key_value_store_arn`,`key`
 * `total_size_in_bytes` - Total size of the Key Value Store in bytes.
 
 ## Import

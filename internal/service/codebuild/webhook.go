@@ -35,117 +35,119 @@ func resourceWebhook() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"branch_filter": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filter_group"},
-			},
-			"build_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.WebhookBuildType](),
-			},
-			"filter_group": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFilter: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"exclude_matched_pattern": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"pattern": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.WebhookFilterType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"branch_filter": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"filter_group"},
+				},
+				"build_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.WebhookBuildType](),
+				},
+				"filter_group": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFilter: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"exclude_matched_pattern": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"pattern": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.WebhookFilterType](),
+										},
 									},
 								},
 							},
 						},
 					},
+					ConflictsWith: []string{"branch_filter"},
 				},
-				ConflictsWith: []string{"branch_filter"},
-			},
-			"manual_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"payload_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"project_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"pull_request_build_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"approver_roles": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
+				"manual_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"payload_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"project_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"pull_request_build_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"approver_roles": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.PullRequestBuildApproverRole](),
+								},
+							},
+							"requires_comment_approval": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.PullRequestBuildApproverRole](),
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.PullRequestBuildCommentApproval](),
 							},
 						},
-						"requires_comment_approval": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.PullRequestBuildCommentApproval](),
+					},
+				},
+				"scope_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrDomain: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrScope: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
+							},
 						},
 					},
 				},
-			},
-			"scope_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrDomain: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrScope: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
-						},
-					},
+				"secret": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
 				},
-			},
-			"secret": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
