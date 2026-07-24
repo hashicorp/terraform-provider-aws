@@ -24,6 +24,7 @@ const (
 	PEMBlockTypeCertificate        = `CERTIFICATE`
 	PEMBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
 	PEMBlockTypeECPrivateKey       = `EC PRIVATE KEY`
+	PEMBlockTypePrivateKey         = `PRIVATE KEY`
 	PEMBlockTypeRSAPrivateKey      = `RSA PRIVATE KEY`
 	PEMBlockTypePublicKey          = `PUBLIC KEY`
 
@@ -174,6 +175,34 @@ func TLSRSAPublicKeyPEM(t *testing.T, keyPem string) string {
 const (
 	hoursForCertificateValidity = 24
 )
+
+// TLSRSAPKCS8PrivateKeyPEM generates a RSA private key PEM string in PKCS#8 format.
+// This produces a "BEGIN PRIVATE KEY" PEM block as opposed to TLSRSAPrivateKeyPEM which
+// produces a "BEGIN RSA PRIVATE KEY" PEM block (PKCS#1 format).
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: private_key_pem = "%[1]s"
+func TLSRSAPKCS8PrivateKeyPEM(t *testing.T, bits int) string {
+	t.Helper()
+
+	key, err := rsa.GenerateKey(rand.Reader, bits)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keyBytes, err := x509.MarshalPKCS8PrivateKey(key)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	block := &pem.Block{
+		Bytes: keyBytes,
+		Type:  PEMBlockTypePrivateKey,
+	}
+
+	return string(pem.EncodeToMemory(block))
+}
 
 // TLSRSAX509LocallySignedCertificatePEM generates a local CA x509 certificate PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
