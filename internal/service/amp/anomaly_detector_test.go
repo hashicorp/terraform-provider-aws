@@ -155,12 +155,6 @@ func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
 				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceAnomalyDetector = newAnomalyDetectorResource
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -216,6 +210,11 @@ func TestAccAMPAnomalyDetector_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.skip"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{ // Testing query update
 				Config: testAccAnomalyDetectorConfig_update(rName, "120", "count(up)", "mark_as_anomaly"),
