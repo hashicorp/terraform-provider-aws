@@ -420,7 +420,7 @@ func TestAccSecretsManagerSecretRotation_externalRotation(t *testing.T) {
 		days         = 30
 	)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
