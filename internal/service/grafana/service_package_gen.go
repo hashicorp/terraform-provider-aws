@@ -50,6 +50,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  dataSourceWorkspaces,
+			TypeName: "aws_grafana_workspaces",
+			Name:     "Workspaces",
+		},
 	}
 }
 
