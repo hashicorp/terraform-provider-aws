@@ -21,7 +21,7 @@ import (
 func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineEndpoint awstypes.PipelineEndpoint
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_endpoint.test"
 	pipelineResourceName := "aws_osis_pipeline.test"
 
@@ -62,7 +62,7 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 func TestAccOpenSearchIngestionPipelineEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineEndpoint awstypes.PipelineEndpoint
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

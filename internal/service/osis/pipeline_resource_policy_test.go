@@ -19,7 +19,7 @@ import (
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	pipelineName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineResourcePolicyConfig_basic(pipelineName),
+				Config: testAccPipelineResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
@@ -51,7 +51,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -86,7 +86,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears_pipeline(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_resource_policy.test"
 	pipelineResourceName := "aws_osis_pipeline.test"
 
@@ -114,7 +114,7 @@ func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears_pipeline(t *tes
 
 func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
