@@ -241,6 +241,12 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
 	}
 
+	return resourceSecretFlatten(ctx, conn, d, output)
+}
+
+func resourceSecretFlatten(ctx context.Context, conn *secretsmanager.Client, d *schema.ResourceData, output *secretsmanager.DescribeSecretOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, output.ARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
@@ -251,7 +257,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	var policy *secretsmanager.GetResourcePolicyOutput
-	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {

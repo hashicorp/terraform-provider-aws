@@ -164,8 +164,9 @@ The `metadata` configuration block supports the following argument:
 
 ### `iceberg`
 
-The `iceberg` configuration block supports the following argument:
+The `iceberg` configuration block supports the following arguments:
 
+* `properties` - (Optional, Forces new resource) Map of configuration properties for the Iceberg table, for example `write.distribution-mode` and `write.sort-order`.
 * `schema` - (Required) Schema configuration for the Iceberg table.
   [See `schema` below](#schema).
 

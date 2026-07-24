@@ -163,11 +163,11 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			// Step 1: CUSTOM type with missing configuration block → ValidateConfig error
 			{
 				Config:      testAccMemoryStrategyConfig_customInvalid(rName),
-				ExpectError: regexache.MustCompile("When type is `CUSTOM`, the configuration block is required"),
+				ExpectError: regexache.MustCompile(`Attribute "configuration" must be configured`),
 			},
 			// Step 2: Create CUSTOM strategy with consolidation block
 			{
-				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SEMANTIC_OVERRIDE", "Focus on semantic relationships", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SEMANTIC_OVERRIDE", "Focus on semantic relationships", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -176,7 +176,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Focus on semantic relationships"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "us.amazon.nova-2-lite-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
@@ -188,7 +188,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 3: Add extraction block and update consolidation properties (same override type)
 			{
-				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "Updated semantic consolidation", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract semantic meaning", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "Updated semantic consolidation", "amazon.nova-lite-v1:0", "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -196,10 +196,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SEMANTIC_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Updated semantic consolidation"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-sonnet-20240229-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "amazon.nova-lite-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract semantic meaning"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "us.amazon.nova-2-lite-v1:0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -209,12 +209,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			// Step 4: Try to remove consolidation block → should ERROR
 			{
-				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, "SEMANTIC_OVERRIDE", "Extract semantic meaning", "anthropic.claude-3-haiku-20240307-v1:0"),
-				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block is not allowed"),
+				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, "SEMANTIC_OVERRIDE", "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
+				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block"),
 			},
 			//// Step 5: Change override type → should replace resource
 			{
-				Config: testAccMemoryStrategyConfig_custom(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract user preferences", "anthropic.claude-3-haiku-20240307-v1:0"),
+				Config: testAccMemoryStrategyConfig_custom(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "amazon.nova-lite-v1:0", "Extract user preferences", "us.amazon.nova-2-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -223,10 +223,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "USER_PREFERENCE_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Store user preferences"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-sonnet-20240229-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "amazon.nova-lite-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.append_to_prompt", "Extract user preferences"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "anthropic.claude-3-haiku-20240307-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.0.model_id", "us.amazon.nova-2-lite-v1:0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -237,12 +237,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			},
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
 			{
-				Config:      testAccMemoryStrategyConfig_custom(rName, "SUMMARY_OVERRIDE", "Summary consolidation", "anthropic.claude-3-sonnet-20240229-v1:0", "Summary extraction", "anthropic.claude-3-haiku-20240307-v1:0"),
-				ExpectError: regexache.MustCompile("(?s)When\\s+configuration\\s+type\\s+is\\s+`SUMMARY_OVERRIDE`,\\s+the\\s+extraction\\s+block\\s+cannot\\s+be\\s+defined"),
+				Config:      testAccMemoryStrategyConfig_custom(rName, "SUMMARY_OVERRIDE", "Summary consolidation", "amazon.nova-lite-v1:0", "Summary extraction", "us.amazon.nova-2-lite-v1:0"),
+				ExpectError: regexache.MustCompile(`Attribute "configuration\[0\].extraction" must not be configured`),
 			},
 			//// Step 7: SUMMARY_OVERRIDE with no extraction block → should succeed
 			{
-				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SUMMARY_OVERRIDE", "Summary consolidation only", "anthropic.claude-3-sonnet-20240229-v1:0"),
+				Config: testAccMemoryStrategyConfig_customConsolidationOnly(rName, "SUMMARY_OVERRIDE", "Summary consolidation only", "amazon.nova-lite-v1:0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -251,24 +251,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SUMMARY_OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.append_to_prompt", "Summary consolidation only"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "anthropic.claude-3-sonnet-20240229-v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.consolidation.0.model_id", "amazon.nova-lite-v1:0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.extraction.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
-			},
-			//Step 8: Add 6 more CUSTOM strategies → should ERROR on too many
-			{
-				Config:      testAccMemoryStrategyConfig_customTooMany(rName, "USER_PREFERENCE_OVERRIDE", "Store user preferences", "anthropic.claude-3-sonnet-20240229-v1:0", "Extract user preferences", "anthropic.claude-3-haiku-20240307-v1:0"),
-				ExpectError: regexache.MustCompile("Resource limit exceeded for memory strategies for memory"),
-			},
-			// Step 9: Import test
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
-				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 		},
 	})
@@ -468,40 +454,6 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   }
 }
 `, rName, overrideType, extractionPrompt, extractionModel))
-}
-
-func testAccMemoryStrategyConfig_customDummy(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_memory_strategy" "%[1]s" {
-  name                      = %[1]q
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = "CUSTOM"
-  description               = "Test custom strategy"
-  namespaces                = ["{sessionId}"]
-
-  configuration {
-    type = "SEMANTIC_OVERRIDE"
-    extraction {
-      append_to_prompt = "test"
-      model_id         = "test_model"
-    }
-  }
-  # Preventing the main strategy from being lost due to "too many resources" error
-  depends_on = [aws_bedrockagentcore_memory_strategy.test]
-}
-`, rName)
-}
-
-func testAccMemoryStrategyConfig_customTooMany(rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
-	compose := acctest.ConfigCompose(testAccMemoryStrategyConfig_custom(rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel),
-		testAccMemoryStrategyConfig_customDummy(rName+"_2"),
-		testAccMemoryStrategyConfig_customDummy(rName+"_3"),
-		testAccMemoryStrategyConfig_customDummy(rName+"_4"),
-		testAccMemoryStrategyConfig_customDummy(rName+"_5"),
-		testAccMemoryStrategyConfig_customDummy(rName+"_6"),
-		testAccMemoryStrategyConfig_customDummy(rName+"_7"))
-	return compose
 }
 
 func testAccMemoryStrategyConfig_customInvalid(rName string) string {

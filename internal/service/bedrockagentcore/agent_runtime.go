@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -38,6 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -128,15 +130,17 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("code_configuration"),
+							path.MatchRelative().AtName("container_configuration"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"code_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("container_configuration"),
-									path.MatchRelative().AtParent().AtName("code_configuration"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -162,15 +166,16 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("s3"),
+												),
+											},
 											Blocks: map[string]schema.Block{
 												"s3": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3CodeConfigurationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
-														listvalidator.ExactlyOneOf(
-															// If another member is added to the union, this will need to be updated.
-															path.MatchRelative().AtParent().AtName("s3"),
-														),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -205,10 +210,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("container_configuration"),
-									path.MatchRelative().AtParent().AtName("code_configuration"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -244,6 +245,12 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"require_service_s3_endpoint": schema.BoolAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
 									names.AttrSecurityGroups: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
@@ -302,6 +309,11 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 			listvalidator.SizeAtMost(1),
 		},
 		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("custom_jwt_authorizer"),
+				),
+			},
 			Blocks: map[string]schema.Block{
 				"custom_jwt_authorizer": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
@@ -327,6 +339,39 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 							},
 						},
 						Blocks: map[string]schema.Block{
+							"allowed_workload_configuration": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[allowedWorkloadConfigurationModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"workload_identities": schema.ListAttribute{
+											CustomType: fwtypes.ListOfStringType,
+											Optional:   true,
+											Validators: []validator.List{
+												listvalidator.SizeBetween(1, 10),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"hosting_environment": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[hostingEnvironmentModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeBetween(1, 10),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													names.AttrARN: schema.StringAttribute{
+														CustomType: fwtypes.ARNType,
+														Required:   true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"custom_claim": schema.SetNestedBlock{
 								CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
 								NestedObject: schema.NestedBlockObject{
@@ -398,6 +443,96 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 									},
 								},
 							},
+							"private_endpoint": privateEndpointSchema(ctx),
+							"private_endpoint_overrides": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointOverrideModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(5),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrDomain: schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 253),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										// SDK PrivateEndpointOverride.PrivateEndpoint is a required member;
+										// enforce it offline so a missing private_endpoint fails at plan
+										// instead of a client-side SDK error at apply.
+										"private_endpoint": privateEndpointSchema(ctx, listvalidator.IsRequired()),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func privateEndpointSchema(ctx context.Context, extraValidators ...validator.List) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
+		Validators: append([]validator.List{
+			listvalidator.SizeAtMost(1),
+		}, extraValidators...),
+		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("managed_vpc_resource"),
+					path.MatchRelative().AtName("self_managed_lattice_resource"),
+				),
+			},
+			Blocks: map[string]schema.Block{
+				"managed_vpc_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"endpoint_ip_address_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
+								Required:   true,
+							},
+							"routing_domain": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 255),
+								},
+							},
+							names.AttrSecurityGroupIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+								Validators: []validator.Set{
+									setvalidator.SizeAtMost(5),
+								},
+							},
+							names.AttrSubnetIDs: schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Required:   true,
+							},
+							names.AttrTags: tftags.TagsAttribute(),
+							"vpc_identifier": schema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"self_managed_lattice_resource": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"resource_configuration_identifier": schema.StringAttribute{
+								Required: true,
+							},
 						},
 					},
 				},
@@ -413,6 +548,13 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 			listvalidator.SizeAtMost(5),
 		},
 		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("efs_access_point"),
+					path.MatchRelative().AtName("s3_files_access_point"),
+					path.MatchRelative().AtName("session_storage"),
+				),
+			},
 			Blocks: map[string]schema.Block{
 				"efs_access_point": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[efsAccessPointConfigurationModel](ctx),
@@ -460,11 +602,6 @@ func filesystemConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 					CustomType: fwtypes.NewListNestedObjectTypeOf[sessionStorageConfigurationModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
-						listvalidator.ExactlyOneOf(
-							path.MatchRelative().AtParent().AtName("efs_access_point"),
-							path.MatchRelative().AtParent().AtName("s3_files_access_point"),
-							path.MatchRelative().AtParent().AtName("session_storage"),
-						),
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
@@ -496,6 +633,12 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// require_service_s3_endpoint is read-only and rejected by the API on create;
+	// never transmit it (it is Computed and absorbed from the read response).
+	if input.NetworkConfiguration != nil && input.NetworkConfiguration.NetworkModeConfig != nil {
+		input.NetworkConfiguration.NetworkModeConfig.RequireServiceS3Endpoint = nil
 	}
 
 	// Additional fields.
@@ -543,11 +686,20 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	// Set values for unknowns.
+	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
+	// private_endpoint_overrides can be restored after Flatten.
+	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -573,10 +725,18 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
+	priorAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -605,6 +765,12 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
+		// require_service_s3_endpoint is read-only for the agent runtimes Terraform can
+		// manage (post-rollout); passing it to UpdateAgentRuntime returns a ValidationException.
+		if input.NetworkConfiguration != nil && input.NetworkConfiguration.NetworkModeConfig != nil {
+			input.NetworkConfiguration.NetworkModeConfig.RequireServiceS3Endpoint = nil
+		}
+
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
@@ -614,10 +780,18 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
+		plannedAuthorizerConfiguration := new.AuthorizerConfiguration
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		authorizerConfiguration, authDiags := preserveAuthorizerPrivateEndpoints(ctx, new.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+		smerr.AddEnrich(ctx, &response.Diagnostics, authDiags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		new.AuthorizerConfiguration = authorizerConfiguration
 
 		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
@@ -646,6 +820,11 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 
 	_, err := conn.DeleteAgentRuntime(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	// Attempting to delete a non-existent agent runtime:
+	// "AccessDeniedException: User: ... is not authorized to perform: bedrock-agentcore:DeleteAgentRuntime".
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") {
 		return
 	}
 	if err != nil {
@@ -1085,13 +1264,74 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 	return &awstypes.UpdatedAuthorizerConfiguration{}, diags
 }
 
-type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
-	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+// preserveAuthorizerPrivateEndpoints copies the configured private_endpoint and
+// private_endpoint_overrides from src (the prior plan or state) into dst (the value just
+// flattened from the API response). The service omits both from Get responses, so without this
+// the configured blocks would be cleared on refresh, producing "Provider produced inconsistent
+// result after apply: block count changed from 1 to 0" and a perpetual replace. It is shared by
+// every resource that embeds authorizerConfigurationModel (agent_runtime, gateway, harness, registry).
+func preserveAuthorizerPrivateEndpoints(ctx context.Context, dst, src fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if dst.IsNull() || src.IsNull() {
+		return dst, diags
+	}
+
+	dstAuth, d := dst.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	srcAuth, d := src.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || dstAuth == nil || srcAuth == nil {
+		return dst, diags
+	}
+
+	if dstAuth.CustomJWTAuthorizer.IsNull() || srcAuth.CustomJWTAuthorizer.IsNull() {
+		return dst, diags
+	}
+
+	dstJWT, d := dstAuth.CustomJWTAuthorizer.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	srcJWT, d := srcAuth.CustomJWTAuthorizer.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || dstJWT == nil || srcJWT == nil {
+		return dst, diags
+	}
+
+	dstJWT.PrivateEndpoint = srcJWT.PrivateEndpoint
+	dstJWT.PrivateEndpointOverrides = srcJWT.PrivateEndpointOverrides
+	dstAuth.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstJWT)
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstAuth), diags
 }
+
+type customJWTAuthorizerConfigurationModel struct {
+	AllowedAudience              fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients               fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes                fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	AllowedWorkloadConfiguration fwtypes.ListNestedObjectValueOf[allowedWorkloadConfigurationModel]  `tfsdk:"allowed_workload_configuration"`
+	CustomClaim                  fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	DiscoveryURL                 types.String                                                        `tfsdk:"discovery_url"`
+	PrivateEndpoint              fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides     fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]       `tfsdk:"private_endpoint_overrides"`
+}
+
+type allowedWorkloadConfigurationModel struct {
+	HostingEnvironment fwtypes.ListNestedObjectValueOf[hostingEnvironmentModel] `tfsdk:"hosting_environment"`
+	WorkloadIdentities fwtypes.ListOfString                                     `tfsdk:"workload_identities"`
+}
+
+type hostingEnvironmentModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type privateEndpointOverrideModel struct {
+	Domain          types.String                                          `tfsdk:"domain"`
+	PrivateEndpoint fwtypes.ListNestedObjectValueOf[privateEndpointModel] `tfsdk:"private_endpoint"`
+}
+
+// privateEndpointModel, managedVPCResourceModel, and selfManagedLatticeResourceModel
+// (and their Expand/Flatten implementations) are defined in gateway_target.go and
+// shared here via privateEndpointSchema.
 
 type customJWTAuthorizerCustomClaimModel struct {
 	InboundTokenClaimName      types.String                                                                        `tfsdk:"inbound_token_claim_name"`
@@ -1157,6 +1397,17 @@ type networkConfigurationModel struct {
 }
 
 type vpcConfigModel struct {
+	RequireServiceS3Endpoint types.Bool          `tfsdk:"require_service_s3_endpoint"`
+	SecurityGroups           fwtypes.SetOfString `tfsdk:"security_groups"`
+	Subnets                  fwtypes.SetOfString `tfsdk:"subnets"`
+}
+
+// vpcConfigNoS3EndpointModel is used by Browser and Code Interpreter, whose VPC
+// configuration does not support require_service_s3_endpoint. Per the SDK, that field
+// "applies only to Agent Runtimes. It is not applicable to Browsers or Code Interpreters" —
+// the API ignores it on create and never returns it, so exposing it here would force a
+// perpetual destroy/recreate on every plan.
+type vpcConfigNoS3EndpointModel struct {
 	SecurityGroups fwtypes.SetOfString `tfsdk:"security_groups"`
 	Subnets        fwtypes.SetOfString `tfsdk:"subnets"`
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fsx_lustre_file_system: Fix perpetual diff in `data_read_cache_configuration.size` when `sizing_mode` is `PROPORTIONAL_TO_THROUGHPUT_CAPACITY` and `size` is not specified
+```

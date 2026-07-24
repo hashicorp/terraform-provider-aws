@@ -28,7 +28,7 @@ nav:
           - Resource Tagging: resource-tagging.md
           - Tag Resource: adding-a-tag-resource.md
           - Bugs and Enhancements: bugs-and-enhancements.md
-          - Documentation Changes: documentation-changes.md
+          - Documentation Changes: end-user-documentation.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
       - Generated Acceptance Tests: acc-test-generation.md
       - Unit Tests: unit-tests.md
@@ -46,6 +46,7 @@ nav:
           - Resource Identity (Parameterized): ai-agent-guides/parameterized-resource-identity.md
           - Smarterr: ai-agent-guides/smarterr.md
       - AWS SDK Go Base: aws-sdk-go-base.md
+      - Breaking Changes: breaking-changes.md
       - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Debugging: debugging.md
@@ -53,7 +54,9 @@ nav:
       - Design Decision Log: design-decision-log.md
       - Enhanced Region Support: enhanced-region-support.md
       - Error Handling: error-handling.md
+      - Finders and Listers: finders-and-listers.md
       - Go-VCR: go-vcr.md
+      - GitHub Actions Caching: github-actions-caching.md
       - ID Attributes: id-attributes.md
       - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md

@@ -49,7 +49,8 @@ var (
 )
 
 type (
-	ManagedVPCResourceModel         = managedVPCResourceModel
-	PrivateEndpointModel            = privateEndpointModel
-	SelfManagedLatticeResourceModel = selfManagedLatticeResourceModel
+	CustomJWTAuthorizerConfigurationModel = customJWTAuthorizerConfigurationModel
+	ManagedVPCResourceModel               = managedVPCResourceModel
+	PrivateEndpointModel                  = privateEndpointModel
+	SelfManagedLatticeResourceModel       = selfManagedLatticeResourceModel
 )

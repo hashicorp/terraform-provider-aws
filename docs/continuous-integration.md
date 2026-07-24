@@ -30,15 +30,18 @@ Additionally, these tests provide rapid feedback to contributors, enabling them 
 
 ## Using `make` to Run Specific Tests Locally
 
-**NOTE:** We've made a great effort to ensure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
+!!! note
+    We've made a great effort to ensure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
 
 The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a macOS terminal.
 
-**NOTE:** See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for detailed information about the Makefile.
+!!! note
+    See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for detailed information about the Makefile.
 
 There are many different tests, and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, let us know!
 
-**NOTE:** Many tests simply exit without error if passing. "No news is good news."
+!!! note
+    Many tests simply exit without error if passing. "No news is good news."
 
 ### Before Running Tests
 
@@ -58,7 +61,8 @@ Use the `ci` target to run all the tests listed below:
 make ci
 ```
 
-**NOTE:** Depending on your machine, running all the tests can take a long time!
+!!! note
+    Depending on your machine, running all the tests can take a long time!
 
 To run most of the tests but exclude the longer-running ones, use the `ci-quick` target. "Quick" may not be _quick_ precisely, but relative to the full `ci` target, it is _quicker_:
 
@@ -166,7 +170,8 @@ Use the `changelog-misspell` target to spellcheck the CHANGELOG:
 make changelog-misspell
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 ### Copyright Checks / headers check
 
@@ -178,7 +183,8 @@ Use the `copyright` target to add the appropriate copyright headers to all files
 make copyright
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 ### Dependency Checks / go_mod
 
@@ -202,7 +208,8 @@ Use the target `docs-link-check` to check links found in the contributor documen
 make docs-link-check
 ```
 
-**NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+!!! note
+    Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
 #### markdown-lint
 
@@ -212,7 +219,8 @@ Use the target `docs-markdown-lint` to lint the contributor documentation:
 make docs-markdown-lint
 ```
 
-**NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+!!! note
+    Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
 #### misspell
 
@@ -222,7 +230,8 @@ Use the target `docs-misspell` to spellcheck the contributor documentation:
 make docs-misspell
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 ### Examples Checks
 
@@ -236,7 +245,8 @@ Use the target `examples-tflint` to lint the examples:
 make examples-tflint
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 #### validate-terraform (0.12.31)
 
@@ -287,7 +297,8 @@ make golangci-lint4
 make golangci-lint5
 ```
 
-**Tip:** Running the second step against the entire codebase often takes the longest of all CI tests. If you're only working in one service package, you can save a lot of time limiting the scan to that service:
+!!! tip
+    Running the second step against the entire codebase often takes the longest of all CI tests. If you're only working in one service package, you can save a lot of time limiting the scan to that service:
 
 ```console
 PKG=rds make golangci-lint2
@@ -373,7 +384,8 @@ Use the `gen` target to run all the generators associated with the provider. Unl
 make gen
 ```
 
-**NOTE:** While running the generators, you may see hundreds or thousands of code changes as `make` and the generators delete and recreate files.
+!!! note
+    While running the generators, you may see hundreds or thousands of code changes as `make` and the generators delete and recreate files.
 
 #### go_test
 
@@ -391,7 +403,8 @@ You can limit `test` to a single service package with the `PKG` environment vari
 PKG=rds make test
 ```
 
-**NOTE:** `test` and `golangci-lint2` are generally the longest running checks and, depending on your computer, may take considerable time to finish.
+!!! note
+    `test` and `golangci-lint2` are generally the longest running checks and, depending on your computer, may take considerable time to finish.
 
 #### test-shard (CI only)
 
@@ -431,7 +444,8 @@ Use the `provider-markdown-lint` target to run this test:
 make provider-markdown-lint
 ```
 
-**NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+!!! note
+    Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
 #### misspell
 
@@ -441,7 +455,8 @@ Use `go-misspell` to check the provider code for misspellings:
 make go-misspell
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 #### Swiss Shepherd
 
@@ -452,7 +467,8 @@ The provider keeps two Swiss Shepherd configurations side by side under `.ci/`:
 - `.ci/swissshepherd-weak.hcl` is the working configuration. It carries the AWS-specific type definitions and bylines plus per-resource exceptions (`ignore_*` lists) so a run against today's documentation is clean. The `swissshepherd` and `swissshepherd-refresh` targets, and CI, all use this file. New work should not grow these exception lists; fixing the underlying documentation is the goal.
 - `.ci/swissshepherd-full.hcl` carries the same type definitions but omits the per-resource exceptions, so a run reports every finding the linter can produce. The `swissshepherd-count` target uses this file. The resulting count gives a sense of how much documentation work remains before every rule can run unconditionally.
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 Use the `swissshepherd` target to run the standard checks:
 
@@ -649,7 +665,8 @@ Use the target `website-link-check-markdown` to check links found in the website
 make website-link-check-markdown
 ```
 
-**NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+!!! note
+    Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
 #### markdown-link-check-i-z-markdown
 
@@ -663,7 +680,8 @@ Use the target `website-link-check-md` to check links found in the website:
 make website-link-check-md
 ```
 
-**NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+!!! note
+    Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
 #### markdown-lint
 
@@ -673,7 +691,8 @@ Use the target `website-markdown-lint` to lint the website documentation:
 make website-markdown-lint
 ```
 
-**NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+!!! note
+    Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
 
 #### misspell
 
@@ -683,7 +702,8 @@ Use the target `website-misspell` to spellcheck the documentation:
 make website-misspell
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 #### terrafmt
 
@@ -693,7 +713,8 @@ Use the target `website-terrafmt` to check formatting of Terraform configuration
 make website-terrafmt
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 #### tflint
 
@@ -703,7 +724,8 @@ Use the target `website-tflint` to check formatting of Terraform configuration i
 make website-tflint
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 ### Workflow Linting / actionlint
 
@@ -713,7 +735,8 @@ Use the `gh-workflow-lint` target to perform the check:
 make gh-workflow-lint
 ```
 
-**NOTE:** Install [tools](#before-running-tests) before running this check.
+!!! note
+    Install [tools](#before-running-tests) before running this check.
 
 ## Naming Checks
 
@@ -737,7 +760,8 @@ Use the `test-naming` target to run the same check CI runs:
 make test-naming
 ```
 
-**NOTE:** Requires `ripgrep` to be installed (`brew install ripgrep` on macOS).
+!!! note
+    Requires `ripgrep` to be installed (`brew install ripgrep` on macOS).
 
 ### YAML Linting / yamllint
 
@@ -765,8 +789,10 @@ Use the `terraform-fmt` target to format all Terraform files:
 make terraform-fmt
 ```
 
-**NOTE:** Install [Terraform](https://developer.hashicorp.com/terraform/install) to run this check. On macOS, you can use Homebrew:
+!!! note
+    Install [Terraform](https://developer.hashicorp.com/terraform/install) to run this check. On macOS, you can use Homebrew:
 
 ```console
-brew install terraform
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 ```
