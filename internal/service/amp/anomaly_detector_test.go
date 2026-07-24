@@ -418,10 +418,12 @@ func testAccPreCheckAnomalyDetector(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccAnomalyDetectorConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {}
+const testAccAnomalyDetectorConfig_base = `resource "aws_prometheus_workspace" "test" {}`
 
+func testAccAnomalyDetectorConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAnomalyDetectorConfig_base,
+		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
   alias = %[1]q
   workspace_id = aws_prometheus_workspace.test.id
@@ -437,13 +439,13 @@ resource "aws_prometheus_anomaly_detector" "test" {
     skip = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAnomalyDetectorConfig_update(rName, eval_time, query, missingDataAction string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {}
-
+	return acctest.ConfigCompose(
+		testAccAnomalyDetectorConfig_base,
+		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
   alias = %[1]q
   workspace_id = aws_prometheus_workspace.test.id
@@ -459,13 +461,13 @@ resource "aws_prometheus_anomaly_detector" "test" {
     %[4]s = true
   }
 }
-`, rName, eval_time, query, missingDataAction)
+`, rName, eval_time, query, missingDataAction))
 }
 
 func testAccAnomalyDetectorConfig_randomCutForest(rName, sampleSize, shingleSize, ignoreAbove, ignoreBelow string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {}
-
+	return acctest.ConfigCompose(
+		testAccAnomalyDetectorConfig_base,
+		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
   alias        = %[1]q
   workspace_id = aws_prometheus_workspace.test.id
@@ -490,13 +492,13 @@ resource "aws_prometheus_anomaly_detector" "test" {
     skip = true
   }
 }
-`, rName, sampleSize, shingleSize, ignoreAbove, ignoreBelow)
+`, rName, sampleSize, shingleSize, ignoreAbove, ignoreBelow))
 }
 
 func testAccAnomalyDetectorConfig_labels(rName, labelKey1, labelValue1, label2 string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {}
-
+	return acctest.ConfigCompose(
+		testAccAnomalyDetectorConfig_base,
+		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
   alias = %[1]q
   workspace_id = aws_prometheus_workspace.test.id
@@ -517,5 +519,5 @@ resource "aws_prometheus_anomaly_detector" "test" {
     skip = true
   }
 }
-`, rName, labelKey1, labelValue1, label2)
+`, rName, labelKey1, labelValue1, label2))
 }
