@@ -30,29 +30,19 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 For managed external secrets that are rotated by AWS partner integrations:
 
 ```terraform
-# AWS Secrets Manager Secret with MES support
-resource "aws_secretsmanager_secret" "salesforce_client_secret" {
+resource "aws_secretsmanager_secret" "example" {
   name        = "example-salesforce-client-secret"
-  description = "Demo of Managed External Secrets for Salesforce integration"
   type        = "SalesforceClientSecret"
-
-  tags = {
-    Name        = "example-salesforce-secret"
-    Environment = "demo"
-    Partner     = "Salesforce"
-    MESEnabled  = "true"
-  }
 }
 
-# Secret rotation configuration with external metadata
-resource "aws_secretsmanager_secret_rotation" "salesforce_rotation" {
-  secret_id = aws_secretsmanager_secret.salesforce_client_secret.id
+resource "aws_secretsmanager_secret_rotation" "example" {
+  secret_id = aws_secretsmanager_secret.example.id
 
-  external_secret_rotation_role_arn = aws_iam_role.external_rotation_role.arn
+  external_secret_rotation_role_arn = aws_iam_role.example.arn
 
   external_secret_rotation_metadata {
     key   = "adminSecretArn"
-    value = aws_secretsmanager_secret.salesforce_client_secret.arn
+    value = aws_secretsmanager_secret.example.arn
   }
 
   external_secret_rotation_metadata {
@@ -64,7 +54,6 @@ resource "aws_secretsmanager_secret_rotation" "salesforce_rotation" {
     automatically_after_days = var.rotation_days
   }
 }
-
 ```
 
 For more information about managed external secrets and partner-specific metadata requirements, see the [AWS documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) and [partner-specific guides](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html).
