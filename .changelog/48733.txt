@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_vpc: Fix perpetual diff on `ipv6_ipam_pool_id` and `ipv6_netmask_length` when the VPC's IPv6 CIDR is attached via a standalone `aws_vpc_ipv6_cidr_block_association` using a non-IPAM BYOIP pool (`ipv6pool-ec2-*`)
+```
+
+```release-note:enhancement
+resource/aws_vpc: Add `ipv6_pool` argument to allocate an IPv6 CIDR from a non-IPAM BYOIP pool (`ipv6pool-ec2-*`) inline
+```
+
+```release-note:enhancement
+resource/aws_default_vpc: Add `ipv6_pool` argument to allocate an IPv6 CIDR from a non-IPAM BYOIP pool (`ipv6pool-ec2-*`) inline
+```
