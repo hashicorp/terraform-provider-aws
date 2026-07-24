@@ -38,6 +38,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -172,6 +173,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -206,6 +208,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -517,6 +520,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -575,6 +579,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -619,6 +624,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -645,6 +651,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -671,6 +678,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -724,6 +732,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -767,6 +776,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -779,6 +789,135 @@ func targetParametersSchema() *schema.Schema {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+						},
+					},
+				},
+				"timestream_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_job_parameters",
+						"target_parameters.0.cloudwatch_logs_parameters",
+						"target_parameters.0.ecs_task_parameters",
+						"target_parameters.0.eventbridge_event_bus_parameters",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream_parameters",
+						"target_parameters.0.lambda_function_parameters",
+						"target_parameters.0.redshift_data_parameters",
+						"target_parameters.0.sagemaker_pipeline_parameters",
+						"target_parameters.0.sqs_queue_parameters",
+						"target_parameters.0.step_function_state_machine_parameters",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dimension_mapping": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimension_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"dimension_value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+										"dimension_value_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.DimensionValueType](),
+										},
+									},
+								},
+							},
+							"time_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"version_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"epoch_time_unit": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.EpochTimeUnit](),
+							},
+							"multi_measure_mapping": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"multi_measure_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"multi_measure_attribute_mapping": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"measure_value": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 2048),
+													},
+													"measure_value_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.MeasureValueType](),
+													},
+													"multi_measure_attribute_name": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"single_measure_mapping": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"measure_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"measure_value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+										"measure_value_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.MeasureValueType](),
+										},
+									},
+								},
+							},
+							"time_field_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.TimeFieldType](),
+							},
+							"timestamp_format": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
 					},
@@ -798,6 +937,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -863,6 +1003,10 @@ func expandPipeTargetParameters(tfMap map[string]any) *types.PipeTargetParameter
 
 	if v, ok := tfMap["sqs_queue_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SqsQueueParameters = expandPipeTargetSQSQueueParameters(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["timestream_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TimestreamParameters = expandPipeTargetTimestreamParameters(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -1844,6 +1988,160 @@ func expandPipeTargetSQSQueueParameters(tfMap map[string]any) *types.PipeTargetS
 	return apiObject
 }
 
+func expandPipeTargetTimestreamParameters(tfMap map[string]any) *types.PipeTargetTimestreamParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetTimestreamParameters{}
+
+	if v, ok := tfMap["dimension_mapping"].([]any); ok && len(v) > 0 {
+		apiObject.DimensionMappings = expandDimensionMappings(v)
+	}
+
+	if v, ok := tfMap["time_value"].(string); ok && v != "" {
+		apiObject.TimeValue = aws.String(v)
+	}
+
+	if v, ok := tfMap["version_value"].(string); ok && v != "" {
+		apiObject.VersionValue = aws.String(v)
+	}
+
+	if v, ok := tfMap["epoch_time_unit"].(string); ok && v != "" {
+		apiObject.EpochTimeUnit = types.EpochTimeUnit(v)
+	}
+
+	if v, ok := tfMap["multi_measure_mapping"].([]any); ok && len(v) > 0 {
+		apiObject.MultiMeasureMappings = expandMultiMeasureMappings(v)
+	}
+
+	if v, ok := tfMap["single_measure_mapping"].([]any); ok && len(v) > 0 {
+		apiObject.SingleMeasureMappings = expandSingleMeasureMappings(v)
+	}
+
+	if v, ok := tfMap["time_field_type"].(string); ok && v != "" {
+		apiObject.TimeFieldType = types.TimeFieldType(v)
+	}
+
+	if v, ok := tfMap["timestamp_format"].(string); ok && v != "" {
+		apiObject.TimestampFormat = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDimensionMappings(tfList []any) []types.DimensionMapping {
+	apiObjects := make([]types.DimensionMapping, 0, len(tfList))
+
+	for _, v := range tfList {
+		tfMap, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.DimensionMapping{}
+
+		if v, ok := tfMap["dimension_name"].(string); ok && v != "" {
+			apiObject.DimensionName = aws.String(v)
+		}
+
+		if v, ok := tfMap["dimension_value"].(string); ok && v != "" {
+			apiObject.DimensionValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["dimension_value_type"].(string); ok && v != "" {
+			apiObject.DimensionValueType = types.DimensionValueType(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandMultiMeasureMappings(tfList []any) []types.MultiMeasureMapping {
+	apiObjects := make([]types.MultiMeasureMapping, 0, len(tfList))
+
+	for _, v := range tfList {
+		tfMap, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.MultiMeasureMapping{}
+
+		if v, ok := tfMap["multi_measure_name"].(string); ok && v != "" {
+			apiObject.MultiMeasureName = aws.String(v)
+		}
+
+		if v, ok := tfMap["multi_measure_attribute_mapping"].([]any); ok && len(v) > 0 {
+			apiObject.MultiMeasureAttributeMappings = expandMultiMeasureAttributeMappings(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandMultiMeasureAttributeMappings(tfList []any) []types.MultiMeasureAttributeMapping {
+	apiObjects := make([]types.MultiMeasureAttributeMapping, 0, len(tfList))
+
+	for _, v := range tfList {
+		tfMap, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.MultiMeasureAttributeMapping{}
+
+		if v, ok := tfMap["measure_value"].(string); ok && v != "" {
+			apiObject.MeasureValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["measure_value_type"].(string); ok && v != "" {
+			apiObject.MeasureValueType = types.MeasureValueType(v)
+		}
+
+		if v, ok := tfMap["multi_measure_attribute_name"].(string); ok && v != "" {
+			apiObject.MultiMeasureAttributeName = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandSingleMeasureMappings(tfList []any) []types.SingleMeasureMapping {
+	apiObjects := make([]types.SingleMeasureMapping, 0, len(tfList))
+
+	for _, v := range tfList {
+		tfMap, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.SingleMeasureMapping{}
+
+		if v, ok := tfMap["measure_name"].(string); ok && v != "" {
+			apiObject.MeasureName = aws.String(v)
+		}
+
+		if v, ok := tfMap["measure_value"].(string); ok && v != "" {
+			apiObject.MeasureValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["measure_value_type"].(string); ok && v != "" {
+			apiObject.MeasureValueType = types.MeasureValueType(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func expandPipeTargetStateMachineParameters(tfMap map[string]any) *types.PipeTargetStateMachineParameters {
 	if tfMap == nil {
 		return nil
@@ -1907,6 +2205,10 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.SqsQueueParameters; v != nil {
 		tfMap["sqs_queue_parameters"] = []any{flattenPipeTargetSQSQueueParameters(v)}
+	}
+
+	if v := apiObject.TimestreamParameters; v != nil {
+		tfMap["timestream_parameters"] = []any{flattenPipeTargetTimestreamParameters(v)}
 	}
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
@@ -2684,6 +2986,140 @@ func flattenPipeTargetSQSQueueParameters(apiObject *types.PipeTargetSqsQueuePara
 	}
 
 	return tfMap
+}
+
+func flattenPipeTargetTimestreamParameters(apiObject *types.PipeTargetTimestreamParameters) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.DimensionMappings; v != nil {
+		tfMap["dimension_mapping"] = flattenDimensionMappings(v)
+	}
+
+	if v := apiObject.TimeValue; v != nil {
+		tfMap["time_value"] = aws.ToString(v)
+	}
+
+	if v := apiObject.VersionValue; v != nil {
+		tfMap["version_value"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EpochTimeUnit; v != "" {
+		tfMap["epoch_time_unit"] = string(v)
+	}
+
+	if v := apiObject.MultiMeasureMappings; v != nil {
+		tfMap["multi_measure_mapping"] = flattenMultiMeasureMappings(v)
+	}
+
+	if v := apiObject.SingleMeasureMappings; v != nil {
+		tfMap["single_measure_mapping"] = flattenSingleMeasureMappings(v)
+	}
+
+	if v := apiObject.TimeFieldType; v != "" {
+		tfMap["time_field_type"] = string(v)
+	}
+
+	if v := apiObject.TimestampFormat; v != nil {
+		tfMap["timestamp_format"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenDimensionMappings(apiObjects []types.DimensionMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.DimensionName; v != nil {
+			tfMap["dimension_name"] = aws.ToString(v)
+		}
+
+		if v := apiObject.DimensionValue; v != nil {
+			tfMap["dimension_value"] = aws.ToString(v)
+		}
+
+		if v := apiObject.DimensionValueType; v != "" {
+			tfMap["dimension_value_type"] = string(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenMultiMeasureMappings(apiObjects []types.MultiMeasureMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.MultiMeasureName; v != nil {
+			tfMap["multi_measure_name"] = aws.ToString(v)
+		}
+
+		if v := apiObject.MultiMeasureAttributeMappings; v != nil {
+			tfMap["multi_measure_attribute_mapping"] = flattenMultiMeasureAttributeMappings(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenMultiMeasureAttributeMappings(apiObjects []types.MultiMeasureAttributeMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.MeasureValue; v != nil {
+			tfMap["measure_value"] = aws.ToString(v)
+		}
+
+		if v := apiObject.MeasureValueType; v != "" {
+			tfMap["measure_value_type"] = string(v)
+		}
+
+		if v := apiObject.MultiMeasureAttributeName; v != nil {
+			tfMap["multi_measure_attribute_name"] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSingleMeasureMappings(apiObjects []types.SingleMeasureMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.MeasureName; v != nil {
+			tfMap["measure_name"] = aws.ToString(v)
+		}
+
+		if v := apiObject.MeasureValue; v != nil {
+			tfMap["measure_value"] = aws.ToString(v)
+		}
+
+		if v := apiObject.MeasureValueType; v != "" {
+			tfMap["measure_value_type"] = string(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenPipeTargetStateMachineParameters(apiObject *types.PipeTargetStateMachineParameters) map[string]any {
