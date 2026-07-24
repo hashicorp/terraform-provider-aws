@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add `reflection_configuration` argument for built-in `EPISODIC` strategies and `reflection` block inside `configuration` for `EPISODIC_OVERRIDE` custom strategies
+```

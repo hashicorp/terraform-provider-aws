@@ -166,6 +166,39 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								},
 							},
 						},
+						"reflection": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[episodicOverrideReflectionModel](ctx),
+							Validators: []validator.List{listvalidator.SizeAtMost(1)},
+							PlanModifiers: []planmodifier.List{
+								errorIfSingleBlockRemoved("reflection"),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"append_to_prompt": schema.StringAttribute{
+										Required: true,
+									},
+									"model_id": schema.StringAttribute{
+										Required: true,
+									},
+									"namespace_templates": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"reflection_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[episodicReflectionConfigModel](ctx),
+				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"namespace_templates": schema.SetAttribute{
+							CustomType: fwtypes.SetOfStringType,
+							Optional:   true,
+						},
 					},
 				},
 			},
@@ -235,6 +268,37 @@ func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req plan
 
 	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
 		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
+	}
+}
+
+func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data memoryStrategyResourceModel
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Type.IsUnknown() {
+		return
+	}
+
+	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
+		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
+			c, diags := data.Configuration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if !c.Type.IsUnknown() && c.Type.ValueEnum() != awstypes.OverrideTypeEpisodicOverride && !(c.Reflection.IsNull() || c.Reflection.IsUnknown()) {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection block inside configuration is only valid when configuration type is `EPISODIC_OVERRIDE`."))
+			}
+		}
+		if !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection_configuration block is only valid when type is `EPISODIC`."))
+		}
+	} else if data.Type.ValueEnum() != awstypes.MemoryStrategyTypeEpisodic && !(data.ReflectionConfiguration.IsNull() || data.ReflectionConfiguration.IsUnknown()) {
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("The reflection_configuration block is only valid when type is `EPISODIC`."))
 	}
 }
 
@@ -336,10 +400,36 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
+	// Use the type from the API response — state.Type may be empty during import.
+	apiType := out.Type
 	// For non-CUSTOM types, clear Configuration from the API response before
 	// flattening. The API returns a StrategyConfiguration with Type values
 	// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-	if state.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
+	// For EPISODIC, extract ReflectionConfiguration before clearing. The API
+	// always returns reflection namespaces; only populate the block when they
+	// differ from the episodic namespaces (i.e. the user explicitly configured them).
+	if apiType != awstypes.MemoryStrategyTypeCustom {
+		if apiType == awstypes.MemoryStrategyTypeEpisodic && out.Configuration != nil {
+			if rc := out.Configuration.Reflection; rc != nil {
+				if episodicRC, ok := rc.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
+					reflNS := episodicRC.Value.NamespaceTemplates
+					// Only surface reflection_configuration when the reflection namespaces
+					// differ from the episodic namespaces (user explicitly configured them).
+					if !stringSlicesEqual(reflNS, out.NamespaceTemplates) {
+						var rcModel episodicReflectionConfigModel
+						if len(reflNS) > 0 {
+							rcModel.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, reflNS)
+						}
+						var d diag.Diagnostics
+						state.ReflectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rcModel)
+						smerr.AddEnrich(ctx, &response.Diagnostics, d)
+						if response.Diagnostics.HasError() {
+							return
+						}
+					}
+				}
+			}
+		}
 		out.Configuration = nil
 	}
 
@@ -407,7 +497,26 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", memoryStrategyID))
 				return
 			}
-			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
+			if found.Type != awstypes.MemoryStrategyTypeCustom {
+				if found.Type == awstypes.MemoryStrategyTypeEpisodic && found.Configuration != nil {
+					if rc := found.Configuration.Reflection; rc != nil {
+						if episodicRC, ok := rc.(*awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration); ok {
+							reflNS := episodicRC.Value.NamespaceTemplates
+							if !stringSlicesEqual(reflNS, found.NamespaceTemplates) {
+								var rcModel episodicReflectionConfigModel
+								if len(reflNS) > 0 {
+									rcModel.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, reflNS)
+								}
+								var d diag.Diagnostics
+								plan.ReflectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &rcModel)
+								smerr.AddEnrich(ctx, &response.Diagnostics, d)
+								if response.Diagnostics.HasError() {
+									return
+								}
+							}
+						}
+					}
+				}
 				found.Configuration = nil
 			}
 			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
@@ -595,15 +704,16 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
-	Description            types.String                                              `tfsdk:"description"`
-	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
-	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
-	MemoryID               types.String                                              `tfsdk:"memory_id"`
-	Name                   types.String                                              `tfsdk:"name"`
-	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
-	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
-	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
+	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]      `tfsdk:"configuration"`
+	Description             types.String                                                   `tfsdk:"description"`
+	MemoryExecutionRoleARN  fwtypes.ARN                                                    `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID        types.String                                                   `tfsdk:"memory_strategy_id"`
+	MemoryID                types.String                                                   `tfsdk:"memory_id"`
+	Name                    types.String                                                   `tfsdk:"name"`
+	Namespaces              fwtypes.SetOfString                                            `tfsdk:"namespaces"`
+	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[episodicReflectionConfigModel] `tfsdk:"reflection_configuration"`
+	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]                `tfsdk:"type"`
+	Timeouts                timeouts.Value                                                 `tfsdk:"timeouts"`
 }
 
 func (m *memoryStrategyResourceModel) GetIdentifier() string {
@@ -679,10 +789,26 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
-		// The API requires the reflection namespace to be the same as or a prefix
-		// of the episodic namespace. Set it to match the episodic namespaces.
-		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
-			Namespaces: r.Value.Namespaces,
+		if !m.ReflectionConfiguration.IsNull() && !m.ReflectionConfiguration.IsUnknown() {
+			rc, d := m.ReflectionConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return nil, diags
+			}
+			reflInput := &awstypes.EpisodicReflectionConfigurationInput{}
+			if !rc.NamespaceTemplates.IsNull() && !rc.NamespaceTemplates.IsUnknown() {
+				smerr.AddEnrich(ctx, &diags, rc.NamespaceTemplates.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+				if diags.HasError() {
+					return nil, diags
+				}
+			}
+			r.Value.ReflectionConfiguration = reflInput
+		} else {
+			// The API requires the reflection namespace to be the same as or a prefix
+			// of the episodic namespace. Default to matching the episodic namespaces.
+			r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
+				NamespaceTemplates: r.Value.Namespaces,
+			}
 		}
 		return &r, diags
 	default:
@@ -708,13 +834,47 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 	if m.Configuration.IsNull() || m.Configuration.IsUnknown() {
 		r.Configuration = nil
 	}
+	// For built-in EPISODIC, propagate reflection_configuration changes via
+	// ModifyStrategyConfiguration.Reflection. When the block is absent, reset
+	// the reflection namespaces to match the episodic namespaces so the API
+	// stops returning divergent namespaces (otherwise the block can never be
+	// removed once set: the API keeps the old namespaces and Read/Update
+	// re-surface the block every time).
+	if m.Type.ValueEnum() == awstypes.MemoryStrategyTypeEpisodic {
+		reflInput := awstypes.EpisodicReflectionConfigurationInput{}
+		if !m.ReflectionConfiguration.IsNull() && !m.ReflectionConfiguration.IsUnknown() {
+			rc, d := m.ReflectionConfiguration.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if !rc.NamespaceTemplates.IsNull() && !rc.NamespaceTemplates.IsUnknown() {
+				smerr.AddEnrich(ctx, &diags, rc.NamespaceTemplates.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+				if diags.HasError() {
+					return nil, diags
+				}
+			}
+		} else {
+			smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+			if diags.HasError() {
+				return nil, diags
+			}
+		}
+		if r.Configuration == nil {
+			r.Configuration = &awstypes.ModifyStrategyConfiguration{}
+		}
+		r.Configuration.Reflection = &awstypes.ModifyReflectionConfigurationMemberEpisodicReflectionConfiguration{
+			Value: reflInput,
+		}
+	}
 	return &r, diags
 }
 
 type customConfigurationModel struct {
-	Type          fwtypes.StringEnum[awstypes.OverrideType]             `tfsdk:"type"`
-	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"extraction"`
+	Type          fwtypes.StringEnum[awstypes.OverrideType]                        `tfsdk:"type"`
+	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel]            `tfsdk:"consolidation"`
+	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel]            `tfsdk:"extraction"`
+	Reflection    fwtypes.ListNestedObjectValueOf[episodicOverrideReflectionModel] `tfsdk:"reflection"`
 }
 
 var (
@@ -751,6 +911,21 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 			}
 			if !extraction.AppendToPrompt.IsNull() && !extraction.ModelID.IsNull() {
 				m.Extraction, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &extraction)
+				smerr.AddEnrich(ctx, &diags, d)
+				if diags.HasError() {
+					return diags
+				}
+			}
+		}
+
+		if t.Reflection != nil {
+			var reflection episodicOverrideReflectionModel
+			smerr.AddEnrich(ctx, &diags, reflection.Flatten(ctx, t.Reflection))
+			if diags.HasError() {
+				return diags
+			}
+			if !reflection.AppendToPrompt.IsNull() && !reflection.ModelID.IsNull() {
+				m.Reflection, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &reflection)
 				smerr.AddEnrich(ctx, &diags, d)
 				if diags.HasError() {
 					return diags
@@ -813,9 +988,28 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 
 	case awstypes.OverrideTypeEpisodicOverride:
 		var r awstypes.CustomConfigurationInputMemberEpisodicOverride
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		// Exclude Reflection from auto-flex; it is expanded manually below.
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value, fwflex.WithIgnoredFieldNamesAppend("Reflection")))
 		if diags.HasError() {
 			return nil, diags
+		}
+		if !m.Reflection.IsNull() && !m.Reflection.IsUnknown() {
+			ref, d := m.Reflection.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return nil, diags
+			}
+			reflInput := &awstypes.EpisodicOverrideReflectionConfigurationInput{
+				AppendToPrompt: ref.AppendToPrompt.ValueStringPointer(),
+				ModelId:        ref.ModelID.ValueStringPointer(),
+			}
+			if !ref.NamespaceTemplates.IsNull() && !ref.NamespaceTemplates.IsUnknown() {
+				smerr.AddEnrich(ctx, &diags, ref.NamespaceTemplates.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+				if diags.HasError() {
+					return nil, diags
+				}
+			}
+			r.Value.Reflection = reflInput
 		}
 		return &r, diags
 	default:
@@ -831,6 +1025,7 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	result = &awstypes.ModifyStrategyConfiguration{}
 
 	var consolidation, extraction *overrideDetailsModel
+	var reflection *episodicOverrideReflectionModel
 	var d diag.Diagnostics
 
 	if !m.Consolidation.IsNull() {
@@ -842,6 +1037,13 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	}
 	if !m.Extraction.IsNull() {
 		extraction, d = m.Extraction.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+	}
+	if !m.Reflection.IsNull() {
+		reflection, d = m.Reflection.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
@@ -933,6 +1135,24 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 				Value: &extractionInput,
 			}
 		}
+
+		if reflection != nil {
+			reflInput := &awstypes.EpisodicOverrideReflectionConfigurationInput{
+				AppendToPrompt: reflection.AppendToPrompt.ValueStringPointer(),
+				ModelId:        reflection.ModelID.ValueStringPointer(),
+			}
+			if !reflection.NamespaceTemplates.IsNull() && !reflection.NamespaceTemplates.IsUnknown() {
+				smerr.AddEnrich(ctx, &diags, reflection.NamespaceTemplates.ElementsAs(ctx, &reflInput.NamespaceTemplates, false))
+				if diags.HasError() {
+					return nil, diags
+				}
+			}
+			result.Reflection = &awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration{
+				Value: &awstypes.CustomReflectionConfigurationInputMemberEpisodicReflectionOverride{
+					Value: *reflInput,
+				},
+			}
+		}
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -946,6 +1166,47 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 type overrideDetailsModel struct {
 	AppendToPrompt types.String `tfsdk:"append_to_prompt"`
 	ModelID        types.String `tfsdk:"model_id"`
+}
+
+// episodicReflectionConfigModel holds the reflection_configuration block for built-in EPISODIC strategies.
+type episodicReflectionConfigModel struct {
+	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
+}
+
+// episodicOverrideReflectionModel holds the reflection sub-block inside configuration for EPISODIC_OVERRIDE.
+type episodicOverrideReflectionModel struct {
+	AppendToPrompt     types.String        `tfsdk:"append_to_prompt"`
+	ModelID            types.String        `tfsdk:"model_id"`
+	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
+}
+
+var (
+	_ fwflex.Flattener = &episodicOverrideReflectionModel{}
+)
+
+func (m *episodicOverrideReflectionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case *awstypes.ReflectionConfigurationMemberCustomReflectionConfiguration:
+		return m.Flatten(ctx, t.Value)
+
+	case *awstypes.CustomReflectionConfigurationMemberEpisodicReflectionOverride:
+		return m.Flatten(ctx, t.Value)
+
+	case awstypes.EpisodicReflectionOverride:
+		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
+		m.ModelID = types.StringPointerValue(t.ModelId)
+		if len(t.NamespaceTemplates) > 0 {
+			m.NamespaceTemplates = fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.NamespaceTemplates)
+		}
+		return diags
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("episodic override reflection flatten: %s", reflect.TypeOf(v).String()),
+		)
+		return diags
+	}
 }
 
 var (
@@ -1020,4 +1281,23 @@ func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.D
 		)
 		return diags
 	}
+}
+
+// stringSlicesEqual returns true when two string slices contain the same elements
+// regardless of order.
+func stringSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := make(map[string]int, len(a))
+	for _, v := range a {
+		counts[v]++
+	}
+	for _, v := range b {
+		counts[v]--
+		if counts[v] < 0 {
+			return false
+		}
+	}
+	return true
 }
