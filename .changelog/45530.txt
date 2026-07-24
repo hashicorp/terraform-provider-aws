@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Fix update failure when `app_network_access_type` is `VpcOnly`
+```
