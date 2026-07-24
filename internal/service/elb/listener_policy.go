@@ -64,7 +64,7 @@ func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta
 	lbName := d.Get("load_balancer_name").(string)
 	lbPort := d.Get("load_balancer_port").(int)
 	id := listenerPolicyCreateResourceID(lbName, lbPort)
-	input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+	input := elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 		LoadBalancerName: aws.String(lbName),
 		LoadBalancerPort: int32(lbPort),
 	}
@@ -73,7 +73,7 @@ func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta
 		input.PolicyNames = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+	_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Listener Policy (%s): %s", id, err)
@@ -123,14 +123,14 @@ func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+	input := elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 		LoadBalancerName: aws.String(lbName),
 		LoadBalancerPort: int32(lbPort),
 		PolicyNames:      []string{},
 	}
 
 	log.Printf("[DEBUG] Deleting ELB Classic Listener Policy: %s", d.Id())
-	_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+	_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
 		return diags
