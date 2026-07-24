@@ -112,6 +112,7 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.random_cut_forest.0.shingle_size"),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_above.0"),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_below.0"),
+					resource.TestCheckResourceAttr(resourceName, "labels.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.skip", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", regexache.MustCompile(`anomalydetector/.+$`)),
@@ -308,6 +309,55 @@ func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 	})
 }
 
+func TestAccAMPAnomalyDetector_labels(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_anomaly_detector.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
+			// testAccPreCheckAnomalyDetector(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnomalyDetectorConfig_labels(rName, "labelKey1", "labelValue1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "labels.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "labels.labelKey1", "labelValue1"),
+				),
+			},
+			{ // Update and add check
+				Config: testAccAnomalyDetectorConfig_labels(rName, "starship", "Enterprise", "\"captain\" = \"Picard\""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "labels.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "labels.starship", "Enterprise"),
+					resource.TestCheckResourceAttr(resourceName, "labels.captain", "Picard"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
 func testAccAnomalyDetectorImportState(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id")
 }
@@ -446,4 +496,31 @@ resource "aws_prometheus_anomaly_detector" "test" {
   }
 }
 `, rName, sampleSize, shingleSize, ignoreAbove, ignoreBelow)
+}
+
+func testAccAnomalyDetectorConfig_labels(rName, labelKey1, labelValue1, label2 string) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {}
+
+resource "aws_prometheus_anomaly_detector" "test" {
+  alias = %[1]q
+  workspace_id = aws_prometheus_workspace.test.id
+  evaluation_interval_in_seconds = 120
+
+  configuration {
+	random_cut_forest {
+	  query = "avg(up)"
+	}
+  }
+
+  labels = {
+	%[2]q = %[3]q
+	%[4]s
+  }
+
+  missing_data_action {
+    skip = true
+  }
+}
+`, rName, labelKey1, labelValue1, label2)
 }
