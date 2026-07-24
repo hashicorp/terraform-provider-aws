@@ -1,5 +1,5 @@
 ---
-subcategory: "OpenSearch Ingestion"
+subcategory: "OpenSearch Ingestion (OSIS)"
 layout: "aws"
 page_title: "AWS: aws_osis_pipeline"
 description: |-

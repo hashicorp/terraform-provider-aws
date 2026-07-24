@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_osis_pipeline_endpoint
+```
+
+```release-note:new-resource
+aws_osis_pipeline_resource_policy
+```
