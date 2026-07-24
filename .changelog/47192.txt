@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_security_group: Fix errant egress rule behavior by revoking the default IPv6 egress rule before managing explicit IPv6 egress rules, including when using `aws_security_group_rule` and `aws_vpc_security_group_egress_rule`.
+```
