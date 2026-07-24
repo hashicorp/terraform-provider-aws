@@ -78,9 +78,10 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	conn.SetServicePackages(ctx, map[string]conns.ServicePackage{
 		"Test": &mockService{},
 	})
-	conns.SetDefaultTagsConfig(conn, expandDefaultTags(ctx, map[string]any{
+	defaultTagsConfig, _ := expandDefaultTags(ctx, map[string]any{
 		"tag": "",
-	}))
+	})
+	conns.SetDefaultTagsConfig(conn, defaultTagsConfig)
 	conns.SetIgnoreTagsConfig(conn, expandIgnoreTags(ctx, map[string]any{
 		"tag2": "tag",
 	}))

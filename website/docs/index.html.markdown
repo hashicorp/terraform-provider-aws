@@ -767,11 +767,30 @@ vpc_all_tags = tomap({
 })
 ```
 
+Default tags can also be provided as comma-separated `<tag_key>=<tag_value>` pairs in the `TF_AWS_DEFAULT_TAGS` environment variable.
+This is useful for tag keys containing characters that are not allowed in environment variable names, such as `-`:
+
+```console
+$ export TF_AWS_DEFAULT_TAGS=Environment=Test,Access-Project=example
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Test"
+  "Name" = "Provider Tag"
+  "Access-Project" = "example"
+})
+```
+
 The `default_tags` configuration block supports the following argument:
 
 * `tags` - (Optional) Key-value map of tags to apply to all resources.
-Default tags can also be provided via environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`.
-If a tag is present in both an environment variable and this argument, the value in the provider configuration takes precedence.
+Default tags can also be provided via environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`,
+or via the `TF_AWS_DEFAULT_TAGS` environment variable containing comma-separated `<tag_key>=<tag_value>` pairs (e.g., `TF_AWS_DEFAULT_TAGS=key1=value1,key2=value2`).
+If a tag is defined in more than one place, the provider configuration takes precedence over `TF_AWS_DEFAULT_TAGS_<tag_key>` environment variables,
+which in turn take precedence over `TF_AWS_DEFAULT_TAGS`.
+Tag values containing commas cannot be specified in `TF_AWS_DEFAULT_TAGS`; use a `TF_AWS_DEFAULT_TAGS_<tag_key>` environment variable instead.
 
 ### ignore_tags Configuration Block
 

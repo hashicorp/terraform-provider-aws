@@ -90,7 +90,8 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 								Optional: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								Description: "Resource tags to default across all resources. " +
-									"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
+									"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`, " +
+									"or with the `" + tftags.DefaultTagsEnvVar + "` environment variable containing comma-separated `key=value` pairs.",
 							},
 						},
 					},
@@ -447,11 +448,18 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		})
 	}
 
+	var defaultTagsConfig *tftags.DefaultConfig
+	var dtDiags diag.Diagnostics
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]any)[0].(map[string]any))
+		defaultTagsConfig, dtDiags = expandDefaultTags(ctx, v.([]any)[0].(map[string]any))
 	} else {
-		config.DefaultTagsConfig = expandDefaultTags(ctx, nil)
+		defaultTagsConfig, dtDiags = expandDefaultTags(ctx, nil)
 	}
+	diags = append(diags, dtDiags...)
+	if dtDiags.HasError() {
+		return nil, diags
+	}
+	config.DefaultTagsConfig = defaultTagsConfig
 
 	v := d.Get("endpoints")
 	endpoints, dx := expandEndpoints(ctx, v.(*schema.Set).List())
@@ -1059,8 +1067,28 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) (*
 	return &assumeRole, nil
 }
 
-func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {
+func expandDefaultTags(ctx context.Context, tfMap map[string]any) (*tftags.DefaultConfig, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	tags := make(map[string]any)
+
+	if v := os.Getenv(tftags.DefaultTagsEnvVar); v != "" {
+		for pair := range strings.SplitSeq(v, ",") {
+			pair = strings.TrimSpace(pair)
+			if pair == "" {
+				continue
+			}
+			tk, tv, ok := strings.Cut(pair, "=")
+			if !ok || tk == "" {
+				diags = append(diags, errs.NewErrorDiagnostic(
+					summaryInvalidEnvironmentVariableValue,
+					fmt.Sprintf("%s must be a comma-separated list of \"key=value\" pairs: invalid entry %q", tftags.DefaultTagsEnvVar, pair),
+				))
+				continue
+			}
+			tags[tk] = tv
+		}
+	}
+
 	for _, ev := range os.Environ() {
 		k, v, _ := strings.Cut(ev, "=")
 		if before, tk, ok := strings.Cut(k, tftags.DefaultTagsEnvVarPrefix); ok && before == "" {
@@ -1075,10 +1103,10 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.Defaul
 	if len(tags) > 0 {
 		return &tftags.DefaultConfig{
 			Tags: tftags.New(ctx, tags),
-		}
+		}, diags
 	}
 
-	return nil
+	return nil, diags
 }
 
 func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreConfig {

@@ -137,6 +137,33 @@ func TestAccProvider_DefaultTagsTags_envVars(t *testing.T) {
 	})
 }
 
+func TestAccProvider_DefaultTagsTags_envVarCommaSeparated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p *schema.Provider
+
+	t.Setenv(tftags.DefaultTagsEnvVar, "test1=commaValue1,test2=commaValue2,test3=commaValue3")
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test2", "envValue2")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &p),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigDefaultTags_Tags1("test1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &p, map[string]string{
+						"test1": "value1",
+						"test2": "envValue2",
+						"test3": "commaValue3",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
