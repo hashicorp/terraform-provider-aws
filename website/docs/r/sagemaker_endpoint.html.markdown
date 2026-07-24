@@ -41,7 +41,14 @@ This resource supports the following arguments:
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
+* `retain_all_variant_properties` - (Optional) When updating the endpoint with a new endpoint configuration, whether to retain the variant properties of the endpoint (such as instance count or variant weight) that were set on the live endpoint, rather than resetting them to the values in the new endpoint configuration. This is useful for endpoints managed by Application Auto Scaling. Defaults to `false`.
+* `exclude_retained_variant_properties` - (Optional) When `retain_all_variant_properties` is set to `true`, the list of variant properties to exclude from retention (i.e. take from the new endpoint configuration instead). See [Exclude Retained Variant Properties](#exclude-retained-variant-properties).
+* `retain_deployment_config` - (Optional) Whether to retain the deployment configuration during an endpoint update. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Exclude Retained Variant Properties
+
+* `variant_property_type` - (Required) The type of variant property to exclude from retention. Valid values are `DesiredInstanceCount`, `DesiredWeight`, and `DataCaptureConfig`.
 
 ### Deployment Config
 
