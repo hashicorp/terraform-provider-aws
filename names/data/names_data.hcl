@@ -7359,7 +7359,6 @@ service "rolesanywhere" {
   doc_prefix               = ["rolesanywhere_"]
   brand                    = "AWS"
 
-  is_global = true
 }
 
 service "route53" {

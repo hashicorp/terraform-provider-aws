@@ -48,6 +48,32 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereProfile_region(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_region(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "role_arns.#", "1"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "role_arns.0", "iam", fmt.Sprintf("role/%s", roleName)),
+					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRolesAnywhereProfile_noRoleARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -322,6 +348,18 @@ resource "aws_rolesanywhere_profile" "test" {
   role_arns = [aws_iam_role.test.arn]
 }
 `, rName))
+}
+
+func testAccProfileConfig_region(rName, roleName string) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  region    = %[1]q
+  name      = %[2]q
+  role_arns = [aws_iam_role.test.arn]
+}
+`, acctest.AlternateRegion(), rName))
 }
 
 func testAccProfileConfig_noRoleARNs(rName string) string {
