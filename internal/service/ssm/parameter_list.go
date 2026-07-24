@@ -77,12 +77,8 @@ func (l *parameterListResource) List(ctx context.Context, request list.ListReque
 					continue
 				}
 
-				diags := resourceParameterFlatten(rd, &paramMetadata)
-				if diags.HasError() {
-					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading SSM parameter %s", name))
-					yield(result)
-					return
-				}
+				resourceParameterFlatten(rd, &paramMetadata)
+
 				rd.Set(names.AttrValue, param.Value)
 			}
 

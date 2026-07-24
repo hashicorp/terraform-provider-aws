@@ -306,10 +306,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
 	}
 
-	diags = append(diags, resourceParameterFlatten(d, paramMetadata)...)
-	if diags.HasError() {
-		return diags
-	}
+	resourceParameterFlatten(d, paramMetadata)
 
 	hasWriteOnly := d.Get("has_value_wo").(bool)
 	rawConfig := d.GetRawConfig()
@@ -337,7 +334,6 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		} else {
 			d.Set(names.AttrValue, param.Value)
 		}
-
 	}
 
 	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
@@ -347,9 +343,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func resourceParameterFlatten(d *schema.ResourceData, paramMetadata *awstypes.ParameterMetadata) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceParameterFlatten(d *schema.ResourceData, paramMetadata *awstypes.ParameterMetadata) {
 	d.Set("allowed_pattern", paramMetadata.AllowedPattern)
 	d.Set(names.AttrARN, paramMetadata.ARN)
 	d.Set("data_type", paramMetadata.DataType)
@@ -359,8 +353,6 @@ func resourceParameterFlatten(d *schema.ResourceData, paramMetadata *awstypes.Pa
 	d.Set("tier", paramMetadata.Tier)
 	d.Set(names.AttrType, paramMetadata.Type)
 	d.Set(names.AttrVersion, paramMetadata.Version)
-
-	return diags
 }
 
 func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
