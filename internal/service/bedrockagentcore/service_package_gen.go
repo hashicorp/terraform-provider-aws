@@ -111,6 +111,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newGatewayRuleResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newGatewayTargetResource,
 			TypeName: "aws_bedrockagentcore_gateway_target",
 			Name:     "Gateway Target",
