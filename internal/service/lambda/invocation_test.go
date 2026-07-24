@@ -154,7 +154,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
@@ -182,7 +182,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
@@ -275,7 +275,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
@@ -614,7 +614,42 @@ func TestAccLambdaInvocation_tenantID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key", "tenant_id"},
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key", "tenant_id"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_maximumRetryAttempts(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+	retryAttempts := 10
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, fmt.Sprintf("maximum_retry_attempts = %d", retryAttempts)),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "maximum_retry_attempts", "result", "terraform_key"},
 			},
 		},
 	})
