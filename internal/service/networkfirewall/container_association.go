@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -92,13 +93,22 @@ func (r *containerAssociationResource) Schema(ctx context.Context, req resource.
 			names.AttrLastUpdatedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"resolved_cidr_count": schema.Int64Attribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ContainerAssociationStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -111,6 +121,9 @@ func (r *containerAssociationResource) Schema(ctx context.Context, req resource.
 			},
 			"update_token": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -348,7 +361,9 @@ func waitContainerAssociationCreated(ctx context.Context, conn *networkfirewall.
 
 func waitContainerAssociationUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeContainerAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ContainerAssociationStatusCreating),
+		// The SDK's ContainerAssociationStatus enum does not include "UPDATING", but the
+		// API returns it as a transient status while an update is in progress.
+		Pending:                   []string{"UPDATING"},
 		Target:                    enum.Slice(awstypes.ContainerAssociationStatusActive),
 		Refresh:                   statusContainerAssociation(conn, arn),
 		Timeout:                   timeout,
