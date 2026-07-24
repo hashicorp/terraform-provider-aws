@@ -395,6 +395,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  resourceTenantDatabase,
+			TypeName: "aws_rds_tenant_database",
+			Name:     "Tenant Database",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 

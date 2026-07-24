@@ -297,7 +297,7 @@ Defaults to true.
 * `copy_tags_to_snapshot` - (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `custom_iam_instance_profile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `database_insights_mode` - (Optional) The mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
-* `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
+* `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica. For Oracle CDB instances with `multi_tenant = true`, this value specifies the name of the initial PDB (Pluggable Database); the CDB itself is always named `RDSCDB`.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
   DB instance will be created in the VPC associated with the DB subnet group.
   If unspecified, will be created in the `default` Subnet Group.
@@ -355,6 +355,7 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
+* `multi_tenant` - (Optional, Forces new resource) Specifies whether to use the multi-tenant configuration or the single-tenant configuration (default). Only applies to RDS for Oracle CDB engines (`oracle-ee-cdb`, `oracle-se2-cdb`). Once set to `true`, this cannot be changed back. Cannot be combined with `replicate_source_db`, `s3_import`, `restore_to_point_in_time`, or `snapshot_identifier`. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Oracle.Concepts.single-tenant.html) for details.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
@@ -499,6 +500,7 @@ in a Route 53 Alias record).
 * `maintenance_window` - The instance maintenance window.
 * `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `multi_az` - If the RDS instance is multi AZ enabled.
+* `multi_tenant` - Whether the multi-tenant configuration is enabled for this Oracle CDB instance.
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.

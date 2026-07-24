@@ -6246,6 +6246,98 @@ func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_Oracle_multiTenant(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_Oracle_multiTenant(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					// CDB (multi_tenant=true) instances do not return MasterUsername from the API.
+					names.AttrUsername,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_Oracle_multiTenantDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_Oracle_multiTenantDefault(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -10290,6 +10382,112 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
+}
+
+func testAccInstanceConfig_Oracle_multiTenant(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = %[1]q
+  license_model = "bring-your-own-license"
+  storage_type  = "gp3"
+
+  preferred_instance_classes = [%[2]s]
+
+  # CDB multi_tenant requires 19c RU 2021-10 or later; exclude older RUs.
+  preferred_engine_versions = [
+    "19.0.0.0.ru-2024-10.rur-2024-10.r1",
+    "19.0.0.0.ru-2024-07.rur-2024-07.r1",
+    "19.0.0.0.ru-2024-04.rur-2024-04.r1",
+    "19.0.0.0.ru-2024-01.rur-2024-01.r1",
+    "19.0.0.0.ru-2023-10.rur-2023-10.r1",
+    "19.0.0.0.ru-2023-07.rur-2023-07.r1",
+    "19.0.0.0.ru-2023-04.rur-2023-04.r1",
+    "19.0.0.0.ru-2023-01.rur-2023-01.r1",
+    "19.0.0.0.ru-2022-10.rur-2022-10.r1",
+    "19.0.0.0.ru-2022-07.rur-2022-07.r1",
+    "19.0.0.0.ru-2022-04.rur-2022-04.r1",
+    "19.0.0.0.ru-2022-01.rur-2022-01.r1",
+    "19.0.0.0.ru-2021-10.rur-2021-10.r1",
+  ]
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[3]q
+  family = "oracle-se2-cdb-19"
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[3]q
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model        = "bring-your-own-license"
+  multi_tenant         = true
+  allocated_storage    = 200
+  storage_type         = "gp3"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  parameter_group_name = aws_db_parameter_group.test.name
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
+  username             = "tfacctest"
+  skip_final_snapshot  = true
+}
+`, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName))
+}
+
+func testAccInstanceConfig_Oracle_multiTenantDefault(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = %[1]q
+  license_model = "bring-your-own-license"
+  storage_type  = "gp3"
+
+  preferred_instance_classes = [%[2]s]
+
+  preferred_engine_versions = [
+    "19.0.0.0.ru-2024-10.rur-2024-10.r1",
+    "19.0.0.0.ru-2024-07.rur-2024-07.r1",
+    "19.0.0.0.ru-2024-04.rur-2024-04.r1",
+    "19.0.0.0.ru-2024-01.rur-2024-01.r1",
+    "19.0.0.0.ru-2023-10.rur-2023-10.r1",
+    "19.0.0.0.ru-2023-07.rur-2023-07.r1",
+    "19.0.0.0.ru-2023-04.rur-2023-04.r1",
+    "19.0.0.0.ru-2023-01.rur-2023-01.r1",
+    "19.0.0.0.ru-2022-10.rur-2022-10.r1",
+    "19.0.0.0.ru-2022-07.rur-2022-07.r1",
+    "19.0.0.0.ru-2022-04.rur-2022-04.r1",
+    "19.0.0.0.ru-2022-01.rur-2022-01.r1",
+    "19.0.0.0.ru-2021-10.rur-2021-10.r1",
+  ]
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[3]q
+  family = "oracle-se2-cdb-19"
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[3]q
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model        = "bring-your-own-license"
+  allocated_storage    = 200
+  storage_type         = "gp3"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  parameter_group_name = aws_db_parameter_group.test.name
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
+  username             = "tfacctest"
+  skip_final_snapshot  = true
+}
+`, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_mssql(rName string) string {
