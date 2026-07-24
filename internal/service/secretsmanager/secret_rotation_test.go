@@ -62,6 +62,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretRotation_upgradePreRotateImmediately(t *testing.T) {
+	acctest.Skip(t, "incompatible lambda runtimes")
 	ctx := acctest.Context(t)
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
