@@ -26,7 +26,7 @@ import (
 // @FrameworkResource("aws_osis_pipeline_resource_policy", name="Pipeline Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(identityTest=false)
+// @Testing(generator="randomPipelineName(t)")
 func newPipelineResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResourcePolicyResource{}
 
