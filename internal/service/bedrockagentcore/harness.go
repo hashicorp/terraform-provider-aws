@@ -222,6 +222,13 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"api_format": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HarnessBedrockApiFormat](),
+										Optional:   true,
+										Validators: []validator.String{
+											enum.FrameworkValidate[awstypes.HarnessBedrockApiFormat](),
+										},
+									},
 									"max_tokens": schema.Int32Attribute{
 										Optional: true,
 										Validators: []validator.Int32{
@@ -253,6 +260,13 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"api_format": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HarnessOpenAiApiFormat](),
+										Optional:   true,
+										Validators: []validator.String{
+											enum.FrameworkValidate[awstypes.HarnessOpenAiApiFormat](),
+										},
+									},
 									"api_key_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
@@ -915,10 +929,11 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 }
 
 type harnessBedrockModelConfigModel struct {
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float32 `tfsdk:"temperature"`
-	TopP        types.Float32 `tfsdk:"top_p"`
+	ApiFormat   fwtypes.StringEnum[awstypes.HarnessBedrockApiFormat] `tfsdk:"api_format"`
+	MaxTokens   types.Int32                                          `tfsdk:"max_tokens"`
+	ModelID     types.String                                         `tfsdk:"model_id"`
+	Temperature types.Float32                                        `tfsdk:"temperature"`
+	TopP        types.Float32                                        `tfsdk:"top_p"`
 }
 
 type harnessGeminiModelConfigModel struct {
@@ -931,11 +946,12 @@ type harnessGeminiModelConfigModel struct {
 }
 
 type harnessOpenAIModelConfigModel struct {
-	ApiKeyARN   fwtypes.ARN   `tfsdk:"api_key_arn"`
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float32 `tfsdk:"temperature"`
-	TopP        types.Float32 `tfsdk:"top_p"`
+	ApiFormat   fwtypes.StringEnum[awstypes.HarnessOpenAiApiFormat] `tfsdk:"api_format"`
+	ApiKeyARN   fwtypes.ARN                                         `tfsdk:"api_key_arn"`
+	MaxTokens   types.Int32                                         `tfsdk:"max_tokens"`
+	ModelID     types.String                                        `tfsdk:"model_id"`
+	Temperature types.Float32                                       `tfsdk:"temperature"`
+	TopP        types.Float32                                       `tfsdk:"top_p"`
 }
 
 // System prompt union.
