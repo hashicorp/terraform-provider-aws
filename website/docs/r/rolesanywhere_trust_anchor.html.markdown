@@ -65,8 +65,17 @@ This resource supports the following arguments:
 
 * `enabled` - (Optional) Whether or not the Trust Anchor should be enabled.
 * `name` - (Required) The name of the Trust Anchor.
+* `notification_settings` - (Optional) A list of notification settings to be associated with the trust anchor, documented below.
 * `source` - (Required) The source of trust, documented below
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+#### `notification_settings`
+
+* `channel` - (Optional) Channel to notify. Valid value is `ALL`.
+* `enabled` - (Optional) Whether to enable the notification setting.
+* `event` - (Optional) Event to notify for. Valid values are `CA_CERTIFICATE_EXPIRY` and `END_ENTITY_CERTIFICATE_EXPIRY`.
+* `threshold` - (Optional) Number of days before certificate expiry to send the notification. Required when `enabled` is `true`. Valid value is between `1` and `360`.
+* `configured_by` - (Computed) Account that configured the notification setting.
 
 #### `source`
 
