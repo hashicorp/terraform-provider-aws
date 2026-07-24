@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -38,8 +37,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -754,54 +751,4 @@ func (anomalyDetectorImportID) Parse(id string) (string, map[string]any, error) 
 	}
 
 	return id, result, nil
-}
-
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//	awsv2.Register("aws_prometheus_anomaly_detector", sweepAnomalyDetectors)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
-func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := amp.ListAnomalyDetectorsInput{}
-	conn := client.AMPClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	workspacePages := amp.NewListWorkspacesPaginator(conn, &amp.ListWorkspacesInput{})
-	for workspacePages.HasMorePages() {
-		workspacePage, err := workspacePages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, workspace := range workspacePage.Workspaces {
-			input.WorkspaceId = workspace.WorkspaceId
-			pages := amp.NewListAnomalyDetectorsPaginator(conn, &input)
-			for pages.HasMorePages() {
-				page, err := pages.NextPage(ctx)
-				if err != nil {
-					return nil, smarterr.NewError(err)
-				}
-
-				for _, v := range page.AnomalyDetectors {
-					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAnomalyDetectorResource, client,
-						sweepfw.NewAttribute(names.AttrID, aws.ToString(v.AnomalyDetectorId)),
-					))
-				}
-			}
-		}
-	}
-
-	return sweepResources, nil
 }
