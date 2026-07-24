@@ -8611,6 +8611,56 @@ func TestAccDynamoDBTable_warmThroughputDefault(t *testing.T) {
 	})
 }
 
+// Regression test for #47673: warm_throughput read/write units below the on-demand
+// default (12000/4000) were rejected by schema validation, even though the AWS API
+// minimum is 1 and a PROVISIONED table accepts such values. Beyond validation, the
+// read path also dropped sub-default values, causing a perpetual diff. This verifies
+// a below-default value is accepted, round-trips into state, and re-applies as a no-op.
+//
+// Note: this uses a PROVISIONED table on purpose. An on-demand (PAY_PER_REQUEST) table
+// rejects warm_throughput below 12000/4000 at the API ("lower than initial throughput
+// for OnDemand"), so it cannot exercise the sub-default round-trip.
+func TestAccDynamoDBTable_warmThroughputBelowDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_warmThroughputProvisioned(rName, 1, 1, 100, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "100"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Re-applying the same config must be a no-op: the sub-default warm
+				// throughput must round-trip cleanly with no perpetual diff.
+				Config: testAccTableConfig_warmThroughputProvisioned(rName, 1, 1, 100, 100),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_gsiWarmThroughput_billingProvisioned(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -13215,6 +13265,26 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, maxRead, maxWrite, warmRead, warmWrite)
+}
+
+func testAccTableConfig_warmThroughputProvisioned(rName string, readCapacity, writeCapacity, warmRead, warmWrite int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  billing_mode   = "PROVISIONED"
+  hash_key       = "TestTableHashKey"
+  read_capacity  = %[2]d
+  write_capacity = %[3]d
+  warm_throughput {
+    read_units_per_second  = %[4]d
+    write_units_per_second = %[5]d
+  }
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName, readCapacity, writeCapacity, warmRead, warmWrite)
 }
 
 func testAccTableConfig_gsiWarmThroughput_billingProvisioned(rName string, readCapacity, writeCapacity, warmRead, warmWrite int) string {

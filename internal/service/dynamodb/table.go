@@ -630,13 +630,13 @@ func warmThroughputSchema() *schema.Schema {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.IntAtLeast(12000),
+					ValidateFunc: validation.IntAtLeast(1),
 				},
 				"write_units_per_second": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.IntAtLeast(4000),
+					ValidateFunc: validation.IntAtLeast(1),
 				},
 			},
 		},
@@ -2885,16 +2885,9 @@ func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescripti
 		return []any{}
 	}
 
-	// AWS may return values below the minimum when warm throughput is not actually configured
-	// Also treat exact minimum values as defaults since AWS sets these automatically
-	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
-	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
-
-	// Return empty if values are below minimums OR exactly at minimums (AWS defaults)
-	if (readUnits < 12000 && writeUnits < 4000) || (readUnits == 12000 && writeUnits == 4000) {
-		return []any{}
-	}
-
+	// Return the API values faithfully. Hiding AWS's auto-applied defaults when
+	// warm_throughput is not configured is handled by suppressTableWarmThroughputDefaults,
+	// which (unlike this function) has access to the configuration.
 	m := map[string]any{}
 
 	if v := apiObject.ReadUnitsPerSecond; v != nil {
@@ -2913,16 +2906,8 @@ func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroug
 		return []any{}
 	}
 
-	// AWS may return values below the minimum when warm throughput is not actually configured
-	// Also treat exact minimum values as defaults since AWS sets these automatically
-	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
-	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
-
-	// Return empty if values are below minimums OR exactly at minimums (AWS defaults)
-	if (readUnits < 12000 && writeUnits < 4000) || (readUnits == 12000 && writeUnits == 4000) {
-		return []any{}
-	}
-
+	// Return the API values faithfully; see flattenTableWarmThroughput for the
+	// rationale on why defaults are suppressed elsewhere (config-aware CustomizeDiff).
 	m := map[string]any{}
 
 	if v := apiObject.ReadUnitsPerSecond; v != nil {
