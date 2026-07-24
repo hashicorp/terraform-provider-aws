@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -150,10 +152,16 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 									"sample_size": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(256),
+										},
 									},
 									"shingle_size": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(2),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -166,9 +174,20 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 											Attributes: map[string]schema.Attribute{
 												"amount": schema.Float64Attribute{
 													Optional: true,
+													Validators: []validator.Float64{
+														float64validator.ConflictsWith(
+															path.MatchRelative().AtParent().AtName("ratio"),
+														),
+													},
 												},
 												"ratio": schema.Float64Attribute{
 													Optional: true,
+													Validators: []validator.Float64{
+														float64validator.ConflictsWith(
+															path.MatchRelative().AtParent().AtName("amount"),
+														),
+														float64validator.AtLeast(0),
+													},
 												},
 											},
 										},
@@ -182,9 +201,20 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 											Attributes: map[string]schema.Attribute{
 												"amount": schema.Float64Attribute{
 													Optional: true,
+													Validators: []validator.Float64{
+														float64validator.ConflictsWith(
+															path.MatchRelative().AtParent().AtName("ratio"),
+														),
+													},
 												},
 												"ratio": schema.Float64Attribute{
 													Optional: true,
+													Validators: []validator.Float64{
+														float64validator.ConflictsWith(
+															path.MatchRelative().AtParent().AtName("amount"),
+														),
+														float64validator.AtLeast(0),
+													},
 												},
 											},
 										},
@@ -649,9 +679,9 @@ func (m ignoreNearExpectedModel) Expand(ctx context.Context) (result any, diags 
 
 func (m *ignoreNearExpectedModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
-	case *awstypes.IgnoreNearExpectedMemberAmount:
+	case awstypes.IgnoreNearExpectedMemberAmount:
 		m.Amount = types.Float64Value(t.Value)
-	case *awstypes.IgnoreNearExpectedMemberRatio:
+	case awstypes.IgnoreNearExpectedMemberRatio:
 		m.Ratio = types.Float64Value(t.Value)
 	}
 	return diags

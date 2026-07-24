@@ -105,16 +105,21 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.random_cut_forest.0.sample_size"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.random_cut_forest.0.shingle_size"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_above.0"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_below.0"),
+					resource.TestCheckResourceAttr(resourceName, "missing_data_action.0.skip", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "missing_data_action.0.mark_as_anomaly"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "aps", regexache.MustCompile(`anomalydetector/.+$`)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
-					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("evaluation_interval_in_seconds"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -123,6 +128,51 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_anomaly_detector.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
+			// testAccPreCheckAnomalyDetector(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnomalyDetectorConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
+					// but expects a new resource factory function as the third argument. To expose this
+					// private function to the testing package, you may need to add a line like the following
+					// to exports_test.go:
+					//
+					//   var ResourceAnomalyDetector = newAnomalyDetectorResource
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceAnomalyDetector, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -202,7 +252,7 @@ func TestAccAMPAnomalyDetector_update(t *testing.T) {
 	})
 }
 
-func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
+func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -222,26 +272,37 @@ func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyDetectorConfig_basic(rName),
+				Config: testAccAnomalyDetectorConfig_randomCutForest(rName, "256", "4", "ratio", "amount"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceAnomalyDetector = newAnomalyDetectorResource
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceAnomalyDetector, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.sample_size", "256"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.shingle_size", "4"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_above.0.ratio", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_below.0.amount", "2"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_above.0.amount"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_below.0.ratio"),
 				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
+			},
+			{ // Update check
+				Config: testAccAnomalyDetectorConfig_randomCutForest(rName, "512", "16", "amount", "ratio"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.query", "avg(up)"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.sample_size", "512"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.shingle_size", "16"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_above.0.amount", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_below.0.ratio", "2"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_above.0.ratio"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.random_cut_forest.0.ignore_near_expected_from_below.0.amount"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -354,4 +415,35 @@ resource "aws_prometheus_anomaly_detector" "test" {
   }
 }
 `, rName, eval_time, query, missingDataAction)
+}
+
+func testAccAnomalyDetectorConfig_randomCutForest(rName, sampleSize, shingleSize, ignoreAbove, ignoreBelow string) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {}
+
+resource "aws_prometheus_anomaly_detector" "test" {
+  alias        = %[1]q
+  workspace_id = aws_prometheus_workspace.test.id
+
+  configuration {
+    random_cut_forest {
+      query        = "avg(up)"
+      sample_size  = %[2]s
+      shingle_size = %[3]s
+
+      ignore_near_expected_from_above {
+        %[4]s = 2
+      }
+
+      ignore_near_expected_from_below {
+        %[5]s = 2
+      }
+    }
+  }
+
+  missing_data_action {
+    skip = true
+  }
+}
+`, rName, sampleSize, shingleSize, ignoreAbove, ignoreBelow)
 }
