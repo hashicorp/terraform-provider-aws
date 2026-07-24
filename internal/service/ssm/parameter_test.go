@@ -914,8 +914,12 @@ func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 				Config: testAccParameterConfig_basic(after, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &afterParam),
-					testAccCheckParameterRecreated(t, &beforeParam, &afterParam),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -1274,15 +1278,6 @@ func TestAccSSMParameter_importByARN(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckParameterRecreated(t *testing.T, before, after *awstypes.Parameter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *before.Name == *after.Name {
-			t.Fatalf("Expected change of SSM Param Names, but both were %v", *before.Name)
-		}
-		return nil
-	}
 }
 
 func testAccCheckParameterWriteOnlyValueEqual(t *testing.T, param *awstypes.Parameter, writeOnlyValue string) resource.TestCheckFunc {
