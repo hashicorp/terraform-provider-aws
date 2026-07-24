@@ -2132,6 +2132,116 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 	})
 }
 
+// TestAccRDSCluster_ManagedMasterPassword_disableOnUnmanagedCluster reproduces the exact
+// bug reported in #31179: sending ManageMasterUserPassword=false to a cluster whose password
+// is not currently managed by Secrets Manager causes InvalidParameterCombination.
+//
+// This scenario arises after an out-of-band snapshot restore: DescribeDBClusters may still
+// report a non-nil MasterUserSecret (inherited from the snapshot source), but the restored
+// cluster is not actually managed. Terraform state retains manage_master_user_password=true
+// from the pre-restore config; when the operator sets it to false, the provider sends
+// ManageMasterUserPassword=false and AWS rejects it.
+//
+// The test reproduces the out-of-band aspect by calling ModifyDBCluster directly (disabling
+// Secrets Manager without updating Terraform state), then verifying that the subsequent
+// Terraform apply succeeds — i.e. the RetryWhen handler strips ManageMasterUserPassword=false
+// and retries so that the remaining changes (MasterUserPassword) are still applied.
+func TestAccRDSCluster_ManagedMasterPassword_disableOnUnmanagedCluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create cluster with Secrets Manager enabled (manage_master_user_password=true).
+				// After the apply, the TestCheckFunc calls ModifyDBCluster directly to disable
+				// Secrets Manager out-of-band — simulating what happens after a snapshot restore
+				// performed outside Terraform. Terraform state retains manage_master_user_password=true.
+				Config: testAccClusterConfig_managedMasterPassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					testAccCheckClusterDisableSecretsManagerOutOfBand(ctx, t, resourceName),
+				),
+			},
+			{
+				// Step 2: Config drops manage_master_user_password (→ false) and sets
+				// master_password. HasChange("manage_master_user_password") fires (state: true →
+				// config: false). The provider sends ManageMasterUserPassword=false; AWS returns
+				// InvalidParameterCombination because Secrets Manager was already disabled in
+				// step 1. The fix catches this in RetryWhen, strips ManageMasterUserPassword, and
+				// retries — MasterUserPassword is applied successfully.
+				//
+				// After the update, manage_master_user_password is stored as false in state
+				// (the SDK carries the zero-value for an Optional TypeBool not present in config).
+				Config: testAccClusterConfig_managedMasterPasswordDisabled(rName, "newPassword123!"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckClusterDisableSecretsManagerOutOfBand disables Secrets Manager on the given
+// cluster by calling ModifyDBCluster directly, without updating Terraform state. This leaves
+// state tracking manage_master_user_password=true while the cluster is actually unmanaged —
+// the exact condition that triggers InvalidParameterCombination on the next Terraform apply.
+func testAccCheckClusterDisableSecretsManagerOutOfBand(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		clusterID := rs.Primary.ID
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		_, err := conn.ModifyDBCluster(ctx, &rds.ModifyDBClusterInput{
+			DBClusterIdentifier:      aws.String(clusterID),
+			ManageMasterUserPassword: aws.Bool(false),
+			MasterUserPassword:       aws.String("tmpPassword123!"),
+			ApplyImmediately:         aws.Bool(true),
+		})
+		if err != nil {
+			return fmt.Errorf("disabling Secrets Manager out-of-band on cluster %s: %w", clusterID, err)
+		}
+
+		// Poll until the cluster is available again before returning to the test framework.
+		deadline := time.Now().Add(30 * time.Minute)
+		for {
+			resp, pollErr := conn.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{
+				DBClusterIdentifier: aws.String(clusterID),
+			})
+			if pollErr != nil {
+				return fmt.Errorf("polling cluster %s after out-of-band disable: %w", clusterID, pollErr)
+			}
+			if len(resp.DBClusters) > 0 && aws.ToString(resp.DBClusters[0].Status) == "available" {
+				break
+			}
+			if time.Now().After(deadline) {
+				return fmt.Errorf("timed out waiting for cluster %s to become available", clusterID)
+			}
+			time.Sleep(30 * time.Second)
+		}
+
+		return nil
+	}
+}
+
 func TestAccRDSCluster_port(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 types.DBCluster
@@ -4323,6 +4433,24 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot         = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+// testAccClusterConfig_managedMasterPasswordDisabled is the "after" config for
+// TestAccRDSCluster_ManagedMasterPassword_disableOnUnmanagedCluster. It omits
+// manage_master_user_password (→ false) and sets master_password, triggering the
+// ManageMasterUserPassword=false update path that the bug fix handles.
+func testAccClusterConfig_managedMasterPasswordDisabled(rName, masterPassword string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = %[3]q
+  engine              = %[2]q
+  apply_immediately   = true
+  skip_final_snapshot = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, masterPassword)
 }
 
 func testAccClusterConfig_managedMasterPasswordKMSKey(rName string) string {
