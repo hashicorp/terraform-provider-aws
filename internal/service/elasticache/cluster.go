@@ -352,6 +352,7 @@ func resourceCluster() *schema.Resource {
 			clusterValidateNumCacheNodes,
 			clusterForceNewOnMemcachedNodeTypeChange,
 			clusterValidateMemcachedSnapshotIdentifier,
+			clusterValidateTransitEncryption,
 		),
 	}
 }
@@ -1040,4 +1041,16 @@ func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.
 		return nil
 	}
 	return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
+}
+
+// clusterValidateTransitEncryption validates that `transit_encryption_enabled` is not set for Redis or Valkey engines
+func clusterValidateTransitEncryption(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if v, ok := diff.GetOk("transit_encryption_enabled"); !ok || !v.(bool) {
+		return nil
+	}
+	engine, ok := diff.GetOk(names.AttrEngine)
+	if !ok || engine.(string) == engineMemcached {
+		return nil
+	}
+	return fmt.Errorf(`engine %q does not support transit_encryption_enabled on standalone clusters, use aws_elasticache_replication_group instead`, engine.(string))
 }
