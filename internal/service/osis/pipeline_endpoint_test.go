@@ -39,12 +39,15 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 				Config: testAccPipelineEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineEndpointExists(ctx, t, resourceName, &pipelineEndpoint),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_arn", pipelineResourceName, "pipeline_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.PipelineEndpointStatusActive)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_options.0.subnet_ids.0", "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_options.0.security_group_ids.0", "aws_security_group.test", names.AttrID),
 				),
 			},
 			{
