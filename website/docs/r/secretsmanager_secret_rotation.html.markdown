@@ -32,12 +32,12 @@ For managed external secrets that are rotated by AWS partner integrations:
 ```terraform
 # AWS Secrets Manager Secret with MES support
 resource "aws_secretsmanager_secret" "salesforce_client_secret" {
-  name        = "${var.prefix}-salesforce-client-secret"
+  name        = "example-salesforce-client-secret"
   description = "Demo of Managed External Secrets for Salesforce integration"
-  type = "SalesforceClientSecret"
+  type        = "SalesforceClientSecret"
 
   tags = {
-    Name        = "${var.prefix}-salesforce-secret"
+    Name        = "example-salesforce-secret"
     Environment = "demo"
     Partner     = "Salesforce"
     MESEnabled  = "true"
@@ -54,11 +54,11 @@ resource "aws_secretsmanager_secret_rotation" "salesforce_rotation" {
     key   = "adminSecretArn"
     value = aws_secretsmanager_secret.salesforce_client_secret.arn
   }
+
   external_secret_rotation_metadata {
     key   = "apiVersion"
     value = "v65.0"
   }
-
 
   rotation_rules {
     automatically_after_days = var.rotation_days

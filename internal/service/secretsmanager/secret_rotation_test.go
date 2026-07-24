@@ -707,7 +707,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_rotation" "test" {
-  secret_id                        = aws_secretsmanager_secret.test.id
+  secret_id                         = aws_secretsmanager_secret.test.id
   external_secret_rotation_role_arn = aws_iam_role.test.arn
 
   external_secret_rotation_metadata {
