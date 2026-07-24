@@ -55,6 +55,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newTableBucketMetricsConfigurationResource,
+			TypeName: "aws_s3tables_table_bucket_metrics_configuration",
+			Name:     "Table Bucket Metrics Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("table_bucket_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTableBucketPolicyResource,
 			TypeName: "aws_s3tables_table_bucket_policy",
 			Name:     "Table Bucket Policy",
