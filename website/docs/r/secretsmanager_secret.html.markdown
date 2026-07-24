@@ -23,7 +23,7 @@ resource "aws_secretsmanager_secret" "example" {
 ### Managed External Secret
 
 ```terraform
-resource "aws_secretsmanager_secret" "bigid" {
+resource "aws_secretsmanager_secret" "example" {
   name = "bigid-client-secret"
   type = "BigIDClientSecret"
 }
