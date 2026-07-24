@@ -79,7 +79,7 @@ func testAccTeamsChannelConfiguration_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccTeamsChannelConfigurationImportStateIDFunc(testResourceTeamsChannelConfiguration),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "team_id",
+				ImportStateVerifyIdentifierAttribute: "chat_configuration_arn",
 			},
 		},
 	})
@@ -135,7 +135,7 @@ func testAccCheckTeamsChannelConfigurationDestroy(ctx context.Context, t *testin
 				continue
 			}
 
-			_, err := tfchatbot.FindTeamsChannelConfigurationByTeamID(ctx, conn, rs.Primary.Attributes["team_id"])
+			_, err := tfchatbot.FindTeamsChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
 			if retry.NotFound(err) {
 				continue
@@ -145,7 +145,7 @@ func testAccCheckTeamsChannelConfigurationDestroy(ctx context.Context, t *testin
 				return err
 			}
 
-			return create.Error(names.Chatbot, create.ErrActionCheckingDestroyed, tfchatbot.ResNameTeamsChannelConfiguration, rs.Primary.Attributes["team_id"], errors.New("not destroyed"))
+			return create.Error(names.Chatbot, create.ErrActionCheckingDestroyed, tfchatbot.ResNameTeamsChannelConfiguration, rs.Primary.Attributes["chat_configuration_arn"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -161,7 +161,7 @@ func testAccCheckTeamsChannelConfigurationExists(ctx context.Context, t *testing
 
 		conn := acctest.ProviderMeta(ctx, t).ChatbotClient(ctx)
 
-		output, err := tfchatbot.FindTeamsChannelConfigurationByTeamID(ctx, conn, rs.Primary.Attributes["team_id"])
+		output, err := tfchatbot.FindTeamsChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
 		if err != nil {
 			return err
@@ -180,7 +180,7 @@ func testAccTeamsChannelConfigurationImportStateIDFunc(resourceName string) reso
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["team_id"], nil
+		return rs.Primary.Attributes["chat_configuration_arn"], nil
 	}
 }
 
