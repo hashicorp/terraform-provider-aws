@@ -37,7 +37,7 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineEndpointConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineEndpointExists(ctx, t, resourceName, &pipelineEndpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_arn", pipelineResourceName, "pipeline_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -74,7 +74,7 @@ func TestAccOpenSearchIngestionPipelineEndpoint_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineEndpointConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineEndpointExists(ctx, t, resourceName, &pipelineEndpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipelineEndpoint, resourceName),
 				),
