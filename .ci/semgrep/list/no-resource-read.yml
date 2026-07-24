@@ -8,8 +8,6 @@ rules:
     paths:
       include:
         - "/internal/service"
-      exclude:
-        - "/internal/service/ssm/parameter_list.go"
     patterns:
       - pattern: |
           func ($L *$TYPE) List($CTX context.Context, $REQ list.ListRequest, $STREAM *list.ListResultsStream) {
