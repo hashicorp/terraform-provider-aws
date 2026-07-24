@@ -360,7 +360,13 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	_, err := conn.DeleteStack(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeValidationError) {
+	// Treat ValidationError as already-deleted ONLY when the message confirms
+	// the stack does not exist. Other ValidationError shapes — notably
+	// "cannot be deleted while TerminationProtection is enabled" — must
+	// propagate as a destroy failure so Terraform state stays in sync with
+	// AWS reality (issue #48411). Mirrors the same narrow check in
+	// `findStacks` below.
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "does not exist") {
 		return diags
 	}
 

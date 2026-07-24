@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -180,6 +182,53 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+// TestAccCloudFormationStack_terminationProtectionDeleteFails pins the fix
+// for https://github.com/hashicorp/terraform-provider-aws/issues/48411:
+// when termination protection is enabled on a CloudFormation stack,
+// `terraform destroy` must fail and leave the resource in state rather than
+// silently swallowing the CloudFormation `ValidationError` and removing the
+// resource from state. Before the fix, any `ValidationError` from
+// `DeleteStack` was treated as "already deleted"; the fix narrows that to
+// only the `"does not exist"` message.
+func TestAccCloudFormationStack_terminationProtectionDeleteFails(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack awstypes.Stack
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create the stack and turn on termination protection via the
+				// AWS API directly (the resource doesn't yet expose this as a
+				// schema attribute — see issue #3496).
+				Config: testAccStackConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stack),
+					testAccCheckStackSetTerminationProtection(ctx, t, &stack, true),
+				),
+			},
+			{
+				// `terraform destroy` must surface the ValidationError from
+				// CloudFormation, not return success and drop the resource.
+				Config:      testAccStackConfig_basic(rName),
+				Destroy:     true,
+				ExpectError: regexache.MustCompile(`TerminationProtection`),
+			},
+			{
+				// Disable termination protection so the test framework's
+				// default destroy can clean up the stack at end-of-test.
+				Config: testAccStackConfig_basic(rName),
+				Check:  testAccCheckStackSetTerminationProtection(ctx, t, &stack, false),
 			},
 		},
 	})
@@ -601,6 +650,25 @@ func testAccCheckStackExists(ctx context.Context, t *testing.T, n string, v *aws
 		*v = *output
 
 		return nil
+	}
+}
+
+// testAccCheckStackSetTerminationProtection toggles termination protection
+// on the captured stack via the AWS API directly. Used by
+// TestAccCloudFormationStack_terminationProtectionDeleteFails to set up the
+// pre-condition (enable) and to clean up after the ExpectError step (disable),
+// since the resource schema does not currently expose termination protection
+// as a managed attribute (see issue #3496).
+func testAccCheckStackSetTerminationProtection(ctx context.Context, t *testing.T, v *awstypes.Stack, enable bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).CloudFormationClient(ctx)
+
+		_, err := conn.UpdateTerminationProtection(ctx, &cloudformation.UpdateTerminationProtectionInput{
+			EnableTerminationProtection: aws.Bool(enable),
+			StackName:                   v.StackName,
+		})
+
+		return err
 	}
 }
 
