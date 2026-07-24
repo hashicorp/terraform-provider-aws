@@ -2,7 +2,9 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_eks_access_policies` ([#49090](https://github.com/hashicorp/terraform-provider-aws/issues/49090))
 * **New List Resource:** `aws_bedrock_evaluation_job` ([#49044](https://github.com/hashicorp/terraform-provider-aws/issues/49044))
+* **New List Resource:** `aws_eks_access_entry` ([#49090](https://github.com/hashicorp/terraform-provider-aws/issues/49090))
 * **New List Resource:** `aws_eks_node_group` ([#49073](https://github.com/hashicorp/terraform-provider-aws/issues/49073))
 * **New List Resource:** `aws_flow_log` ([#49086](https://github.com/hashicorp/terraform-provider-aws/issues/49086))
 * **New List Resource:** `aws_mailmanager_traffic_policy` ([#49043](https://github.com/hashicorp/terraform-provider-aws/issues/49043))
@@ -12,11 +14,18 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `ena_queue_count` attribute to `network_interfaces` configuration block ([#48892](https://github.com/hashicorp/terraform-provider-aws/issues/48892))
+* data-source/aws_secretsmanager_secret: Add `type` attribute ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
+* data-source/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` attributes ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
+* data-source/aws_vpc: Adds support for `ipv6_cidr_block_associations`. ([#46918](https://github.com/hashicorp/terraform-provider-aws/issues/46918))
+* data-source/aws_vpc: Deprecates `ipv6_association_id` and `ipv6_cidr_block`. ([#46918](https://github.com/hashicorp/terraform-provider-aws/issues/46918))
 * resource/aws_autoscaling_group: Add `reservations-then-balanced` valid value for `availability_zone_distribution.capacity_distribution_strategy` ([#48934](https://github.com/hashicorp/terraform-provider-aws/issues/48934))
 * resource/aws_codepipeline: Add `stage.action.commands` and `stage.action.output_artifacts_for_compute_action` arguments to support Compute action types ([#42507](https://github.com/hashicorp/terraform-provider-aws/issues/42507))
 * resource/aws_codepipeline: `stage.action.output_artifacts_for_compute_action` and `stage.action.output_artifacts` now conflict ([#42507](https://github.com/hashicorp/terraform-provider-aws/issues/42507))
+* resource/aws_eks_pod_identity_association: Add `policy` argument to support inline session policies ([#48869](https://github.com/hashicorp/terraform-provider-aws/issues/48869))
 * resource/aws_flow_log: Add resource identity support ([#49086](https://github.com/hashicorp/terraform-provider-aws/issues/49086))
 * resource/aws_launch_template: Add `ena_queue_count` argument to `network_interfaces` configuration block ([#48892](https://github.com/hashicorp/terraform-provider-aws/issues/48892))
+* resource/aws_secretsmanager_secret: Add `type` argument in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
+* resource/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` arguments in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
 
 ## 6.56.0 (July 22, 2026)
 
