@@ -21,6 +21,7 @@ import (
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -233,13 +234,32 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		input.TracingConfiguration = expandTracingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
+	timeoutCreate := d.Timeout(schema.TimeoutCreate)
+	accessDeniedTimeout := 2 * time.Minute
+	if timeoutCreate < accessDeniedTimeout {
+		accessDeniedTimeout = timeoutCreate
+	}
+
+	startTime := time.Now()
+
 	// This is done to deal with IAM eventual consistency.
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, timeoutCreate, func(ctx context.Context) (any, error) {
 		return conn.CreateStateMachine(ctx, input)
-	}, "StateMachineDeleting", "AccessDeniedException")
+	}, func(err error) (bool, error) {
+		if tfawserr.ErrCodeEquals(err, "StateMachineDeleting") {
+			return true, err
+		}
+		if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
+			if time.Since(startTime) > accessDeniedTimeout {
+				return false, err
+			}
+			return true, err
+		}
+		return false, err
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Step Functions State Machine (%s): %s", name, err)
