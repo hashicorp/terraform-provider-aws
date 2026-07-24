@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_cleanrooms_configured_table: Add `selected_analysis_methods` argument
+```
+
+```release-note:enhancement
+resource/aws_cleanrooms_configured_table: Add `athena` and `snowflake` sub-blocks to `table_reference`
+```
+
+```release-note:bug
+resource/aws_cleanrooms_configured_table: Fix `allowed_columns` and `analysis_method` incorrectly marked as `ForceNew`; both are mutable via `UpdateConfiguredTable`
+```
+
+```release-note:bug
+resource/aws_cleanrooms_configured_table: Fix `analysis_method` validation rejecting valid values `DIRECT_JOB` and `MULTIPLE`
+```
