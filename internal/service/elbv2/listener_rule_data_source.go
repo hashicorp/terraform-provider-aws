@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -46,6 +47,10 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				Computed:   true,
+			},
+			"is_default": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
 			},
 			"listener_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -401,13 +406,20 @@ func (d *listenerRuleDataSource) ConfigValidators(_ context.Context) []datasourc
 			path.MatchRoot(names.AttrARN),
 			path.MatchRoot("listener_arn"),
 		),
-		datasourcevalidator.RequiredTogether(
-			path.MatchRoot("listener_arn"),
-			path.MatchRoot(names.AttrPriority),
+		datasourcevalidator.Any(
+			datasourcevalidator.RequiredTogether(
+				path.MatchRoot("listener_arn"),
+				path.MatchRoot(names.AttrPriority),
+			),
+			datasourcevalidator.RequiredTogether(
+				path.MatchRoot("listener_arn"),
+				path.MatchRoot("is_default"),
+			),
 		),
 		datasourcevalidator.Conflicting(
 			path.MatchRoot(names.AttrARN),
 			path.MatchRoot(names.AttrPriority),
+			path.MatchRoot("is_default"),
 		),
 	}
 }
@@ -432,7 +444,17 @@ func (d *listenerRuleDataSource) Read(ctx context.Context, req datasource.ReadRe
 			)
 			return
 		}
-	} else {
+	} else if data.IsDefault.ValueBool() { // ListenerARN and IsDefault are set
+		var err error
+		out, err = findListenerRuleByListenerAndIsDefault(ctx, conn, data.ListenerARN.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, fmt.Sprintf("%s/%s", data.ListenerARN.String(), data.Priority.String()), err),
+				err.Error(),
+			)
+			return
+		}
+	} else { // ListenerARN and Priority are set
 		var err error
 		out, err = findListenerRuleByListenerAndPriority(ctx, conn, data.ListenerARN.ValueString(), strconv.Itoa(int(data.Priority.ValueInt32())))
 		if err != nil {
@@ -454,17 +476,29 @@ func (d *listenerRuleDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// The listener ARN isn't in the response but can be derived from the rule ARN
 	data.ListenerARN = fwtypes.ARNValue(listenerARNFromRuleARN(aws.ToString(out.RuleArn)))
 
-	priority, err := strconv.ParseInt(aws.ToString(out.Priority), 10, 32)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, data.ARN.String(), err),
-			err.Error(),
-		)
-		return
+	if aws.ToString(out.Priority) != "default" {
+		priority, err := strconv.ParseInt(aws.ToString(out.Priority), 10, 32)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, data.ARN.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		data.Priority = types.Int32Value(int32(priority))
 	}
-	data.Priority = types.Int32Value(int32(priority))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func findListenerRuleByListenerAndIsDefault(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN string) (*awstypes.Rule, error) {
+	input := &elasticloadbalancingv2.DescribeRulesInput{
+		ListenerArn: aws.String(listenerARN),
+	}
+
+	return findListenerRule(ctx, conn, input, func(v *awstypes.Rule) bool {
+		return aws.ToBool(v.IsDefault)
+	})
 }
 
 type listenerRuleDataSourceModel struct {
@@ -472,6 +506,7 @@ type listenerRuleDataSourceModel struct {
 	Action      fwtypes.ListNestedObjectValueOf[actionModel]       `tfsdk:"action"`
 	ARN         fwtypes.ARN                                        `tfsdk:"arn"`
 	Condition   fwtypes.SetNestedObjectValueOf[ruleConditionModel] `tfsdk:"condition"`
+	IsDefault   types.Bool                                         `tfsdk:"is_default"`
 	ListenerARN fwtypes.ARN                                        `tfsdk:"listener_arn"`
 	Priority    types.Int32                                        `tfsdk:"priority" autoflex:"-"`
 	Tags        tftags.Map                                         `tfsdk:"tags"`
