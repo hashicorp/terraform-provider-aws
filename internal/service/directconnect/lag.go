@@ -17,6 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -58,6 +59,12 @@ func resourceLag() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validConnectionBandWidth(),
 				},
+				"encryption_mode": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+				},
 				names.AttrForceDestroy: {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -76,6 +83,10 @@ func resourceLag() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"macsec_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -88,6 +99,12 @@ func resourceLag() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
+					ForceNew: true,
+				},
+				"request_macsec": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
@@ -106,6 +123,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(name),
 		Location:             aws.String(d.Get(names.AttrLocation).(string)),
+		RequestMACSec:        aws.Bool(d.Get("request_macsec").(bool)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -165,9 +183,11 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("connections_bandwidth", lag.ConnectionsBandwidth)
+	d.Set("encryption_mode", lag.EncryptionMode)
 	d.Set("has_logical_redundancy", lag.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
 	d.Set(names.AttrLocation, lag.Location)
+	d.Set("macsec_capable", lag.MacSecCapable)
 	d.Set(names.AttrName, lag.LagName)
 	d.Set(names.AttrOwnerAccountID, lag.OwnerAccount)
 	d.Set(names.AttrProviderName, lag.ProviderName)
@@ -189,6 +209,19 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect LAG (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("encryption_mode") {
+		input := &directconnect.UpdateLagInput{
+			EncryptionMode: aws.String(d.Get("encryption_mode").(string)),
+			LagId:          aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateLag(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect LAG (%s) encryption mode: %s", d.Id(), err)
 		}
 	}
 
