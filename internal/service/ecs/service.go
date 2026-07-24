@@ -695,7 +695,7 @@ func resourceService() *schema.Resource {
 									Schema: map[string]*schema.Schema{
 										"hook_target_arn": {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"lifecycle_stages": {
@@ -708,7 +708,7 @@ func resourceService() *schema.Resource {
 										},
 										names.AttrRoleARN: {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verify.ValidARN,
 										},
 										"hook_details": {
@@ -716,6 +716,34 @@ func resourceService() *schema.Resource {
 											Optional:         true,
 											DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 											ValidateFunc:     verify.ValidStringIsJSONOrYAML,
+										},
+										"target_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookTargetType](),
+										},
+										"timeout_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAction: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookAction](),
+													},
+													"timeout_in_minutes": {
+														Type:         nullable.TypeNullableInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 20160),
+													},
+												},
+											},
 										},
 									},
 								},
@@ -2661,10 +2689,36 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 			tfMap["lifecycle_stages"] = v
 		}
 
+		if apiObject.TargetType == awstypes.DeploymentLifecycleHookTargetTypePause {
+			tfMap["target_type"] = string(apiObject.TargetType)
+
+			if v := apiObject.TimeoutConfiguration; v != nil {
+				tfMap["timeout_configuration"] = flattenLifecycleHookTimeoutConfiguration(v)
+			}
+		}
+
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
+}
+
+func flattenLifecycleHookTimeoutConfiguration(apiObject *awstypes.DeploymentLifecycleHookTimeoutConfiguration) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Action; v != "" {
+		tfMap[names.AttrAction] = string(v)
+	}
+
+	if v := apiObject.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = flex.Int32ToStringValue(v)
+	}
+
+	return []map[string]any{tfMap}
 }
 
 func flattenCanaryConfiguration(apiObject *awstypes.CanaryConfiguration) []map[string]any {
@@ -2728,7 +2782,34 @@ func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
 			}
 		}
 
+		if v, ok := tfMap["target_type"].(string); ok && v != "" {
+			hook.TargetType = awstypes.DeploymentLifecycleHookTargetType(v)
+		}
+
+		if v, ok := tfMap["timeout_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			hook.TimeoutConfiguration = expandLifecycleHookTimeoutConfiguration(v[0].(map[string]any))
+		}
+
 		apiObject = append(apiObject, hook)
+	}
+
+	return apiObject
+}
+
+func expandLifecycleHookTimeoutConfiguration(tfMap map[string]any) *awstypes.DeploymentLifecycleHookTimeoutConfiguration {
+	apiObject := &awstypes.DeploymentLifecycleHookTimeoutConfiguration{}
+
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		apiObject.Action = awstypes.DeploymentLifecycleHookAction(v)
+	}
+
+	if v, ok := tfMap["timeout_in_minutes"].(string); ok {
+		timeoutMinutes := nullable.Int(v)
+		if !timeoutMinutes.IsNull() {
+			if minutes, _, err := timeoutMinutes.ValueInt32(); err == nil {
+				apiObject.TimeoutInMinutes = aws.Int32(minutes)
+			}
+		}
 	}
 
 	return apiObject
