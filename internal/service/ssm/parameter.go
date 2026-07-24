@@ -34,7 +34,6 @@ import (
 // @SDKResource("aws_ssm_parameter", name="Parameter")
 // @Tags(identifierAttribute="id", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
-// @Testing(importIgnore="has_value_wo")
 // @IdentityAttribute("name")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.7.0")
@@ -53,7 +52,6 @@ func resourceParameter() *schema.Resource {
 					return nil, err
 				}
 
-				d.Set("has_value_wo", false)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
