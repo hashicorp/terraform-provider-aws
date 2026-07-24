@@ -190,7 +190,7 @@ func findResourcePolicyByResourceARN(ctx context.Context, conn *osis.Client, res
 		return nil, err
 	}
 
-	if output == nil || output.Policy == nil || *output.Policy == "{}" {
+	if output == nil || output.Policy == nil || aws.ToString(output.Policy) == "{}" {
 		return nil, &retry.NotFoundError{}
 	}
 

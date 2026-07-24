@@ -254,8 +254,8 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 	return endpoint, nil
 }
 
-func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusPipelineEndpoint(conn *osis.Client, endpointID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPipelineEndpointByID(ctx, conn, endpointID)
 
 		if retry.NotFound(err) {
@@ -274,7 +274,7 @@ func waitPipelineEndpointCreated(ctx context.Context, conn *osis.Client, endpoin
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineEndpointStatusCreating),
 		Target:     enum.Slice(awstypes.PipelineEndpointStatusActive),
-		Refresh:    statusPipelineEndpoint(ctx, conn, endpointID),
+		Refresh:    statusPipelineEndpoint(conn, endpointID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -293,7 +293,7 @@ func waitPipelineEndpointDeleted(ctx context.Context, conn *osis.Client, endpoin
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineEndpointStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusPipelineEndpoint(ctx, conn, endpointID),
+		Refresh:    statusPipelineEndpoint(conn, endpointID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
