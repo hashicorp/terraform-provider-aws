@@ -243,6 +243,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 * `name` - (Required) Name of this column in the underlying data source.
 * `type` - (Required) Data type of the column.
+* `sub_type` - (Optional) The sub data type of the column. Sub types are only available for decimal columns that are part of a SPICE dataset. Valid values are `FLOAT` and `FIXED`.
 
 ### s3_source
 
@@ -306,6 +307,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `column_name` - (Required) Column name.
 * `new_column_type` - (Required) New column data type. Valid values are `STRING`, `INTEGER`, `DECIMAL`, `DATETIME`.
 * `format` - (Optional) When casting a column from string to datetime type, you can supply a string in a format supported by Amazon QuickSight to denote the source data format.
+* `sub_type` - (Optional) The sub data type of the new column. Sub types are only available for decimal columns that are part of a SPICE dataset. Valid values are `FLOAT` and `FIXED`.
 
 ### create_columns_operation
 
@@ -430,6 +432,7 @@ The `output_columns` block has the following attributes.
 
 * `name` - The name of the column.
 * `description` - The description of the column.
+* `sub_type` - The sub data type of the column.
 * `type` - The data type of the column.
 
 ## Import
