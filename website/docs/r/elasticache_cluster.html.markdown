@@ -181,7 +181,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 * `snapshot_window` - (Optional, Redis only) Daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
 * `subnet_group_name` - (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource. Cannot be provided with `replication_group_id.`
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `transit_encryption_enabled` - (Optional) Enable encryption in-transit. Supported with Memcached versions `1.6.12` and later, Redis OSS versions `3.2.6`, `4.0.10` and later, running in a VPC. See the [ElastiCache in-transit encryption documentation](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html#in-transit-encryption-constraints) for more details.
+* `transit_encryption_enabled` - (Optional) Enable encryption in-transit. Supported with Memcached versions `1.6.12` and later, running in a VPC. For Redis OSS, configure `transit_encryption_enabled` using the [`aws_elasticache_replication_group` resource](/docs/providers/aws/r/elasticache_replication_group.html). See the [ElastiCache in-transit encryption documentation](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html#in-transit-encryption-constraints) for more details.
 
 ### Log Delivery Configuration
 
