@@ -447,6 +447,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"origin_path": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
+							Default:  stringdefault.StaticString(""),
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
@@ -1112,7 +1113,7 @@ type originModel struct {
 	DomainName                types.String                                             `tfsdk:"domain_name"`
 	ID                        types.String                                             `tfsdk:"id"`
 	OriginAccessControlID     types.String                                             `tfsdk:"origin_access_control_id" autoflex:",omitempty"`
-	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",omitempty"`
+	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",legacy"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout" autoflex:",omitempty"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
