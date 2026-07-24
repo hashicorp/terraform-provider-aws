@@ -32,7 +32,6 @@ func TestAccAMPAnomalyDetector_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
@@ -125,7 +124,6 @@ func TestAccAMPAnomalyDetector_Identity_regionOverride(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,

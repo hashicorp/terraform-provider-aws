@@ -778,17 +778,28 @@ func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]swee
 	conn := client.AMPClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := amp.NewListAnomalyDetectorsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	workspacePages := amp.NewListWorkspacesPaginator(conn, &amp.ListWorkspacesInput{})
+	for workspacePages.HasMorePages() {
+		workspacePage, err := workspacePages.NextPage(ctx)
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.AnomalyDetectors {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAnomalyDetectorResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.AnomalyDetectorId))),
-			)
+		for _, workspace := range workspacePage.Workspaces {
+			input.WorkspaceId = workspace.WorkspaceId
+			pages := amp.NewListAnomalyDetectorsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.AnomalyDetectors {
+					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAnomalyDetectorResource, client,
+						sweepfw.NewAttribute(names.AttrID, aws.ToString(v.AnomalyDetectorId)),
+					))
+				}
+			}
 		}
 	}
 

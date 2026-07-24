@@ -94,7 +94,6 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -147,7 +146,6 @@ func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -192,7 +190,6 @@ func TestAccAMPAnomalyDetector_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -266,7 +263,6 @@ func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -324,7 +320,6 @@ func TestAccAMPAnomalyDetector_labels(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-			// testAccPreCheckAnomalyDetector(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
