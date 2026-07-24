@@ -5,6 +5,6 @@ package s3control
 
 // Exports for use in other packages.
 var (
-	ListTags   = listTags
-	UpdateTags = updateTags
+	ListTags   = listTagsImpl
+	UpdateTags = updateTagsImpl
 )
