@@ -61,6 +61,38 @@ func resourceCapacityProvider() *schema.Resource {
 				if clusterName == "" {
 					return errors.New("cluster is required when using managed_instances_provider")
 				}
+
+				// Validate capacity reservation rules for managed instances providers
+				capacityOptionType := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_option_type").(string)
+				capacityReservations := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations").([]any)
+				instanceRequirements := diff.Get("managed_instances_provider.0.instance_launch_template.0.instance_requirements").([]any)
+				hasCapacityReservations := len(capacityReservations) > 0
+
+				// capacity_reservations requires capacity_option_type = RESERVED
+				if hasCapacityReservations && capacityOptionType != string(awstypes.CapacityOptionTypeReserved) {
+					return errors.New("capacity_reservations can only be set when capacity_option_type is RESERVED")
+				}
+
+				// capacity_option_type = RESERVED requires capacity_reservations
+				if capacityOptionType == string(awstypes.CapacityOptionTypeReserved) && !hasCapacityReservations {
+					return errors.New("capacity_reservations must be set when capacity_option_type is RESERVED")
+				}
+
+				if hasCapacityReservations {
+					reservationPreference := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_preference").(string)
+					reservationGroupArn := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_group_arn").(string)
+
+					// reservation_group_arn is only valid with the RESERVATIONS_ONLY preference
+					if reservationGroupArn != "" && reservationPreference != "" && reservationPreference != string(awstypes.CapacityReservationPreferenceReservationsOnly) {
+						return errors.New("reservation_group_arn can only be set when reservation_preference is RESERVATIONS_ONLY")
+					}
+
+					// instance_requirements is required for RESERVATIONS_ONLY and RESERVATIONS_FIRST
+					if (reservationPreference == string(awstypes.CapacityReservationPreferenceReservationsOnly) ||
+						reservationPreference == string(awstypes.CapacityReservationPreferenceReservationsFirst)) && len(instanceRequirements) == 0 {
+						return errors.New("instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST")
+					}
+				}
 			} else if len(asgProvider) > 0 {
 				// cluster must not be set for ASG CP
 				if clusterName != "" {
@@ -188,6 +220,26 @@ func resourceCapacityProvider() *schema.Resource {
 											ForceNew:         true,
 											Computed:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+										},
+										"capacity_reservations": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"reservation_group_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"reservation_preference": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+													},
+												},
+											},
 										},
 										"ec2_instance_profile_arn": {
 											Type:         schema.TypeString,
@@ -1025,6 +1077,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
 	}
 
+	if v, ok := tfMap["capacity_reservations"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservations = expandCapacityReservationRequest(v)
+	}
+
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
 	}
@@ -1056,6 +1112,10 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplateUpdate{}
 
+	if v, ok := tfMap["capacity_reservations"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservations = expandCapacityReservationRequest(v)
+	}
+
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
 	}
@@ -1074,6 +1134,25 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 
 	if v, ok := tfMap["storage_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.StorageConfiguration = expandManagedInstancesStorageConfiguration(v)
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationRequest(tfList []any) *awstypes.CapacityReservationRequest {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CapacityReservationRequest{}
+
+	if v, ok := tfMap["reservation_group_arn"].(string); ok && v != "" {
+		apiObject.ReservationGroupArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["reservation_preference"].(string); ok && v != "" {
+		apiObject.ReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
 	return apiObject
@@ -1435,6 +1514,10 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 		"monitoring":               template.Monitoring,
 	}
 
+	if template.CapacityReservations != nil {
+		tfMap["capacity_reservations"] = flattenCapacityReservationRequest(template.CapacityReservations)
+	}
+
 	if template.InstanceRequirements != nil {
 		tfMap["instance_requirements"] = flattenInstanceRequirementsRequest(template.InstanceRequirements)
 	}
@@ -1453,6 +1536,22 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 		tfMap["storage_configuration"] = []map[string]any{{
 			"storage_size_gib": aws.ToInt32(template.StorageConfiguration.StorageSizeGiB),
 		}}
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func flattenCapacityReservationRequest(req *awstypes.CapacityReservationRequest) []map[string]any {
+	if req == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"reservation_preference": req.ReservationPreference,
+	}
+
+	if req.ReservationGroupArn != nil {
+		tfMap["reservation_group_arn"] = aws.ToString(req.ReservationGroupArn)
 	}
 
 	return []map[string]any{tfMap}

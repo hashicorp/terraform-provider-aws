@@ -627,6 +627,70 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_monitoring(t *tes
 	})
 }
 
+func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityReservations(rName, "RESERVATIONS_EXCLUDED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "RESERVED"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_reservations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_preference", "RESERVATIONS_EXCLUDED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccECSCapacityProvider_managedInstancesProvider_capacityReservationsValidation exercises the
+// plan-time cross-field validation for capacity_reservations. Each step is expected to fail during
+// plan, so no resources are created.
+func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservationsValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCapacityProviderConfig_managedInstancesProvider_capacityReservationsWithoutReserved(rName),
+				ExpectError: regexache.MustCompile(`capacity_reservations can only be set when capacity_option_type is RESERVED`),
+			},
+			{
+				Config:      testAccCapacityProviderConfig_managedInstancesProvider_reservedWithoutCapacityReservations(rName),
+				ExpectError: regexache.MustCompile(`capacity_reservations must be set when capacity_option_type is RESERVED`),
+			},
+			{
+				Config:      testAccCapacityProviderConfig_managedInstancesProvider_reservationGroupARNWrongPreference(rName),
+				ExpectError: regexache.MustCompile(`reservation_group_arn can only be set when reservation_preference is RESERVATIONS_ONLY`),
+			},
+			{
+				Config:      testAccCapacityProviderConfig_managedInstancesProvider_reservationsWithoutInstanceRequirements(rName),
+				ExpectError: regexache.MustCompile(`instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST`),
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -1214,6 +1278,160 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName, capacityOptionType))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_capacityReservations(rName, preference string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = "RESERVED"
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      capacity_reservations {
+        reservation_preference = %[2]q
+      }
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+        }
+
+        memory_mib {
+          min = 1024
+        }
+      }
+    }
+  }
+}
+`, rName, preference))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_capacityReservationsWithoutReserved(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = "ON_DEMAND"
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      capacity_reservations {
+        reservation_preference = "RESERVATIONS_EXCLUDED"
+      }
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_reservedWithoutCapacityReservations(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = "RESERVED"
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_reservationGroupARNWrongPreference(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = "RESERVED"
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      capacity_reservations {
+        reservation_preference = "RESERVATIONS_FIRST"
+        reservation_group_arn  = "arn:${data.aws_partition.current.partition}:resource-groups:${data.aws_region.current.region}:123456789012:group/example"
+      }
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+        }
+
+        memory_mib {
+          min = 1024
+        }
+      }
+    }
+  }
+}
+
+data "aws_region" "current" {}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_reservationsWithoutInstanceRequirements(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = "RESERVED"
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      capacity_reservations {
+        reservation_preference = "RESERVATIONS_ONLY"
+      }
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccCapacityProviderConfig_managedInstancesProvider_monitoring(rName, monitoring string) string {
