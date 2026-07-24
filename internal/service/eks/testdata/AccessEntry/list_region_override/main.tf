@@ -2,14 +2,17 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_eks_access_entry" "test" {
+  count  = var.resource_count
   region = var.region
 
   cluster_name  = aws_eks_cluster.test.name
-  principal_arn = aws_iam_role.test.arn
+  principal_arn = aws_iam_role.test[count.index].arn
 }
 
 resource "aws_iam_role" "test" {
-  name = var.rName
+  count = var.resource_count
+
+  name = "${var.rName}-${count.index}"
 
   assume_role_policy = <<POLICY
 {
@@ -47,6 +50,8 @@ resource "aws_eks_cluster" "test" {
 data "aws_partition" "current" {}
 
 data "aws_service_principal" "eks" {
+  region = var.region
+
   service_name = "eks"
 }
 
@@ -87,8 +92,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   region = var.region
-
-  count = 2
+  count  = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
@@ -116,6 +120,12 @@ data "aws_availability_zones" "available" {
 variable "rName" {
   description = "Name for resource"
   type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
   nullable    = false
 }
 
