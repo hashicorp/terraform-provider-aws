@@ -9,3 +9,7 @@ resource/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metad
 ```release-note:enhancement
 data-source/aws_secretsmanager_secret: Add `type` attribute
 ```
+
+```release-note:enhancement
+data-source/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` attributes
+```
