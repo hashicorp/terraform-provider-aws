@@ -44,6 +44,13 @@ func TestAccInspector2_serial(t *testing.T) {
 			"lambdaCode":         testAccOrganizationConfiguration_lambdaCode,
 			"codeRepository":     testAccOrganizationConfiguration_codeRepository,
 		},
+		"Configuration": {
+			acctest.CtBasic:      testAccConfiguration_basic,
+			acctest.CtDisappears: testAccConfiguration_disappears,
+			"ec2ScanMode":        testAccConfiguration_ec2ScanMode,
+			"ecrRescan":          testAccConfiguration_ecrRescan,
+			"combined":           testAccConfiguration_combined,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
