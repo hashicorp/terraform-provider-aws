@@ -31,8 +31,8 @@ For managed external secrets that are rotated by AWS partner integrations:
 
 ```terraform
 resource "aws_secretsmanager_secret" "example" {
-  name        = "example-salesforce-client-secret"
-  type        = "SalesforceClientSecret"
+  name = "example-salesforce-client-secret"
+  type = "SalesforceClientSecret"
 }
 
 resource "aws_secretsmanager_secret_rotation" "example" {
