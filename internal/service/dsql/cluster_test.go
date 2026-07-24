@@ -60,6 +60,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_encryption_key"), knownvalue.StringExact("AWS_OWNED_KMS_KEY")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_service_name"), knownvalue.NotNull()),
 				},
 			},
