@@ -39,9 +39,9 @@ var AssociateDisassociateIAMRole = newResourceAssociateDisassociateIAMRole
 func newResourceAssociateDisassociateIAMRole(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAssociateDisassociateIAMRole{}
 
-	r.SetDefaultCreateTimeout(36 * time.Hour)
-	r.SetDefaultUpdateTimeout(36 * time.Hour)
-	r.SetDefaultDeleteTimeout(36 * time.Hour)
+	r.SetDefaultCreateTimeout(1 * time.Hour)
+	r.SetDefaultUpdateTimeout(1 * time.Hour)
+	r.SetDefaultDeleteTimeout(1 * time.Hour)
 
 	return r, nil
 }
