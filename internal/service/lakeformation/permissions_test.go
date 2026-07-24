@@ -346,6 +346,47 @@ func testAccPermissions_lfTag(t *testing.T) {
 	})
 }
 
+func testAccPermissions_lfTagExpression(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+	expressionName := "aws_lakeformation_lf_tag_expression.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_lfTagExpression(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_expression.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.0.name", expressionName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.0.catalog_id", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionAlter)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDescribe)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDrop)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "GRANT_WITH_LF_TAG_EXPRESSION"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", string(awstypes.PermissionAlter)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", string(awstypes.PermissionDescribe)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", string(awstypes.PermissionDrop)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions_with_grant_option.*", "GRANT_WITH_LF_TAG_EXPRESSION"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissions_lfTagPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1199,6 +1240,22 @@ func permissionCountForResource(ctx context.Context, t *testing.T, conn *lakefor
 		noResource = false
 	}
 
+	if v, ok := rs.Primary.Attributes["lf_tag_expression.#"]; ok && v != "" && v != "0" {
+		tfMap := map[string]any{}
+
+		if v := rs.Primary.Attributes["lf_tag_expression.0.catalog_id"]; v != "" {
+			tfMap[names.AttrCatalogID] = v
+		}
+
+		if v := rs.Primary.Attributes["lf_tag_expression.0.name"]; v != "" {
+			tfMap[names.AttrName] = v
+		}
+
+		input.Resource.LFTagExpression = tflakeformation.ExpandLFTagExpressionResource(tfMap)
+
+		noResource = false
+	}
+
 	if v, ok := rs.Primary.Attributes["lf_tag_policy.#"]; ok && v != "" && v != "0" {
 		tfMap := map[string]any{}
 
@@ -1357,6 +1414,9 @@ func permissionsFilter(attributes map[string]string) (tflakeformation.Permission
 	}
 	if v, ok := attributes["lf_tag.#"]; ok && v != "" && v != "0" {
 		return tflakeformation.FilterLFTagPermissions(principalIdentifier), nil
+	}
+	if v, ok := attributes["lf_tag_expression.#"]; ok && v != "" && v != "0" {
+		return tflakeformation.FilterLFTagExpressionPermissions(principalIdentifier), nil
 	}
 	if v, ok := attributes["lf_tag_policy.#"]; ok && v != "" && v != "0" {
 		return tflakeformation.FilterLFTagPolicyPermissions(principalIdentifier), nil
@@ -1913,13 +1973,64 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
+func testAccPermissionsConfig_lfTagExpression(rName string) string {
+	return acctest.ConfigCompose(testAccLFTagExpression_baseConfig, fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+	name               = %[1]q
+	path               = "/"
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "glue.${data.aws_partition.current.dns_suffix}"
+			},
+			"Effect": "Allow",
+			"Sid": ""
+		}
+	]
+}
+EOF
+}
+
+resource "aws_lakeformation_lf_tag_expression" "test" {
+	   name = %[1]q
+	   expression {
+		       tag_key    = aws_lakeformation_lf_tag.test.key
+			   tag_values = aws_lakeformation_lf_tag.test.values
+	   }
+
+	   depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+	   permissions                   = ["ALTER", "DESCRIBE", "DROP", "GRANT_WITH_LF_TAG_EXPRESSION"]
+	   permissions_with_grant_option = ["ALTER", "DESCRIBE", "DROP", "GRANT_WITH_LF_TAG_EXPRESSION"]
+	   principal                     = aws_iam_role.test.arn
+
+	   lf_tag_expression {
+		       catalog_id = data.aws_caller_identity.current.account_id
+			   name       = aws_lakeformation_lf_tag_expression.test.name
+	   }
+	   depends_on = [
+		       aws_lakeformation_data_lake_settings.test,
+		       aws_lakeformation_lf_tag_expression.test,
+	   ]
+}
+`, rName))
+}
+
 func testAccPermissionsConfig_lfTagPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
-  name               = %[1]q
-  path               = "/"
-  assume_role_policy = <<EOF
+       name               = %[1]q
+       path               = "/"
+	   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1981,9 +2092,9 @@ func testAccPermissionsConfig_lfTagPolicyMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
-  name               = %[1]q
-  path               = "/"
-  assume_role_policy = <<EOF
+	   name               = %[1]q
+       path               = "/"
+	   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
