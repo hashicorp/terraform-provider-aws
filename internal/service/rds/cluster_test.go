@@ -864,6 +864,41 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_storageTypeUpdateNonAurora(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageTypeNonAurora(rName, "io2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io2"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_storageTypeNonAurora(rName, "gp3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_iops(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -4651,6 +4686,42 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot       = true
 }
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, sType))
+}
+
+func testAccClusterConfig_storageTypeNonAurora(rName, sType string) string {
+	var iopsConfig string
+	if sType != "gp3" {
+		iopsConfig = `  iops = 1000`
+	}
+
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io2"
+  supports_iops              = true
+  supports_clusters          = true
+}
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  cluster_identifier        = %[1]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = %[2]q
+  allocated_storage         = 100
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
+%[3]s
+}
+`, rName, sType, iopsConfig))
 }
 
 func testAccClusterConfig_storageChange(rName string, sType string) string {
