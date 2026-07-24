@@ -137,7 +137,6 @@ func resourceCluster() *schema.Resource {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
-					ForceNew:      true,
 					ValidateFunc:  validIdentifier,
 					ConflictsWith: []string{"cluster_identifier_prefix"},
 				},
@@ -1524,6 +1523,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
+		// Renaming a cluster (NewDBClusterIdentifier) is only honored when
+		// ApplyImmediately is true; otherwise AWS defers it to the next maintenance
+		// window. Because this resource's ID is the cluster identifier, a deferred
+		// rename would leave the ID out of sync with the actual cluster name. Require
+		// apply_immediately to keep the rename and the resource ID consistent.
+		if d.HasChange(names.AttrClusterIdentifier) {
+			if !applyImmediately {
+				return sdkdiag.AppendErrorf(diags, "renaming RDS Cluster (%s) requires apply_immediately = true", d.Id())
+			}
+			input.NewDBClusterIdentifier = aws.String(d.Get(names.AttrClusterIdentifier).(string))
+		}
+
 		storageType := d.Get(names.AttrStorageType).(string)
 		if d.HasChange(names.AttrAllocatedStorage) {
 			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
@@ -1753,6 +1764,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
+		}
+
+		// A successful rename changes the cluster identifier, which is this
+		// resource's ID. Update it so the wait and subsequent read target the new
+		// name rather than the old one.
+		if input.NewDBClusterIdentifier != nil {
+			d.SetId(aws.ToString(input.NewDBClusterIdentifier))
 		}
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
