@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -5412,4 +5413,103 @@ resource "aws_s3_bucket" "test" {
 
 data "aws_caller_identity" "current" {}
 `, rName)
+}
+
+func TestLifecycleConfigEqual(t *testing.T) {
+	t.Parallel()
+
+	// baseRule returns a canonical rule for comparison. A non-empty filter prefix mirrors the configs
+	// reported in https://github.com/hashicorp/terraform-provider-aws/issues/43333, which are fixed by
+	// tolerating a non-echoed transition header alone.
+	baseRule := func(id string) types.LifecycleRule {
+		return types.LifecycleRule{
+			ID:     aws.String(id),
+			Status: types.ExpirationStatusEnabled,
+			Expiration: &types.LifecycleExpiration{
+				Days: aws.Int32(30),
+			},
+			Filter: &types.LifecycleRuleFilter{
+				Prefix: aws.String("logs/"),
+			},
+		}
+	}
+
+	tests := []struct {
+		name               string
+		transitionMinSize1 types.TransitionDefaultMinimumObjectSize
+		rules1             []types.LifecycleRule
+		transitionMinSize2 types.TransitionDefaultMinimumObjectSize
+		rules2             []types.LifecycleRule
+		want               bool
+	}{
+		{
+			// Ceph RADOS Gateway (e.g. 19.2.x) does not echo the transition header, so the value read
+			// back is empty while the configured value is non-empty. These must compare equal.
+			name:               "transition response empty vs configured, equal rules",
+			transitionMinSize1: "",
+			rules1:             []types.LifecycleRule{baseRule("rule-one")},
+			transitionMinSize2: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules2:             []types.LifecycleRule{baseRule("rule-one")},
+			want:               true,
+		},
+		{
+			name:               "transition both empty, equal rules",
+			transitionMinSize1: "",
+			rules1:             []types.LifecycleRule{baseRule("rule-one")},
+			transitionMinSize2: "",
+			rules2:             []types.LifecycleRule{baseRule("rule-one")},
+			want:               true,
+		},
+		{
+			// Genuine drift: both values are non-empty and differ. Must still be detected.
+			name:               "transition differs both non-empty",
+			transitionMinSize1: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules1:             []types.LifecycleRule{baseRule("rule-one")},
+			transitionMinSize2: types.TransitionDefaultMinimumObjectSizeVariesByStorageClass,
+			rules2:             []types.LifecycleRule{baseRule("rule-one")},
+			want:               false,
+		},
+		{
+			name:               "equal rules, different order",
+			transitionMinSize1: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules1:             []types.LifecycleRule{baseRule("rule-one"), baseRule("rule-two")},
+			transitionMinSize2: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules2:             []types.LifecycleRule{baseRule("rule-two"), baseRule("rule-one")},
+			want:               true,
+		},
+		{
+			name:               "rules differ in content",
+			transitionMinSize1: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules1:             []types.LifecycleRule{baseRule("rule-one")},
+			transitionMinSize2: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules2: []types.LifecycleRule{{
+				ID:     aws.String("rule-one"),
+				Status: types.ExpirationStatusEnabled,
+				Expiration: &types.LifecycleExpiration{
+					Days: aws.Int32(7),
+				},
+				Filter: &types.LifecycleRuleFilter{
+					Prefix: aws.String("logs/"),
+				},
+			}},
+			want: false,
+		},
+		{
+			name:               "rules differ in length",
+			transitionMinSize1: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules1:             []types.LifecycleRule{baseRule("rule-one")},
+			transitionMinSize2: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			rules2:             []types.LifecycleRule{baseRule("rule-one"), baseRule("rule-two")},
+			want:               false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfs3.LifecycleConfigEqual(tt.transitionMinSize1, tt.rules1, tt.transitionMinSize2, tt.rules2); got != tt.want {
+				t.Errorf("LifecycleConfigEqual() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
