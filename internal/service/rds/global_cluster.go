@@ -206,6 +206,13 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
+		sourceARN := v.(string)
+		if _, err := waitGlobalClusterSourcePromoted(ctx, conn, d.Id(), sourceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) source cluster promotion: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
@@ -493,6 +500,58 @@ func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, 
 	}
 
 	return nil, err
+}
+
+func waitGlobalClusterSourcePromoted(ctx context.Context, conn *rds.Client, id, sourceARN string, timeout time.Duration) (*types.GlobalCluster, error) {
+	const (
+		globalClusterStatusPromoting = "promoting"
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{globalClusterStatusPromoting},
+		Target:     []string{globalClusterStatusAvailable},
+		Refresh:    statusGlobalClusterSourcePromotion(conn, id, sourceARN),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.GlobalCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusGlobalClusterSourcePromotion(conn *rds.Client, id, sourceARN string) retry.StateRefreshFunc {
+	const (
+		globalClusterStatusPromoting = "promoting"
+	)
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findGlobalClusterByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", &retry.NotFoundError{LastError: err}
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		status := aws.ToString(output.Status)
+		if status != globalClusterStatusAvailable {
+			return output, status, nil
+		}
+
+		for _, m := range output.GlobalClusterMembers {
+			if aws.ToString(m.DBClusterArn) == sourceARN && aws.ToBool(m.IsWriter) {
+				return output, globalClusterStatusAvailable, nil
+			}
+		}
+
+		return output, globalClusterStatusPromoting, nil
+	}
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
