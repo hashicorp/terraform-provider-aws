@@ -76,6 +76,9 @@ var (
 
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rekognition;rekognition.DescribeStreamProcessorOutput")
+// @Testing(preIdentityVersion="v6.56.0")
 func newStreamProcessorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &streamProcessorResource{}
 
@@ -93,6 +96,7 @@ const (
 type streamProcessorResource struct {
 	framework.ResourceWithModel[streamProcessorResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *streamProcessorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -691,10 +695,6 @@ func (r *streamProcessorResource) Delete(ctx context.Context, req resource.Delet
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
-}
-
-func (r *streamProcessorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
