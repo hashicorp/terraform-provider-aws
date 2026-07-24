@@ -417,6 +417,19 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
+			{
+				// Removing the argument entirely must clear it on the API (not be ignored).
+				Config: testAccRestAPIConfig_binaryMediaTypesRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -465,6 +478,17 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
+			// Dropping the argument while the body still sets binary media types must
+			// not clear the value: the plan-time clear skips the OpenAPI-import path,
+			// so the value derived from the body is retained rather than forced empty.
+			{
+				Config: testAccRestAPIConfig_binaryMediaTypes1SetByBody(rName, "image/png"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "image/png"),
+				),
+			},
 		},
 	})
 }
@@ -494,6 +518,17 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+			// Updating the body-derived binary media type must still apply: the
+			// argument is never set in config, so the plan-time clear skips this
+			// OpenAPI-import path and the Computed value tracks the body.
+			{
+				Config: testAccRestAPIConfig_binaryMediaTypes1SetByBody(rName, "image/jpeg"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "image/jpeg"),
+				),
 			},
 		},
 	})
@@ -2313,6 +2348,14 @@ resource "aws_api_gateway_rest_api" "test" {
   name               = %[1]q
 }
 `, rName, binaryMediaTypes1)
+}
+
+func testAccRestAPIConfig_binaryMediaTypesRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
 func testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName string, binaryMediaTypes1 string, bodyBinaryMediaTypes1 string) string {
