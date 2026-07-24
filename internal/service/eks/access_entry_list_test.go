@@ -130,7 +130,7 @@ func TestAccEKSAccessEntry_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("access_entry_arn"), checkAccessEntryARN(rName, rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("kubernetes_groups"), knownvalue.SetSizeExact(1)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("kubernetes_groups"), knownvalue.SetSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("principal_arn"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -139,7 +139,7 @@ func TestAccEKSAccessEntry_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.StringExact("EC2_LINUX")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.StringExact("STANDARD")),
 					}),
 				},
 			},

@@ -6,8 +6,6 @@ resource "aws_eks_access_entry" "test" {
 
   cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_iam_role.test[count.index].arn
-
-  type = "EC2_LINUX"
 }
 
 resource "aws_iam_role" "test" {

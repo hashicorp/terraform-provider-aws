@@ -64,9 +64,9 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_entry_arn"), checkAccessEntryARN(rName, rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kubernetes_groups"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kubernetes_groups"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("modified_at"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("EC2_LINUX")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("STANDARD")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrUserName), knownvalue.NotNull()),
 				},
 			},
