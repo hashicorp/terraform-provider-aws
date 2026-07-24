@@ -8,6 +8,7 @@ var (
 	ResourceCustomModel                         = newCustomModelResource
 	ResourceEvaluationJob                       = newEvaluationJobResource
 	ResourceGuardrail                           = newGuardrailResource
+	ResourceGuardrailResourcePolicy             = newGuardrailResourcePolicyResource
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 	ResourceInferenceProfile                    = newInferenceProfileResource
@@ -16,6 +17,7 @@ var (
 	FindCustomModelByID                     = findCustomModelByID
 	FindEvaluationJobByARN                  = findEvaluationJobByARN
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
+	FindGuardrailResourcePolicyByARN        = findGuardrailResourcePolicyByARN
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
