@@ -52,19 +52,19 @@ func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWith
 
 type podIdentityAssociationResourceModel struct {
 	framework.WithRegionModel
-	AssociationARN     types.String `tfsdk:"association_arn"`
-	AssociationID      types.String `tfsdk:"association_id"`
-	ClusterName        types.String `tfsdk:"cluster_name"`
-	DisableSessionTags types.Bool   `tfsdk:"disable_session_tags"`
-	ExternalID         types.String `tfsdk:"external_id"`
-	ID                 types.String `tfsdk:"id"`
-	Namespace          types.String `tfsdk:"namespace"`
-	Policy             types.String `tfsdk:"policy"`
-	RoleARN            fwtypes.ARN  `tfsdk:"role_arn"`
-	ServiceAccount     types.String `tfsdk:"service_account"`
-	Tags               tftags.Map   `tfsdk:"tags"`
-	TagsAll            tftags.Map   `tfsdk:"tags_all"`
-	TargetRoleARN      fwtypes.ARN  `tfsdk:"target_role_arn"`
+	AssociationARN     types.String      `tfsdk:"association_arn"`
+	AssociationID      types.String      `tfsdk:"association_id"`
+	ClusterName        types.String      `tfsdk:"cluster_name"`
+	DisableSessionTags types.Bool        `tfsdk:"disable_session_tags"`
+	ExternalID         types.String      `tfsdk:"external_id"`
+	ID                 types.String      `tfsdk:"id"`
+	Namespace          types.String      `tfsdk:"namespace"`
+	Policy             fwtypes.IAMPolicy `tfsdk:"policy"`
+	RoleARN            fwtypes.ARN       `tfsdk:"role_arn"`
+	ServiceAccount     types.String      `tfsdk:"service_account"`
+	Tags               tftags.Map        `tfsdk:"tags"`
+	TagsAll            tftags.Map        `tfsdk:"tags_all"`
+	TargetRoleARN      fwtypes.ARN       `tfsdk:"target_role_arn"`
 }
 
 type podIdentityAssociationResource struct {
@@ -98,9 +98,6 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, request res
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrPolicy: schema.StringAttribute{
-				Optional: true,
-			},
 			names.AttrExternalID: schema.StringAttribute{
 				Computed: true,
 			},
@@ -110,6 +107,10 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, request res
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType: fwtypes.IAMPolicyType,
+				Optional:   true,
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				Required:   true,
