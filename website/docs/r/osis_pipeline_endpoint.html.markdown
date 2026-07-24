@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Unique identifier for the endpoint.
 * `status` - Status of the endpoint.
-* `vpc_id` - ID of the VPC.
+* `vpc_id` - ID of the VPC. Derived from `subnet_ids`.
 
 ## Timeouts
 
