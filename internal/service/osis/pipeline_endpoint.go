@@ -34,7 +34,10 @@ import (
 )
 
 // @FrameworkResource("aws_osis_pipeline_endpoint", name="Pipeline Endpoint")
-// @Testing(identityTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/osis/types;awstypes;awstypes.PipelineEndpoint")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(generator="randomPipelineName(t)")
 func newPipelineEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineEndpointResource{}
 
@@ -45,7 +48,7 @@ func newPipelineEndpointResource(_ context.Context) (resource.ResourceWithConfig
 
 type pipelineEndpointResource struct {
 	framework.ResourceWithModel[pipelineEndpointResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
@@ -127,8 +130,7 @@ func (r *pipelineEndpointResource) Create(ctx context.Context, request resource.
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	input := osis.CreatePipelineEndpointInput{}
-
+	var input osis.CreatePipelineEndpointInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return

@@ -23,7 +23,7 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 	var pipelineEndpoint awstypes.PipelineEndpoint
 	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline_endpoint.test"
-	pipelineResourceName := "aws_osis_pipeline.test"
+	pipelineResourceName := "aws_osis_pipeline.pipeline"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -149,7 +149,7 @@ func testAccCheckPipelineEndpointExists(ctx context.Context, t *testing.T, n str
 func testAccPipelineEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccPipelineEndpointConfig_pipeline(rName), fmt.Sprintf(`
 resource "aws_osis_pipeline_endpoint" "test" {
-  pipeline_arn = aws_osis_pipeline.test.pipeline_arn
+  pipeline_arn = aws_osis_pipeline.pipeline.pipeline_arn
 
   vpc_options {
     subnet_ids         = [aws_subnet.test.id]
@@ -213,7 +213,7 @@ resource "aws_security_group" "pipeline" {
   vpc_id = aws_vpc.pipeline.id
 }
 
-resource "aws_osis_pipeline" "test" {
+resource "aws_osis_pipeline" "pipeline" {
   pipeline_name               = %[1]q
   pipeline_configuration_body = <<-EOT
             version: "2"
