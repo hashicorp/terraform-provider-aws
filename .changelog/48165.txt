@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53domains_delegation_signer_record: Stop removing the resource from state and forcing replacement on refresh by keying the DS record on its digest, skipping refresh of write-only `signing_attributes`, and migrating prior state via a schema upgrader
+```
