@@ -12,10 +12,22 @@ Manages a Neptune database cluster snapshot.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_neptune_cluster_snapshot" "example" {
   db_cluster_identifier          = aws_neptune_cluster.example.id
   db_cluster_snapshot_identifier = "resourcetestsnapshot1234"
+}
+```
+
+### Sharing With Specific Accounts
+
+```terraform
+resource "aws_neptune_cluster_snapshot" "example" {
+  db_cluster_identifier          = aws_neptune_cluster.example.id
+  db_cluster_snapshot_identifier = "resourcetestsnapshot1234"
+  shared_accounts                = ["123456789012", "234567890123"]
 }
 ```
 
@@ -26,6 +38,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
+* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 
 ## Attribute Reference
 

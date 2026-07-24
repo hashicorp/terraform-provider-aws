@@ -43,6 +43,10 @@ const (
 )
 
 const (
+	clusterSnapshotAttributeNameRestore = "restore"
+)
+
+const (
 	eventSubscriptionStatusActive    = "active"
 	eventSubscriptionStatusCreating  = "creating"
 	eventSubscriptionStatusDeleting  = "deleting"
