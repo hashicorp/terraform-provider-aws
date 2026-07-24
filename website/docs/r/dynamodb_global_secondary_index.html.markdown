@@ -186,6 +186,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `create_async` - (Optional) Whether to return as soon as the index enters the `CREATING` state instead of waiting for it to become `ACTIVE`. Defaults to `false`. Useful when adding a GSI to a large existing table, where backfilling the index can take hours.
+  The provider still waits briefly for AWS to acknowledge the create (so a subsequent `terraform refresh` succeeds), but does not block on backfill.
+  While the index is still backfilling, attempting to modify or delete it returns an error until it becomes `ACTIVE`, and other operations against the parent table that touch GSIs may fail.
+  If downstream resources need the GSI to be queryable, guard them with an explicit `depends_on` and a [`time_sleep`](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (or equivalent) sized for the expected backfill duration.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the index.
   See [`on_demand_throughput` below](#on_demand_throughput).
   Only valid if the table's `billing_mode` is `PAY_PER_REQUEST`.
