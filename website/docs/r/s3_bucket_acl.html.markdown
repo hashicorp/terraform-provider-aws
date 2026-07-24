@@ -167,6 +167,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+~> **NOTE:** Use the actual S3 bucket name in the import ID, not the Terraform resource name. For example, if the resource is named `aws_s3_bucket.example` but its `bucket` argument is `"my-company-logs"`, use `my-company-logs` in the import ID. S3 can return a misleading Region error when the name identifies a different bucket in another AWS Region. If the bucket itself is in another Region, set the resource's `region` argument to that Region.
+
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
