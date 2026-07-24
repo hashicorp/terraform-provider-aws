@@ -204,11 +204,11 @@ func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
 	endpointID := data.ID.ValueString()
-	input := &osis.DeletePipelineEndpointInput{
+	input := osis.DeletePipelineEndpointInput{
 		EndpointId: aws.String(endpointID),
 	}
 
-	_, err := conn.DeletePipelineEndpoint(ctx, input)
+	_, err := conn.DeletePipelineEndpoint(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -227,12 +227,12 @@ func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.
 
 // findPipelineEndpointByID retrieves a pipeline endpoint by its ID.
 func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID string) (*awstypes.PipelineEndpoint, error) {
-	input := &osis.ListPipelineEndpointsInput{
+	input := osis.ListPipelineEndpointsInput{
 		MaxResults: aws.Int32(100),
 	}
 
 	var endpoint *awstypes.PipelineEndpoint
-	pages := osis.NewListPipelineEndpointsPaginator(conn, input)
+	pages := osis.NewListPipelineEndpointsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {

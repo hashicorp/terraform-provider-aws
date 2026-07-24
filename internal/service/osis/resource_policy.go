@@ -66,12 +66,12 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	input := &osis.PutResourcePolicyInput{
+	input := osis.PutResourcePolicyInput{
 		Policy:      fwflex.StringFromFramework(ctx, data.Policy),
 		ResourceArn: fwflex.StringFromFramework(ctx, data.ResourceARN),
 	}
 
-	_, err := conn.PutResourcePolicy(ctx, input)
+	_, err := conn.PutResourcePolicy(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Ingestion Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
@@ -124,12 +124,12 @@ func (r *resourcePolicyResource) Update(ctx context.Context, request resource.Up
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	input := &osis.PutResourcePolicyInput{
+	input := osis.PutResourcePolicyInput{
 		Policy:      fwflex.StringFromFramework(ctx, data.Policy),
 		ResourceArn: fwflex.StringFromFramework(ctx, data.ResourceARN),
 	}
 
-	_, err := conn.PutResourcePolicy(ctx, input)
+	_, err := conn.PutResourcePolicy(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Ingestion Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
@@ -149,11 +149,11 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	input := &osis.DeleteResourcePolicyInput{
+	input := osis.DeleteResourcePolicyInput{
 		ResourceArn: fwflex.StringFromFramework(ctx, data.ResourceARN),
 	}
 
-	_, err := conn.DeleteResourcePolicy(ctx, input)
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
