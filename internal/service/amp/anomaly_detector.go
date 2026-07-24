@@ -500,6 +500,7 @@ func findAnomalyDetectorByID(ctx context.Context, conn *amp.Client, id, workspac
 
 	return out.AnomalyDetector, nil
 }
+
 type anomalyDetectorResourceModel struct {
 	framework.WithRegionModel
 	Alias                       types.String                                                           `tfsdk:"alias"`

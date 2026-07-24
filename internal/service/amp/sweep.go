@@ -60,7 +60,6 @@ func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]swee
 	return sweepResources, nil
 }
 
-
 func sweepScraper(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AMPClient(ctx)
 
