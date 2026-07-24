@@ -35,7 +35,7 @@ import (
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("name", identityDuplicateAttributes="id")
+// @IdentityAttribute("name")
 // @IdentityAttribute("feature", optional="true")
 // @ImportIDHandler("projectImportID")
 // @Testing(preIdentityVersion="v6.56.0")

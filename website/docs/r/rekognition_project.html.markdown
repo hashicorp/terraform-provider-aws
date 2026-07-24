@@ -108,12 +108,6 @@ Using `terraform import`, import Rekognition Project using the `name`. For examp
 % terraform import aws_rekognition_project.example project-id-12345678
 ```
 
-Or with the optional `feature`:
-
-```console
-% terraform import aws_rekognition_project.example project-id-12345678:CUSTOM_LABELS
-```
-
 ### Identity Schema
 
 #### Required

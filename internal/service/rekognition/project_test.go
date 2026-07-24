@@ -38,7 +38,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, t, feature, rName),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
@@ -119,7 +119,7 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, t, feature, rName),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_customLabels(rName),
@@ -146,7 +146,6 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
-	feature := "CONTENT_MODERATION"
 	autoUpdate := "ENABLED"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -157,7 +156,7 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, t, feature, rName),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
@@ -184,7 +183,6 @@ func TestAccRekognitionProject_tags(t *testing.T) {
 
 	rProjectId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
-	feature := "CUSTOM_LABELS"
 
 	tags1 := `
   tags = {
@@ -211,7 +209,7 @@ func TestAccRekognitionProject_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, t, feature, rProjectId),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_tags(rProjectId, tags1),
@@ -264,7 +262,7 @@ func testAccCheckProjectExists(ctx context.Context, t *testing.T, name string) r
 	}
 }
 
-func testAccCheckProjectDestroy(ctx context.Context, t *testing.T, feature string, name string) resource.TestCheckFunc {
+func testAccCheckProjectDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).RekognitionClient(ctx)
 
@@ -273,7 +271,7 @@ func testAccCheckProjectDestroy(ctx context.Context, t *testing.T, feature strin
 				continue
 			}
 
-			_, err := tfrekognition.FindProjectByName(ctx, conn, name, awstypes.CustomizationFeature(feature))
+			_, err := tfrekognition.FindProjectByName(ctx, conn, rs.Primary.ID, awstypes.CustomizationFeature(rs.Primary.Attributes["feature"]))
 			if retry.NotFound(err) {
 				continue
 			}
