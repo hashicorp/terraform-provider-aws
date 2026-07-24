@@ -674,6 +674,45 @@ func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t
 	})
 }
 
+func TestAccElastiCacheGlobalReplicationGroup_primaryReplicationGroupID_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplcationGroup awstypes.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.primary"
+	secondaryReplicationGroupResourceName := "aws_elasticache_replication_group.secondary"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_primaryReplicationGroupIDUpdateSetup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplcationGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_replication_group_id", primaryReplicationGroupResourceName, names.AttrID),
+				),
+			},
+			{
+				Config: testAccGlobalReplicationGroupConfig_primaryReplicationGroupIDUpdateFailover(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplcationGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_replication_group_id", secondaryReplicationGroupResourceName, names.AttrID),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheGlobalReplicationGroup_clusterMode_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2256,6 +2295,89 @@ resource "aws_elasticache_replication_group" "third" {
   global_replication_group_id = aws_elasticache_global_replication_group.test.global_replication_group_id
 
   subnet_group_name = aws_elasticache_subnet_group.third.name
+
+  num_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccGlobalReplicationGroupConfig_primaryReplicationGroupIDUpdateSetup(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id = "%[1]s-p"
+  description          = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
+
+  node_type = "cache.m5.large"
+
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id        = "%[1]s-s"
+  description                 = "secondary"
+  global_replication_group_id = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.secondary.name
+
+  num_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccGlobalReplicationGroupConfig_primaryReplicationGroupIDUpdateFailover(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.secondary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id = "%[1]s-p"
+  description          = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
+
+  node_type = "cache.m5.large"
+
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id = "%[1]s-s"
+  description          = "secondary"
+
+  subnet_group_name = aws_elasticache_subnet_group.secondary.name
 
   num_cache_clusters = 1
 }
