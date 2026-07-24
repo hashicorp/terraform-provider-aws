@@ -8,7 +8,6 @@ package cleanrooms
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,14 +48,35 @@ func resourceCollaboration() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
+				"allowed_result_regions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.SupportedS3Region](),
+					},
+				},
 				"analytics_engine": {
 					Type:             schema.TypeString,
 					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
+					Deprecated:       "AWS Clean Rooms now uses Spark exclusively for new collaborations. CLEAN_ROOMS_SQL is no longer accepted at create time and AWS will return a ValidationException. See https://docs.aws.amazon.com/clean-rooms/latest/userguide/doc-history.html.",
 				},
 				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"auto_approved_change_request_types": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.AutoApprovedChangeType](),
+					},
 				},
 				names.AttrCreateTime: {
 					Type:     schema.TypeString,
@@ -70,8 +91,13 @@ func resourceCollaboration() *schema.Resource {
 					Type:     schema.TypeList,
 					Required: true,
 					ForceNew: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.MemberAbility](),
+					},
 				},
+				"creator_ml_member_abilities":   mlMemberAbilitiesSchema(),
+				"creator_payment_configuration": paymentConfigurationSchema(),
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -110,10 +136,27 @@ func resourceCollaboration() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"is_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"job_log_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.CollaborationJobLogStatus](),
+				},
 				"member": {
 					Type:     schema.TypeSet,
 					Optional: true,
 					ForceNew: true,
+					Set: func(v any) int {
+						m := v.(map[string]any)
+						return create.StringHashcode(m[names.AttrAccountID].(string))
+					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrAccountID: {
@@ -126,27 +169,41 @@ func resourceCollaboration() *schema.Resource {
 								Required: true,
 								ForceNew: true,
 							},
-							names.AttrStatus: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
 							"member_abilities": {
 								Type:     schema.TypeList,
 								Required: true,
 								ForceNew: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.MemberAbility](),
+								},
+							},
+							"ml_member_abilities":   mlMemberAbilitiesSchema(),
+							"payment_configuration": paymentConfigurationSchema(),
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
+				},
+				"membership_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"membership_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
 				"query_log_status": {
-					Type:     schema.TypeString,
-					ForceNew: true,
-					Required: true,
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.CollaborationQueryLogStatus](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -155,6 +212,94 @@ func resourceCollaboration() *schema.Resource {
 					Computed: true,
 				},
 			}
+		},
+	}
+}
+
+func mlMemberAbilitiesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_ml_member_abilities": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.CustomMLMemberAbility](),
+					},
+				},
+			},
+		},
+	}
+}
+
+func paymentConfigurationSchema() *schema.Schema {
+	isResponsibleBlock := func() *schema.Schema {
+		return &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"is_responsible": {
+						Type:     schema.TypeBool,
+						Required: true,
+						ForceNew: true,
+					},
+				},
+			},
+		}
+	}
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"job_compute": isResponsibleBlock(),
+				"machine_learning": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"model_inference":           isResponsibleBlock(),
+							"model_training":            isResponsibleBlock(),
+							"synthetic_data_generation": isResponsibleBlock(),
+						},
+					},
+				},
+				// query_compute is required by the AWS API on every PaymentConfiguration.
+				// See https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_PaymentConfiguration.html.
+				"query_compute": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"is_responsible": {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -168,25 +313,35 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	creatorAbilities := d.Get("creator_member_abilities").([]any)
-
 	input := cleanrooms.CreateCollaborationInput{
 		Name:                   aws.String(d.Get(names.AttrName).(string)),
 		CreatorDisplayName:     aws.String(d.Get("creator_display_name").(string)),
-		CreatorMemberAbilities: expandMemberAbilities(creatorAbilities),
+		CreatorMemberAbilities: flex.ExpandStringyValueList[types.MemberAbility](d.Get("creator_member_abilities").([]any)),
 		Members:                *expandMembers(d.Get("member").(*schema.Set).List()),
 		Tags:                   getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("allowed_result_regions"); ok {
+		input.AllowedResultRegions = flex.ExpandStringyValueList[types.SupportedS3Region](v.([]any))
 	}
 
 	if v, ok := d.GetOk("analytics_engine"); ok {
 		input.AnalyticsEngine = types.AnalyticsEngine(v.(string))
 	}
 
-	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
-	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
+	if v, ok := d.GetOk("auto_approved_change_request_types"); ok {
+		input.AutoApprovedChangeRequestTypes = flex.ExpandStringyValueList[types.AutoApprovedChangeType](v.([]any))
 	}
-	input.QueryLogStatus = queryLogStatus
+
+	if v, ok := d.GetOk("creator_ml_member_abilities"); ok {
+		input.CreatorMLMemberAbilities = expandMLMemberAbilities(v.([]any))
+	}
+
+	if v, ok := d.GetOk("creator_payment_configuration"); ok {
+		input.CreatorPaymentConfiguration = expandPaymentConfiguration(v.([]any))
+	}
+
+	input.QueryLogStatus = types.CollaborationQueryLogStatus(d.Get("query_log_status").(string))
 
 	if v, ok := d.GetOk("data_encryption_metadata"); ok {
 		input.DataEncryptionMetadata = expandDataEncryptionMetadata(v.([]any))
@@ -194,6 +349,17 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	// is_metrics_enabled is Optional+Computed+TypeBool. Use GetRawConfig so an
+	// explicit `false` is reliably distinguished from absence; d.GetOk and
+	// d.GetOkExists are unreliable here per terraform-plugin-sdk guidance.
+	if v := d.GetRawConfig().GetAttr("is_metrics_enabled"); v.IsKnown() && !v.IsNull() {
+		input.IsMetricsEnabled = aws.Bool(v.True())
+	}
+
+	if v, ok := d.GetOk("job_log_status"); ok {
+		input.JobLogStatus = types.CollaborationJobLogStatus(v.(string))
 	}
 
 	out, err := conn.CreateCollaboration(ctx, &input)
@@ -244,10 +410,6 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChanges(names.AttrName) {
 			input.Name = aws.String(d.Get(names.AttrName).(string))
-		}
-
-		if d.HasChanges("analytics_engine") {
-			input.AnalyticsEngine = types.AnalyticsEngine(d.Get("analytics_engine").(string))
 		}
 
 		_, err := conn.UpdateCollaboration(ctx, &input)
@@ -328,30 +490,6 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 	return out, nil
 }
 
-func expandMemberAbilities(data []any) []types.MemberAbility {
-	mappedAbilities := make([]types.MemberAbility, 0)
-	for _, v := range data {
-		switch v.(string) {
-		case "CAN_QUERY":
-			mappedAbilities = append(mappedAbilities, types.MemberAbilityCanQuery)
-		case "CAN_RECEIVE_RESULTS":
-			mappedAbilities = append(mappedAbilities, types.MemberAbilityCanReceiveResults)
-		}
-	}
-	return mappedAbilities
-}
-
-func expandQueryLogStatus(status string) (types.CollaborationQueryLogStatus, error) {
-	switch status {
-	case "ENABLED":
-		return types.CollaborationQueryLogStatusEnabled, nil
-	case "DISABLED":
-		return types.CollaborationQueryLogStatusDisabled, nil
-	default:
-		return types.CollaborationQueryLogStatusDisabled, fmt.Errorf("Invalid query log status type: %s", status)
-	}
-}
-
 func expandDataEncryptionMetadata(data []any) *types.DataEncryptionMetadata {
 	dataEncryptionMetadata := types.DataEncryptionMetadata{}
 	if len(data) > 0 {
@@ -370,12 +508,75 @@ func expandMembers(data []any) *[]types.MemberSpecification {
 		memberMap := member.(map[string]any)
 		m := types.MemberSpecification{
 			AccountId:       aws.String(memberMap[names.AttrAccountID].(string)),
-			MemberAbilities: expandMemberAbilities(memberMap["member_abilities"].([]any)),
+			MemberAbilities: flex.ExpandStringyValueList[types.MemberAbility](memberMap["member_abilities"].([]any)),
 			DisplayName:     aws.String(memberMap[names.AttrDisplayName].(string)),
+		}
+		if v, ok := memberMap["ml_member_abilities"].([]any); ok && len(v) > 0 {
+			m.MlMemberAbilities = expandMLMemberAbilities(v)
+		}
+		if v, ok := memberMap["payment_configuration"].([]any); ok && len(v) > 0 {
+			m.PaymentConfiguration = expandPaymentConfiguration(v)
 		}
 		members = append(members, m)
 	}
 	return &members
+}
+
+func expandMLMemberAbilities(data []any) *types.MLMemberAbilities {
+	if len(data) == 0 {
+		return nil
+	}
+	m := data[0].(map[string]any)
+	return &types.MLMemberAbilities{
+		CustomMLMemberAbilities: flex.ExpandStringyValueList[types.CustomMLMemberAbility](m["custom_ml_member_abilities"].([]any)),
+	}
+}
+
+// expandIsResponsible reads the `is_responsible` bool from a single-element
+// list block (the shape used by every leaf payment-config block) and returns
+// nil when the block is absent.
+func expandIsResponsible(v any) *bool {
+	data, ok := v.([]any)
+	if !ok || len(data) == 0 {
+		return nil
+	}
+	return aws.Bool(data[0].(map[string]any)["is_responsible"].(bool))
+}
+
+func expandPaymentConfiguration(data []any) *types.PaymentConfiguration {
+	if len(data) == 0 {
+		return nil
+	}
+	m := data[0].(map[string]any)
+	out := &types.PaymentConfiguration{}
+	if r := expandIsResponsible(m["query_compute"]); r != nil {
+		out.QueryCompute = &types.QueryComputePaymentConfig{IsResponsible: r}
+	}
+	if r := expandIsResponsible(m["job_compute"]); r != nil {
+		out.JobCompute = &types.JobComputePaymentConfig{IsResponsible: r}
+	}
+	if v, ok := m["machine_learning"].([]any); ok && len(v) > 0 {
+		out.MachineLearning = expandMLPaymentConfig(v)
+	}
+	return out
+}
+
+func expandMLPaymentConfig(data []any) *types.MLPaymentConfig {
+	if len(data) == 0 {
+		return nil
+	}
+	m := data[0].(map[string]any)
+	out := &types.MLPaymentConfig{}
+	if r := expandIsResponsible(m["model_inference"]); r != nil {
+		out.ModelInference = &types.ModelInferencePaymentConfig{IsResponsible: r}
+	}
+	if r := expandIsResponsible(m["model_training"]); r != nil {
+		out.ModelTraining = &types.ModelTrainingPaymentConfig{IsResponsible: r}
+	}
+	if r := expandIsResponsible(m["synthetic_data_generation"]); r != nil {
+		out.SyntheticDataGeneration = &types.SyntheticDataGenerationPaymentConfig{IsResponsible: r}
+	}
+	return out
 }
 
 func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionMetadata) []any {
@@ -393,34 +594,85 @@ func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionM
 func flattenMembers(members []types.MemberSummary, ownerAccount *string) []any {
 	flattenedMembers := make([]any, 0)
 	for _, member := range members {
-		if aws.ToString(member.AccountId) != aws.ToString(ownerAccount) {
-			memberMap := map[string]any{}
-			memberMap[names.AttrStatus] = member.Status
-			memberMap[names.AttrAccountID] = member.AccountId
-			memberMap[names.AttrDisplayName] = member.DisplayName
-			memberMap["member_abilities"] = flattenMemberAbilities(member.Abilities)
-			flattenedMembers = append(flattenedMembers, memberMap)
+		if aws.ToString(member.AccountId) == aws.ToString(ownerAccount) {
+			continue
 		}
+		flattenedMembers = append(flattenedMembers, map[string]any{
+			names.AttrStatus:        member.Status,
+			names.AttrAccountID:     member.AccountId,
+			names.AttrDisplayName:   member.DisplayName,
+			"member_abilities":      flex.FlattenStringyValueList(member.Abilities),
+			"ml_member_abilities":   flattenMLMemberAbilities(member.MlAbilities),
+			"payment_configuration": flattenPaymentConfiguration(member.PaymentConfiguration),
+		})
 	}
 	return flattenedMembers
 }
 
-func flattenCreatorAbilities(members []types.MemberSummary, ownerAccount *string) []string {
-	flattenedAbilities := make([]string, 0)
-	for _, member := range members {
+// findCreatorMember returns the MemberSummary entry matching the creator
+// account, or nil if it is not present in the list.
+func findCreatorMember(members []types.MemberSummary, ownerAccount *string) *types.MemberSummary {
+	for i, member := range members {
 		if aws.ToString(member.AccountId) == aws.ToString(ownerAccount) {
-			return flattenMemberAbilities(member.Abilities)
+			return &members[i]
 		}
 	}
-	return flattenedAbilities
+	return nil
 }
 
-func flattenMemberAbilities(abilities []types.MemberAbility) []string {
-	flattenedAbilities := make([]string, 0)
-	for _, ability := range abilities {
-		flattenedAbilities = append(flattenedAbilities, string(ability))
+func flattenMLMemberAbilities(in *types.MLMemberAbilities) []any {
+	if in == nil {
+		return nil
 	}
-	return flattenedAbilities
+	return []any{map[string]any{
+		"custom_ml_member_abilities": flex.FlattenStringyValueList(in.CustomMLMemberAbilities),
+	}}
+}
+
+// flattenIsResponsible builds the single-element list block that wraps
+// `is_responsible` for every leaf payment-config block. Returns nil when the
+// input pointer is nil so the wrapping caller can skip the key.
+func flattenIsResponsible(b *bool) []any {
+	if b == nil {
+		return nil
+	}
+	return []any{map[string]any{
+		"is_responsible": aws.ToBool(b),
+	}}
+}
+
+func flattenPaymentConfiguration(in *types.PaymentConfiguration) []any {
+	if in == nil {
+		return nil
+	}
+	m := map[string]any{}
+	if in.QueryCompute != nil {
+		m["query_compute"] = flattenIsResponsible(in.QueryCompute.IsResponsible)
+	}
+	if in.JobCompute != nil {
+		m["job_compute"] = flattenIsResponsible(in.JobCompute.IsResponsible)
+	}
+	if in.MachineLearning != nil {
+		m["machine_learning"] = flattenMLPaymentConfig(in.MachineLearning)
+	}
+	return []any{m}
+}
+
+func flattenMLPaymentConfig(in *types.MLPaymentConfig) []any {
+	if in == nil {
+		return nil
+	}
+	m := map[string]any{}
+	if in.ModelInference != nil {
+		m["model_inference"] = flattenIsResponsible(in.ModelInference.IsResponsible)
+	}
+	if in.ModelTraining != nil {
+		m["model_training"] = flattenIsResponsible(in.ModelTraining.IsResponsible)
+	}
+	if in.SyntheticDataGeneration != nil {
+		m["synthetic_data_generation"] = flattenIsResponsible(in.SyntheticDataGeneration.IsResponsible)
+	}
+	return []any{m}
 }
 
 func resourceCollaborationFlatten(ctx context.Context, conn *cleanrooms.Client, d *schema.ResourceData, out *cleanrooms.GetCollaborationOutput) diag.Diagnostics {
@@ -430,9 +682,15 @@ func resourceCollaborationFlatten(ctx context.Context, conn *cleanrooms.Client, 
 	d.Set(names.AttrARN, collaboration.Arn)
 	d.Set(names.AttrName, collaboration.Name)
 	d.Set(names.AttrDescription, collaboration.Description)
+	d.Set("allowed_result_regions", flex.FlattenStringyValueList(collaboration.AllowedResultRegions))
 	d.Set("analytics_engine", collaboration.AnalyticsEngine)
+	d.Set("auto_approved_change_request_types", flex.FlattenStringyValueList(collaboration.AutoApprovedChangeTypes))
 	d.Set("creator_display_name", collaboration.CreatorDisplayName)
 	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
+	d.Set("is_metrics_enabled", aws.ToBool(collaboration.IsMetricsEnabled))
+	d.Set("job_log_status", collaboration.JobLogStatus)
+	d.Set("membership_arn", collaboration.MembershipArn)
+	d.Set("membership_id", collaboration.MembershipId)
 	d.Set("update_time", collaboration.UpdateTime.String())
 	d.Set("query_log_status", collaboration.QueryLogStatus)
 	d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata))
@@ -443,7 +701,12 @@ func resourceCollaborationFlatten(ctx context.Context, conn *cleanrooms.Client, 
 	}
 
 	d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId))
-	d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId))
+
+	if creator := findCreatorMember(membersOut.MemberSummaries, collaboration.CreatorAccountId); creator != nil {
+		d.Set("creator_member_abilities", flex.FlattenStringyValueList(creator.Abilities))
+		d.Set("creator_ml_member_abilities", flattenMLMemberAbilities(creator.MlAbilities))
+		d.Set("creator_payment_configuration", flattenPaymentConfiguration(creator.PaymentConfiguration))
+	}
 
 	return diags
 }

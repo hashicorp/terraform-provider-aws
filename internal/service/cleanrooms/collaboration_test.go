@@ -610,3 +610,153 @@ resource "aws_cleanrooms_collaboration" "test" {
 }
 `, rName, engine)
 }
+
+func TestAccCleanRoomsCollaboration_topLevelAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var collaboration cleanrooms.GetCollaborationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cleanrooms_collaboration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollaborationConfig_topLevelAttributes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
+					resource.TestCheckResourceAttr(resourceName, "allowed_result_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_result_regions.0", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_result_regions.1", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_approved_change_request_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_approved_change_request_types.0", "ADD_MEMBER"),
+					resource.TestCheckResourceAttr(resourceName, "is_metrics_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "job_log_status", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCleanRoomsCollaboration_paymentAndMLConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var collaboration cleanrooms.GetCollaborationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cleanrooms_collaboration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollaborationConfig_paymentAndMLConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
+					resource.TestCheckResourceAttr(resourceName, "creator_ml_member_abilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "creator_ml_member_abilities.0.custom_ml_member_abilities.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "creator_payment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "creator_payment_configuration.0.query_compute.0.is_responsible", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "creator_payment_configuration.0.job_compute.0.is_responsible", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "creator_payment_configuration.0.machine_learning.0.model_inference.0.is_responsible", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "creator_payment_configuration.0.machine_learning.0.model_training.0.is_responsible", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "creator_payment_configuration.0.machine_learning.0.synthetic_data_generation.0.is_responsible", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "member.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "member.0.ml_member_abilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "member.0.ml_member_abilities.0.custom_ml_member_abilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "member.0.payment_configuration.0.query_compute.0.is_responsible", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCollaborationConfig_topLevelAttributes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cleanrooms_collaboration" "test" {
+  name                               = %[1]q
+  creator_display_name               = "creator"
+  creator_member_abilities           = ["CAN_QUERY", "CAN_RECEIVE_RESULTS", "CAN_RUN_JOB"]
+  description                        = "top-level attributes"
+  query_log_status                   = "DISABLED"
+  allowed_result_regions             = ["us-east-1", "us-west-2"]
+  auto_approved_change_request_types = ["ADD_MEMBER"]
+  is_metrics_enabled                 = true
+  job_log_status                     = "DISABLED"
+
+  member {
+    account_id       = 123456789012
+    display_name     = "OtherMember"
+    member_abilities = ["CAN_RECEIVE_RESULTS"]
+  }
+}
+`, rName)
+}
+
+func testAccCollaborationConfig_paymentAndMLConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cleanrooms_collaboration" "test" {
+  name                     = %[1]q
+  creator_display_name     = "creator"
+  creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS", "CAN_RUN_JOB"]
+  description              = "payment and ML config"
+  query_log_status         = "DISABLED"
+  job_log_status           = "DISABLED"
+
+  creator_ml_member_abilities {
+    custom_ml_member_abilities = ["CAN_RECEIVE_MODEL_OUTPUT", "CAN_RECEIVE_INFERENCE_OUTPUT"]
+  }
+
+  creator_payment_configuration {
+    query_compute {
+      is_responsible = true
+    }
+    job_compute {
+      is_responsible = true
+    }
+    machine_learning {
+      model_inference {
+        is_responsible = true
+      }
+      model_training {
+        is_responsible = true
+      }
+      synthetic_data_generation {
+        is_responsible = true
+      }
+    }
+  }
+
+  member {
+    account_id       = 123456789012
+    display_name     = "OtherMember"
+    member_abilities = []
+
+    ml_member_abilities {
+      custom_ml_member_abilities = ["CAN_RECEIVE_MODEL_OUTPUT"]
+    }
+
+    payment_configuration {
+      query_compute {
+        is_responsible = false
+      }
+    }
+  }
+}
+`, rName)
+}
