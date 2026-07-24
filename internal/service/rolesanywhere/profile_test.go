@@ -48,6 +48,56 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereProfile_attributeMappings(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_attributeMappings1(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mappings.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute_mappings.*", map[string]string{
+						"certificate_field": "x509Subject",
+						"mapping_rules.#":   "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_attributeMappings2(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mappings.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute_mappings.*", map[string]string{
+						"certificate_field": "x509Issuer",
+						"mapping_rules.#":   "1",
+					}),
+				),
+			},
+			{
+				Config: testAccProfileConfig_attributeMappings1(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mappings.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRolesAnywhereProfile_noRoleARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -383,4 +433,50 @@ resource "aws_rolesanywhere_profile" "test" {
   accept_role_session_name = %[2]t
 }
 `, rName, acceptRoleSessionName))
+}
+
+func testAccProfileConfig_attributeMappings1(rName, roleName string) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name      = %[1]q
+  role_arns = [aws_iam_role.test.arn]
+
+  attribute_mappings {
+    certificate_field = "x509Subject"
+
+    mapping_rules {
+      specifier = "CN"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccProfileConfig_attributeMappings2(rName, roleName string) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name      = %[1]q
+  role_arns = [aws_iam_role.test.arn]
+
+  attribute_mappings {
+    certificate_field = "x509Subject"
+
+    mapping_rules {
+      specifier = "CN"
+    }
+  }
+
+  attribute_mappings {
+    certificate_field = "x509Issuer"
+
+    mapping_rules {
+      specifier = "CN"
+    }
+  }
+}
+`, rName))
 }
