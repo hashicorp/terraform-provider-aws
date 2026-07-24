@@ -823,37 +823,6 @@ func TestAccSSMParameter_Overwrite_removeAttribute(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_updateType(t *testing.T) {
-	ctx := acctest.Context(t)
-	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
-	resourceName := "aws_ssm_parameter.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccParameterConfig_basic(name, "SecureString", "test2"),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterExists(ctx, t, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
@@ -880,6 +849,37 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_updateType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "SecureString", "test2"),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 		},
