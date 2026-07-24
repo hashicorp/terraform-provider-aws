@@ -29,7 +29,336 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestMemoryStrategyResourceModelExpand(t *testing.T) {
+func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	testCases := []struct {
+		name     string
+		model    tfbedrockagentcore.MemoryStrategyResourceModel
+		expected awstypes.MemoryStrategyInput
+	}{
+		{
+			name: "basic summarization",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("summarization_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSummarization),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{
+				Value: awstypes.SummaryMemoryStrategyInput{
+					Name:               aws.String("summarization_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				},
+			},
+		},
+		{
+			name: "basic summarization with description",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:             types.StringValue("description_001"),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("summarization_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSummarization),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{
+				Value: awstypes.SummaryMemoryStrategyInput{
+					Description:        aws.String("description_001"),
+					Name:               aws.String("summarization_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				},
+			},
+		},
+		{
+			name: "basic semantic",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("semantic_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSemantic),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{
+				Value: awstypes.SemanticMemoryStrategyInput{
+					Name:               aws.String("semantic_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				},
+			},
+		},
+		{
+			name: "basic user preference",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("user_preference_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeUserPreference),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy{
+				Value: awstypes.UserPreferenceMemoryStrategyInput{
+					Name:               aws.String("user_preference_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				},
+			},
+		},
+		{
+			name: "basic episodic",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				Name:                   types.StringValue("episodic_builtin_001"),
+				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.EpisodicReflectionConfigurationModel{
+					NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				}),
+				Type: fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeEpisodic),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy{
+				Value: awstypes.EpisodicMemoryStrategyInput{
+					Name:               aws.String("episodic_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+					ReflectionConfiguration: &awstypes.EpisodicReflectionConfigurationInput{
+						NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}, // TODO
+					},
+				},
+			},
+		},
+		{
+			name: "summarization override",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("summarization_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberSummaryOverride{
+						Value: awstypes.SummaryOverrideConfigurationInput{
+							Consolidation: &awstypes.SummaryOverrideConsolidationConfigurationInput{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+						},
+					},
+					Name:               aws.String("summarization_override_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				},
+			},
+		},
+		{
+			name: "semantic override",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberSemanticOverride{
+						Value: awstypes.SemanticOverrideConfigurationInput{
+							Consolidation: &awstypes.SemanticOverrideConsolidationConfigurationInput{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+							Extraction: &awstypes.SemanticOverrideExtractionConfigurationInput{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Name:               aws.String("semantic_override_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				},
+			},
+		},
+		{
+			name: "user preference override",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("user_preference_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberUserPreferenceOverride{
+						Value: awstypes.UserPreferenceOverrideConfigurationInput{
+							Consolidation: &awstypes.UserPreferenceOverrideConsolidationConfigurationInput{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+							Extraction: &awstypes.UserPreferenceOverrideExtractionConfigurationInput{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Name:               aws.String("user_preference_override_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				},
+			},
+		},
+		{
+			name: "episodic override",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+				}),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				Name:                   types.StringValue("episodic_override_001"),
+				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.EpisodicReflectionConfigurationModel{
+					NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				}),
+				Type: fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberEpisodicOverride{
+						Value: awstypes.EpisodicOverrideConfigurationInput{
+							Consolidation: &awstypes.EpisodicOverrideConsolidationConfigurationInput{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+							Extraction: &awstypes.EpisodicOverrideExtractionConfigurationInput{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Name:               aws.String("episodic_override_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				},
+			},
+		},
+	}
+
+	opts := cmp.Options{
+		cmpopts.IgnoreUnexported(
+			awstypes.CustomConfigurationInputMemberEpisodicOverride{},
+			awstypes.CustomConfigurationInputMemberSemanticOverride{},
+			awstypes.CustomConfigurationInputMemberSummaryOverride{},
+			awstypes.CustomConfigurationInputMemberUserPreferenceOverride{},
+			awstypes.CustomMemoryStrategyInput{},
+			awstypes.EpisodicMemoryStrategyInput{},
+			awstypes.EpisodicOverrideConfigurationInput{},
+			awstypes.EpisodicOverrideConsolidationConfigurationInput{},
+			awstypes.EpisodicOverrideExtractionConfigurationInput{},
+			awstypes.EpisodicReflectionConfigurationInput{},
+			awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{},
+			awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy{},
+			awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{},
+			awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{},
+			awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy{},
+			awstypes.SemanticMemoryStrategyInput{},
+			awstypes.SummaryMemoryStrategyInput{},
+			awstypes.SemanticOverrideConfigurationInput{},
+			awstypes.SemanticOverrideConsolidationConfigurationInput{},
+			awstypes.SemanticOverrideExtractionConfigurationInput{},
+			awstypes.SummaryOverrideConfigurationInput{},
+			awstypes.SummaryOverrideConsolidationConfigurationInput{},
+			awstypes.UserPreferenceMemoryStrategyInput{},
+			awstypes.UserPreferenceOverrideConfigurationInput{},
+			awstypes.UserPreferenceOverrideConsolidationConfigurationInput{},
+			awstypes.UserPreferenceOverrideExtractionConfigurationInput{},
+		),
+		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var out awstypes.MemoryStrategyInput
+			if diags := fwflex.Expand(ctx, tc.model, &out); diags.HasError() {
+				t.Fatalf("Expand: %v", diags)
+			}
+
+			if diff := cmp.Diff(tc.expected, out, opts...); diff != "" {
+				t.Errorf("model -> ModifyMemoryStrategyInput mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
