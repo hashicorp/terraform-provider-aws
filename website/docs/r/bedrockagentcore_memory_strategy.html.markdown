@@ -210,7 +210,7 @@ The `extraction` block supports the following:
 
 The `reflection_configuration` block supports the following:
 
-* `namespace_templates` - (Optional) Namespace templates over which to create reflections. Can be less nested than episode namespaces.
+* `namespace_templates` - (Required) Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 
 ## Attribute Reference
 

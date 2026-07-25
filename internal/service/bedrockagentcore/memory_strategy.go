@@ -198,12 +198,14 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					// TODO RequiresReplace if removed.
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"namespace_templates": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
-							Optional:   true,
-							Computed:   true,
+							Required:   true,
 						},
 					},
 				},
@@ -280,7 +282,8 @@ func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req plan
 func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan memoryStrategyResourceModel
+	var config, plan memoryStrategyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	if response.Diagnostics.HasError() {
 		return
@@ -325,6 +328,11 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		if response.Diagnostics.HasError() {
 			return
+		}
+
+		// If no `reflection_configuration` is configured, don't overwrite with returned value.
+		if config.ReflectionConfiguration.IsNull() {
+			plan.ReflectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[episodicReflectionConfigurationModel](ctx)
 		}
 
 		memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
@@ -373,9 +381,16 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
+	nullReflectionConfiguration := state.ReflectionConfiguration.IsNull()
+
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// If no `reflection_configuration` was configured, don't overwrite with returned value.
+	if nullReflectionConfiguration {
+		state.ReflectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[episodicReflectionConfigurationModel](ctx)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
@@ -384,7 +399,8 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan, state memoryStrategyResourceModel
+	var config, plan, state memoryStrategyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
@@ -434,6 +450,14 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			}
 
 			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			// If no `reflection_configuration` is configured, don't overwrite with returned value.
+			if config.ReflectionConfiguration.IsNull() {
+				plan.ReflectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[episodicReflectionConfigurationModel](ctx)
+			}
 
 			if _, err := waitMemoryUpdated(ctx, conn, memoryID, updateTimeout); err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
@@ -479,6 +503,11 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 		}
 
 		if _, err := waitMemoryStrategyDeleted(ctx, conn, memoryID, memoryStrategyID, deleteTimeout); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
+			return
+		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, deleteTimeout); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
@@ -640,6 +669,17 @@ func (m *memoryStrategyResourceModel) Flatten(ctx context.Context, v any) diag.D
 		// (e.g. "EPISODIC") that are not valid OverrideType enum values.
 		switch t.Type {
 		case awstypes.MemoryStrategyTypeCustom:
+		case awstypes.MemoryStrategyTypeEpisodic:
+			if t.Configuration != nil {
+				switch t := t.Configuration.Reflection.(type) {
+				case *awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration:
+					m.ReflectionConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, &episodicReflectionConfigurationModel{
+						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.Value.NamespaceTemplates),
+					})
+				}
+
+				t.Configuration = nil
+			}
 		default:
 			t.Configuration = nil
 		}
@@ -665,10 +705,10 @@ func (m *memoryStrategyResourceModel) Flatten(ctx context.Context, v any) diag.D
 func (m memoryStrategyResourceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch targetType {
-	case reflect.TypeFor[awstypes.MemoryStrategyInput]():
+	case reflect.TypeFor[awstypes.MemoryStrategyInput](): // Create
 		return m.expandToMemoryStrategyInput(ctx)
 
-	case reflect.TypeFor[awstypes.ModifyMemoryStrategyInput]():
+	case reflect.TypeFor[awstypes.ModifyMemoryStrategyInput](): // Update
 		return m.expandToModifyMemoryStrategyInput(ctx)
 
 	default:
@@ -725,11 +765,15 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
-		// The API requires the reflection namespace to be the same as or a prefix
-		// of the episodic namespace. Set it to match the episodic namespaces.
-		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
-			NamespaceTemplates: r.Value.NamespaceTemplates,
+
+		if r.Value.ReflectionConfiguration == nil {
+			// The API requires the reflection namespace to be the same as or a prefix
+			// of the episodic namespace. Set it to match the episodic namespaces.
+			r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
+				NamespaceTemplates: r.Value.NamespaceTemplates,
+			}
 		}
+
 		return &r, diags
 
 	default:
@@ -756,7 +800,25 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 	// For non-CUSTOM types, Configuration should not be sent.
 	// Auto-flex may produce an empty ModifyStrategyConfiguration from the
 	// null model Configuration field, which the API rejects.
-	if m.Configuration.IsNull() || m.Configuration.IsUnknown() {
+	switch m.Type.ValueEnum() {
+	case awstypes.MemoryStrategyTypeCustom:
+	case awstypes.MemoryStrategyTypeEpisodic:
+		if !m.ReflectionConfiguration.IsNull() {
+			var rReflectionConfiguration awstypes.EpisodicReflectionConfigurationInput
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.ReflectionConfiguration, &rReflectionConfiguration))
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			r.Configuration = &awstypes.ModifyStrategyConfiguration{
+				Reflection: &awstypes.ModifyReflectionConfigurationMemberEpisodicReflectionConfiguration{
+					Value: rReflectionConfiguration,
+				},
+			}
+		} else {
+			r.Configuration = nil
+		}
+	default:
 		r.Configuration = nil
 	}
 
