@@ -188,7 +188,7 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceAccessPolicyAssociationFlatten(ctx context.Context, clusterName, principalARN string, item *types.AssociatedAccessPolicy, d *schema.ResourceData) error {
+func resourceAccessPolicyAssociationFlatten(_ context.Context, clusterName, principalARN string, item *types.AssociatedAccessPolicy, d *schema.ResourceData) error {
 	if err := d.Set("access_scope", flattenAccessScope(item.AccessScope)); err != nil {
 		return fmt.Errorf("setting access_scope: %w", err)
 	}
