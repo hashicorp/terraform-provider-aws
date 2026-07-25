@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -50,10 +49,10 @@ func TestAccEKSAccessPolicyAssociation_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("eks", "accesspolicyassociation:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("eks", "accesspolicyassociation:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
 				},
 			},
 
@@ -67,11 +66,11 @@ func TestAccEKSAccessPolicyAssociation_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_eks_access_policy_association.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_eks_access_policy_association.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					querycheck.ExpectResourceDisplayName("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -103,13 +102,10 @@ func TestAccEKSAccessPolicyAssociation_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("eks", "accesspolicyassociation:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
 				},
 			},
 
@@ -120,25 +116,18 @@ func TestAccEKSAccessPolicyAssociation_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_eks_access_policy_association.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					querycheck.ExpectResourceKnownValues("aws_eks_access_policy_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						// TIP: Add checks for _all_ resource attributes, including "region".
-						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("eks", "accesspolicyassociation:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("associated_at"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("modified_at"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy_arn"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("principal_arn"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						})),
 					}),
 				},
 			},
@@ -177,10 +166,10 @@ func TestAccEKSAccessPolicyAssociation_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("eks", "accesspolicyassociation:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("eks", "accesspolicyassociation:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
 				},
 			},
 

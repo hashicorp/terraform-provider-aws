@@ -6,7 +6,7 @@ resource "aws_eks_access_policy_association" "test" {
 
   cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_eks_access_entry.test.principal_arn
-  policy_arn    = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+  policy_arn    = one([for ap in data.aws_eks_access_policies.test.access_policies : ap.arn if ap.name == local.access_pollicy_names[count.index]])
 
   access_scope {
     type = "cluster"
@@ -115,6 +115,17 @@ data "aws_availability_zones" "available" {
   }
 }
 
+data "aws_eks_access_policies" "test" {}
+
+locals {
+  access_pollicy_names = [
+    "AmazonEKSAdminPolicy",
+    "AmazonEKSClusterAdminPolicy",
+    "AmazonEKSEditPolicy",
+    "AmazonEKSViewPolicy",
+  ]
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string
@@ -125,4 +136,9 @@ variable "resource_count" {
   description = "Number of resources to create"
   type        = number
   nullable    = false
+
+  validation {
+    condition     = var.resource_count >= 0 && var.resource_count <= 4
+    error_message = "resource_count must be between 0 and 4."
+  }
 }
