@@ -3774,8 +3774,10 @@ func testAccFunctionConfig_s3ObjectStorageModeConflictsImageURI(rName string) st
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_lambda_function" "test" {
-  image_uri              = "123456789012.dkr.ecr.us-east-1.amazonaws.com/test:latest"
+  image_uri              = "123456789012.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/test:latest"
   package_type           = "Image"
   s3_bucket              = %[1]q
   s3_key                 = "test.zip"
