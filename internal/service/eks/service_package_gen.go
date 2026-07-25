@@ -262,6 +262,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newAccessPolicyAssociationResourceAsListResource,
+			TypeName: "aws_eks_access_policy_association",
+			Name:     "Access Policy Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterName, true),
+				inttypes.StringIdentityAttribute("principal_arn", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+		},
+		{
 			Factory:  newAddonResourceAsListResource,
 			TypeName: "aws_eks_addon",
 			Name:     "Add-On",
