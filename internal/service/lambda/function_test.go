@@ -2059,6 +2059,207 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_s3ObjectStorageMode_reference(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	key := "lambdatest.zip"
+	path := "test-fixtures/lambdatest.zip"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_s3ObjectStorageModeReference(rName, key, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionResolvedS3ObjectSet(&conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", "REFERENCE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish", names.AttrS3Bucket, "s3_key", "s3_object_version", "s3_object_storage_mode"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_s3ObjectStorageMode_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	key := "lambdatest.zip"
+	path := "test-fixtures/lambdatest.zip"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with attribute unset (COPY).
+				Config: testAccFunctionConfig_s3ObjectStorageMode(rName, key, path, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_object_storage_mode"),
+				),
+			},
+			{
+				// Step 2: set REFERENCE, same code -> in-place update.
+				Config: testAccFunctionConfig_s3ObjectStorageMode(rName, key, path, "REFERENCE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionResolvedS3ObjectSet(&conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", "REFERENCE"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Step 3: set COPY explicitly -> in-place update.
+				Config: testAccFunctionConfig_s3ObjectStorageMode(rName, key, path, "COPY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", "COPY"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Step 4: remove attribute -> update back to default; subsequent plan is empty.
+				Config: testAccFunctionConfig_s3ObjectStorageMode(rName, key, path, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_s3ObjectStorageMode_codeUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	key := "lambdatest.zip"
+	path := "test-fixtures/lambdatest.zip"
+	pathModified := "test-fixtures/lambdatest_modified.zip"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create a REFERENCE function.
+				Config: testAccFunctionConfig_s3ObjectStorageMode(rName, key, path, "REFERENCE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionResolvedS3ObjectSet(&conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", "REFERENCE"),
+				),
+			},
+			{
+				// Update ONLY the code object (new s3_object_version); mode must stay REFERENCE.
+				Config: testAccFunctionConfig_s3ObjectStorageMode(rName, key, pathModified, "REFERENCE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionResolvedS3ObjectSet(&conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", "REFERENCE"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_s3ObjectStorageMode_versioningPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	key := "lambdatest.zip"
+	path := "test-fixtures/lambdatest.zip"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Versioning propagation can take up to 15 minutes; creation must succeed via the retry path.
+				Config: testAccFunctionConfig_s3ObjectStorageModeReference(rName, key, path),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionResolvedS3ObjectSet(&conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_object_storage_mode", "REFERENCE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_s3ObjectStorageMode_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFunctionConfig_s3ObjectStorageModeConflictsFilename(rName),
+				ExpectError: regexache.MustCompile(`"s3_object_storage_mode": conflicts with filename`),
+			},
+			{
+				Config:      testAccFunctionConfig_s3ObjectStorageModeConflictsImageURI(rName),
+				ExpectError: regexache.MustCompile(`"s3_object_storage_mode": conflicts with image_uri`),
+			},
+			{
+				Config:      testAccFunctionConfig_s3ObjectStorageModeMissingS3Bucket(rName),
+				ExpectError: regexache.MustCompile(`"s3_object_storage_mode": all of ` + "`s3_bucket,s3_object_storage_mode`"),
+			},
+			{
+				Config:      testAccFunctionConfig_s3ObjectStorageModeInvalid(rName),
+				ExpectError: regexache.MustCompile(`expected s3_object_storage_mode to be one of`),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_LocalUpdate_sourceCodeHash(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3069,6 +3270,16 @@ func testAccCheckFunctionExists(ctx context.Context, t *testing.T, n string, v *
 	}
 }
 
+func testAccCheckFunctionResolvedS3ObjectSet(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if function.Code == nil || function.Code.ResolvedS3Object == nil {
+			return fmt.Errorf("expected Code.ResolvedS3Object to be set for REFERENCE storage mode")
+		}
+
+		return nil
+	}
+}
+
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
 	conn := acctest.ProviderMeta(ctx, t).SignerClient(ctx)
 
@@ -3538,6 +3749,69 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs24.x"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_s3ObjectStorageModeConflictsFilename(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename               = "test-fixtures/lambdatest.zip"
+  s3_bucket              = %[1]q
+  s3_key                 = "test.zip"
+  s3_object_storage_mode = "REFERENCE"
+  function_name          = %[1]q
+  role                   = aws_iam_role.iam_for_lambda.arn
+  handler                = "exports.example"
+  runtime                = "nodejs24.x"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_s3ObjectStorageModeConflictsImageURI(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri              = "123456789012.dkr.ecr.us-east-1.amazonaws.com/test:latest"
+  package_type           = "Image"
+  s3_bucket              = %[1]q
+  s3_key                 = "test.zip"
+  s3_object_storage_mode = "REFERENCE"
+  function_name          = %[1]q
+  role                   = aws_iam_role.iam_for_lambda.arn
+}
+`, rName))
+}
+
+func testAccFunctionConfig_s3ObjectStorageModeMissingS3Bucket(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  s3_object_storage_mode = "REFERENCE"
+  function_name          = %[1]q
+  role                   = aws_iam_role.iam_for_lambda.arn
+  handler                = "exports.example"
+  runtime                = "nodejs24.x"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_s3ObjectStorageModeInvalid(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  s3_bucket              = %[1]q
+  s3_key                 = "test.zip"
+  s3_object_storage_mode = "INVALID"
+  function_name          = %[1]q
+  role                   = aws_iam_role.iam_for_lambda.arn
+  handler                = "exports.example"
+  runtime                = "nodejs24.x"
 }
 `, rName))
 }
@@ -4975,6 +5249,164 @@ resource "aws_lambda_function" "test" {
   runtime           = "nodejs24.x"
 }
 `, key, path, rName))
+}
+
+func testAccFunctionConfig_s3ObjectStorageModeReference(rName, key, path string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "artifacts" {
+  bucket        = %[3]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "o" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+
+  bucket = aws_s3_bucket.artifacts.bucket
+  key    = %[1]q
+  source = %[2]q
+  etag   = filemd5(%[2]q)
+}
+
+resource "aws_s3_bucket_policy" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+        Resource = "${aws_s3_bucket.artifacts.arn}/${aws_s3_object.o.key}"
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:%[3]s"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.artifacts,
+    aws_s3_bucket_policy.artifacts,
+  ]
+
+  s3_bucket               = aws_s3_object.o.bucket
+  s3_key                  = aws_s3_object.o.key
+  s3_object_version       = aws_s3_object.o.version_id
+  s3_object_storage_mode  = "REFERENCE"
+  function_name           = %[3]q
+  role                    = aws_iam_role.iam_for_lambda.arn
+  handler                 = "exports.example"
+  runtime                 = "nodejs24.x"
+
+  timeouts {
+    create = "20m"
+  }
+}
+`, key, path, rName))
+}
+
+func testAccFunctionConfig_s3ObjectStorageMode(rName, key, path, mode string) string {
+	modeConfig := ""
+	if mode != "" {
+		modeConfig = fmt.Sprintf("s3_object_storage_mode = %q", mode)
+	}
+
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "artifacts" {
+  bucket        = %[3]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "o" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+
+  bucket = aws_s3_bucket.artifacts.bucket
+  key    = %[1]q
+  source = %[2]q
+  etag   = filemd5(%[2]q)
+}
+
+resource "aws_s3_bucket_policy" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+        Resource = "${aws_s3_bucket.artifacts.arn}/${aws_s3_object.o.key}"
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:%[3]s"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.artifacts,
+    aws_s3_bucket_policy.artifacts,
+  ]
+
+  s3_bucket         = aws_s3_object.o.bucket
+  s3_key            = aws_s3_object.o.key
+  s3_object_version = aws_s3_object.o.version_id
+  %[4]s
+  function_name = %[3]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs24.x"
+
+  timeouts {
+    create = "20m"
+    update = "20m"
+  }
+}
+`, key, path, rName, modeConfig))
 }
 
 func testAccFunctionConfig_s3UnversionedTPL(rName, key, path string) string {
