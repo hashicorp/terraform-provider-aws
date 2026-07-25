@@ -231,7 +231,6 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 		MaxResults: aws.Int32(100),
 	}
 
-	var endpoint *awstypes.PipelineEndpoint
 	pages := osis.NewListPipelineEndpointsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -241,17 +240,12 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 
 		for _, e := range page.PipelineEndpoints {
 			if aws.ToString(e.EndpointId) == endpointID {
-				endpoint = &e
-				return endpoint, nil
+				return &e, nil
 			}
 		}
 	}
 
-	if endpoint == nil {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return endpoint, nil
+	return nil, &retry.NotFoundError{}
 }
 
 func statusPipelineEndpoint(conn *osis.Client, endpointID string) retry.StateRefreshFunc {
