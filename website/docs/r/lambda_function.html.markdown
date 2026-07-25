@@ -643,6 +643,88 @@ resource "aws_lambda_capacity_provider" "example" {
 ```
 
 See [the `aws_lambda_capacity_provider` resource](lambda_capacity_provider.html) for more details, such as configuring instance requirements and the scaling policy.
+
+### Self-managed S3 code storage
+
+With `s3_object_storage_mode = "REFERENCE"`, Lambda references the deployment package directly from your S3 bucket instead of copying it into Lambda-managed storage. This requires S3 versioning enabled on the bucket and a bucket policy granting `lambda.amazonaws.com` access to the object.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example-lambda-code"
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "example" {
+  # Versioning must be enabled before uploading the object.
+  depends_on = [aws_s3_bucket_versioning.example]
+
+  bucket = aws_s3_bucket.example.id
+  key    = "function.zip"
+  source = "function.zip"
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+        Resource = "${aws_s3_bucket.example.arn}/${aws_s3_object.example.key}"
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:example"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "example" {
+  # Ensure versioning has propagated and the bucket policy exists first.
+  depends_on = [
+    aws_s3_bucket_versioning.example,
+    aws_s3_bucket_policy.example,
+  ]
+
+  function_name          = "example"
+  role                   = aws_iam_role.example.arn
+  handler                = "index.handler"
+  runtime                = "nodejs24.x"
+  s3_bucket              = aws_s3_object.example.bucket
+  s3_key                 = aws_s3_object.example.key
+  s3_object_version      = aws_s3_object.example.version_id
+  s3_object_storage_mode = "REFERENCE"
+}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+```
+
+~> **Note:** S3 versioning must be enabled on the bucket, and enabling it can take up to 15 minutes to become effective. When enabling versioning and creating a `REFERENCE` function in the same apply, the provider automatically retries while propagation completes. Setting `timeouts` (and `use_resource_timeout_for_propagation = true`) extends the retry window if needed. Additional considerations:
+
+* Removing the `s3_object_storage_mode` argument reverts the function to `COPY` on the next code update.
+* Deleting or losing access to the source S3 object makes the function `Inactive`.
+* Switching from `REFERENCE` to `COPY` may fail if the account exceeds its Lambda-managed storage quota.
+* `REFERENCE` mode is not supported for container images (`image_uri`).
+* The value is not returned by the AWS API, so `terraform import` does not populate `s3_object_storage_mode`.
+
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
 
 Once you have created your deployment package you can specify it either directly as a local file (using the `filename` argument) or indirectly via Amazon S3 (using the `s3_bucket`, `s3_key` and `s3_object_version` arguments). When providing the deployment package via S3 it may be useful to use [the `aws_s3_object` resource](s3_object.html) to upload it.
@@ -687,6 +769,7 @@ The following arguments are optional:
 * `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename` and `image_uri`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Required if `s3_bucket` is set.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
+* `s3_object_storage_mode` - (Optional) How Lambda stores the deployment package. Valid values: `COPY` (default) — Lambda stores a copy of the package in Lambda-managed storage; `REFERENCE` — Lambda references the package directly from your S3 bucket ([self-managed S3 code storage](https://docs.aws.amazon.com/lambda/latest/dg/configuration-self-managed-storage.html)). Conflicts with `filename` and `image_uri`. Must be used with `s3_bucket`. See the [Self-managed S3 code storage](#self-managed-s3-code-storage) example and notes below.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
 * `source_code_hash` - (Optional) User-defined hash of the source code package file. Use this argument to trigger updates when the local function source code changes. This is a synthetic argument tracked only by the AWS provider and does not need to match the hashing algorithm used by Lambda to compute the `CodeSha256` response value. Out-of-band changes to the source code _will not_ be captured by this argument. To include out-of-band source code changes as an update trigger, use the `code_sha256` argument instead.
