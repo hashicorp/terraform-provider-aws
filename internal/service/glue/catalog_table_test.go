@@ -875,6 +875,55 @@ func TestAccGlueCatalogTable_viewDefinitionFailure(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/49042
+//
+// Glue's Read populates the Optional+Computed storage_descriptor from the
+// schema it derives from a validated view's query. Confirm that updating the
+// view's SQL succeeds in place, rather than resending that derived
+// storage_descriptor to UpdateTable, which Glue rejects for validated views
+// ("Storage descriptor may not be defined when creating a validated Glue
+// view").
+func TestAccGlueCatalogTable_Update_validatedViewStorageDescriptor(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_validatedViewStorageDescriptor(rName, "id, amount"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+				),
+			},
+			{
+				// This second apply is the actual regression check: prior to
+				// the fix, this UpdateTable call failed with "Storage
+				// descriptor may not be defined when creating a validated
+				// Glue view" because the provider replayed the
+				// storage_descriptor that Read populated after the first
+				// apply.
+				Config: testAccCatalogTableConfig_validatedViewStorageDescriptor(rName, "id"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", fmt.Sprintf("SELECT id FROM %q.%q", rName, rName+"-source")),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckCatalogTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
@@ -1901,4 +1950,157 @@ resource "aws_glue_connection" "test_athena" {
   }
 }
 `, rName)
+}
+
+func testAccCatalogTableConfig_validatedViewStorageDescriptor(rName, selectColumns string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket        = "%[1]s-source"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "results" {
+  bucket        = "%[1]s-results"
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "source" {
+  name          = "%[1]s-source"
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "EXTERNAL_TABLE"
+
+  storage_descriptor {
+    location      = "s3://${aws_s3_bucket.source.bucket}/"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+    }
+
+    columns {
+      name = "id"
+      type = "bigint"
+    }
+
+    columns {
+      name = "amount"
+      type = "double"
+    }
+  }
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.results.bucket}/"
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "glue.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:StartQueryExecution",
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "athena:StopQueryExecution",
+          "athena:GetWorkGroup",
+        ]
+        Resource = aws_athena_workgroup.test.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:GetDatabase",
+          "glue:GetTable",
+          "glue:GetTables",
+          "glue:GetPartition",
+          "glue:GetPartitions",
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          aws_s3_bucket.source.arn,
+          "${aws_s3_bucket.source.arn}/*",
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+        ]
+        Resource = [
+          aws_s3_bucket.results.arn,
+          "${aws_s3_bucket.results.arn}/*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_glue_connection" "test" {
+  name            = %[1]q
+  connection_type = "VIEW_VALIDATION_ATHENA"
+
+  connection_properties = {
+    WORKGROUP_NAME = aws_athena_workgroup.test.name
+  }
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  depends_on = [aws_glue_catalog_table.source]
+
+  view_definition {
+    is_protected = true
+    definer      = aws_iam_role.test.arn
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = "SELECT %[2]s FROM \"%[1]s\".\"%[1]s-source\""
+      validation_connection = aws_glue_connection.test.name
+    }
+  }
+}
+`, rName, selectColumns)
 }

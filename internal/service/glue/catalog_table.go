@@ -1003,6 +1003,23 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.ViewOriginalText = aws.String(v.(string))
 	}
 
+	// For a *validated* view (one with a representation's validation_connection
+	// set), Glue derives the storage descriptor from the view definition itself
+	// and rejects a client-supplied one on UpdateTable ("Storage descriptor may
+	// not be defined when creating a validated Glue view") -- even though it's
+	// the provider's own prior Read that populated storage_descriptor
+	// (Optional+Computed) with Glue's auto-derived value in the first place.
+	// Unvalidated multi-dialect views (no validation_connection) don't have
+	// this restriction, so only strip it in the validated case.
+	if apiObject.ViewDefinition != nil {
+		for _, representation := range apiObject.ViewDefinition.Representations {
+			if aws.ToString(representation.ValidationConnection) != "" {
+				apiObject.StorageDescriptor = nil
+				break
+			}
+		}
+	}
+
 	return apiObject
 }
 
