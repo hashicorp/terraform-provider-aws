@@ -49,7 +49,6 @@ func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion := "v1.18.3-eksbuild.2"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -59,7 +58,7 @@ func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, string(awstypes.ResolveConflictsOverwrite)),
+				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, configurationValues, awstypes.ResolveConflictsOverwrite),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
@@ -93,14 +92,20 @@ data "aws_eks_addon" "test" {
 `, rName, addonName))
 }
 
-func testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
+func testAccAddonDataSourceConfig_configurationValues(rName, addonName, configurationValues string, resolveConflicts awstypes.ResolveConflicts) string {
 	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name                = aws_eks_cluster.test.name
   addon_name                  = %[2]q
-  addon_version               = %[3]q
-  configuration_values        = %[4]q
-  resolve_conflicts_on_create = %[5]q
+  addon_version               = data.aws_eks_addon_version.test.version
+  configuration_values        = %[3]q
+  resolve_conflicts_on_create = %[4]q
+}
+
+data "aws_eks_addon_version" "test" {
+  addon_name         = %[2]q
+  kubernetes_version = aws_eks_cluster.test.version
+  most_recent        = true
 }
 
 data "aws_eks_addon" "test" {
@@ -112,5 +117,5 @@ data "aws_eks_addon" "test" {
     aws_eks_cluster.test,
   ]
 }
-`, rName, addonName, addonVersion, configurationValues, resolveConflicts))
+`, rName, addonName, configurationValues, resolveConflicts))
 }

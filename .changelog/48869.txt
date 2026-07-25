@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_pod_identity_association: Add `policy` argument to support inline session policies
+```

@@ -23,11 +23,9 @@ import (
 
 func TestAccEKSAccessPolicyAssociation_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_eks_access_policy_association.test[0]"
 	resourceName2 := "aws_eks_access_policy_association.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -37,7 +35,7 @@ func TestAccEKSAccessPolicyAssociation_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccAccessPolicyAssociationPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx, t),
@@ -83,10 +81,8 @@ func TestAccEKSAccessPolicyAssociation_List_basic(t *testing.T) {
 
 func TestAccEKSAccessPolicyAssociation_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_eks_access_policy_association.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -95,7 +91,7 @@ func TestAccEKSAccessPolicyAssociation_List_includeResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccAccessPolicyAssociationPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx, t),
@@ -152,11 +148,9 @@ func TestAccEKSAccessPolicyAssociation_List_includeResource(t *testing.T) {
 
 func TestAccEKSAccessPolicyAssociation_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_eks_access_policy_association.test[0]"
 	resourceName2 := "aws_eks_access_policy_association.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -167,7 +161,7 @@ func TestAccEKSAccessPolicyAssociation_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccAccessPolicyAssociationPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx, t),

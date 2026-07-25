@@ -2,14 +2,39 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_eks_access_entry" "test" {
-  region = var.region
+  count = var.resource_count
 
   cluster_name  = aws_eks_cluster.test.name
-  principal_arn = aws_iam_role.test.arn
+  principal_arn = aws_iam_role.test[count.index].arn
 }
 
+resource "aws_eks_access_policy_association" "test" {
+  count = var.resource_count
+
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_eks_access_entry.test[count.index].principal_arn
+  policy_arn    = one([for ap in data.aws_eks_access_policies.test.access_policies : ap.arn if ap.name == local.access_policy_names[count.index]])
+
+  access_scope {
+    type = "cluster"
+  }
+}
+
+locals {
+  access_policy_names = [
+    "AmazonEKSViewPolicy",
+    "AmazonEKSNetworkingPolicy",
+    "AmazonEKSEventPolicy",
+    "AmazonEKSComputePolicy",
+  ]
+}
+
+data "aws_eks_access_policies" "test" {}
+
 resource "aws_iam_role" "test" {
-  name = var.rName
+  count = var.resource_count
+
+  name = "${var.rName}-${count.index}"
 
   assume_role_policy = <<POLICY
 {
@@ -28,8 +53,6 @@ POLICY
 }
 
 resource "aws_eks_cluster" "test" {
-  region = var.region
-
   name     = var.rName
   role_arn = aws_iam_role.cluster.arn
 
@@ -75,8 +98,6 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
 }
 
 resource "aws_vpc" "test" {
-  region = var.region
-
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -86,8 +107,6 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  region = var.region
-
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -103,8 +122,6 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptIn
 
 data "aws_availability_zones" "available" {
-  region = var.region
-
   state = "available"
 
   filter {
@@ -119,8 +136,13 @@ variable "rName" {
   nullable    = false
 }
 
-variable "region" {
-  description = "Region to deploy resource in"
-  type        = string
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
   nullable    = false
+
+  validation {
+    condition     = var.resource_count >= 0 && var.resource_count <= 4
+    error_message = "resource_count must be between 0 and 4."
+  }
 }
