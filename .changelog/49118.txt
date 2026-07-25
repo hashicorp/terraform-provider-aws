@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_catalog_table: Fix `UpdateTable` failure on validated multi-dialect views (`Storage descriptor may not be defined when creating a validated Glue view`)
+```
