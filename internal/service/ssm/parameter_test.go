@@ -99,8 +99,12 @@ func TestAccSSMParameter_nameWithLeadingSlash(t *testing.T) {
 			},
 			{
 				// The normalized name must not produce a perpetual diff or replacement.
-				Config:   testAccParameterConfig_basic("/"+rName, "String", "test"),
-				PlanOnly: true,
+				Config: testAccParameterConfig_basic("/"+rName, "String", "test"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -127,8 +131,12 @@ func TestAccSSMParameter_namePathWithoutLeadingSlash(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccParameterConfig_basic(rName+"/param", "String", "test"),
-				PlanOnly: true,
+				Config: testAccParameterConfig_basic(rName+"/param", "String", "test"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
