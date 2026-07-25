@@ -5311,14 +5311,14 @@ resource "aws_lambda_function" "test" {
     aws_s3_bucket_policy.artifacts,
   ]
 
-  s3_bucket               = aws_s3_object.o.bucket
-  s3_key                  = aws_s3_object.o.key
-  s3_object_version       = aws_s3_object.o.version_id
-  s3_object_storage_mode  = "REFERENCE"
-  function_name           = %[3]q
-  role                    = aws_iam_role.iam_for_lambda.arn
-  handler                 = "exports.example"
-  runtime                 = "nodejs24.x"
+  s3_bucket              = aws_s3_object.o.bucket
+  s3_key                 = aws_s3_object.o.key
+  s3_object_version      = aws_s3_object.o.version_id
+  s3_object_storage_mode = "REFERENCE"
+  function_name          = %[3]q
+  role                   = aws_iam_role.iam_for_lambda.arn
+  handler                = "exports.example"
+  runtime                = "nodejs24.x"
 
   timeouts {
     create = "20m"
