@@ -8,6 +8,7 @@ package ssm
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -106,6 +107,9 @@ func resourceParameter() *schema.Resource {
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
+					StateFunc: func(v any) string {
+						return normalizeParameterName(v.(string))
+					},
 				},
 				"overwrite": {
 					Type:     schema.TypeBool,
@@ -186,7 +190,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := normalizeParameterName(d.Get(names.AttrName).(string))
 	typ := awstypes.ParameterType(d.Get(names.AttrType).(string))
 	value := d.Get(names.AttrValue).(string)
 	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
@@ -512,4 +516,17 @@ func shouldUpdateParameter(d *schema.ResourceData) bool {
 	// Since the user has not specified a preference, obey lifecycle rules
 	// if it is not a new resource, otherwise overwrite should be set to false.
 	return !d.IsNewResource()
+}
+
+// normalizeParameterName canonicalizes an SSM parameter name to match how the
+// API stores it. A single name (no path separators) is stored without a leading
+// slash, so any leading slash is removed. A path (containing one or more
+// separators) must have a leading slash, so one is added if missing.
+func normalizeParameterName(name string) string {
+	trimmed := strings.TrimPrefix(name, "/")
+	if strings.Contains(trimmed, "/") {
+		return "/" + trimmed
+	}
+
+	return trimmed
 }

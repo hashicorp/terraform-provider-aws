@@ -77,6 +77,63 @@ func TestAccSSMParameter_basic(t *testing.T) {
 }
 
 // TestAccSSMParameter_multiple is mostly a performance benchmark
+func TestAccSSMParameter_nameWithLeadingSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// A single name with a leading slash is normalized to drop the slash.
+				Config: testAccParameterConfig_basic("/"+rName, "String", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				// The normalized name must not produce a perpetual diff or replacement.
+				Config:   testAccParameterConfig_basic("/"+rName, "String", "test"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_namePathWithoutLeadingSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// A path without a leading slash is normalized to include one.
+				Config: testAccParameterConfig_basic(rName+"/param", "String", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "/"+rName+"/param"),
+				),
+			},
+			{
+				Config:   testAccParameterConfig_basic(rName+"/param", "String", "test"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccSSMParameter_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
