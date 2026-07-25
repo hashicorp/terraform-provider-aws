@@ -36,35 +36,28 @@ import (
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 	"context"
-	"errors"
 	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/taxsettings"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/taxsettings/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
 // TIP: ==== FILE STRUCTURE ====
 // All resources should follow this basic outline. Improve this resource's
 // maintainability by sticking to it.
@@ -77,31 +70,8 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_taxsettings_tax_inheritance", name="Tax Inheritance")
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-// 
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one of the following sets of annotations as appropriate:
-//
-// * ARN Identity
-// @ArnIdentity
-// or
-// @ArnIdentity("arn_attribute")
-//
-// * Singleton Identity
+// @Region(global=true)
 // @SingletonIdentity
-//
-// * Parameterized Identity
-// @IdentityAttribute("id_attribute")
-// // @IdentityAttribute("another_id_attribute")
 //
 // TIP: ==== GENERATED ACCEPTANCE TESTS ====
 // Resource Identity and tagging make use of automatically generated acceptance tests.
@@ -138,7 +108,6 @@ type taxInheritanceResource struct {
 	framework.WithImportByIdentity
 }
 
-
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the attributes in snake case (e.g.,
 // delete_automated_backups).
@@ -148,28 +117,31 @@ type taxInheritanceResource struct {
 // * Do not add a blank line between attributes.
 //
 // Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
+//   - If a user can provide a value ("configure a value") for an
+//     attribute (e.g., instances = 5), we call the attribute an
+//     "argument."
+//   - You change the way users interact with attributes using:
+//   - Required
+//   - Optional
+//   - Computed
+//   - There are only four valid combinations:
 //
 // 1. Required only - the user must provide a value
 // Required: true,
 //
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
+//  2. Optional only - the user can configure or omit a value; do not
+//     use Default or DefaultFunc
+//
 // Optional: true,
 //
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
+//  3. Computed only - the provider can provide a value but the user
+//     cannot, i.e., read-only
+//
 // Computed: true,
 //
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
+//  4. Optional AND Computed - the provider or user can provide a value;
+//     use this combination if you are using Default
+//
 // Optional: true,
 // Computed: true,
 //
@@ -183,66 +155,11 @@ type taxInheritanceResource struct {
 func (r *taxInheritanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "TaxInheritanceId"
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"type": schema.StringAttribute{
+			"heritage_status": schema.StringAttribute{
 				Required: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -268,8 +185,7 @@ func (r *taxInheritanceResource) Create(ctx context.Context, req resource.Create
 	// 7. Save the request plan to response state
 
 	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().TaxSettingsClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan taxInheritanceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -277,42 +193,11 @@ func (r *taxInheritanceResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
-	var input taxsettings.CreateTaxInheritanceInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `TaxInheritanceId`
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TaxInheritance")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-
-	// TIP: -- 4. Call the AWS Create function
-	out, err := conn.CreateTaxInheritance(ctx, &input)
-	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil || out.TaxInheritance == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	// TIP: -- 5. Using the output from the create function, set attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	resp.Diagnostics.Append(r.putTaxInheritanceHeritageStatus(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitTaxInheritanceCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	
 	// TIP: -- 7. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -331,17 +216,17 @@ func (r *taxInheritanceResource) Read(ctx context.Context, req resource.ReadRequ
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().TaxSettingsClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state taxInheritanceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := findTaxInheritanceByID(ctx, conn, state.ID.ValueString())
+	heritageStatus, err := getTaxInheritanceHeritageStatus(ctx, conn)
 	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -349,23 +234,18 @@ func (r *taxInheritanceResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.HeritageStatus)
 		return
 	}
-	
+
 	// TIP: -- 5. Set the arguments and attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, heritageStatus, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 6. Set the state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *taxInheritanceResource) flatten(ctx context.Context, taxInheritance *awstypes.TaxInheritance, data *taxInheritanceResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, taxInheritance, data)...)
-	return diags
 }
 
 func (r *taxInheritanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -390,58 +270,19 @@ func (r *taxInheritanceResource) Update(ctx context.Context, req resource.Update
 	// 5. Use a waiter to wait for update to complete
 	// 6. Save the request plan to response state
 	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().TaxSettingsClient(ctx)
-	
-	// TIP: -- 2. Fetch the plan
-	var plan, state taxInheritanceResourceModel
+	var plan taxInheritanceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-	// TIP: -- 3. Get the difference between the plan and state, if any
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if diff.HasChanges() {
-		var input taxsettings.UpdateTaxInheritanceInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		
-		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdateTaxInheritance(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil || out.TaxInheritance == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-			return
-		}
-		
-		// TIP: Using the output from the update function, re-set any computed attributes
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	// TIP: -- 5. Use a waiter to wait for update to complete
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTaxInheritanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+	resp.Diagnostics.Append(r.putTaxInheritanceHeritageStatus(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	// TIP: -- 7. Save the request plan to response state
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *taxInheritanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -461,40 +302,20 @@ func (r *taxInheritanceResource) Delete(ctx context.Context, req resource.Delete
 	// 4. Call the AWS delete function
 	// 5. Use a waiter to wait for delete to complete
 	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().TaxSettingsClient(ctx)
-	
-	// TIP: -- 2. Fetch the state
-	var state taxInheritanceResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	var plan taxInheritanceResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &plan))
+	plan.HeritageStatus = types.StringValue(string(awstypes.HeritageStatusOptOut))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 3. Populate a delete input structure
-	input := taxsettings.DeleteTaxInheritanceInput{
-		TaxInheritanceId: state.ID.ValueStringPointer(),
-	}
-	
-	// TIP: -- 4. Call the AWS delete function
-	_, err := conn.DeleteTaxInheritance(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+	resp.Diagnostics.Append(r.putTaxInheritanceHeritageStatus(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitTaxInheritanceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
+
+	// TIP: -- 7. Save the request plan to response state
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 // TIP: ==== TERRAFORM IMPORTING ====
@@ -507,103 +328,31 @@ func (r *taxInheritanceResource) Delete(ctx context.Context, req resource.Delete
 // https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
 // func (r *taxInheritanceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 // 	r.WithImportByIdentity.ImportState(ctx, req, resp)
-// 
+//
 // 	// Set needed attribute values here
 // }
 
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitTaxInheritanceCreated(ctx context.Context, conn *taxsettings.Client, id string, timeout time.Duration) (*awstypes.TaxInheritance, error) {
+func waitHeritageStatusUpdated(ctx context.Context, conn *taxsettings.Client, expectedHeritageStatus string, timeout time.Duration) (*awstypes.HeritageStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusTaxInheritance(conn, id),
+		Target:                    []string{expectedHeritageStatus},
+		Refresh:                   statusTaxInheritance(conn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TaxInheritance); ok {
+	if out, ok := outputRaw.(*awstypes.HeritageStatus); ok {
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitTaxInheritanceUpdated(ctx context.Context, conn *taxsettings.Client, id string, timeout time.Duration) (*awstypes.TaxInheritance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusTaxInheritance(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TaxInheritance); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitTaxInheritanceDeleted(ctx context.Context, conn *taxsettings.Client, id string, timeout time.Duration) (*awstypes.TaxInheritance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusTaxInheritance(conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TaxInheritance); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusTaxInheritance(conn *taxsettings.Client, id string) retry.StateRefreshFunc {
+func statusTaxInheritance(conn *taxsettings.Client) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findTaxInheritanceByID(ctx, conn, id)
+		out, err := getTaxInheritanceHeritageStatus(ctx, conn)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -612,8 +361,35 @@ func statusTaxInheritance(conn *taxsettings.Client, id string) retry.StateRefres
 			return nil, "", smarterr.NewError(err)
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, aws.ToString((*string)(out)), nil
 	}
+}
+
+func (r *taxInheritanceResource) putTaxInheritanceHeritageStatus(ctx context.Context, data *taxInheritanceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := r.Meta().TaxSettingsClient(ctx)
+
+	var input taxsettings.PutTaxInheritanceInput
+	diags.Append(flex.Expand(ctx, data, &input)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	_, err := conn.PutTaxInheritance(ctx, &input)
+	if err != nil {
+		diags.AddError("put heritage status for tax inheritance", err.Error())
+		return diags
+	}
+
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	_, err = waitHeritageStatusUpdated(ctx, conn, data.HeritageStatus.String(), createTimeout)
+	if err != nil {
+		diags.AddError("waiting heritage status update for tax inheritance", err.Error())
+		return diags
+	}
+
+	return diags
 }
 
 // TIP: ==== FINDERS ====
@@ -621,27 +397,25 @@ func statusTaxInheritance(conn *taxsettings.Client, id string) retry.StateRefres
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findTaxInheritanceByID(ctx context.Context, conn *taxsettings.Client, id string) (*awstypes.TaxInheritance, error) {
-	input := taxsettings.GetTaxInheritanceInput{
-		Id: aws.String(id),
-	}
+func getTaxInheritanceHeritageStatus(ctx context.Context, conn *taxsettings.Client) (*awstypes.HeritageStatus, error) {
+	input := taxsettings.GetTaxInheritanceInput{}
 
 	out, err := conn.GetTaxInheritance(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
+				LastError: err,
 			})
 		}
 
 		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil || out.TaxInheritance == nil {
+	if out == nil || out.HeritageStatus == "" {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	return out.TaxInheritance, nil
+	return &out.HeritageStatus, nil
 }
 
 // TIP: ==== DATA STRUCTURES ====
@@ -657,88 +431,6 @@ func findTaxInheritanceByID(ctx context.Context, conn *taxsettings.Client, id st
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type taxInheritanceResourceModel struct {
-	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
-}
-
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
-
-
-// TIP: ==== IMPORT ID HANDLER ====
-// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
-// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
-//
-// The parser takes the string value of the Import ID and returns:
-// * A string value that is typically ignored. See documentation for more details.
-// * A map of the resource attributes derived from the Import ID.
-// * An error value if there are parsing errors.
-//
-// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
-var (
-	_ inttypes.ImportIDParser = taxInheritanceImportID{}
-)
-
-type taxInheritanceImportID struct{}
-
-func (taxInheritanceImportID) Parse(id string) (string, map[string]string, error) {
-	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
-	}
-
-	result := map[string]string{
-		"some-value":    someValue,
-		"another-value": anotherValue,
-	}
-
-	return id, result, nil
-}
-
-
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//  awsv2.Register("aws_taxsettings_tax_inheritance", sweepTaxInheritances)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
-func sweepTaxInheritances(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := taxsettings.ListTaxInheritancesInput{}
-	conn := client.TaxSettingsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := taxsettings.NewListTaxInheritancesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.TaxInheritances {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newTaxInheritanceResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.TaxInheritanceId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
+	HeritageStatus types.String   `tfsdk:"heritage_status"`
+	Timeouts       timeouts.Value `tfsdk:"timeouts"`
 }
