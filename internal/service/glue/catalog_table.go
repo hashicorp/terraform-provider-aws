@@ -815,6 +815,14 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	if input.TableInput != nil && input.TableInput.ViewDefinition != nil {
 		input.ViewUpdateAction = awstypes.ViewUpdateActionReplace
 		input.Force = true
+
+		// A view with a validation_connection on any representation (e.g. a
+		// validated Athena multi-dialect view) fails UpdateTable with
+		// "Storage descriptor may not be defined when creating a validated
+		// Glue view" if StorageDescriptor is also set.
+		if isValidatedView(input.TableInput.ViewDefinition) {
+			input.TableInput.StorageDescriptor = nil
+		}
 	}
 
 	_, err = conn.UpdateTable(ctx, &input)
@@ -1827,6 +1835,20 @@ func expandViewDefinitionInput(tfMap map[string]any) *awstypes.ViewDefinitionInp
 	}
 
 	return apiObject
+}
+
+func isValidatedView(apiObject *awstypes.ViewDefinitionInput) bool {
+	if apiObject == nil {
+		return false
+	}
+
+	for _, representation := range apiObject.Representations {
+		if aws.ToString(representation.ValidationConnection) != "" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationInput {

@@ -398,6 +398,52 @@ func TestAccGlueCatalogTable_Update_viewInPlace(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/49042
+func TestAccGlueCatalogTable_Update_validatedAthenaViewInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_validatedAthenaView(rName, "SELECT 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "ATHENA"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "SELECT 1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Updating view_original_text on a validated Athena view must succeed
+				// without the "Storage descriptor may not be defined" error — the fix
+				// strips StorageDescriptor from the UpdateTable payload for validated views.
+				Config: testAccCatalogTableConfig_validatedAthenaView(rName, "SELECT 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "SELECT 2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1901,4 +1947,38 @@ resource "aws_glue_connection" "test_athena" {
   }
 }
 `, rName)
+}
+
+func testAccCatalogTableConfig_validatedAthenaView(rName, sql string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name            = %[1]q
+  connection_type = "VIEW_VALIDATION_ATHENA"
+
+  connection_properties = {
+    WORKGROUP_NAME = "primary"
+  }
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    is_protected = false
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = %[2]q
+      validation_connection = aws_glue_connection.test.name
+    }
+  }
+}
+`, rName, sql)
 }
