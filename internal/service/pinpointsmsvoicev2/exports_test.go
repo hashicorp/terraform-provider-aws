@@ -9,9 +9,16 @@ var (
 	ResourceEventDestination = newEventDestinationResource
 	ResourceOptOutList       = newOptOutListResource
 	ResourcePhoneNumber      = newPhoneNumberResource
+	ResourcePool             = newPoolResource
 
 	FindConfigurationSetByID         = findConfigurationSetByID
 	FindEventDestinationByTwoPartKey = findEventDestinationByTwoPartKey
 	FindOptOutListByID               = findOptOutListByID
 	FindPhoneNumberByID              = findPhoneNumberByID
+	FindPoolByID                     = findPoolByID
+
+	ValidatePhoneIdentity  = validatePhoneIdentity
+	ValidateSenderIdentity = validateSenderIdentity
 )
+
+type IntendedIdentityConfig = intendedIdentityConfig

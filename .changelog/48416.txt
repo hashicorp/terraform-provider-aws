@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_lakeformation_opt_in: Prevent crash by making the `principal` block required
+```
+```release-note:bug
+resource/aws_lakeformation_opt_in: Fix handling of out-of-band deletion of linked resource
+```

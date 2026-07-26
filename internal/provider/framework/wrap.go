@@ -261,7 +261,7 @@ func (w *wrappedEphemeralResource) context(ctx context.Context, getAttribute get
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = c.RequestContext(ctx)
+		ctx = c.EphemeralRequestContext(ctx)
 	}
 
 	return ctx, diags
@@ -429,7 +429,7 @@ func (w *wrappedAction) context(ctx context.Context, getAttribute getAttributeFu
 
 	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = c.RequestContext(ctx)
+		ctx = c.EphemeralRequestContext(ctx)
 	}
 
 	return ctx, diags

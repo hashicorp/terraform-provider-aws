@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_endpoint: Prevents `Cannot create already existing endpoint` error when retrying creation.
+```

@@ -93,6 +93,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "EXTENDED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.control_plane_egress_mode", "AWS_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "0"),
@@ -1233,6 +1234,38 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.public_access_cidrs.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccEKSCluster_VPC_controlPlaneEgressMode requires internet access: the VPC includes
+// a NAT gateway so the EKS control plane can reach AWS APIs in CUSTOMER_ROUTED egress mode.
+func TestAccEKSCluster_VPC_controlPlaneEgressMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_vpcControlPlaneEgressMode(rName, "CUSTOMER_ROUTED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.control_plane_egress_mode", "CUSTOMER_ROUTED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -2515,6 +2548,165 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, publicAccessCidr))
+}
+
+func testAccClusterConfig_vpcControlPlaneEgressMode(rName string, egressMode string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
+resource "aws_iam_role" "cluster" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "${data.aws_service_principal.eks.name}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "public" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count = 2
+
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_eip" "nat" {
+  count = 2
+
+  domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_nat_gateway" "test" {
+  count = 2
+
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index + 2}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_route_table" "private" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.test[count.index].id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.private[count.index].id
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    control_plane_egress_mode = %[2]q
+    endpoint_private_access   = true
+    endpoint_public_access    = false
+    subnet_ids                = aws_subnet.test[*].id
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
+    aws_route_table_association.test,
+  ]
+}
+`, rName, egressMode))
 }
 
 func testAccClusterConfig_networkServiceIPv4CIDR(rName string, serviceIpv4Cidr string) string {

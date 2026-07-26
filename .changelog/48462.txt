@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` and subsequent `too many results` warning that silently removed the resource from state when `id` was not set in configuration
+```

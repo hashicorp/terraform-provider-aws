@@ -233,6 +233,8 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// All access keys, MFA devices and login profile for the user must be removed.
 	if d.Get(names.AttrForceDestroy).(bool) {
+		partition := meta.(*conns.AWSClient).Partition(ctx)
+
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string
@@ -248,9 +250,16 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 			{deleteServiceSpecificCredentials, "removing IAM User (%s) Service Specific Credentials: %s"},
 		} {
 			if err := v.f(ctx, conn, d.Id()); err != nil {
-				if !errs.IsA[*awstypes.NoSuchEntityException](err) {
-					return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					continue
 				}
+				// Some credential types (e.g. SSH public keys) are not available in all
+				// partitions (e.g. ISO) so List/Delete actions return errors such as
+				// InvalidAction. There's nothing to clean up, so treat it as a no-op.
+				if errs.IsUnsupportedOperationInPartitionError(partition, err) {
+					continue
+				}
+				return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
 			}
 		}
 	}
