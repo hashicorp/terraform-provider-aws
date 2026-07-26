@@ -24,7 +24,7 @@ import (
 // @FrameworkResource("aws_cloudwatch_log_storage_tier_policy", name="Storage Tier Policy")
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetStorageTierPolicyOutput")
+// @Testing(hasNoPreExistingResource=true)
 func newStorageTierPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &storageTierPolicyResource{}
 
