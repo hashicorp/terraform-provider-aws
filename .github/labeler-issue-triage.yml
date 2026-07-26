@@ -452,6 +452,8 @@ service/macie:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_macie_'
 service/macie2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_macie2_'
+service/mailmanager:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mailmanager_'
 service/managedblockchain:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_managedblockchain_'
 service/marketplacecatalog:

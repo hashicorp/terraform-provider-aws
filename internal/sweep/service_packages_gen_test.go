@@ -163,6 +163,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mailmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
@@ -434,6 +435,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		logs.ServicePackage(ctx),
 		m2.ServicePackage(ctx),
 		macie2.ServicePackage(ctx),
+		mailmanager.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
 		mediaconvert.ServicePackage(ctx),
 		medialive.ServicePackage(ctx),
