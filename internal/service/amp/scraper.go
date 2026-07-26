@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -90,6 +90,12 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("amp"),
+							path.MatchRelative().AtName("cloudwatch"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"amp": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[ampConfigurationModel](ctx),
@@ -162,6 +168,12 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("eks"),
+							path.MatchRelative().AtName("vpc"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"eks": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[eksConfigurationModel](ctx),
@@ -253,15 +265,6 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 }
 
-func (r *scraperResource) ConfigValidators(context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot(names.AttrDestination).AtListIndex(0).AtName("amp"),
-			path.MatchRoot(names.AttrDestination).AtListIndex(0).AtName("cloudwatch"),
-		),
-	}
-}
-
 func (r *scraperResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data scraperResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -280,7 +283,7 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-		Value: []byte(data.ScrapeConfiguration.ValueString()),
+		Value: []byte(fwflex.StringValueFromFramework(ctx, data.ScrapeConfiguration)),
 	}
 	input.Tags = getTagsIn(ctx)
 
@@ -347,7 +350,7 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 
 	// Additional fields.
 	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
-		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, string(v.Value))
+		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, v.Value)
 	}
 
 	setTagsOut(ctx, scraper.Tags)
@@ -381,7 +384,7 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-			Value: []byte(new.ScrapeConfiguration.ValueString()),
+			Value: []byte(fwflex.StringValueFromFramework(ctx, new.ScrapeConfiguration)),
 		}
 		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
 
