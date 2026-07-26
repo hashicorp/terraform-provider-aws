@@ -45,7 +45,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "scraper/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "0"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(scraper.ScraperId))(s)
 					},
