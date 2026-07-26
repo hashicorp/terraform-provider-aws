@@ -754,6 +754,7 @@ func testAccScraperConfig_cloudWatchDestination(rName string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
   name = "%[1]s.local"
@@ -797,7 +798,7 @@ EOT
 
   destination {
     cloudwatch {
-      dataset_arn = "arn:aws:cloudwatch:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dataset/default"
+      dataset_arn = "arn:${data.aws_partition.current.partition}:cloudwatch:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dataset/default"
     }
   }
 }
