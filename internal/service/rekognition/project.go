@@ -14,10 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -37,7 +39,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @IdentityAttribute("feature", optional="true", testNotNull="true")
-// @ImportIDHandler("projectImportID")
+// @ImportIDHandler("projectImportID", setIDAttribute=true)
 // @Testing(preIdentityVersion="v6.56.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
@@ -344,6 +346,13 @@ func (projectImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	return id, result, nil
+}
+
+func (projectImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var name types.String
+	state.GetAttribute(ctx, path.Root(names.AttrName), &name)
+
+	return flex.StringValueFromFramework(ctx, name)
 }
 
 type projectResourceModel struct {

@@ -78,6 +78,7 @@ var (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rekognition;rekognition.DescribeStreamProcessorOutput")
+// @Testing(importStateIdAttribute="name")
 // @Testing(preIdentityVersion="v6.56.0")
 func newStreamProcessorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &streamProcessorResource{}
