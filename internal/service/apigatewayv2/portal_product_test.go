@@ -44,18 +44,17 @@ func TestAccAPIGatewayV2PortalProduct_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
-					// Resource path inferred from the API URI (/v2/portalproducts/{id}); confirm on
-					// the first acceptance run and tighten if AWS returns a different shape.
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("portal_product_arn"), tfknownvalue.RegionalARNRegexp("apigateway", regexache.MustCompile(`/portalproducts/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("portal_product_arn"), tfknownvalue.RegionalARNRegexp("apigateway", regexache.MustCompile(`/portalproducts/[0-9A-Za-z]{10,30}`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("portal_product_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("last_modified"), knownvalue.NotNull()),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "portal_product_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "portal_product_id"),
+				ImportStateVerifyIdentifierAttribute: "portal_product_id",
 			},
 		},
 	})
@@ -117,14 +116,23 @@ func TestAccAPIGatewayV2PortalProduct_description(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated")),
 				},
 			},
-			// Removing the argument must actually clear the description; UpdatePortalProduct
-			// is a PATCH, so a nil field would silently leave the old value in place.
+			// Clearing is done by setting "" rather than removing the argument, because
+			// UpdatePortalProduct is a PATCH and omits nil fields.
 			{
-				Config: testAccPortalProductConfig_basic(rName),
+				Config: testAccPortalProductConfig_description(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalProductExists(ctx, t, resourceName, &v),
 					testAccCheckPortalProductDescription(&v, ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+				},
+			},
+			// Removing the argument is a documented no-op: description is Optional+Computed,
+			// so the prior value is retained and the plan stays empty.
+			{
+				Config:   testAccPortalProductConfig_basic(rName),
+				PlanOnly: true,
 			},
 		},
 	})

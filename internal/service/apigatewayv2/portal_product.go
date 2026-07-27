@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,6 +36,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetPortalProductOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="portal_product_id")
+// @Testing(skipEmptyTags=true)
+// @Testing(skipNullTags=true)
 func newPortalProductResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &portalProductResource{}, nil
 }
@@ -46,10 +50,19 @@ type portalProductResource struct {
 func (r *portalProductResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			// Optional+Computed is required, not cosmetic: UpdatePortalProduct is a PATCH,
+			// so an omitted description leaves the stored value in place. With a plain
+			// Optional attribute the flattened response would then disagree with a null
+			// plan and Terraform would report "inconsistent result after apply". Clear the
+			// description by setting it to "" rather than removing the argument.
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(1024),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrDisplayName: schema.StringAttribute{
@@ -156,12 +169,6 @@ func (r *portalProductResource) Update(ctx context.Context, request resource.Upd
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if response.Diagnostics.HasError() {
 			return
-		}
-
-		// UpdatePortalProduct is a PATCH: nil fields are omitted rather than cleared,
-		// so removing the argument would silently leave the old description in place.
-		if plan.Description.IsNull() && !state.Description.IsNull() {
-			input.Description = aws.String("")
 		}
 
 		out, err := conn.UpdatePortalProduct(ctx, &input)
