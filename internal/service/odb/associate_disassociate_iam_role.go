@@ -204,7 +204,6 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitAssociateDisassociateIAMRoleDeleted(ctx, conn, state.ResourceARN.ValueStringPointer(), state.IAMRoleARN.ValueStringPointer(), deleteTimeout)
 	if err != nil {
-		err = errors.New("disassociate IAM role returning nil response")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
