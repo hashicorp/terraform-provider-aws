@@ -41,7 +41,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
@@ -299,6 +299,14 @@ func testAccProjectPreCheck(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func testAccProjectConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rekognition_project" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
 func testAccProjectConfig_contentModeration(rName string, autoUpdate string) string {

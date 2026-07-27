@@ -8,22 +8,18 @@ package rekognition
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -31,15 +27,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("name")
-// @IdentityAttribute("feature", optional="true", testNotNull="true")
-// @ImportIDHandler("projectImportID", setIDAttribute=true)
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
 // @Testing(preIdentityVersion="v6.56.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &projectResource{}
@@ -76,8 +69,10 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"feature": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.CustomizationFeature](),
 				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -119,7 +114,7 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 
 	in.ProjectName = flex.StringFromFramework(ctx, plan.Name)
 
-	if plan.Feature.ValueEnum() == awstypes.CustomizationFeatureCustomLabels {
+	if plan.Feature.IsNull() || plan.Feature.ValueEnum() == awstypes.CustomizationFeatureCustomLabels {
 		in.AutoUpdate = ""
 	}
 
@@ -326,33 +321,6 @@ func statusProject(conn *rekognition.Client, name string, feature awstypes.Custo
 
 		return out, string(out.Status), nil
 	}
-}
-
-var (
-	_ inttypes.ImportIDParser = projectImportID{}
-)
-
-type projectImportID struct{}
-
-func (projectImportID) Parse(id string) (string, map[string]any, error) {
-	name, feature, found := strings.Cut(id, intflex.ResourceIdSeparator)
-
-	result := map[string]any{
-		names.AttrName: name,
-	}
-
-	if found && feature != "" {
-		result["feature"] = feature
-	}
-
-	return id, result, nil
-}
-
-func (projectImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var name types.String
-	state.GetAttribute(ctx, path.Root(names.AttrName), &name)
-
-	return flex.StringValueFromFramework(ctx, name)
 }
 
 type projectResourceModel struct {

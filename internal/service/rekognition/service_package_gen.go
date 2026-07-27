@@ -49,14 +49,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrName, true),
-				inttypes.StringIdentityAttribute("feature", false),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
-				ImportID:      projectImportID{},
-				SetIDAttr:     true,
 			},
 		},
 		{
