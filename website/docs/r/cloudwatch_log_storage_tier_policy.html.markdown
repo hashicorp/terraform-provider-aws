@@ -41,14 +41,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `region` - AWS region where the storage tier policy is configured.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
 Import CloudWatch Logs Storage Tier Policy using the region. For example:

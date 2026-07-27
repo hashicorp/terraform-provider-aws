@@ -8,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,21 +48,13 @@ func (r *storageTierPolicyResource) Schema(ctx context.Context, req resource.Sch
 			},
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
-		},
 	}
 }
 
 type storageTierPolicyResourceModel struct {
-	StorageTier fwtypes.StringEnum[awstypes.StorageTier] `tfsdk:"storage_tier"`
 	ID          types.String                             `tfsdk:"id"`
 	Region      types.String                             `tfsdk:"region"`
-	Timeouts    timeouts.Value                           `tfsdk:"timeouts"`
+	StorageTier fwtypes.StringEnum[awstypes.StorageTier] `tfsdk:"storage_tier"`
 }
 
 func (r *storageTierPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -83,8 +75,7 @@ func (r *storageTierPolicyResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	plan.ID = types.StringValue(r.Meta().Region(ctx))
-	plan.Region = types.StringValue(r.Meta().Region(ctx))
+	plan.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -105,7 +96,6 @@ func (r *storageTierPolicyResource) Read(ctx context.Context, req resource.ReadR
 	}
 
 	state.StorageTier = fwtypes.StringEnumValue(out.StorageTier)
-	state.Region = types.StringValue(r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -152,9 +142,9 @@ func (r *storageTierPolicyResource) Delete(ctx context.Context, req resource.Del
 }
 
 func findStorageTierPolicy(ctx context.Context, conn *cloudwatchlogs.Client) (*cloudwatchlogs.GetStorageTierPolicyOutput, error) {
-	input := &cloudwatchlogs.GetStorageTierPolicyInput{}
+	var input cloudwatchlogs.GetStorageTierPolicyInput
 
-	out, err := conn.GetStorageTierPolicy(ctx, input)
+	out, err := conn.GetStorageTierPolicy(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
