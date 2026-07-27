@@ -459,7 +459,13 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_gatewayIAMRole()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(
+					rName,
+					rNameRuntime,
+					rImageUri,
+					testAccCredentialProvider_gatewayIAMRole(),
+					testAccGatewayTargetSchema_block(testAccGatewayTargetSchema_inlinePayload()),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -467,6 +473,10 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.arn", "aws_bedrockagentcore_agent_runtime.test", "agent_runtime_arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.0.inline_payload.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.0.inline_payload.0.payload"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.0.s3.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -597,6 +607,16 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration_invalid(t *testing
 			// Invalid: passthrough schema with both inline_payload and s3.
 			{
 				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+			// Invalid: AgentCore Runtime schema with neither inline_payload nor s3.
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPRuntimeSchema(rName, ""),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+			// Invalid: AgentCore Runtime schema with both inline_payload and s3.
+			{
+				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPRuntimeSchema(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
 				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
 			},
 			// Invalid: open_api_schema with both inline_payload and s3.
@@ -869,7 +889,7 @@ func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_jwtPassthrough()),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_jwtPassthrough(), ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -2134,7 +2154,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, toolOverrideSuffix))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
+func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent, schemaContent string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -2179,11 +2199,12 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
     http {
       agentcore_runtime {
         arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+%[3]s
       }
     }
   }
 }
-`, rName, credentialProviderContent))
+`, rName, credentialProviderContent, schemaContent))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPPassthrough(rName, credentialProviderContent string) string {
@@ -2264,6 +2285,38 @@ func testAccGatewayTargetSchema_bothInlinePayloadAndS3() string {
           s3 {
             uri = "s3://test-bucket/schema.json"
           }`
+}
+
+func testAccGatewayTargetSchema_block(schemaContent string) string {
+	return fmt.Sprintf(`
+        schema {
+%s
+        }`, schemaContent)
+}
+
+func testAccGatewayTargetConfig_targetConfigurationHTTPRuntimeSchema(rName, schemaContent string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    http {
+      agentcore_runtime {
+        arn = "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/test"
+
+        schema {
+%[2]s
+        }
+      }
+    }
+  }
+}
+`, rName, schemaContent))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, schemaContent string) string {

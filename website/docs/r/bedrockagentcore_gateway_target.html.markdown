@@ -372,6 +372,12 @@ resource "aws_bedrockagentcore_gateway_target" "runtime" {
       agentcore_runtime {
         arn       = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
         qualifier = "DEFAULT"
+
+        schema {
+          inline_payload {
+            payload = file("${path.module}/runtime-openapi.json")
+          }
+        }
       }
     }
   }
@@ -657,6 +663,7 @@ The `agentcore_runtime` block supports the following:
 
 * `arn` - (Required) ARN of the AgentCore Runtime agent that the gateway routes requests to.
 * `qualifier` - (Optional) Runtime qualifier identifying a specific endpoint version. Defaults to `DEFAULT` when not set.
+* `schema` - (Optional) API schema configuration that defines the structure of the runtime target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
 
 ### `passthrough`
 
