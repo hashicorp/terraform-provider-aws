@@ -649,7 +649,7 @@ func (anomalyDetectorImportID) Parse(id string) (string, map[string]any, error) 
 	}
 
 	result := map[string]any{
-		names.AttrID:           anomalyDetectorID,
+		names.AttrID:   anomalyDetectorID,
 		"workspace_id": workspaceID,
 	}
 
