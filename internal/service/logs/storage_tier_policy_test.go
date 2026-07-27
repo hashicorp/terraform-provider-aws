@@ -10,10 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,6 +29,7 @@ func TestAccLogsStorageTierPolicy_serial(t *testing.T) {
 		acctest.CtBasic:      testAccLogsStorageTierPolicy_basic,
 		acctest.CtDisappears: testAccLogsStorageTierPolicy_disappears,
 		"update":             testAccLogsStorageTierPolicy_update,
+		"Identity":           testAccLogsStorageTierPolicy_identitySerial,
 	}
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
@@ -43,11 +48,18 @@ func testAccLogsStorageTierPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckStorageTierPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStorageTierPolicyConfig_basic(),
+				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageTierPolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "storage_tier", "INTELLIGENT_TIERING"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_tier"), tfknownvalue.StringExact(awstypes.StorageTierIntelligentTiering)),
+				},
 			},
 		},
 	})
@@ -67,7 +79,7 @@ func testAccLogsStorageTierPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckStorageTierPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStorageTierPolicyConfig_basic(),
+				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageTierPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceStorageTierPolicy, resourceName),
@@ -100,25 +112,46 @@ func testAccLogsStorageTierPolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckStorageTierPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStorageTierPolicyConfig_basic(),
+				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageTierPolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "storage_tier", "INTELLIGENT_TIERING"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_tier"), tfknownvalue.StringExact(awstypes.StorageTierIntelligentTiering)),
+				},
 			},
 			{
-				Config: testAccStorageTierPolicyConfig_standard(),
+				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/standard/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageTierPolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "storage_tier", "STANDARD"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_tier"), tfknownvalue.StringExact(awstypes.StorageTierStandard)),
+				},
 			},
 			{
-				Config: testAccStorageTierPolicyConfig_basic(),
+				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageTierPolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "storage_tier", "INTELLIGENT_TIERING"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_tier"), tfknownvalue.StringExact(awstypes.StorageTierIntelligentTiering)),
+				},
 			},
 		},
 	})
@@ -181,20 +214,4 @@ func testAccCheckStorageTierPolicyExists(ctx context.Context, t *testing.T, n st
 
 		return err
 	}
-}
-
-func testAccStorageTierPolicyConfig_basic() string {
-	return `
-resource "aws_cloudwatch_log_storage_tier_policy" "test" {
-  storage_tier = "INTELLIGENT_TIERING"
-}
-`
-}
-
-func testAccStorageTierPolicyConfig_standard() string {
-	return `
-resource "aws_cloudwatch_log_storage_tier_policy" "test" {
-  storage_tier = "STANDARD"
-}
-`
 }

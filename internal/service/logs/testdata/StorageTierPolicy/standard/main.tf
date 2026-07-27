@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_cloudwatch_log_storage_tier_policy" "test" {
-  storage_tier = "INTELLIGENT_TIERING"
+  storage_tier = "STANDARD"
 }
 

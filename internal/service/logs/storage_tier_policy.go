@@ -25,6 +25,7 @@ import (
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
 func newStorageTierPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &storageTierPolicyResource{}
 

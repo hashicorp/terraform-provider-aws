@@ -7,11 +7,6 @@ resource "aws_cloudwatch_log_storage_tier_policy" "test" {
   storage_tier = "INTELLIGENT_TIERING"
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"
