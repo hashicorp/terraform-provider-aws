@@ -163,6 +163,45 @@ func testAccFilter_update(t *testing.T) {
 	})
 }
 
+func testAccFilter_noRank(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v guardduty.GetFilterOutput
+	resourceName := "aws_guardduty_filter.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFilterConfig_noRank(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"), // Automatically assigned by AWS
+				),
+			},
+			{
+				Config: testAccFilterConfig_noRank(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v guardduty.GetFilterOutput
@@ -337,6 +376,29 @@ resource "aws_guardduty_filter" "test" {
     criterion {
       field      = "service.additionalInfo.threatListName"
       not_equals = ["some-threat", "yet-another-threat"]
+    }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+`
+}
+
+func testAccFilterConfig_noRank() string {
+	return `
+data "aws_region" "current" {}
+
+resource "aws_guardduty_filter" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "test-filter"
+  action      = "ARCHIVE"
+
+  finding_criteria {
+    criterion {
+      field  = "region"
+      equals = [data.aws_region.current.region]
     }
   }
 }
