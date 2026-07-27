@@ -209,3 +209,60 @@ func TestAccAMPAnomalyDetector_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAMPAnomalyDetector_List_aliasFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_prometheus_anomaly_detector.test[0]"
+	resourceName2 := "aws_prometheus_anomaly_detector.test[1]"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/list_alias_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/list_alias_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_prometheus_anomaly_detector.test", 1),
+
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_anomaly_detector.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_anomaly_detector.test",tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()),knownvalue.StringExact(rName+"-0")),
+					
+					tfquerycheck.ExpectNoIdentityFunc("aws_prometheus_anomaly_detector.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}

@@ -121,7 +121,6 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 					}
 
 					result.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
-					// fmt.Printf("Flattened AnomalyDetector: %+v\n", data)
 					if result.Diagnostics.HasError() {
 						return
 					}
