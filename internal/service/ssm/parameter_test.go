@@ -886,7 +886,7 @@ func TestAccSSMParameter_updateType(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
+func TestAccSSMParameter_Name_changeForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var beforeParam, afterParam awstypes.Parameter
 	before := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
@@ -925,7 +925,7 @@ func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_fullPath(t *testing.T) {
+func TestAccSSMParameter_Name_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
 	name := fmt.Sprintf("/path/%s_%s", t.Name(), acctest.RandString(t, 10))
