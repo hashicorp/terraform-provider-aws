@@ -36,7 +36,7 @@ import (
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
-// @IdentityAttribute("feature", optional="true")
+// @IdentityAttribute("feature", optional="true", testNotNull="true")
 // @ImportIDHandler("projectImportID")
 // @Testing(preIdentityVersion="v6.56.0")
 func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
