@@ -13,7 +13,7 @@ resource "aws_prometheus_anomaly_detector" "test" {
     }
   }
 
-  missing_data_action{
+  missing_data_action {
     skip = true
   }
 {{- template "tags" . }}
