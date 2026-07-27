@@ -1279,6 +1279,7 @@ func TestAccSSMParameter_ImportByARN_name(t *testing.T) {
 	})
 }
 
+// lintignore:AT002
 func TestAccSSMParameter_ImportByARN_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
