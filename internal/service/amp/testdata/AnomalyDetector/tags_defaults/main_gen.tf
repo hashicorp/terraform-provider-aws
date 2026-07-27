@@ -11,16 +11,16 @@ resource "aws_prometheus_workspace" "test" {
 }
 
 resource "aws_prometheus_anomaly_detector" "test" {
-  alias        = var.rName
+  alias = var.rName
   workspace_id = aws_prometheus_workspace.test.id
 
   configuration {
-    random_cut_forest {
-      query = "avg(up)"
-    }
+	random_cut_forest {
+	  query = "avg(up)"
+	}
   }
 
-  missing_data_action {
+  missing_data_action{
     skip = true
   }
 
