@@ -212,59 +212,22 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 	}
 }
 func (r *resourceAssociateDisassociateIAMRole) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	const (
-		keyIAMRoleARN  = "iam_role_arn"
-		keyResourceARN = "resource_arn"
-	)
-
-	kvPairs := strings.Split(req.ID, ",")
-	if len(kvPairs) != 2 {
+	// ODB resource ARNs cannot contain commas, but IAM role ARNs can.
+	separatorIndex := strings.LastIndex(req.ID, ",")
+	if separatorIndex == -1 {
 		resp.Diagnostics.AddError(
 			"Invalid import identifier",
-			"Expected import identifier in the format iam_role_arn=<value>,resource_arn=<value>.",
+			"Expected import identifier in the format <iam_role_arn>,<resource_arn>.",
 		)
 		return
 	}
 
-	values := map[string]string{}
-	for _, kvPair := range kvPairs {
-		parts := strings.SplitN(strings.TrimSpace(kvPair), "=", 2)
-		if len(parts) != 2 {
-			resp.Diagnostics.AddError(
-				"Invalid import identifier",
-				"Expected key-value pairs in the format key=value.",
-			)
-			return
-		}
-
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-
-		switch key {
-		case keyIAMRoleARN, keyResourceARN:
-			if value == "" {
-				resp.Diagnostics.AddError(
-					"Invalid import identifier",
-					"Import value for key "+key+" must be non-empty.",
-				)
-				return
-			}
-			values[key] = value
-		default:
-			resp.Diagnostics.AddError(
-				"Invalid import identifier",
-				"Unsupported key "+key+". Supported keys are iam_role_arn and resource_arn.",
-			)
-			return
-		}
-	}
-
-	iamRoleARN, hasIAMRoleARN := values[keyIAMRoleARN]
-	resourceARN, hasResourceARN := values[keyResourceARN]
-	if !hasIAMRoleARN || !hasResourceARN {
+	iamRoleARN := strings.TrimSpace(req.ID[:separatorIndex])
+	resourceARN := strings.TrimSpace(req.ID[separatorIndex+1:])
+	if iamRoleARN == "" || resourceARN == "" {
 		resp.Diagnostics.AddError(
 			"Invalid import identifier",
-			"Both iam_role_arn and resource_arn must be specified in the import identifier.",
+			"Both IAM role ARN and resource ARN must be non-empty.",
 		)
 		return
 	}

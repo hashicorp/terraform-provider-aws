@@ -68,7 +68,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 						return "", errors.New("missing resource_arn in state")
 					}
 
-					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
+					return iamRoleARN + "," + resourceARN, nil
 				},
 			},
 		},
@@ -118,7 +118,7 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 						return "", errors.New("missing resource_arn in state")
 					}
 
-					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
+					return iamRoleARN + "," + resourceARN, nil
 				},
 			},
 		},

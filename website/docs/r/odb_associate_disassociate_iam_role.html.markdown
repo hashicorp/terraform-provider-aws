@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Oracle Database@AWS Associate Disassociate IAM Role using `composite_arn` key-value pairs (`iam_role_arn=<value>,resource_arn=<value>`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Oracle Database@AWS Associate Disassociate IAM Role using the IAM role ARN and resource ARN, separated by a comma. Specify the IAM role ARN first and the resource ARN second. For example:
 
 ```terraform
 import {
@@ -62,7 +62,7 @@ import {
 }
 ```
 
-Using `terraform import`, import an Oracle Database@AWS Associate Disassociate IAM Role using `composite_arn` key-value pairs (`iam_role_arn=<value>,resource_arn=<value>`). For example:
+Using `terraform import`, import an Oracle Database@AWS Associate Disassociate IAM Role using the IAM role ARN and resource ARN, separated by a comma. Specify the IAM role ARN first and the resource ARN second. For example:
 
 ```console
 % terraform import aws_odb_associate_disassociate_iam_role.example "iarn:aws:iam::123456789012:role/odb-iam-role-example,arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
