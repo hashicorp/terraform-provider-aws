@@ -61,7 +61,7 @@ func resourceParameter() *schema.Resource {
 						// The resource part of the ARN is "parameter/<name>", where "<name>" is either a bare string
 						// or a path with leading slash. If there are any slashes in "<name>" (after the separating slash),
 						// we need to keep the leading slash, otherwise we must remove it.
-						id = strings.TrimPrefix(id, "parameter")
+						id = strings.TrimPrefix(id, names.AttrParameter)
 						if !strings.Contains(id[1:], "/") {
 							id = strings.TrimPrefix(id, "/")
 						}
