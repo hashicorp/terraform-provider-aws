@@ -910,6 +910,22 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 			}
 		}
 
+		if t.Reflection != nil {
+			var reflection episodicReflectionOverrideDetailsModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Reflection, &reflection))
+			if diags.HasError() {
+				return diags
+			}
+			if !reflection.AppendToPrompt.IsNull() && !reflection.ModelID.IsNull() && !reflection.NamespaceTemplates.IsNull() {
+				var d diag.Diagnostics
+				m.Reflection, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &reflection)
+				smerr.AddEnrich(ctx, &diags, d)
+				if diags.HasError() {
+					return diags
+				}
+			}
+		}
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -923,10 +939,10 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 func (m customConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch targetType {
-	case reflect.TypeFor[awstypes.CustomConfigurationInput]():
+	case reflect.TypeFor[awstypes.CustomConfigurationInput](): // Create
 		return m.expandToCustomConfigurationInput(ctx)
 
-	case reflect.TypeFor[awstypes.ModifyStrategyConfiguration]():
+	case reflect.TypeFor[awstypes.ModifyStrategyConfiguration](): // Update
 		return m.expandToModifyStrategyConfiguration(ctx)
 
 	default:
@@ -993,7 +1009,9 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	var r awstypes.ModifyStrategyConfiguration
 	var rConsolidation awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration
 	var rExtraction awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration
+	var rReflection awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration
 	var consolidation, extraction *overrideDetailsModel
+	var reflection *episodicReflectionOverrideDetailsModel
 
 	if !m.Consolidation.IsNull() {
 		var d diag.Diagnostics
@@ -1014,6 +1032,16 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 		}
 
 		r.Extraction = &rExtraction
+	}
+	if !m.Reflection.IsNull() {
+		var d diag.Diagnostics
+		reflection, d = m.Reflection.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		r.Reflection = &rReflection
 	}
 
 	switch m.Type.ValueEnum() {
@@ -1095,6 +1123,16 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 			rExtraction.Value = &r
 		}
 
+		if reflection != nil {
+			var r awstypes.CustomReflectionConfigurationInputMemberEpisodicReflectionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, reflection, &r.Value))
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			rReflection.Value = &r
+		}
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
@@ -1117,6 +1155,9 @@ var (
 
 func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *overrideDetailsModel
+	alias := modelAlias(m)
 	switch t := v.(type) {
 	// Consolidation.
 	case awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration:
@@ -1135,20 +1176,28 @@ func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnost
 		return m.Flatten(ctx, t.Value)
 
 	case awstypes.SemanticConsolidationOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.SummaryConsolidationOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.UserPreferenceConsolidationOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.EpisodicConsolidationOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	//	Extraction.
 	case awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration:
@@ -1164,16 +1213,22 @@ func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnost
 		return m.Flatten(ctx, t.Value)
 
 	case awstypes.SemanticExtractionOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.UserPreferenceExtractionOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.EpisodicExtractionOverride:
-		m.AppendToPrompt = fwflex.StringToFramework(ctx, t.AppendToPrompt)
-		m.ModelID = fwflex.StringToFramework(ctx, t.ModelId)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	default:
 		diags.AddError(
@@ -1193,4 +1248,37 @@ type episodicReflectionOverrideDetailsModel struct {
 	AppendToPrompt     types.String        `tfsdk:"append_to_prompt"`
 	ModelID            types.String        `tfsdk:"model_id"`
 	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
+}
+
+var (
+	_ fwflex.Flattener = &episodicReflectionOverrideDetailsModel{}
+)
+
+func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	//	Reflection.
+	case *awstypes.CustomReflectionConfigurationMemberEpisodicReflectionOverride:
+		return m.Flatten(ctx, t.Value)
+
+	case awstypes.EpisodicReflectionOverride:
+		// To prevent infinite recursion...
+		type modelAlias *episodicReflectionOverrideDetailsModel
+		alias := modelAlias(m)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
+
+	case awstypes.ReflectionConfigurationMemberCustomReflectionConfiguration:
+		return m.Flatten(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("episodicReflectionOverrideDetailsModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
 }
