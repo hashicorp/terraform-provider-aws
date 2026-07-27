@@ -70,14 +70,14 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		input := amp.ListAnomalyDetectorsInput{
+		input := &amp.ListAnomalyDetectorsInput{
 			WorkspaceId: aws.String(workspaceID),
 		}
 		if !query.Alias.IsNull() {
 			input.Alias = query.Alias.ValueStringPointer()
 		}
 
-		for item, err := range listAnomalyDetectors(ctx, conn, &input) {
+		for item, err := range listAnomalyDetectors(ctx, conn, input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

@@ -3,44 +3,13 @@
 
 package amp_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the service/amp/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/amp"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -52,41 +21,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance tests access AWS and cost money to run.
 func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_anomaly_detector.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
@@ -139,7 +84,7 @@ func TestAccAMPAnomalyDetector_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_anomaly_detector.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -177,7 +122,7 @@ func TestAccAMPAnomalyDetector_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_anomaly_detector.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -255,7 +200,7 @@ func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_anomaly_detector.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -306,13 +251,11 @@ func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 
 func TestAccAMPAnomalyDetector_labels(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_anomaly_detector.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -402,21 +345,6 @@ func testAccCheckAnomalyDetectorExists(ctx context.Context, t *testing.T, name s
 	}
 }
 
-func testAccPreCheckAnomalyDetector(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
-
-	input := &amp.ListAnomalyDetectorsInput{}
-
-	_, err := conn.ListAnomalyDetectors(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 const testAccAnomalyDetectorConfig_base = `resource "aws_prometheus_workspace" "test" {}`
 
 func testAccAnomalyDetectorConfig_basic(rName string) string {
@@ -424,14 +352,14 @@ func testAccAnomalyDetectorConfig_basic(rName string) string {
 		testAccAnomalyDetectorConfig_base,
 		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
-  alias = %[1]q
-  workspace_id = aws_prometheus_workspace.test.id
+  alias                          = %[1]q
+  workspace_id                   = aws_prometheus_workspace.test.id
   evaluation_interval_in_seconds = 120
 
   configuration {
-	random_cut_forest {
-	  query = "avg(up)"
-	}
+    random_cut_forest {
+      query = "avg(up)"
+    }
   }
 
   missing_data_action {
@@ -446,14 +374,14 @@ func testAccAnomalyDetectorConfig_update(rName, eval_time, query, missingDataAct
 		testAccAnomalyDetectorConfig_base,
 		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
-  alias = %[1]q
-  workspace_id = aws_prometheus_workspace.test.id
+  alias                          = %[1]q
+  workspace_id                   = aws_prometheus_workspace.test.id
   evaluation_interval_in_seconds = %[2]s
 
   configuration {
-	random_cut_forest {
-	  query = %[3]q
-	}
+    random_cut_forest {
+      query = %[3]q
+    }
   }
 
   missing_data_action {
@@ -499,18 +427,18 @@ func testAccAnomalyDetectorConfig_labels(rName, labelKey1, labelValue1, label2 s
 		testAccAnomalyDetectorConfig_base,
 		fmt.Sprintf(`
 resource "aws_prometheus_anomaly_detector" "test" {
-  alias = %[1]q
-  workspace_id = aws_prometheus_workspace.test.id
+  alias                          = %[1]q
+  workspace_id                   = aws_prometheus_workspace.test.id
   evaluation_interval_in_seconds = 120
 
   configuration {
-	random_cut_forest {
-	  query = "avg(up)"
-	}
+    random_cut_forest {
+      query = "avg(up)"
+    }
   }
 
   labels = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
 	%[4]s
   }
 

@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -364,7 +365,6 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, req resource.Updat
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -404,8 +404,8 @@ func (r *anomalyDetectorResource) Delete(ctx context.Context, req resource.Delet
 
 func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id, workspaceID string, timeout time.Duration) (*awstypes.AnomalyDetectorDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.AnomalyDetectorStatusCodeCreating)},
-		Target:                    []string{string(awstypes.AnomalyDetectorStatusCodeActive)},
+		Pending:                   enum.Slice(awstypes.AnomalyDetectorStatusCodeCreating),
+		Target:                    enum.Slice(awstypes.AnomalyDetectorStatusCodeActive),
 		Refresh:                   statusAnomalyDetector(conn, id, workspaceID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -425,8 +425,8 @@ func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id, works
 
 func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id, workspaceID string, timeout time.Duration) (*awstypes.AnomalyDetectorDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.AnomalyDetectorStatusCodeUpdating)},
-		Target:                    []string{string(awstypes.AnomalyDetectorStatusCodeActive)},
+		Pending:                   enum.Slice(awstypes.AnomalyDetectorStatusCodeUpdating),
+		Target:                    enum.Slice(awstypes.AnomalyDetectorStatusCodeActive),
 		Refresh:                   statusAnomalyDetector(conn, id, workspaceID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -446,7 +446,7 @@ func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id, works
 
 func waitAnomalyDetectorDeleted(ctx context.Context, conn *amp.Client, id, workspaceID string, timeout time.Duration) (*awstypes.AnomalyDetectorDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.AnomalyDetectorStatusCodeDeleting), string(awstypes.AnomalyDetectorStatusCodeActive)},
+		Pending: enum.Slice(awstypes.AnomalyDetectorStatusCodeDeleting, awstypes.AnomalyDetectorStatusCodeActive),
 		Target:  []string{},
 		Refresh: statusAnomalyDetector(conn, id, workspaceID),
 		Timeout: timeout,
