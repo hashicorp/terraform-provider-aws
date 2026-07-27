@@ -84,6 +84,30 @@ resource "aws_bedrockagentcore_harness" "example" {
 }
 ```
 
+### With Gemini Additional Parameters
+
+```terraform
+resource "aws_bedrockagentcore_harness" "example" {
+  harness_name       = "example_gemini"
+  execution_role_arn = aws_iam_role.example.arn
+
+  model {
+    gemini_model_config {
+      api_key_arn = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
+      model_id     = "gemini-2.5-pro"
+
+      additional_params = jsonencode({
+        thinking_budget = 1024
+      })
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+```
+
 ### With Tools and Truncation
 
 ```terraform
@@ -196,6 +220,7 @@ The `model` block supports exactly one of the following:
 
 * `model_id` - (Required) Gemini model ID.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the Gemini model provider unchanged.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.

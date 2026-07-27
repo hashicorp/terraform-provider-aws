@@ -220,6 +220,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"additional_params": schema.StringAttribute{
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
 									"api_key_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
@@ -402,7 +406,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 													CustomType: fwtypes.ARNType,
 													Required:   true,
 												},
-												"username": schema.StringAttribute{
+												names.AttrUsername: schema.StringAttribute{
 													Optional: true,
 												},
 											},
@@ -418,7 +422,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"uri": schema.StringAttribute{
+									names.AttrURI: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(5),
@@ -939,6 +943,16 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if t.Value.AdditionalParams != nil {
+			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
+			if err != nil {
+				diags.AddError("reading Smithy document", err.Error())
+				return diags
+			}
+			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+		} else {
+			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
 		m.GeminiModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.HarnessModelConfigurationMemberLiteLlmModelConfig:
 		var data harnessLiteLLMModelConfigModel
@@ -990,6 +1004,17 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberGeminiModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		if !data.AdditionalParams.IsNull() && !data.AdditionalParams.IsUnknown() {
+			doc, err := tfsmithy.DocumentFromJSONString(data.AdditionalParams.ValueString(), document.NewLazyDocument)
+			if err != nil {
+				diags.AddError("creating Smithy document", err.Error())
+				return nil, diags
+			}
+			r.Value.AdditionalParams = doc
+		}
 		return &r, diags
 	case !m.LiteLlmModelConfig.IsNull():
 		data, d := m.LiteLlmModelConfig.ToPtr(ctx)
@@ -1032,12 +1057,13 @@ type harnessBedrockModelConfigModel struct {
 }
 
 type harnessGeminiModelConfigModel struct {
-	ApiKeyARN   fwtypes.ARN   `tfsdk:"api_key_arn"`
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float64 `tfsdk:"temperature"`
-	TopP        types.Float64 `tfsdk:"top_p"`
-	TopK        types.Int32   `tfsdk:"top_k"`
+	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
+	ApiKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
+	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
+	ModelID          types.String                           `tfsdk:"model_id"`
+	Temperature      types.Float64                          `tfsdk:"temperature"`
+	TopP             types.Float64                          `tfsdk:"top_p"`
+	TopK             types.Int32                            `tfsdk:"top_k"`
 }
 
 type harnessOpenAIModelConfigModel struct {

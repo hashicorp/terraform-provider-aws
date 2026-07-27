@@ -7,5 +7,5 @@ resource/aws_bedrockagentcore_harness: Add `s3`, `git`, and `aws_skills` configu
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_harness: Add `additional_params` argument to `openai_model_config`
+resource/aws_bedrockagentcore_harness: Add `additional_params` argument to `gemini_model_config` and `openai_model_config`
 ```
