@@ -34,7 +34,7 @@ import (
 // @FrameworkResource("aws_rekognition_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("collection_id", identityDuplicateAttributes="id")
-// @Testing(preIdentityVersion="v6.55.0")
+// @Testing(preIdentityVersion="v6.56.0")
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &collectionResource{}
 
