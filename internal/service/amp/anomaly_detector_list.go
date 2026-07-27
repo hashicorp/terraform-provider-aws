@@ -28,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -107,7 +108,7 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 
 			var data anomalyDetectorResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.ID = fwflex.StringToFramework(ctx, item.AnomalyDetectorId)
+				data.WorkspaceID = types.StringValue(workspaceID)
 
 				if request.IncludeResource {
 					out, err := findAnomalyDetectorByID(ctx, conn, id, workspaceID)
@@ -120,11 +121,17 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 					}
 
 					result.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
+					// fmt.Printf("Flattened AnomalyDetector: %+v\n", data)
 					if result.Diagnostics.HasError() {
 						return
 					}
 
 					setTagsOut(ctx, out.Tags)
+				} else {
+					result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
+					if result.Diagnostics.HasError() {
+						return
+					}
 				}
 
 				result.DisplayName = data.Alias.ValueString()
@@ -181,7 +188,7 @@ func listAnomalyDetectors(ctx context.Context, conn *amp.Client, input *amp.List
 //	if response.Diagnostics.HasError() {
 //		return
 //	}
-// func (r *anomalyDetectorResource) flatten(ctx context.Context, anomalyDetector *awstypes.AnomalyDetectorSummary, data *anomalyDetectorResourceModel) (diags diag.Diagnostics) {
-// 	diags.Append(fwflex.Flatten(ctx, anomalyDetector, data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
-// 	return diags
-// }
+func (r *anomalyDetectorResource) flatten(ctx context.Context, anomalyDetector *awstypes.AnomalyDetectorSummary, data *anomalyDetectorResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, anomalyDetector, data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
+	return diags
+}

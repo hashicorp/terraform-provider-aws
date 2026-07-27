@@ -100,6 +100,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
