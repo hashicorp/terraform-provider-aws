@@ -8,9 +8,11 @@ package ssm
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -48,6 +50,25 @@ func resourceParameter() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// We allow importing by ARN and versioned parameter in addition to named parameter
+				if id := d.Id(); id != "" {
+					if arn.IsARN(id) {
+						paramARN, err := arn.Parse(id)
+						if err != nil {
+							return nil, err
+						}
+						id = paramARN.Resource
+						// The resource part of the ARN is "parameter/<name>", where "<name>" is either a bare string
+						// or a path with leading slash. If there are any slashes in "<name>" (after the separating slash),
+						// we need to keep the leading slash, otherwise we must remove it.
+						id = strings.TrimPrefix(id, "parameter")
+						if !strings.Contains(id[1:], "/") {
+							id = strings.TrimPrefix(id, "/")
+						}
+						d.SetId(id)
+					}
+				}
+
 				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
