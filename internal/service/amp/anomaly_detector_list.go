@@ -3,23 +3,6 @@
 
 package amp
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
 	"context"
 	"fmt"
@@ -151,8 +134,6 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 
 type listAnomalyDetectorModel struct {
 	framework.WithRegionModel
-	// TIP: -- 1. Include required attributes
-	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 	Alias       types.String `tfsdk:"alias"` // Optional filtering
 }
@@ -176,17 +157,6 @@ func listAnomalyDetectors(ctx context.Context, conn *amp.Client, input *amp.List
 	}
 }
 
-// TIP: ==== RESOURCE FLATTENING FUNCTION ====
-// This function should be placed in the resource type's source file ("anomaly_detector.go"). It may already be present.
-// It is intended to perform the flattening of the results of the API call or calls used to populate a resource's values.
-// It should replace the flattening portion of the resource type's Read function (`anomalyDetectorResource.Read`) and take the API results
-// as parameters.
-// The replaced section of the Read function should be
-//
-//	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
-//	if response.Diagnostics.HasError() {
-//		return
-//	}
 func (r *anomalyDetectorResource) flatten(ctx context.Context, anomalyDetector *awstypes.AnomalyDetectorSummary, data *anomalyDetectorResourceModel) (diags diag.Diagnostics) {
 	diags.Append(fwflex.Flatten(ctx, anomalyDetector, data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
 	return diags
