@@ -19,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPAnomalyDetector_basic(t *testing.T) {
