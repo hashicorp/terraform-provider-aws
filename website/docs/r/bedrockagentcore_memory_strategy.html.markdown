@@ -206,6 +206,14 @@ The `extraction` block supports the following:
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for extraction processing.
 * `model_id` - (Required) ID of the foundation model to use for extraction processing.
 
+### `reflection`
+
+The `reflection` block supports the following:
+
+* `append_to_prompt` - (Required) Additional text to append to the model prompt for reflection processing.
+* `model_id` - (Required) ID of the foundation model to use for reflection processing.
+* `namespace_templates` - (Required) Namespace templates for episodic reflection. Can be less nested than the episodic namespaces.
+
 ### `reflection_configuration`
 
 The `reflection_configuration` block supports the following:

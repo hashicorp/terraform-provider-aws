@@ -49,12 +49,13 @@ var (
 )
 
 type (
-	CustomConfigurationModel              = customConfigurationModel
-	CustomJWTAuthorizerConfigurationModel = customJWTAuthorizerConfigurationModel
-	EpisodicReflectionConfigurationModel  = episodicReflectionConfigurationModel
-	ManagedVPCResourceModel               = managedVPCResourceModel
-	MemoryStrategyResourceModel           = memoryStrategyResourceModel
-	OverrideDetailsModel                  = overrideDetailsModel
-	PrivateEndpointModel                  = privateEndpointModel
-	SelfManagedLatticeResourceModel       = selfManagedLatticeResourceModel
+	CustomConfigurationModel               = customConfigurationModel
+	CustomJWTAuthorizerConfigurationModel  = customJWTAuthorizerConfigurationModel
+	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
+	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
+	ManagedVPCResourceModel                = managedVPCResourceModel
+	MemoryStrategyResourceModel            = memoryStrategyResourceModel
+	OverrideDetailsModel                   = overrideDetailsModel
+	PrivateEndpointModel                   = privateEndpointModel
+	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel
 )

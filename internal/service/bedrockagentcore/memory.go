@@ -52,6 +52,7 @@ func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error
 	r := &memoryResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -317,7 +318,32 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
-		_, err := conn.UpdateMemory(ctx, &input)
+		var (
+			err error
+		)
+		err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateMemory(ctx, &input)
+
+			// IAM propagation - retry if role validation fails
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+				return tfresource.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "valid trust policy") {
+				return tfresource.RetryableError(err)
+			}
+			// IAM propagation - retry while the execution role's permissions to a
+			// referenced resource (e.g. a Kinesis stream in stream_delivery_resources)
+			// have not yet propagated.
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "does not have access to provided") {
+				return tfresource.RetryableError(err)
+			}
+
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 			return

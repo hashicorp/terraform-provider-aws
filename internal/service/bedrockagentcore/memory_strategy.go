@@ -84,6 +84,9 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				},
 			},
 			names.AttrName: schema.StringAttribute{
+				Validators: []validator.String{
+					// TODO [a-zA-Z][a-zA-Z0-9_]{0,47}
+				},
 				Required: true,
 			},
 			"namespaces": schema.SetAttribute{
@@ -116,6 +119,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					tfstringvalidator.AlsoRequiresWhenEquals(
 						awstypes.MemoryStrategyTypeCustom,
 						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+						path.MatchRelative().AtParent().AtName("memory_execution_role_arn"),
 					),
 					tfstringvalidator.ConflictsWithWhenNotEquals(
 						awstypes.MemoryStrategyTypeCustom,
@@ -143,6 +147,14 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.OverrideType](),
 							Validators: []validator.String{
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.OverrideTypeEpisodicOverride,
+									path.MatchRelative().AtParent().AtName("reflection"),
+								),
+								tfstringvalidator.ConflictsWithWhenNotEquals(
+									awstypes.OverrideTypeEpisodicOverride,
+									path.MatchRelative().AtParent().AtName("reflection"),
+								),
 								tfstringvalidator.ConflictsWithWhenEquals(
 									awstypes.OverrideTypeSummaryOverride,
 									path.MatchRelative().AtParent().AtName("extraction"),
@@ -186,6 +198,29 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									},
 									"model_id": schema.StringAttribute{
 										Required: true,
+									},
+								},
+							},
+						},
+						"reflection": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[episodicReflectionOverrideDetailsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								errorIfSingleBlockRemoved("reflection"),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"append_to_prompt": schema.StringAttribute{
+										Required: true,
+									},
+									"model_id": schema.StringAttribute{
+										Required: true,
+									},
+									"namespace_templates": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Required:   true,
 									},
 								},
 							},
@@ -826,9 +861,10 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 }
 
 type customConfigurationModel struct {
-	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"extraction"`
-	Type          fwtypes.StringEnum[awstypes.OverrideType]             `tfsdk:"type"`
+	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"consolidation"`
+	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"extraction"`
+	Reflection    fwtypes.ListNestedObjectValueOf[episodicReflectionOverrideDetailsModel] `tfsdk:"reflection"`
+	Type          fwtypes.StringEnum[awstypes.OverrideType]                               `tfsdk:"type"`
 }
 
 var (
@@ -1150,5 +1186,11 @@ func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnost
 }
 
 type episodicReflectionConfigurationModel struct {
+	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
+}
+
+type episodicReflectionOverrideDetailsModel struct {
+	AppendToPrompt     types.String        `tfsdk:"append_to_prompt"`
+	ModelID            types.String        `tfsdk:"model_id"`
 	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
 }
