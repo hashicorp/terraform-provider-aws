@@ -125,7 +125,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 		return
 	}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
+	iamRoleOut, err := waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAssociateDisassociateIAMRole, associationDescription, err),
@@ -133,16 +133,10 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 		)
 		return
 	}
-	iamRoleOut, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, *input.ResourceArn, *input.IamRoleArn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, associationDescription, err),
-			err.Error(),
-		)
+	resp.Diagnostics.Append(flex.Flatten(ctx, iamRoleOut, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.Status = fwtypes.StringEnumValue(iamRoleOut.Status)
-	plan.StatusReason = types.StringPointerValue(iamRoleOut.StatusReason)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -280,7 +274,7 @@ func (r *resourceAssociateDisassociateIAMRole) ImportState(ctx context.Context, 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), resourceARN)...)
 }
 
-func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Client, resourceARN *string, iamRoleARN *string, timeout time.Duration) (*odb.AssociateIamRoleToResourceOutput, error) {
+func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Client, resourceARN *string, iamRoleARN *string, timeout time.Duration) (*odbtypes.IamRole, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.IamRoleStatusAssociating),
 		Target:  enum.Slice(odbtypes.IamRoleStatusFailed, odbtypes.IamRoleStatusConnected),
@@ -289,7 +283,7 @@ func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Clie
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*odb.AssociateIamRoleToResourceOutput); ok {
+	if out, ok := outputRaw.(*odbtypes.IamRole); ok {
 		return out, err
 	}
 
