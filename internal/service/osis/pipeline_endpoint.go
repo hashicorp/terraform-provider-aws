@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -186,12 +187,17 @@ func (r *pipelineEndpointResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, endpoint, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, endpoint, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *pipelineEndpointResource) flatten(ctx context.Context, endpoint *awstypes.PipelineEndpoint, data *pipelineEndpointResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, endpoint, data, fwflex.WithFieldNamePrefix("Endpoint"))...)
+	return diags
 }
 
 func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
