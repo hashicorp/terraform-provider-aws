@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS API Gateway V2 Portal Product.
 
-A portal product is a business-focused grouping of REST API endpoints that is surfaced in an [API Gateway developer portal](apigatewayv2_portal.html.markdown). Create the portal products first, then reference their ARNs from `aws_apigatewayv2_portal`.
+A portal product is a business-focused grouping of REST API endpoints that is surfaced in an API Gateway developer portal. Portal products are created independently of any portal; a portal then references them by ARN.
 
 ## Example Usage
 
@@ -23,37 +23,24 @@ resource "aws_apigatewayv2_portal_product" "example" {
 }
 ```
 
-### Referenced From a Portal
+### Multiple Products
 
 ```terraform
-resource "aws_apigatewayv2_portal_product" "example" {
+resource "aws_apigatewayv2_portal_product" "adopt" {
   display_name = "AdoptAnimals"
+  description  = "APIs for browsing and adopting shelter animals."
+
+  tags = {
+    Audience = "public"
+  }
 }
 
-resource "aws_apigatewayv2_portal" "example" {
-  included_portal_product_arns = [aws_apigatewayv2_portal_product.example.portal_product_arn]
+resource "aws_apigatewayv2_portal_product" "veterinary" {
+  display_name = "VeterinaryRecords"
+  description  = "APIs for managing animal medical records."
 
-  authorization {
-    none {}
-  }
-
-  endpoint_configuration {
-    none {}
-  }
-
-  portal_content {
-    display_name = "Animal Shelter APIs"
-
-    theme {
-      custom_colors {
-        accent_color           = "#FF9900"
-        background_color       = "#FFFFFF"
-        error_validation_color = "#D13212"
-        header_color           = "#232F3E"
-        navigation_color       = "#232F3E"
-        text_color             = "#16191F"
-      }
-    }
+  tags = {
+    Audience = "partner"
   }
 }
 ```
@@ -74,7 +61,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `last_modified` - Timestamp when the portal product was last modified.
+* `last_modified` - Timestamp when the portal product was last modified, in RFC3339 format.
 * `portal_product_arn` - ARN of the portal product.
 * `portal_product_id` - Unique identifier of the portal product.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
