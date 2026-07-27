@@ -215,6 +215,8 @@ func TestAccAPIGatewayV2PortalProduct_tags(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_null(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support null tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -425,6 +427,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_addOnUpdate(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_EmptyTag_onCreate(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -523,6 +527,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_EmptyTag_onCreate(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -670,6 +676,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -1506,6 +1514,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_updateToResourceOnly(t *t
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -1578,6 +1588,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_emptyResourceTag(t *testi
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support empty tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -1642,6 +1654,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_emptyProviderOnlyTag(t *t
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support null tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
@@ -1717,6 +1731,8 @@ func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_nullOverlappingResourceTa
 }
 
 func TestAccAPIGatewayV2PortalProduct_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+	t.Skip("Resource PortalProduct does not support null tags")
+
 	ctx := acctest.Context(t)
 
 	var v apigatewayv2.GetPortalProductOutput
