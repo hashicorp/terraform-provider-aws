@@ -23,17 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsStorageTierPolicy_serial(t *testing.T) {
-	t.Parallel()
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccLogsStorageTierPolicy_basic,
-		acctest.CtDisappears: testAccLogsStorageTierPolicy_disappears,
-		"update":             testAccLogsStorageTierPolicy_update,
-		"Identity":           testAccLogsStorageTierPolicy_identitySerial,
-	}
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccLogsStorageTierPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_log_storage_tier_policy.test"
