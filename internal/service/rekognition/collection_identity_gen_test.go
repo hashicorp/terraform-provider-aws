@@ -195,7 +195,7 @@ func TestAccRekognitionCollection_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.55.0
+// Resource Identity was added after v6.56.0
 func TestAccRekognitionCollection_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -212,7 +212,7 @@ func TestAccRekognitionCollection_Identity_ExistingResource_basic(t *testing.T) 
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Collection/basic_v6.55.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Collection/basic_v6.56.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -252,7 +252,7 @@ func TestAccRekognitionCollection_Identity_ExistingResource_basic(t *testing.T) 
 	})
 }
 
-// Resource Identity was added after v6.55.0
+// Resource Identity was added after v6.56.0
 func TestAccRekognitionCollection_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -274,7 +274,7 @@ func TestAccRekognitionCollection_Identity_ExistingResource_noRefreshNoChange(t 
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Collection/basic_v6.55.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Collection/basic_v6.56.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
