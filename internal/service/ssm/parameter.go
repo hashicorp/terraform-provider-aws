@@ -32,7 +32,7 @@ import (
 )
 
 // @SDKResource("aws_ssm_parameter", name="Parameter")
-// @Tags(identifierAttribute="id", resourceType="Parameter")
+// @Tags(identifierAttribute="name", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 // @IdentityAttribute("name")
 // @Testing(idAttrDuplicates="name")
