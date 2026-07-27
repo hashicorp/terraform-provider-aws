@@ -1,0 +1,123 @@
+---
+subcategory: "API Gateway V2"
+layout: "aws"
+page_title: "AWS: aws_apigatewayv2_portal_product"
+description: |-
+  Manages an AWS API Gateway V2 Portal Product.
+---
+
+# Resource: aws_apigatewayv2_portal_product
+
+Manages an AWS API Gateway V2 Portal Product.
+
+A portal product is a business-focused grouping of REST API endpoints that is surfaced in an [API Gateway developer portal](apigatewayv2_portal.html.markdown). Create the portal products first, then reference their ARNs from `aws_apigatewayv2_portal`.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_apigatewayv2_portal_product" "example" {
+  display_name = "AdoptAnimals"
+  description  = "APIs for browsing and adopting shelter animals."
+}
+```
+
+### Referenced From a Portal
+
+```terraform
+resource "aws_apigatewayv2_portal_product" "example" {
+  display_name = "AdoptAnimals"
+}
+
+resource "aws_apigatewayv2_portal" "example" {
+  included_portal_product_arns = [aws_apigatewayv2_portal_product.example.portal_product_arn]
+
+  authorization {
+    none {}
+  }
+
+  endpoint_configuration {
+    none {}
+  }
+
+  portal_content {
+    display_name = "Animal Shelter APIs"
+
+    theme {
+      custom_colors {
+        accent_color           = "#FF9900"
+        background_color       = "#FFFFFF"
+        error_validation_color = "#D13212"
+        header_color           = "#232F3E"
+        navigation_color       = "#232F3E"
+        text_color             = "#16191F"
+      }
+    }
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `display_name` - (Required) Name of the portal product as it appears in a published portal. Must be between 1 and 255 characters in length.
+
+The following arguments are optional:
+
+* `description` - (Optional) Description of the portal product. Must be at most 1024 characters in length.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `last_modified` - Timestamp when the portal product was last modified.
+* `portal_product_arn` - ARN of the portal product.
+* `portal_product_id` - Unique identifier of the portal product.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apigatewayv2_portal_product.example
+  identity = {
+    portal_product_id = "abcdef1234"
+  }
+}
+
+resource "aws_apigatewayv2_portal_product" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `portal_product_id` (String) ID of the portal product.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway V2 Portal Products using `portal_product_id`. For example:
+
+```terraform
+import {
+  to = aws_apigatewayv2_portal_product.example
+  id = "abcdef1234"
+}
+```
+
+Using `terraform import`, import API Gateway V2 Portal Products using `portal_product_id`. For example:
+
+```console
+% terraform import aws_apigatewayv2_portal_product.example abcdef1234
+```
