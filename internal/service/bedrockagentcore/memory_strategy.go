@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -85,7 +87,8 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrName: schema.StringAttribute{
 				Validators: []validator.String{
-					// TODO [a-zA-Z][a-zA-Z0-9_]{0,47}
+					stringvalidator.LengthBetween(1, 48),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
 				},
 				Required: true,
 			},
@@ -234,7 +237,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
-					// TODO RequiresReplace if removed.
+					errorIfSingleBlockRemoved("reflection_configuration"),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{

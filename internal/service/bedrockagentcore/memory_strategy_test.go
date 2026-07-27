@@ -1880,6 +1880,130 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguratio
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/episodic_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                 config.StringVariable(rName),
+					"namespace_template":            config.StringVariable("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					"reflection_namespace_template": config.StringVariable("/strategy/{memoryStrategyId}/actor/{actorId}/"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("<task>Consolidate</task>"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						"extraction": knownvalue.ListSizeExact(0),
+						"reflection": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("<task>Reflect</task>"),
+							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
+							"namespace_templates": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/"),
+							}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/episodic_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                 config.StringVariable(rName),
+					"namespace_template":            config.StringVariable("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					"reflection_namespace_template": config.StringVariable("/strategy/{memoryStrategyId}/actor/{actorId}/"),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/episodic_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                 config.StringVariable(rName),
+					"namespace_template":            config.StringVariable("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					"reflection_namespace_template": config.StringVariable("/strategy/{memoryStrategyId}/"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("<task>Consolidate</task>"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						"extraction": knownvalue.ListSizeExact(0),
+						"reflection": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("<task>Reflect</task>"),
+							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
+							"namespace_templates": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("/strategy/{memoryStrategyId}/"),
+							}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckMemoryStrategyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
