@@ -110,7 +110,7 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[anomalyDetectorConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -649,7 +649,7 @@ func (anomalyDetectorImportID) Parse(id string) (string, map[string]any, error) 
 	}
 
 	result := map[string]any{
-		"id":           anomalyDetectorID,
+		names.AttrID:           anomalyDetectorID,
 		"workspace_id": workspaceID,
 	}
 
