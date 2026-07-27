@@ -52,21 +52,20 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     "composite_arn",
 				ImportStateIdFunc: func(state *terraform.State) (string, error) {
 					rs, ok := state.RootModule().Resources[resourceName]
 					if !ok {
 						return "", errors.New("resource not found in state")
 					}
 
-					iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+					iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
 					if !ok || iamRoleARN == "" {
-						return "", errors.New("missing composite_arn.0.iam_role_arn in state")
+						return "", errors.New("missing iam_role_arn in state")
 					}
 
-					resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+					resourceARN, ok := rs.Primary.Attributes["resource_arn"]
 					if !ok || resourceARN == "" {
-						return "", errors.New("missing composite_arn.0.resource_arn in state")
+						return "", errors.New("missing resource_arn in state")
 					}
 
 					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
@@ -103,21 +102,20 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     "composite_arn",
 				ImportStateIdFunc: func(state *terraform.State) (string, error) {
 					rs, ok := state.RootModule().Resources[resourceName]
 					if !ok {
 						return "", errors.New("resource not found in state")
 					}
 
-					iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+					iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
 					if !ok || iamRoleARN == "" {
-						return "", errors.New("missing composite_arn.0.iam_role_arn in state")
+						return "", errors.New("missing iam_role_arn in state")
 					}
 
-					resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+					resourceARN, ok := rs.Primary.Attributes["resource_arn"]
 					if !ok || resourceARN == "" {
-						return "", errors.New("missing composite_arn.0.resource_arn in state")
+						return "", errors.New("missing resource_arn in state")
 					}
 
 					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
@@ -171,12 +169,12 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 				continue
 			}
 
-			resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+			resourceARN, ok := rs.Primary.Attributes["resource_arn"]
 			if !ok || resourceARN == "" {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("resource ARN not found in state"))
 			}
 
-			iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+			iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
 			if !ok || iamRoleARN == "" {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
 			}
@@ -203,12 +201,12 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, name, errors.New("not found"))
 		}
 
-		resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+		resourceARN, ok := rs.Primary.Attributes["resource_arn"]
 		if !ok || resourceARN == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("resource ARN not found in state"))
 		}
 
-		iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+		iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
 		if !ok || iamRoleARN == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
 		}
@@ -238,10 +236,8 @@ data "aws_odb_cloud_autonomous_vm_cluster" "test" {
 
 resource "aws_odb_associate_disassociate_iam_role" "test" {
   aws_integration = "KmsTde"
-  composite_arn {
-    iam_role_arn = data.aws_iam_role.test.arn
-    resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
-  }
+  iam_role_arn   = data.aws_iam_role.test.arn
+  resource_arn   = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
 }
 `
 }
@@ -258,10 +254,8 @@ data "aws_odb_cloud_vm_cluster" "test" {
 
 resource "aws_odb_associate_disassociate_iam_role" "test" {
   aws_integration = "KmsTde"
-  composite_arn {
-    iam_role_arn = data.aws_iam_role.test.arn
-    resource_arn = data.aws_odb_cloud_vm_cluster.test.arn
-  }
+  iam_role_arn   = data.aws_iam_role.test.arn
+  resource_arn   = data.aws_odb_cloud_vm_cluster.test.arn
 }
 `
 }

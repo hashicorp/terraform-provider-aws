@@ -19,11 +19,8 @@ Currently supported `resource_arn` targets are Cloud VM Clusters and Cloud Auton
 ```terraform
 resource "aws_odb_associate_disassociate_iam_role" "example" {
   aws_integration = "KmsTde"
-
-  composite_arn {
-    iam_role_arn = "arn:aws:iam::123456789012:role/odb-iam-role-example"
-    resource_arn = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
-  }
+  iam_role_arn   = "arn:aws:iam::123456789012:role/odb-iam-role-example"
+  resource_arn   = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
 }
 ```
 
@@ -32,10 +29,6 @@ resource "aws_odb_associate_disassociate_iam_role" "example" {
 The following arguments are required:
 
 * `aws_integration` - (Required) AWS integration configuration for the IAM role association. Valid value: `KmsTde`.
-* `composite_arn` - (Required) Exactly one block with the IAM role ARN and Oracle Database@AWS resource ARN.
-
-The `composite_arn` block supports the following arguments:
-
 * `iam_role_arn` - (Required) IAM role ARN to associate.
 * `resource_arn` - (Required) Oracle Database@AWS resource ARN to associate the IAM role with.
 

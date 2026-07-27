@@ -14,13 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -64,14 +62,23 @@ func (r *resourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrIAMRoleARN: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrResourceARN: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[odbtypes.IamRoleStatus](),
 				Computed:   true,
 			},
 			names.AttrStatusReason: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrID: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -81,32 +88,6 @@ func (r *resourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req r
 				Update: true,
 				Delete: true,
 			}),
-			"composite_arn": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceCompositeARNModel](ctx),
-				Validators: []validator.List{
-					// Only one combination of resource ARN and IAM role ARN is mandatory
-					listvalidator.SizeAtMost(1),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.IsRequired(),
-				},
-				Description: "Combination of resource ARN and IAM role ARN is mandatory",
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrIAMRoleARN: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						names.AttrResourceARN: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -118,26 +99,23 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARNs []resourceCompositeARNModel
-	plan.CompositeARN.ElementsAs(ctx, &combinedARNs, false)
+	associationDescription := iamRoleAssociationDescription(plan.IAMRoleARN, plan.ResourceARN)
 	var input odb.AssociateIamRoleToResourceInput
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.ResourceArn = combinedARNs[0].ResourceARN.ValueStringPointer()
-	input.IamRoleArn = combinedARNs[0].IAMRoleARN.ValueStringPointer()
 	out, err := conn.AssociateIamRoleToResource(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), nil),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, associationDescription, nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -150,7 +128,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	_, err = waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
@@ -158,14 +136,13 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	iamRoleOut, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, *input.ResourceArn, *input.IamRoleArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
 	}
 	plan.Status = fwtypes.StringEnumValue(iamRoleOut.Status)
 	plan.StatusReason = types.StringPointerValue(iamRoleOut.StatusReason)
-	plan.ComputedId = types.StringValue(plan.CompositeARN.String())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -177,21 +154,8 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARNs []resourceCompositeARNModel
-	resp.Diagnostics.Append(state.CompositeARN.ElementsAs(ctx, &combinedARNs, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if len(combinedARNs) == 0 {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), errors.New("missing composite_arn")),
-			"Expected at least one composite_arn entry in state.",
-		)
-		return
-	}
-
-	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARNs[0].ResourceARN.ValueString(), combinedARNs[0].IAMRoleARN.ValueString())
+	associationDescription := iamRoleAssociationDescription(state.IAMRoleARN, state.ResourceARN)
+	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, state.ResourceARN.ValueString(), state.IAMRoleARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -200,7 +164,7 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
@@ -210,18 +174,6 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 		return
 	}
 
-	compositeARN, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []resourceCompositeARNModel{
-		{
-			IAMRoleARN:  types.StringPointerValue(out.IamRoleArn),
-			ResourceARN: combinedARNs[0].ResourceARN,
-		},
-	})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	state.CompositeARN = compositeARN
-	state.ComputedId = types.StringValue(state.CompositeARN.String())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -232,47 +184,35 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARNs []resourceCompositeARNModel
-	resp.Diagnostics.Append(state.CompositeARN.ElementsAs(ctx, &combinedARNs, false)...)
+	associationDescription := iamRoleAssociationDescription(state.IAMRoleARN, state.ResourceARN)
+	var input odb.DisassociateIamRoleFromResourceInput
+	resp.Diagnostics.Append(flex.Expand(ctx, state, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if len(combinedARNs) == 0 {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), errors.New("missing composite_arn")),
-			"Expected at least one composite_arn entry in state.",
-		)
-		return
-	}
-
-	var input odb.DisassociateIamRoleFromResourceInput
-	resp.Diagnostics.Append(flex.Expand(ctx, state, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
-	input.IamRoleArn = combinedARNs[0].IAMRoleARN.ValueStringPointer()
-	input.ResourceArn = combinedARNs[0].ResourceARN.ValueStringPointer()
 	output, err := conn.DisassociateIamRoleFromResource(ctx, &input)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
 	}
 	if output == nil {
-		err = errors.New("disassociate IAM role returning nil response  : " + state.CompositeARN.String())
+		err = errors.New("disassociate IAM role returning nil response")
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
 	}
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitAssociateDisassociateIAMRoleDeleted(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer(), deleteTimeout)
+	_, err = waitAssociateDisassociateIAMRoleDeleted(ctx, conn, state.ResourceARN.ValueStringPointer(), state.IAMRoleARN.ValueStringPointer(), deleteTimeout)
 	if err != nil {
-		err = errors.New("disassociate IAM role returning nil response  : " + state.CompositeARN.String())
+		err = errors.New("disassociate IAM role returning nil response")
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
@@ -336,18 +276,8 @@ func (r *resourceAssociateDisassociateIAMRole) ImportState(ctx context.Context, 
 		return
 	}
 
-	compositeARN, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []resourceCompositeARNModel{
-		{
-			IAMRoleARN:  types.StringValue(iamRoleARN),
-			ResourceARN: types.StringValue(resourceARN),
-		},
-	})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("composite_arn"), compositeARN)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrIAMRoleARN), iamRoleARN)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), resourceARN)...)
 }
 
 func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Client, resourceARN *string, iamRoleARN *string, timeout time.Duration) (*odb.AssociateIamRoleToResourceOutput, error) {
@@ -449,16 +379,14 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 
 type resourceAssociateDisassociateIAMRoleResourceModel struct {
 	framework.WithRegionModel
-	CompositeARN   fwtypes.ListNestedObjectValueOf[resourceCompositeARNModel] `tfsdk:"composite_arn" noexpand:"true" noflatten:"true"`
-	AWSIntegration types.String                                               `tfsdk:"aws_integration"`
-	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                 `tfsdk:"status"`
-	StatusReason   types.String                                               `tfsdk:"status_reason"`
-	ComputedId     types.String                                               `tfsdk:"id" noflatten:"true"`
-	Timeouts       timeouts.Value                                             `tfsdk:"timeouts"`
+	AWSIntegration types.String                               `tfsdk:"aws_integration"`
+	IAMRoleARN     types.String                               `tfsdk:"iam_role_arn"`
+	ResourceARN    types.String                               `tfsdk:"resource_arn"`
+	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus] `tfsdk:"status"`
+	StatusReason   types.String                               `tfsdk:"status_reason"`
+	Timeouts       timeouts.Value                             `tfsdk:"timeouts"`
 }
 
-// Composite ID for IAM role resource
-type resourceCompositeARNModel struct {
-	IAMRoleARN  types.String `tfsdk:"iam_role_arn"`
-	ResourceARN types.String `tfsdk:"resource_arn"`
+func iamRoleAssociationDescription(iamRoleARN, resourceARN types.String) string {
+	return "IAM role " + iamRoleARN.ValueString() + " for resource " + resourceARN.ValueString()
 }
