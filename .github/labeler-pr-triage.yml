@@ -1438,6 +1438,12 @@ service/macie2:
           - any-glob-to-any-file:
               - 'internal/service/macie2/**/*'
               - 'website/**/macie2_*'
+service/mailmanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/mailmanager/**/*'
+              - 'website/**/mailmanager_*'
 service/managedblockchain:
   - any:
       - changed-files:

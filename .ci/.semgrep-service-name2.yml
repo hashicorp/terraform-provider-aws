@@ -1481,6 +1481,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Macie2"
     severity: WARNING
+  - id: mailmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "MailManager" in func name inside mailmanager package
+    paths:
+      include:
+        - "/internal/service/mailmanager"
+      exclude:
+        - "/internal/service/mailmanager/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MailManager"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: mailmanager-in-test-name
+    languages:
+      - go
+    message: Include "MailManager" in test name
+    paths:
+      include:
+        - "/internal/service/mailmanager/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccMailManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mailmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "MailManager" in const name inside mailmanager package
+    paths:
+      include:
+        - "/internal/service/mailmanager"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MailManager"
+    severity: WARNING
+  - id: mailmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "MailManager" in var name inside mailmanager package
+    paths:
+      include:
+        - "/internal/service/mailmanager"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MailManager"
+    severity: WARNING
   - id: managedgrafana-in-func-name
     languages:
       - go
@@ -4585,65 +4646,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)recyclebin"
-    severity: WARNING
-  - id: recyclebin-in-var-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in var name inside rbin package
-    paths:
-      include:
-        - "/internal/service/rbin"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
-    severity: WARNING
-  - id: redshift-in-func-name
-    languages:
-      - go
-    message: Do not use "Redshift" in func name inside redshift package
-    paths:
-      include:
-        - "/internal/service/redshift"
-      exclude:
-        - "/internal/service/redshift/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Redshift"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: redshift-in-test-name
-    languages:
-      - go
-    message: Include "Redshift" in test name
-    paths:
-      include:
-        - "/internal/service/redshift/*_test.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccRedshift"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: redshift-in-const-name
-    languages:
-      - go
-    message: Do not use "Redshift" in const name inside redshift package
-    paths:
-      include:
-        - "/internal/service/redshift"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Redshift"
     severity: WARNING
