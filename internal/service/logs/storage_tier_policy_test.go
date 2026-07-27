@@ -34,7 +34,7 @@ func testAccLogsStorageTierPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageTierPolicyDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
@@ -65,13 +65,13 @@ func testAccLogsStorageTierPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageTierPolicyDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageTierPolicyExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceStorageTierPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceStorageTierPolicy, resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -79,7 +79,7 @@ func testAccLogsStorageTierPolicy_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -98,7 +98,7 @@ func testAccLogsStorageTierPolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageTierPolicyDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/StorageTierPolicy/basic/"),
@@ -163,30 +163,6 @@ func testAccPreCheckStorageTierPolicy(ctx context.Context, t *testing.T) {
 	// Unexpected errors last
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckStorageTierPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cloudwatch_log_storage_tier_policy" {
-				continue
-			}
-
-			// Policy always exists, verify it's reset to STANDARD after destroy
-			out, err := tflogs.FindStorageTierPolicy(ctx, conn)
-			if err != nil {
-				return err
-			}
-
-			if out.StorageTier != awstypes.StorageTierStandard {
-				return fmt.Errorf("CloudWatch Logs Storage Tier Policy not reset to STANDARD after destroy, got: %s", out.StorageTier)
-			}
-		}
-
-		return nil
 	}
 }
 

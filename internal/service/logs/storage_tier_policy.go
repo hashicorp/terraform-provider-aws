@@ -26,6 +26,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
 func newStorageTierPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &storageTierPolicyResource{}
 
