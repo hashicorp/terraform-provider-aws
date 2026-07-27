@@ -52,7 +52,6 @@ import (
 // @IdentityAttribute("id")
 // @IdentityAttribute("workspace_id")
 // @ImportIDHandler("anomalyDetectorImportID")
-// @Testing(preCheck="testAccPreCheckAnomalyDetector")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc="testAccAnomalyDetectorImportState")
 func newAnomalyDetectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {

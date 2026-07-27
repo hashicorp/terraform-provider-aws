@@ -30,9 +30,7 @@ func TestAccAMPAnomalyDetector_Identity_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -122,9 +120,7 @@ func TestAccAMPAnomalyDetector_Identity_regionOverride(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
