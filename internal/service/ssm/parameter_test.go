@@ -1246,7 +1246,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 }
 
 // lintignore:AT002
-func TestAccSSMParameter_importByARN(t *testing.T) {
+func TestAccSSMParameter_ImportByARN_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
@@ -1274,7 +1274,39 @@ func TestAccSSMParameter_importByARN(t *testing.T) {
 				},
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_ImportByARN_fullPath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	name := fmt.Sprintf("/path/%s_%s", t.Name(), acctest.RandString(t, 10))
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+				),
+			},
+			// Test import by ARN.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/39050.
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(*terraform.State) (string, error) {
+					return aws.ToString(param.ARN), nil
+				},
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
