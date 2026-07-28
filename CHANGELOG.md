@@ -1,5 +1,10 @@
 ## 6.57.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. This attrribute should be removed from configurations ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: The `namespace` attribute has been deprecated. All configurations using `namespace` should be updated to use the `namespace_templates` attribute instead ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+
 FEATURES:
 
 * **New Data Source:** `aws_eks_access_policies` ([#49090](https://github.com/hashicorp/terraform-provider-aws/issues/49090))
@@ -26,6 +31,11 @@ ENHANCEMENTS:
 * data-source/aws_vpc: Adds support for `ipv6_cidr_block_associations`. ([#46918](https://github.com/hashicorp/terraform-provider-aws/issues/46918))
 * data-source/aws_vpc: Deprecates `ipv6_association_id` and `ipv6_cidr_block`. ([#46918](https://github.com/hashicorp/terraform-provider-aws/issues/46918))
 * resource/aws_autoscaling_group: Add `reservations-then-balanced` valid value for `availability_zone_distribution.capacity_distribution_strategy` ([#48934](https://github.com/hashicorp/terraform-provider-aws/issues/48934))
+* resource/aws_bedrockagentcore_memory: Add `timeouts.update` with a default value of `30m` ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: Add `configuration.reflection` configuration block for `EPISODIC_OVERRIDE` strategy type ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: Add `namespace_templates` argument ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: Add `reflection_configuration` configuration block for `EPISODIC` strategy type ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: Increase default `timeouts` values to `45m` ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
 * resource/aws_codepipeline: Add `stage.action.commands` and `stage.action.output_artifacts_for_compute_action` arguments to support Compute action types ([#42507](https://github.com/hashicorp/terraform-provider-aws/issues/42507))
 * resource/aws_codepipeline: `stage.action.output_artifacts_for_compute_action` and `stage.action.output_artifacts` now conflict ([#42507](https://github.com/hashicorp/terraform-provider-aws/issues/42507))
 * resource/aws_eks_pod_identity_association: Add `policy` argument to support inline session policies ([#48869](https://github.com/hashicorp/terraform-provider-aws/issues/48869))
