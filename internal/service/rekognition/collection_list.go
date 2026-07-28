@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,8 +58,11 @@ func (l *collectionListResource) List(ctx context.Context, request list.ListRequ
 						result.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 						return
 					}
-					data.ARN = flex.StringToFramework(ctx, out.CollectionARN)
-					data.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
+
+					smerr.AddEnrich(ctx, &result.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Collection")))
+					if result.Diagnostics.HasError() {
+						return
+					}
 				}
 
 				result.DisplayName = collectionID
