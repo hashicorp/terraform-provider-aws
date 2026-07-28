@@ -214,6 +214,31 @@ TASK_DEFINITION
 }
 ```
 
+### Exclusive Execution (Managed Instances)
+
+```terraform
+resource "aws_ecs_task_definition" "exclusive" {
+  family                   = "exclusive-task"
+  requires_compatibilities = ["MANAGED_INSTANCES"]
+  network_mode             = "awsvpc"
+
+  trusted_execution_configuration {
+    isolation_mode      = "EXCLUSIVE"
+    instance_reuse_mode = "REUSE"
+  }
+
+  container_definitions = jsonencode([
+    {
+      name      = "app"
+      image     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/my-app:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+    }
+  ])
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -240,6 +265,7 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `track_latest` - (Optional) Whether should track latest `ACTIVE` task definition on AWS or the one created with the resource stored in state. Default is `false`. Useful in the event the task definition is modified outside of this resource.
+* `trusted_execution_configuration` - (Optional) Configuration block for exclusive execution mode on ECS Managed Instances. Forces new resource. See [Trusted Execution Configuration](#trusted_execution_configuration) below.
 * `volume` - (Optional) Repeatable configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
 ~> **NOTE:** Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
@@ -319,6 +345,11 @@ For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.
 * `container_name` - (Required) Name of the container that will serve as the App Mesh proxy.
 * `properties` - (Required) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 * `type` - (Optional) Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
+
+### trusted_execution_configuration
+
+* `isolation_mode` - (Required) The isolation mode for the task. `EXCLUSIVE` guarantees the task is the only primary task running on the instance. `SHARED` uses standard shared placement. Valid values: `EXCLUSIVE`, `SHARED`.
+* `instance_reuse_mode` - (Optional) Controls what happens to the instance after the exclusive task stops. `REUSE` retains the instance for the next exclusive task. `TERMINATE` always provisions a fresh instance and terminates it after the task stops. Only valid when `isolation_mode` is `EXCLUSIVE`. Valid values: `REUSE`, `TERMINATE`. Default: `REUSE`.
 
 ### ephemeral_storage
 

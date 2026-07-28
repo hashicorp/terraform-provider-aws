@@ -298,6 +298,29 @@ func resourceTaskDefinition() *schema.Resource {
 					Default:  false,
 					Optional: true,
 				},
+				"trusted_execution_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"isolation_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IsolationMode](),
+							},
+							"instance_reuse_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InstanceReuseMode](),
+							},
+						},
+					},
+				},
 				"volume": resourceTaskDefinitionVolumeSchema(),
 			}
 		},
@@ -674,6 +697,10 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("task_role_arn"); ok {
 		input.TaskRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("trusted_execution_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TrustedExecutionConfiguration = expandTrustedExecutionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("volume"); ok {
@@ -1266,6 +1293,41 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	return []any{tfMap}
 }
 
+func expandTrustedExecutionConfiguration(tfList []any) *awstypes.TrustedExecutionConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.TrustedExecutionConfiguration{}
+
+	if v, ok := tfMap["isolation_mode"].(string); ok && v != "" {
+		apiObject.IsolationMode = awstypes.IsolationMode(v)
+	}
+
+	if v, ok := tfMap["instance_reuse_mode"].(string); ok && v != "" {
+		apiObject.InstanceReuseMode = awstypes.InstanceReuseMode(v)
+	}
+
+	return apiObject
+}
+
+func flattenTrustedExecutionConfiguration(apiObject *awstypes.TrustedExecutionConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"isolation_mode": string(apiObject.IsolationMode),
+	}
+
+	if apiObject.InstanceReuseMode != "" {
+		tfMap["instance_reuse_mode"] = string(apiObject.InstanceReuseMode)
+	}
+
+	return []any{tfMap}
+}
+
 func expandS3FilesVolumeConfiguration(tfList []any) *awstypes.S3FilesVolumeConfiguration {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.S3FilesVolumeConfiguration{}
@@ -1339,6 +1401,7 @@ func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, 
 	d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform))
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
 	d.Set("track_latest", d.Get("track_latest"))
+	d.Set("trusted_execution_configuration", flattenTrustedExecutionConfiguration(taskDefinition.TrustedExecutionConfiguration))
 	d.Set("volume", flattenVolumes(taskDefinition.Volumes))
 
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
