@@ -177,46 +177,48 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration`](#configuration) below.
+* `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration` Block](#configuration-block) below.
 * `description` - (Optional) Description of the memory strategy.
+* `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations.
 * `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured.
-* `namespaces` - (Optional) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
-* `reflection_configuration` - (Optional) Configuration for the reflections created with the episodic memory strategy. Valid when `type` is `EPISODIC`, must be omitted for other types. See [`reflection_configuration`](#reflection_configuration) below.
+* `namespaces` - (Optional, **Deprecated**) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
+* `reflection_configuration` - (Optional) Configuration for the reflections created with the episodic memory strategy. Valid when `type` is `EPISODIC`, must be omitted for other types. See [`reflection_configuration` Block](#reflection_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `configuration`
+### `configuration` Block
 
-The `configuration` block supports the following:
+The `configuration` block supports the following arguments:
 
+* `consolidation` - (Optional) Consolidation configuration for the memory strategy. See [`consolidation` Block](#consolidation-block) below. Once added, this block cannot be removed without recreating the resource.
+* `extraction` - (Optional) Extraction configuration for the memory strategy. See [`extraction` Block](#extraction-block) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
+* `reflection` - (Optional) Reflection configuration for the memory strategy. See [`reflection` Block](#reflection-block) below. Can only be used, and is required, with `type` set to `EPISODIC_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
 * `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
-* `consolidation` - (Optional) Consolidation configuration for processing and organizing memory content. See [`consolidation`](#consolidation) below. Once added, this block cannot be removed without recreating the resource.
-* `extraction` - (Optional) Extraction configuration for identifying and extracting relevant information. See [`extraction`](#extraction) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
 
-### `consolidation`
+### `consolidation` Block
 
-The `consolidation` block supports the following:
+The `consolidation` block supports the following arguments:
 
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for consolidation processing.
 * `model_id` - (Required) ID of the foundation model to use for consolidation processing.
 
-### `extraction`
+### `extraction` Block
 
-The `extraction` block supports the following:
+The `extraction` block supports the following arguments:
 
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for extraction processing.
 * `model_id` - (Required) ID of the foundation model to use for extraction processing.
 
-### `reflection`
+### `reflection` Block
 
-The `reflection` block supports the following:
+The `reflection` block supports the following arguments:
 
 * `append_to_prompt` - (Required) Additional text to append to the model prompt for reflection processing.
 * `model_id` - (Required) ID of the foundation model to use for reflection processing.
 * `namespace_templates` - (Required) Namespace templates for episodic reflection. Can be less nested than the episodic namespaces.
 
-### `reflection_configuration`
+### `reflection_configuration` Block
 
-The `reflection_configuration` block supports the following:
+The `reflection_configuration` supports the following arguments:
 
 * `namespace_templates` - (Required) Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 

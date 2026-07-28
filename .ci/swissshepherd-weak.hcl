@@ -965,7 +965,6 @@ check "schema_docs" {
     "resource/aws_bedrockagentcore_gateway_target",
     "resource/aws_bedrockagentcore_gateway",
     "resource/aws_bedrockagentcore_harness",
-    "resource/aws_bedrockagentcore_memory_strategy",
     "resource/aws_bedrockagentcore_memory",
     "resource/aws_bedrockagentcore_oauth2_credential_provider",
     "resource/aws_bedrockagentcore_registry",
