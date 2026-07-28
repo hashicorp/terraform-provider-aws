@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// DefaultValueFromPath returns a plan modifier requires resource replacement if:
+// RequiresReplaceIfEmptied returns a plan modifier requires resource replacement if:
 //   - The resource is planned for update.
 //   - The plan and state values are not equal.
 //   - The state value is a non-empty list.
