@@ -968,6 +968,31 @@ func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, d
 	return output, err
 }
 
+// viewDefinitionHasDialect returns true if view_definition.representations
+// contains at least one entry whose dialect matches the given value.
+func viewDefinitionHasDialect(d *schema.ResourceData, dialect awstypes.ViewDialect) bool {
+	v, ok := d.GetOk("view_definition")
+	if !ok {
+		return false
+	}
+	vdList := v.([]any)
+	if len(vdList) == 0 || vdList[0] == nil {
+		return false
+	}
+	reps, ok := vdList[0].(map[string]any)["representations"].([]any)
+	if !ok {
+		return false
+	}
+	for _, raw := range reps {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d == string(dialect) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 	apiObject := &awstypes.TableInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
@@ -995,7 +1020,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.Retention = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("storage_descriptor"); ok {
+	// For validated ATHENA views, Glue forbids StorageDescriptor on both
+	// CreateTable and UpdateTable. Skip it when any representation carries
+	// dialect = ATHENA, regardless of what is in state.
+	if v, ok := d.GetOk("storage_descriptor"); ok && !viewDefinitionHasDialect(d, awstypes.ViewDialectAthena) {
 		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
