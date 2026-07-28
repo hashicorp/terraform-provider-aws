@@ -6,6 +6,7 @@ package odb_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
@@ -25,7 +26,38 @@ type iamRoleAssociationDisassociationTest struct {
 
 var iamRoleAssociationDisassociationTestEntity = iamRoleAssociationDisassociationTest{}
 
+const (
+	iamRoleAssociationAVMCIDEnvVar      = "TF_AWS_ODB_IAM_ROLE_ASSOCIATION_AVMC_ID"
+	iamRoleAssociationAVMCRoleARNEnvVar = "TF_AWS_ODB_IAM_ROLE_ASSOCIATION_AVMC_ROLE_ARN"
+	iamRoleAssociationVMCIDEnvVar       = "TF_AWS_ODB_IAM_ROLE_ASSOCIATION_VMC_ID"
+	iamRoleAssociationVMCRoleARNEnvVar  = "TF_AWS_ODB_IAM_ROLE_ASSOCIATION_VMC_ROLE_ARN"
+)
+
+type iamRoleAssociationTestFixtures struct {
+	iamRoleARN string
+	resourceID string
+}
+
+func testAccIAMRoleAssociationAVMCFixtures(t *testing.T) iamRoleAssociationTestFixtures {
+	t.Helper()
+
+	return iamRoleAssociationTestFixtures{
+		resourceID: acctest.SkipIfEnvVarNotSet(t, iamRoleAssociationAVMCIDEnvVar),
+		iamRoleARN: acctest.SkipIfEnvVarNotSet(t, iamRoleAssociationAVMCRoleARNEnvVar),
+	}
+}
+
+func testAccIAMRoleAssociationVMCFixtures(t *testing.T) iamRoleAssociationTestFixtures {
+	t.Helper()
+
+	return iamRoleAssociationTestFixtures{
+		resourceID: acctest.SkipIfEnvVarNotSet(t, iamRoleAssociationVMCIDEnvVar),
+		iamRoleARN: acctest.SkipIfEnvVarNotSet(t, iamRoleAssociationVMCRoleARNEnvVar),
+	}
+}
+
 func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
+	fixtures := testAccIAMRoleAssociationVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -33,7 +65,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 	var associateDisassociateIAMRole odbtypes.IamRole
 	resourceName := "aws_odb_iam_role_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
@@ -43,7 +75,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(),
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(fixtures),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
 				),
@@ -76,6 +108,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 }
 
 func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
+	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -83,7 +116,7 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 	var associateDisassociateIAMRole odbtypes.IamRole
 	resourceName := "aws_odb_iam_role_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
@@ -93,7 +126,7 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(fixtures),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
 				),
@@ -126,6 +159,7 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 }
 
 func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
+	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -134,7 +168,7 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 	var iamRole odbtypes.IamRole
 	resourceName := "aws_odb_iam_role_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
@@ -144,7 +178,7 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(fixtures),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &iamRole),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.AssociateDisassociateIAMRole, resourceName),
@@ -224,38 +258,30 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 	}
 }
 
-func (test iamRoleAssociationDisassociationTest) associateIAMRoleToAutonomousCloudVMCluster() string {
-	return `
-data "aws_iam_role" "test" {
-  name = "OracleDBKMS_avmc_hvlokll3j2"
-}
-
+func (test iamRoleAssociationDisassociationTest) associateIAMRoleToAutonomousCloudVMCluster(fixtures iamRoleAssociationTestFixtures) string {
+	return fmt.Sprintf(`
 data "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  id = "avmc_hvlokll3j2"
+  id = %[1]q
 }
 
 resource "aws_odb_iam_role_association" "test" {
   aws_integration = "KmsTde"
-  iam_role_arn   = data.aws_iam_role.test.arn
+  iam_role_arn   = %[2]q
   resource_arn   = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
 }
-`
+`, fixtures.resourceID, fixtures.iamRoleARN)
 }
 
-func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster() string {
-	return `
-data "aws_iam_role" "test" {
-  name = "OracleDBKMS_vmc_fh3d42fmeu"
-}
-
+func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster(fixtures iamRoleAssociationTestFixtures) string {
+	return fmt.Sprintf(`
 data "aws_odb_cloud_vm_cluster" "test" {
-  id = "vmc_fh3d42fmeu"
+  id = %[1]q
 }
 
 resource "aws_odb_iam_role_association" "test" {
   aws_integration = "KmsTde"
-  iam_role_arn   = data.aws_iam_role.test.arn
+  iam_role_arn   = %[2]q
   resource_arn   = data.aws_odb_cloud_vm_cluster.test.arn
 }
-`
+`, fixtures.resourceID, fixtures.iamRoleARN)
 }
