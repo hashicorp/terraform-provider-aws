@@ -4,6 +4,7 @@
 package odb
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -86,6 +87,105 @@ func TestAutonomousDatabaseScheduledOperationsRoundTrip(t *testing.T) {
 	if got := models[0].DayOfWeek.ValueEnum(); got != odbtypes.DayOfWeekNameMonday {
 		t.Fatalf("flattened day of week = %q, want %q", got, odbtypes.DayOfWeekNameMonday)
 	}
+}
+
+func TestAutonomousDatabaseAdminPasswordSourceRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	source := testAutonomousDatabaseAdminPasswordSource(ctx, "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password", "arn:aws:iam::123456789012:role/SecretManagerReadRole", odbtypes.ExternalIdTypeCompartmentOcid)
+
+	var response resource.CreateResponse
+	passwordSource, configuration := expandAutonomousDatabaseAdminPasswordSource(ctx, source, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("expanding admin password source: %v", response.Diagnostics)
+	}
+	if got, want := passwordSource, odbtypes.AdminPasswordSourceCustomerManagedAwsSecret; got != want {
+		t.Fatalf("admin password source = %q, want %q", got, want)
+	}
+	secret, ok := configuration.(*odbtypes.AdminPasswordSourceConfigurationInputMemberCustomerManagedAwsSecret)
+	if !ok {
+		t.Fatalf("admin password source configuration = %T, want customer-managed AWS secret", configuration)
+	}
+	if got, want := aws.ToString(secret.Value.SecretId), "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password"; got != want {
+		t.Fatalf("secret_id = %q, want %q", got, want)
+	}
+	if got, want := aws.ToString(secret.Value.IamRoleArn), "arn:aws:iam::123456789012:role/SecretManagerReadRole"; got != want {
+		t.Fatalf("iam_role_arn = %q, want %q", got, want)
+	}
+	if got, want := secret.Value.ExternalIdType, odbtypes.ExternalIdTypeCompartmentOcid; got != want {
+		t.Fatalf("external_id_type = %q, want %q", got, want)
+	}
+
+	var result inttypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]
+	diags := flattenAutonomousDatabaseAdminPasswordSource(ctx, &odbtypes.AdminPasswordSourceSummary{
+		AdminPasswordSource: odbtypes.AdminPasswordSourceCustomerManagedAwsSecret,
+		AdminPasswordSourceConfiguration: &odbtypes.AdminPasswordSourceConfigurationMemberCustomerManagedAwsSecret{
+			Value: odbtypes.CustomerManagedAwsSecretConfiguration{
+				ExternalIdType: odbtypes.ExternalIdTypeCompartmentOcid,
+				IamRoleArn:     aws.String("arn:aws:iam::123456789012:role/SecretManagerReadRole"),
+				SecretId:       aws.String("arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password"),
+			},
+		},
+	}, &result)
+	if diags.HasError() {
+		t.Fatalf("flattening admin password source: %v", diags)
+	}
+	if !source.Equal(result) {
+		t.Fatalf("admin password source = %#v, want %#v", result, source)
+	}
+}
+
+func TestAutonomousDatabaseUpdateInputAdminPasswordSource(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	state, diags := inttypes.Nullified[autonomousDatabaseResourceModel](ctx)
+	if diags.HasError() {
+		t.Fatalf("constructing null resource model: %v", diags)
+	}
+	state.AutonomousDatabaseID = types.StringValue("adb-123")
+	plan := state
+	plan.AdminPasswordSource = testAutonomousDatabaseAdminPasswordSource(ctx, "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password", "arn:aws:iam::123456789012:role/SecretManagerReadRole", odbtypes.ExternalIdTypeCompartmentOcid)
+
+	var response resource.UpdateResponse
+	input := expandAutonomousDatabaseUpdateInput(ctx, plan, state, plan, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("expanding update input: %v", response.Diagnostics)
+	}
+	if got, want := input.AdminPasswordSource, odbtypes.AdminPasswordSourceCustomerManagedAwsSecret; got != want {
+		t.Fatalf("admin_password_source = %q, want %q", got, want)
+	}
+	if _, ok := input.AdminPasswordSourceConfiguration.(*odbtypes.AdminPasswordSourceConfigurationInputMemberCustomerManagedAwsSecret); !ok {
+		t.Fatalf("admin_password_source_configuration = %T, want customer-managed AWS secret", input.AdminPasswordSourceConfiguration)
+	}
+
+	state.AdminPasswordSource = plan.AdminPasswordSource
+	plan.AdminPasswordSource = inttypes.NewListNestedObjectValueOfNull[autonomousDatabaseAdminPasswordSourceModel](ctx)
+	input = expandAutonomousDatabaseUpdateInput(ctx, plan, state, plan, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("expanding removal update input: %v", response.Diagnostics)
+	}
+	if got, want := input.AdminPasswordSource, odbtypes.AdminPasswordSourceApiRequestParameter; got != want {
+		t.Fatalf("removal admin_password_source = %q, want %q", got, want)
+	}
+	if input.AdminPasswordSourceConfiguration != nil {
+		t.Fatalf("removal admin_password_source_configuration = %T, want nil", input.AdminPasswordSourceConfiguration)
+	}
+}
+
+func testAutonomousDatabaseAdminPasswordSource(ctx context.Context, secretARN, iamRoleARN string, externalIDType odbtypes.ExternalIdType) inttypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel] {
+	return inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseAdminPasswordSourceModel{
+		{
+			CustomerManagedAWSSecret: inttypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerManagedAWSSecretModel{
+				{
+					ExternalIDType: inttypes.StringEnumValue(externalIDType),
+					IAMRoleARN:     types.StringValue(iamRoleARN),
+					SecretARN:      types.StringValue(secretARN),
+				},
+			}),
+		},
+	})
 }
 
 func TestAutonomousDatabaseUpdateInputChangesOnly(t *testing.T) {
