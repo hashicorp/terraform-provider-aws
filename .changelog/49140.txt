@@ -1,4 +1,12 @@
 ```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add `reflection_configuration` configuration block for `EPISODIC` strategy type
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add `configuration.reflection` configuration block for `EPISODIC_OVERRIDE` strategy type
+```
+
+```release-note:enhancement
 resource/aws_bedrockagentcore_memory_strategy: Add `namespace_templates` argument
 ```
 
