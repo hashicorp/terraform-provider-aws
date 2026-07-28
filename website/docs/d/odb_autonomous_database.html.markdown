@@ -30,6 +30,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `actual_used_data_storage_size_in_tbs` - Actual data storage currently in use, in TB.
+* `admin_password_source` - Source of the ADMIN password. See [`admin_password_source` Block](#admin_password_source-block) below.
 * `allocated_storage_size_in_tbs` - Storage currently allocated, in TB.
 * `allowlisted_ips` - IP addresses allowed to access the database.
 * `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
@@ -92,6 +93,16 @@ This data source exports the following attributes in addition to the arguments a
 * `status_reason` - Additional lifecycle status information.
 * `tags` - Map of tags assigned to the Autonomous Database.
 * `time_of_auto_refresh_start` - Automatic refresh start date and time.
+
+### `admin_password_source` Block
+
+* `customer_managed_aws_secret` - Customer-managed AWS Secrets Manager configuration.
+
+#### `customer_managed_aws_secret`
+
+* `external_id_type` - OCI identifier type used as the external ID when OCI assumes the customer-managed IAM role.
+* `iam_role_arn` - ARN of the customer-managed IAM role OCI assumes to retrieve the secret.
+* `secret_arn` - ARN of the AWS Secrets Manager secret containing the ADMIN password.
 
 ### `customer_contacts_to_send_to_oci`
 

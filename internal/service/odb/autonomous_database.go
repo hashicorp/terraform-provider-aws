@@ -42,6 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,6 +79,7 @@ func (r *resourceAutonomousDatabase) Schema(ctx context.Context, _ resource.Sche
 				Update: true,
 				Delete: true,
 			}),
+			"admin_password_source":            adminPasswordSourceResourceBlock(ctx),
 			"customer_contacts_to_send_to_oci": customerContactsResourceBlock(ctx),
 			"db_tools_details":                 databaseToolsResourceBlock(ctx),
 			"long_term_backup_schedule":        longTermBackupScheduleResourceBlock(ctx),
@@ -111,6 +113,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Sensitive: true,
 			Validators: []validator.String{
 				stringvalidator.LengthBetween(12, 30),
+				stringvalidator.ConflictsWith(path.MatchRoot("admin_password_source")),
 				stringvalidator.ConflictsWith(path.MatchRoot("admin_password_wo")),
 				stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("admin_password_wo")),
 			},
@@ -123,6 +126,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Validators: []validator.String{
 				stringvalidator.LengthBetween(12, 30),
 				stringvalidator.ConflictsWith(path.MatchRoot("admin_password")),
+				stringvalidator.ConflictsWith(path.MatchRoot("admin_password_source")),
 				stringvalidator.AlsoRequires(path.MatchRoot("admin_password_wo_version")),
 			},
 			Description: "Password for the ADMIN user. This write-only value is never stored in Terraform state.",
@@ -485,6 +489,54 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 		},
 		names.AttrTags:    tftags.TagsAttribute(),
 		names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+	}
+}
+
+func adminPasswordSourceResourceBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseAdminPasswordSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(
+				path.MatchRoot("admin_password"),
+				path.MatchRoot("admin_password_wo"),
+			),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"customer_managed_aws_secret": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[autonomousDatabaseCustomerManagedAWSSecretModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"external_id_type": schema.StringAttribute{
+								CustomType:  fwtypes.StringEnumType[odbtypes.ExternalIdType](),
+								Required:    true,
+								Description: "Type of OCI identifier supplied as the external ID when OCI assumes the IAM role.",
+							},
+							"iam_role_arn": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									fwvalidators.ARN(),
+								},
+								Description: "ARN of the customer-managed IAM role OCI assumes to retrieve the secret.",
+							},
+							"secret_arn": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									fwvalidators.ARN(),
+								},
+								Description: "ARN of the AWS Secrets Manager secret that contains the ADMIN password.",
+							},
+						},
+					},
+				},
+			},
+		},
+		Description: "Source of the ADMIN password. Conflicts with admin_password and admin_password_wo.",
 	}
 }
 
@@ -865,6 +917,7 @@ func (r *resourceAutonomousDatabase) Create(ctx context.Context, req resource.Cr
 	} else if !plan.AdminPassword.IsNull() {
 		input.AdminPassword = plan.AdminPassword.ValueStringPointer()
 	}
+	input.AdminPasswordSource, input.AdminPasswordSourceConfiguration = expandAutonomousDatabaseAdminPasswordSource(ctx, plan.AdminPasswordSource, &resp.Diagnostics)
 	input.EncryptionKeyProvider, input.EncryptionKeyConfiguration = expandAutonomousDatabaseEncryption(plan.EncryptionKeyProvider, plan.KMSKeyID)
 	input.ScheduledOperations = expandAutonomousDatabaseScheduledOperations(ctx, plan.ScheduledOperations, &resp.Diagnostics)
 	input.SourceConfiguration = expandAutonomousDatabaseSourceConfiguration(ctx, plan.SourceConfiguration, &resp.Diagnostics)
@@ -1111,6 +1164,13 @@ func expandAutonomousDatabaseUpdateInput(ctx context.Context, plan, state, confi
 		input.AdminPassword = config.AdminPasswordWO.ValueStringPointer()
 	} else if !plan.AdminPassword.Equal(state.AdminPassword) {
 		input.AdminPassword = plan.AdminPassword.ValueStringPointer()
+	}
+	if !plan.AdminPasswordSource.Equal(state.AdminPasswordSource) {
+		if plan.AdminPasswordSource.IsNull() {
+			input.AdminPasswordSource = odbtypes.AdminPasswordSourceApiRequestParameter
+		} else {
+			input.AdminPasswordSource, input.AdminPasswordSourceConfiguration = expandAutonomousDatabaseAdminPasswordSource(ctx, plan.AdminPasswordSource, diags)
+		}
 	}
 	if plan.AllowlistedIps.Equal(state.AllowlistedIps) {
 		input.AllowlistedIps = nil
@@ -1397,6 +1457,34 @@ func expandAutonomousDatabaseEncryption(provider, kmsKeyID types.String) (odbtyp
 	return odbtypes.EncryptionKeyProviderInput(provider.ValueString()), configuration
 }
 
+// AdminPasswordSourceConfigurationInput is an SDK tagged union and requires explicit member selection.
+// nosemgrep:ci.semgrep.framework.manual-expander-functions
+func expandAutonomousDatabaseAdminPasswordSource(ctx context.Context, value fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel], diags *diag.Diagnostics) (odbtypes.AdminPasswordSource, odbtypes.AdminPasswordSourceConfigurationInput) {
+	if value.IsNull() || value.IsUnknown() {
+		return "", nil
+	}
+
+	source, d := value.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || source == nil || source.CustomerManagedAWSSecret.IsNull() {
+		return "", nil
+	}
+
+	secret, d := source.CustomerManagedAWSSecret.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || secret == nil {
+		return "", nil
+	}
+
+	return odbtypes.AdminPasswordSourceCustomerManagedAwsSecret, &odbtypes.AdminPasswordSourceConfigurationInputMemberCustomerManagedAwsSecret{
+		Value: odbtypes.CustomerManagedAwsSecretConfigurationInput{
+			ExternalIdType: secret.ExternalIDType.ValueEnum(),
+			IamRoleArn:     secret.IAMRoleARN.ValueStringPointer(),
+			SecretId:       secret.SecretARN.ValueStringPointer(),
+		},
+	}
+}
+
 // Scheduled operations require explicit conversion because the SDK represents day_of_week as a nested structure.
 // nosemgrep:ci.semgrep.framework.manual-expander-functions
 func expandAutonomousDatabaseScheduledOperations(ctx context.Context, value fwtypes.ListNestedObjectValueOf[autonomousDatabaseScheduledOperationModel], diags *diag.Diagnostics) []odbtypes.ScheduledOperationDetails {
@@ -1546,6 +1634,10 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 	model.ByolComputeCountLimit = flattenAutonomousDatabaseByolComputeCountLimit(apiObject.ByolComputeCountLimit)
 	model.DataStorageSizeInTBs = flattenAutonomousDatabaseDataStorageSizeInTBs(apiObject.DataStorageSizeInTBs)
 	model.KMSKeyID = types.StringNull()
+	diags.Append(flattenAutonomousDatabaseAdminPasswordSource(ctx, apiObject.AdminPasswordSourceSummary, &model.AdminPasswordSource)...)
+	if diags.HasError() {
+		return
+	}
 	if len(apiObject.CustomerContacts) == 0 && isConfiguredAutonomousDatabaseBlock(customerContacts) {
 		model.CustomerContactsToSendToOCI = customerContacts
 	} else {
@@ -1564,6 +1656,34 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 	case *odbtypes.EncryptionKeyConfigurationMemberAwsEncryptionKey:
 		model.KMSKeyID = types.StringPointerValue(configuration.Value.KmsKeyId)
 	}
+}
+
+// AdminPasswordSourceConfiguration is an SDK tagged union and requires explicit member selection.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenAutonomousDatabaseAdminPasswordSource(ctx context.Context, summary *odbtypes.AdminPasswordSourceSummary, target *fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]) diag.Diagnostics {
+	*target = fwtypes.NewListNestedObjectValueOfNull[autonomousDatabaseAdminPasswordSourceModel](ctx)
+	if summary == nil || summary.AdminPasswordSource != odbtypes.AdminPasswordSourceCustomerManagedAwsSecret {
+		return nil
+	}
+
+	configuration, ok := summary.AdminPasswordSourceConfiguration.(*odbtypes.AdminPasswordSourceConfigurationMemberCustomerManagedAwsSecret)
+	if !ok {
+		return nil
+	}
+
+	value, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []autonomousDatabaseAdminPasswordSourceModel{
+		{
+			CustomerManagedAWSSecret: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerManagedAWSSecretModel{
+				{
+					ExternalIDType: fwtypes.StringEnumValue(configuration.Value.ExternalIdType),
+					IAMRoleARN:     types.StringPointerValue(configuration.Value.IamRoleArn),
+					SecretARN:      types.StringPointerValue(configuration.Value.SecretId),
+				},
+			}),
+		},
+	})
+	*target = value
+	return diags
 }
 
 func isConfiguredAutonomousDatabaseBlock(value autonomousDatabaseValue) bool {
@@ -1597,6 +1717,7 @@ type autonomousDatabaseResourceModel struct {
 	AdminPassword                        types.String                                                                    `tfsdk:"admin_password" autoflex:"-"`
 	AdminPasswordWO                      types.String                                                                    `tfsdk:"admin_password_wo" autoflex:"-"`
 	AdminPasswordWOVersion               types.Int64                                                                     `tfsdk:"admin_password_wo_version" autoflex:"-"`
+	AdminPasswordSource                  fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]     `tfsdk:"admin_password_source" autoflex:"-"`
 	AllocatedStorageSizeInTBs            types.Float64                                                                   `tfsdk:"allocated_storage_size_in_tbs"`
 	AllowlistedIps                       fwtypes.ListValueOf[types.String]                                               `tfsdk:"allowlisted_ips"`
 	AutoRefreshFrequencyInSeconds        types.Int32                                                                     `tfsdk:"auto_refresh_frequency_in_seconds"`
@@ -1669,6 +1790,16 @@ type autonomousDatabaseResourceModel struct {
 
 type autonomousDatabaseCustomerContactModel struct {
 	Email types.String `tfsdk:"email"`
+}
+
+type autonomousDatabaseAdminPasswordSourceModel struct {
+	CustomerManagedAWSSecret fwtypes.ListNestedObjectValueOf[autonomousDatabaseCustomerManagedAWSSecretModel] `tfsdk:"customer_managed_aws_secret"`
+}
+
+type autonomousDatabaseCustomerManagedAWSSecretModel struct {
+	ExternalIDType fwtypes.StringEnum[odbtypes.ExternalIdType] `tfsdk:"external_id_type"`
+	IAMRoleARN     types.String                                `tfsdk:"iam_role_arn"`
+	SecretARN      types.String                                `tfsdk:"secret_arn"`
 }
 
 type autonomousDatabaseToolModel struct {

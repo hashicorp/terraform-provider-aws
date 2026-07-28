@@ -9,3 +9,7 @@ aws_odb_autonomous_database
 ```release-note:new-resource
 aws_odb_autonomous_database_secrets_manager_integration
 ```
+
+```release-note:enhancement
+resource/aws_odb_autonomous_database: Add AWS Secrets Manager ADMIN password source support
+```
