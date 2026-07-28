@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `engine`, `engine_version`, and `parameter_group_name` changes being ignored after disassociating from a global replication group
+```
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix `engine_version` returning full patch version instead of minor version for Valkey engine
+```

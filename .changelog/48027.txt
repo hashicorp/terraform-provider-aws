@@ -1,0 +1,23 @@
+```release-note:enhancement
+resource/aws_route: Add `odb_network_arn` argument
+```
+
+```release-note:enhancement
+data-source/aws_route: Add `odb_network_arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_route_table: Add `route.odb_network_arn` argument
+```
+
+```release-note:enhancement
+resource/aws_route: Add plan-time validation of `core_network_arn`
+```
+
+```release-note:enhancement
+resource/aws_route_table: Add plan-time validation of `route.core_network_arn`
+```
+
+```release-note:enhancement
+data-source/aws_route_table: Add `routes.odb_network_arn` attribute
+```

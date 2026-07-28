@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -85,6 +86,14 @@ func TestAccS3TablesNamespace_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfs3tables.ResourceNamespace, resourceName, namespaceDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3tables_namespace.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3tables_namespace.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

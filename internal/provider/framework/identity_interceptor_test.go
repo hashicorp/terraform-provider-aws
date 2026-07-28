@@ -338,11 +338,11 @@ func getIdentityAttributeValue(ctx context.Context, t *testing.T, identity *tfsd
 }
 
 func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name)
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func stateFromSchema(ctx context.Context, schema schema.Schema, values map[string]string) tfsdk.State {

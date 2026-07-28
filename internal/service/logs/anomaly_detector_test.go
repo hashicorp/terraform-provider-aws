@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -32,7 +34,10 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyDetectorConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
@@ -42,12 +47,18 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
+				ImportStateVerifyIgnore: []string{
+					names.AttrEnabled,
+				},
 			},
 		},
 	})
@@ -68,7 +79,13 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyDetectorConfig_update(rName, "TEN_MIN", acctest.CtFalse, 7),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:         config.StringVariable(rName),
+					"evaluationFrequency":   config.StringVariable("TEN_MIN"),
+					"enabled":               config.BoolVariable(false),
+					"anomalyVisibilityTime": config.IntegerVariable(7),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
@@ -80,15 +97,30 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:         config.StringVariable(rName),
+					"evaluationFrequency":   config.StringVariable("TEN_MIN"),
+					"enabled":               config.BoolVariable(false),
+					"anomalyVisibilityTime": config.IntegerVariable(7),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
+				ImportStateVerifyIgnore: []string{
+					names.AttrEnabled,
+				},
 			},
 			{
-				Config: testAccAnomalyDetectorConfig_update(rName, "FIVE_MIN", acctest.CtTrue, 8),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:         config.StringVariable(rName),
+					"evaluationFrequency":   config.StringVariable("FIVE_MIN"),
+					"enabled":               config.BoolVariable(true),
+					"anomalyVisibilityTime": config.IntegerVariable(8),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
@@ -97,14 +129,6 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
 			},
 		},
 	})
@@ -125,12 +149,23 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyDetectorConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -181,49 +216,4 @@ func testAccCheckAnomalyDetectorExists(ctx context.Context, t *testing.T, n stri
 
 		return nil
 	}
-}
-
-func testAccAnomalyDetectorImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
-	}
-}
-
-func testAccAnomalyDetectorConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  count = 2
-  name  = "%[1]s-${count.index}"
-}
-
-resource "aws_cloudwatch_log_anomaly_detector" "test" {
-  detector_name           = %[1]q
-  log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
-  anomaly_visibility_time = 7
-  evaluation_frequency    = "TEN_MIN"
-  enabled                 = false
-}
-`, rName)
-}
-
-func testAccAnomalyDetectorConfig_update(rName string, ef string, enabled string, avt int64) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  count = 2
-  name  = "%[1]s-${count.index}"
-}
-
-resource "aws_cloudwatch_log_anomaly_detector" "test" {
-  detector_name           = %[1]q
-  log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
-  anomaly_visibility_time = %[4]d
-  evaluation_frequency    = %[2]q
-  enabled                 = %[3]q
-}
-`, rName, ef, enabled, avt)
 }

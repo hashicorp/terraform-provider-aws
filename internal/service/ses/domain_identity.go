@@ -7,12 +7,10 @@ package ses
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,25 +27,28 @@ func resourceDomainIdentity() *schema.Resource {
 		CreateWithoutTimeout: resourceDomainIdentityCreate,
 		ReadWithoutTimeout:   resourceDomainIdentityRead,
 		DeleteWithoutTimeout: resourceDomainIdentityDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-			},
-			"verification_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+				},
+				"verification_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -57,11 +58,11 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	input := &ses.VerifyDomainIdentityInput{
+	input := ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),
 	}
 
-	_, err := conn.VerifyDomainIdentity(ctx, input)
+	_, err := conn.VerifyDomainIdentity(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting SES Domain Identity (%s) verification: %s", domainName, err)
@@ -74,7 +75,8 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	verificationAttrs, err := findIdentityVerificationAttributesByIdentity(ctx, conn, d.Id())
 
@@ -88,14 +90,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity (%s) verification: %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("identity/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, identityARN(ctx, c, d.Id()))
 	d.Set(names.AttrDomain, d.Id())
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 
@@ -107,9 +102,10 @@ func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Domain Identity: %s", d.Id())
-	_, err := conn.DeleteIdentity(ctx, &ses.DeleteIdentityInput{
+	input := ses.DeleteIdentityInput{
 		Identity: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIdentity(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Domain Identity (%s): %s", d.Id(), err)

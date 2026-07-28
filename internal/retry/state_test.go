@@ -193,6 +193,10 @@ func TestWaitForState_timeout(t *testing.T) {
 	if obj != nil {
 		t.Fatalf("should not return obj")
 	}
+
+	if !TimedOut(err) {
+		t.Fatalf("Expected TimedOut to return true, err: %s", err)
+	}
 }
 
 func TestWaitForState_success(t *testing.T) {

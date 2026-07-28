@@ -1,0 +1,51 @@
+```release-note:enhancement
+resource/aws_securityhub_action_target: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_configuration_policy_association: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_finding_aggregator: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_finding_aggregator: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_securityhub_insight: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_standards_subscription: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_standards_subscription: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_securityhub_member: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_standards_control: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_standards_control_association: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_product_subscription: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_organization_admin_account: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_securityhub_configuration_policy: Add Resource Identity support
+```

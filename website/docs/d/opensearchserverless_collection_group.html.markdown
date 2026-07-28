@@ -38,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits) below for details.
 * `created_date` - Date the collection group was created.
 * `description` - Description of the collection group.
+* `generation` - Generation of Amazon OpenSearch Serverless for the collection group.
 * `standby_replicas` - Indicates whether standby replicas should be used for collections in this group.
 * `tags` - A map of tags assigned to the collection group.
 

@@ -41,6 +41,32 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_workmail_default_domain.example
+  identity = {
+    organization_id = "m-1234567890abcdef0"
+  }
+}
+
+resource "aws_workmail_default_domain" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `organization_id` (String) Identifier of the WorkMail organization.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkMail Default Domain using the organization ID. For example:
 
 ```terraform

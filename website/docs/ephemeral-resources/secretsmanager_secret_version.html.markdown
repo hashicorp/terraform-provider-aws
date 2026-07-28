@@ -39,7 +39,7 @@ Reading key-value pairs from JSON back into a native Terraform map can be accomp
 
 ```terraform
 output "example" {
-  value = ephemeral.aws_secretsmanager_secret_version.example.secret_string["key1"]
+  value = jsondecode(ephemeral.aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
 ```
 

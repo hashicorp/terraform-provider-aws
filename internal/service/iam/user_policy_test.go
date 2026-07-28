@@ -88,6 +88,14 @@ func TestAccIAMUserPolicy_disappears(t *testing.T) {
 					testAccCheckUserPolicyExists(ctx, t, resourceName, &userPolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicy(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

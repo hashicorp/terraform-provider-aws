@@ -41,6 +41,7 @@ The following arguments are optional:
 * `comment` - (Optional) Comment.
 * `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
 * `key_value_store_associations` - (Optional) List of `aws_cloudfront_key_value_store` ARNs to be associated to the function. AWS limits associations to one key value store per function.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -50,6 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `etag` - ETag hash of the function. This is the value for the `DEVELOPMENT` stage of the function.
 * `live_stage_etag` - ETag hash of any `LIVE` stage of the function.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

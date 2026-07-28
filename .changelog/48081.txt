@@ -1,0 +1,9 @@
+```release-note:new-list-resource
+aws_s3control_multi_region_access_point
+```
+```release-note:new-list-resource
+aws_s3control_multi_region_access_point_routes
+```
+```release-note:enhancement
+resource/aws_s3control_multi_region_access_point: Add resource identity support
+```

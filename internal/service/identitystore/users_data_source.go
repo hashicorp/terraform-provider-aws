@@ -110,6 +110,7 @@ type userModel struct {
 	Title             types.String                                       `tfsdk:"title"`
 	UserID            types.String                                       `tfsdk:"user_id"`
 	UserName          types.String                                       `tfsdk:"user_name"`
+	UserStatus        types.String                                       `tfsdk:"user_status"`
 	UserType          types.String                                       `tfsdk:"user_type"`
 }
 

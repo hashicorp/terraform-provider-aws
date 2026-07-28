@@ -29,7 +29,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage Basic Authorization
+### Example Usage Basic Authorization
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage OAuth Authorization
+### Example Usage OAuth Authorization
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -88,7 +88,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage Invocation Http Parameters
+### Example Usage Invocation Http Parameters
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -131,7 +131,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage OAuth Authorization with Connectivity Parameters
+### Example Usage OAuth Authorization with Connectivity Parameters
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -167,7 +167,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-## Example Usage CMK Encryption
+### Example Usage CMK Encryption
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -308,17 +308,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge connection using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_connection.test
-  id = "ngrok-connection"
+  to = aws_cloudwatch_event_connection.example
+  identity = {
+    name = "example-connection"
+  }
+}
+
+resource "aws_cloudwatch_event_connection" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EventBridge EventBridge connection using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the connection.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Connections using `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_connection.example
+  id = "example-connection"
+}
+```
+
+Using `terraform import`, import Connections using `name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_event_connection.test ngrok-connection
+% terraform import aws_cloudwatch_event_connection.example example-connection
 ```

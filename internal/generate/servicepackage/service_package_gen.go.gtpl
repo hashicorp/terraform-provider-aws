@@ -44,16 +44,31 @@ inttypes.StringIdentityAttribute(
 {{- end }}
 
 {{ define "SDKv2CommonIdentityOpts" -}}
+{{- template "CommonIdentityOpts" . -}}
 {{- if .HasV6_0NullValuesError }}
 	inttypes.WithV6_0SDKv2Fix(),
 {{- end }}
-{{- template "CommonIdentityOpts" . -}}
 {{- end }}
 
 {{ define "CommonIdentityOpts" -}}
 {{- if .HasIdentityDuplicateAttrs -}}
 	inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 {{- end -}}
+{{- if .MutableIdentity }}
+	inttypes.WithMutableIdentity(),
+{{ end -}}
+{{- if .HasIdentityFix }}
+	inttypes.WithIdentityFix(),
+{{ end -}}
+{{- if .IdentityVersion }}
+    inttypes.WithVersion({{ .IdentityVersion }}),
+{{ end -}}
+{{- if gt (len .SDKv2IdentityUpgraders) 0 -}}
+	inttypes.WithSDKv2IdentityUpgraders({{- range .SDKv2IdentityUpgraders -}}{{.}},{{- end -}}),
+{{ end -}}
+{{- end }}
+
+{{ define "ListResourceIdentityOpts" -}}
 {{- if .MutableIdentity }}
 	inttypes.WithMutableIdentity(),
 {{ end -}}
@@ -229,14 +244,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . }}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . }}
 						),
@@ -349,14 +364,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . -}}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{ template "CommonIdentityOpts" . -}}
 						),
@@ -486,14 +501,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end -}}
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- else -}}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
@@ -512,23 +527,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							inttypes.RegionalARNIdentity(
 						{{- end }}
 					{{- end }}
-						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- template "SDKv2CommonIdentityOpts" . }}
+						{{ template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
-							{{- template "SDKv2CommonIdentityOpts" . }}
+							{{ template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- else -}}
 						inttypes.RegionalSingletonIdentity(
-							{{- template "SDKv2CommonIdentityOpts" . }}
+							{{ template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- end }}
 				{{- else if $value.IsCustomInherentRegionIdentity -}}
 					inttypes.RegionalCustomInherentRegionIdentity({{ .IdentityAttribute }}, {{ .CustomInherentRegionParser }},
-						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- template "SDKv2CommonIdentityOpts" . }}
+						{{ template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- end -}}
 			{{- end }}
@@ -586,7 +599,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						},
-						{{- template "CommonIdentityOpts" . -}}
+						{{- template "ListResourceIdentityOpts" . -}}
 						),
 					{{- else -}}
 						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -594,23 +607,23 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						},
-						{{- template "CommonIdentityOpts" . -}}
+						{{- template "ListResourceIdentityOpts" . -}}
 						),
 					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- template "ListResourceIdentityOpts" . -}}
 						),
 					{{- else -}}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }},
+								{{ template "IdentifierAttribute" . }}
 							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- template "ListResourceIdentityOpts" . -}}
 						),
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
@@ -635,22 +648,21 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- end }}
 						{{- end }}
 					{{- end }}
-						{{- template "CommonIdentityOpts" . -}}
+						{{- template "ListResourceIdentityOpts" . }}
 					),
 				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
-							{{- template "CommonIdentityOpts" . -}}
+							{{- template "ListResourceIdentityOpts" . -}}
 						),
 					{{ else -}}
 						inttypes.RegionalSingletonIdentity(
-							{{- template "CommonIdentityOpts" . -}}
+							{{- template "ListResourceIdentityOpts" . -}}
 						),
 					{{- end }}
 				{{- else if $value.IsCustomInherentRegionIdentity }}
 					inttypes.RegionalCustomInherentRegionIdentity({{ .IdentityAttribute }}, {{ .CustomInherentRegionParser }},
-						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- template "SDKv2CommonIdentityOpts" . }}
+						{{- template "ListResourceIdentityOpts" . }}
 					),
 				{{- end -}}
 			{{- end }}

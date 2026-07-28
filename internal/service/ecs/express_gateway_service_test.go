@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -22,6 +23,13 @@ import (
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// NOTE: When running these tests, the Express-Mode Service may get stuck while tearing down.
+// This is most likely due to a permissions issue, as most of the default permissions on the
+// policy "AmazonECSInfrastructureRoleforExpressGatewayServices" are gated on the condition key
+// "aws:ResourceTag/AmazonECSManaged = true".
+// To unblock deletion, add the policy "AdministratorAccess" to the IAM Role for the running Service.
+// Alternatively, destroy the ECS Cluster which contains the Service, which will also delete the Service.
 
 func TestAccECSExpressGatewayService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -53,10 +61,17 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cluster"), knownvalue.StringExact("default")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("current_deployment"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("health_check_path"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_type":      tfknownvalue.StringExact(awstypes.AccessTypePublic),
+							names.AttrEndpoint: tfknownvalue.RegionalHostnameOnDotAWSRegexp("ecs", regexache.MustCompile(`https://ng-\w+`)),
+						},
+						),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_target"), knownvalue.ListSizeExact(1)),
@@ -456,6 +471,136 @@ func TestAccECSExpressGatewayService_environmentVariableOrdering(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_recreateAfterDeleting(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service1, service2 awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Initial creation
+			{
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
+				),
+			},
+			// Step 2: Remove Service
+			{
+				Config: testAccExpressGatewayServiceConfig_base(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceNotInState(ctx, t, resourceName),
+				),
+			},
+			// Step 3: Re-Create Service with same name
+			{
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccECSExpressGatewayService_inactiveServiceDoesNotBlockCreate verifies that
+// an INACTIVE service returned by DescribeServices does not block recreation.
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/47438
+func TestAccECSExpressGatewayService_inactiveServiceDoesNotBlockCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service1, service2 awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_named(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_base(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceNotInState(ctx, t, resourceName),
+					testAccCheckServiceInactiveViaDescribeServices(ctx, t, rName, "default"),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_named(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckServiceInactiveViaDescribeServices(ctx context.Context, t *testing.T, serviceName, cluster string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
+
+		svc, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, serviceName, cluster)
+		if err != nil {
+			t.Logf("Service %s not found via DescribeServices (may have been fully removed): %s", serviceName, err)
+			return nil
+		}
+
+		status := aws.ToString(svc.Status)
+		if status != "INACTIVE" {
+			return fmt.Errorf("expected service %s to be INACTIVE via DescribeServices, got %s", serviceName, status)
+		}
+
+		t.Logf("Service %s is INACTIVE but still discoverable via DescribeServices", serviceName)
+		return nil
+	}
+}
+
+func testAccExpressGatewayServiceConfig_named(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  service_name            = %[1]q
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName))
+}
+
 func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -475,8 +620,7 @@ func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T)
 				return err
 			}
 
-			if string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeInactive) ||
-				string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeDraining) {
+			if string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeInactive) {
 				return nil
 			}
 
@@ -508,8 +652,19 @@ func testAccCheckExpressGatewayServiceExists(ctx context.Context, t *testing.T, 
 	}
 }
 
-func testAccExpressGatewayServiceConfig_base(rName string) string {
-	return fmt.Sprintf(`
+func testAccCheckExpressGatewayServiceNotInState(_ context.Context, _ *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if ok {
+			return fmt.Errorf("ECS Express Gateway Service %q found", rs.Primary.Attributes["service_arn"])
+		}
+
+		return nil
+	}
+}
+
+func testAccExpressGatewayServiceConfig_base(rName string, waitForSteadyState bool) string {
+	config := fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_vpc" "default" {
@@ -556,7 +711,11 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "execution" {
   role       = aws_iam_role.execution.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  policy_arn = data.aws_iam_policy.AmazonECSTaskExecutionRolePolicy.arn
+}
+
+data "aws_iam_policy" "AmazonECSTaskExecutionRolePolicy" {
+  name = "AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_role_policy" "execution_logs" {
@@ -591,12 +750,35 @@ resource "aws_iam_role" "infrastructure" {
 }
 POLICY
 }
+`, rName)
 
+	// Many of the permissions in `AmazonECSInfrastructureRoleforExpressGatewayServices` are
+	// gated on the condition key "aws:ResourceTag/AmazonECSManaged = true".
+	// If we are not waiting for steady state, the resource may be deleted before those tags are applied,
+	// causing permission errors in teardown.
+	if waitForSteadyState {
+		return acctest.ConfigCompose(config, `
 resource "aws_iam_role_policy_attachment" "infrastructure" {
   role       = aws_iam_role.infrastructure.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+  policy_arn = data.aws_iam_policy.AmazonECSInfrastructureRoleforExpressGatewayServices.arn
 }
-`, rName)
+
+data "aws_iam_policy" "AmazonECSInfrastructureRoleforExpressGatewayServices" {
+  name = "AmazonECSInfrastructureRoleforExpressGatewayServices"
+}
+`)
+	} else {
+		return acctest.ConfigCompose(config, `
+resource "aws_iam_role_policy_attachment" "infrastructure" {
+  role       = aws_iam_role.infrastructure.name
+  policy_arn = data.aws_iam_policy.AdministratorAccess.arn
+}
+
+data "aws_iam_policy" "AdministratorAccess" {
+  name = "AdministratorAccess"
+}
+`)
+	}
 }
 
 func testAccExpressGatewayServiceConfig_basic(rName string, waitForSteadyState bool) string {
@@ -605,7 +787,7 @@ func testAccExpressGatewayServiceConfig_basic(rName string, waitForSteadyState b
 		waitForSteadyStateConfig = "wait_for_steady_state = true"
 	}
 
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, waitForSteadyState), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -614,6 +796,11 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -624,7 +811,7 @@ func testAccExpressGatewayServiceConfig_updated(rName string, waitForSteadyState
 		waitForSteadyStateConfig = "wait_for_steady_state = true"
 	}
 
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, waitForSteadyState), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -640,12 +827,17 @@ resource "aws_ecs_express_gateway_service" "test" {
     auto_scaling_metric       = "AVERAGE_CPU"
     auto_scaling_target_value = 60
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, waitForSteadyStateConfig))
 }
 
 func testAccExpressGatewayServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -657,12 +849,17 @@ resource "aws_ecs_express_gateway_service" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, tagKey1, tagValue1))
 }
 
 func testAccExpressGatewayServiceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -675,12 +872,17 @@ resource "aws_ecs_express_gateway_service" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccExpressGatewayServiceConfig_networkConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -779,12 +981,18 @@ resource "aws_ecs_express_gateway_service" "test" {
     subnets         = [aws_subnet.test_subnet1.id, aws_subnet.test_subnet2.id]
     security_groups = [aws_security_group.test.id]
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+    aws_iam_role_policy_attachment.task_role,
+  ]
 }
 `, rName))
 }
 
 func testAccExpressGatewayServiceConfig_duplicate(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -792,6 +1000,11 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 
 resource "aws_ecs_express_gateway_service" "duplicate" {
@@ -813,7 +1026,7 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
 // testAccExpressGatewayServiceConfig_environmentVariableOrdering creates a service
 // with env vars in non-alphabetical order.
 func testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -836,6 +1049,11 @@ resource "aws_ecs_express_gateway_service" "test" {
       value = "first"
     }
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `)
 }
@@ -843,7 +1061,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 // testAccExpressGatewayServiceConfig_environmentVariableUpdated creates a service
 // with updated env vars to test ordering after add/remove.
 func testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -861,6 +1079,11 @@ resource "aws_ecs_express_gateway_service" "test" {
       value = "fourth"
     }
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
 }
 `)
 }

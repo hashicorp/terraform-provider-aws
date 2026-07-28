@@ -16,60 +16,62 @@ import (
 
 func resourceRuleV0() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"event_bus_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  DefaultEventBusName,
-			},
-			"event_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
-				StateFunc: func(v any) string {
-					json, _ := ruleEventPatternJSONDecoder(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"is_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrNamePrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrScheduleExpression: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"event_bus_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  defaultEventBusName,
+				},
+				"event_pattern": {
+					Type:     schema.TypeString,
+					Optional: true,
+					StateFunc: func(v any) string {
+						json, _ := ruleEventPatternJSONDecoder(v.(string))
+						return json
+					},
+				},
+				"is_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrNamePrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrScheduleExpression: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

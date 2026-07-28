@@ -68,6 +68,10 @@ This data source exports the following attributes in addition to the arguments a
     * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
     * `control_plane_placement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
         * `group_name` - The name of the placement group for the Kubernetes control plane instances.
+        * `spread_level` - Placement group spread level for control plane instances.
+    * `etcd_instance_type` - Amazon EC2 instance type for etcd instances.
+    * `etcd_placement` - Placement configuration for the etcd instances.
+        * `spread_level` - Placement group spread level for etcd instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
 * `remote_network_config` - Contains remote network configuration for EKS Hybrid Nodes.
@@ -86,6 +90,7 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Kubernetes server version for the cluster.
 * `vpc_config` - Nested list containing VPC configuration for the cluster.
     * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
+    * `control_plane_egress_mode` - The egress mode for the EKS control plane. Possible values are `AWS_MANAGED` and `CUSTOMER_ROUTED`.
     * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.

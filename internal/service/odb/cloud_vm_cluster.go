@@ -32,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -61,6 +60,7 @@ func newResourceCloudVmCluster(_ context.Context) (resource.ResourceWithConfigur
 const (
 	ResNameCloudVmCluster = "Cloud Vm Cluster"
 	MajorGiVersionPattern = `^\d+\.0\.0\.0$`
+	GiVersionSystemTag    = "odb:input_gi_version"
 )
 
 var ResourceCloudVmCluster = newResourceCloudVmCluster
@@ -173,7 +173,7 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Validators:  giVersionValidator,
 				Description: "A valid software version of Oracle Grid Infrastructure (GI). To get the list of valid values, use the ListGiVersions operation and specify the shape of the Exadata infrastructure. Example: 19.0.0.0 This member is required. Changing this will create a new resource.",
 			},
-			//Underlying API returns complete gi version. For example if gi_version 23.0.0.0 then underlying api returns a version starting with 23
+			//Underlying API returns complete gi version. For example if gi_version 23.0.0.0 then underlying api returns a version starting with 23 or could be completely a different
 			"gi_version_computed": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -510,6 +510,18 @@ func (r *resourceCloudVmCluster) ValidateConfig(ctx context.Context, req resourc
 		)
 		return
 	}
+	vmcTagAsMap := data.Tags.Elements()
+	v, ok := vmcTagAsMap[GiVersionSystemTag]
+	if ok {
+		if v.String() != data.GiVersion.String() {
+			err := errors.New(GiVersionSystemTag + " tag value must be equals to GiVersion value")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
 }
 
 func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -569,7 +581,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = flex.Int32ToFramework(ctx, createdVmCluster.ListenerPort)
 	plan.GiVersionComputed = flex.StringToFramework(ctx, createdVmCluster.GiVersion)
-	giVersionMajor, err := getMajorGiVersion(createdVmCluster.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(ctx, conn, createdVmCluster.CloudVmClusterArn, createdVmCluster.GiVersion)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
@@ -615,7 +627,7 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	//scan listener port not returned by API directly
 	state.ScanListenerPortTcp = flex.Int32ToFramework(ctx, out.ListenerPort)
 	state.GiVersionComputed = flex.StringToFramework(ctx, out.GiVersion)
-	giVersionMajor, err := getMajorGiVersion(out.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(ctx, conn, out.CloudVmClusterArn, out.GiVersion)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
@@ -680,10 +692,10 @@ func computeHostnamePrefix(hostnamePrefixComputed *string) *string {
 	}
 }
 func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:                   statusCloudVmCluster(ctx, conn, id),
+		Refresh:                   statusCloudVmCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -698,10 +710,10 @@ func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string,
 }
 
 func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
-		Refresh: statusCloudVmCluster(ctx, conn, id),
+		Refresh: statusCloudVmCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -713,8 +725,8 @@ func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string,
 	return nil, err
 }
 
-func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCloudVmCluster(conn *odb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findCloudVmClusterForResourceByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -735,9 +747,8 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	out, err := conn.GetCloudVmCluster(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err
@@ -748,15 +759,29 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	}
 	return out.CloudVmCluster, nil
 }
-func getMajorGiVersion(giVersionComputed *string) (*string, error) {
-	giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
-	giVersionMajor = giVersionMajor + ".0.0.0"
-	regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
-	if !regxGiVersionMajor.MatchString(giVersionMajor) {
-		err := errors.New("gi_version major retrieved from gi_version_computed does not match the pattern 19.0.0.0")
+
+// Here we will go through tag to find out whether we can find the input gi_version or not. If not found we will get the version from
+// computed gi version to ensure backward compatibility.
+func getMajorGiVersion(ctx context.Context, conn *odb.Client, arn *string, giVersionComputed *string) (*string, error) {
+	tagsRead, err := listTags(ctx, conn, *arn)
+	if err != nil {
 		return nil, err
 	}
-	return &giVersionMajor, nil
+	var inputGiVersion *string
+	if tagsRead.KeyExists(GiVersionSystemTag) {
+		inputGiVersion = tagsRead.KeyValue(GiVersionSystemTag)
+		return inputGiVersion, nil
+	} else {
+		// This regexp based approach is for backward compatibility
+		giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
+		giVersionMajor = giVersionMajor + ".0.0.0"
+		regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
+		if !regxGiVersionMajor.MatchString(giVersionMajor) {
+			err := errors.New("gi_version major retrieved from gi_version_computed does not match the pattern 19.0.0.0")
+			return nil, err
+		}
+		return &giVersionMajor, nil
+	}
 }
 
 type cloudVmClusterResourceModel struct {

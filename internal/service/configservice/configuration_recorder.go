@@ -42,113 +42,115 @@ func resourceConfigurationRecorder() *schema.Resource {
 
 		CustomizeDiff: resourceConfigurationRecorderCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      defaultConfigurationRecorderName,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"recording_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"all_supported": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"exclusion_by_resource_types": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource_types": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"include_global_resource_types": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"recording_strategy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"use_only": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.RecordingStrategyType](),
-									},
-								},
-							},
-						},
-						"resource_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      defaultConfigurationRecorderName,
+					ValidateFunc: validation.StringLenBetween(0, 256),
 				},
-			},
-			"recording_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recording_frequency": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.RecordingFrequencyContinuous,
-							ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
-						},
-						"recording_mode_override": {
-							Type:     schema.TypeList,
-							Optional: true,
-							// Even though the name is plural, the API only allows one override:
-							// ValidationException: 1 validation error detected: Value '[com.amazonaws.starling.dove.RecordingModeOverride@aa179030, com.amazonaws.starling.dove.RecordingModeOverride@4b13c61c]' at 'configurationRecorder.recordingMode.recordingModeOverrides' failed to satisfy constraint: Member must have length less than or equal to 1
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDescription: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"recording_frequency": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
-									},
-									"resource_types": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"recording_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all_supported": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"exclusion_by_resource_types": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_types": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
+							},
+							"include_global_resource_types": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"recording_strategy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"use_only": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.RecordingStrategyType](),
+										},
+									},
+								},
+							},
+							"resource_types": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
 				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"recording_mode": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"recording_frequency": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.RecordingFrequencyContinuous,
+								ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
+							},
+							"recording_mode_override": {
+								Type:     schema.TypeList,
+								Optional: true,
+								// Even though the name is plural, the API only allows one override:
+								// ValidationException: 1 validation error detected: Value '[com.amazonaws.starling.dove.RecordingModeOverride@aa179030, com.amazonaws.starling.dove.RecordingModeOverride@4b13c61c]' at 'configurationRecorder.recordingMode.recordingModeOverrides' failed to satisfy constraint: Member must have length less than or equal to 1
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDescription: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"recording_frequency": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
+										},
+										"resource_types": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

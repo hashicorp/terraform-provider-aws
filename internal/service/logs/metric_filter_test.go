@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -50,7 +51,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -76,6 +77,14 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -100,6 +109,14 @@ func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -158,7 +175,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -216,22 +233,15 @@ func TestAccLogsMetricFilter_longPatternInUTF8(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrLogGroupName] + ":" + rs.Primary.Attributes[names.AttrName], nil
-	}
+func testAccMetricFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ":", names.AttrLogGroupName, names.AttrName)
 }
 
 func testAccCheckMetricFilterExists(ctx context.Context, t *testing.T, n string, v *types.MetricFilter) resource.TestCheckFunc {

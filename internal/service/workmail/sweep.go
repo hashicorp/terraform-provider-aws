@@ -36,9 +36,11 @@ func sweepOrganizations(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 		}
 
 		for _, v := range page.OrganizationSummaries {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newOrganizationResource, client,
-				sweepfw.NewAttribute("organization_id", aws.ToString(v.OrganizationId))),
-			)
+			if aws.ToString(v.State) != statusDeleted {
+				sweepResources = append(sweepResources, sweepfw.NewSweepResource(newOrganizationResource, client,
+					sweepfw.NewAttribute("organization_id", aws.ToString(v.OrganizationId))),
+				)
+			}
 		}
 	}
 
@@ -57,6 +59,10 @@ func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 		}
 
 		for _, organization := range page.OrganizationSummaries {
+			if aws.ToString(organization.State) == statusDeleted {
+				continue
+			}
+
 			organizationID := aws.ToString(organization.OrganizationId)
 
 			input := workmail.ListGroupsInput{
@@ -95,6 +101,10 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 		}
 
 		for _, organization := range page.OrganizationSummaries {
+			if aws.ToString(organization.State) == statusDeleted {
+				continue
+			}
+
 			organizationID := aws.ToString(organization.OrganizationId)
 
 			input := workmail.ListUsersInput{

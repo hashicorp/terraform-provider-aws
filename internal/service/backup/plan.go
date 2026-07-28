@@ -56,198 +56,200 @@ func resourcePlan() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"advanced_backup_setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"backup_options": {
-							Type:     schema.TypeMap,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrResourceType: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"EC2",
-							}, false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"advanced_backup_setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"backup_options": {
+								Type:     schema.TypeMap,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrResourceType: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"EC2",
+								}, false),
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"completion_window": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  180,
-						},
-						"copy_action": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_vault_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lifecycle": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cold_storage_after": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"delete_after": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"opt_in_to_archive_for_supported_resources": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"completion_window": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  180,
+							},
+							"copy_action": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_vault_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"lifecycle": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cold_storage_after": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"delete_after": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"opt_in_to_archive_for_supported_resources": {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Computed: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"enable_continuous_backup": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"lifecycle": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cold_storage_after": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"delete_after": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"opt_in_to_archive_for_supported_resources": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
+							"enable_continuous_backup": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"lifecycle": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cold_storage_after": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"delete_after": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"opt_in_to_archive_for_supported_resources": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"recovery_point_tags": tftags.TagsSchema(),
-						"rule_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 50),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-							),
-						},
-						names.AttrSchedule: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"scan_action": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"malware_scanner": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.MalwareScanner](),
-									},
-									"scan_mode": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ScanMode](),
+							"recovery_point_tags": tftags.TagsSchema(),
+							"rule_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 50),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+								),
+							},
+							names.AttrSchedule: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"scan_action": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"malware_scanner": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.MalwareScanner](),
+										},
+										"scan_mode": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ScanMode](),
+										},
 									},
 								},
 							},
-						},
-						"schedule_expression_timezone": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  defaultPlanRuleScheduleExpressionTimezone,
-						},
-						"start_window": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  60,
-						},
-						"target_logically_air_gapped_backup_vault_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"target_vault_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(2, 50),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
-							),
-						},
-					},
-				},
-			},
-			"scan_setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"malware_scanner": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MalwareScanner](),
-						},
-						"resource_types": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
+							"schedule_expression_timezone": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  defaultPlanRuleScheduleExpressionTimezone,
+							},
+							"start_window": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  60,
+							},
+							"target_logically_air_gapped_backup_vault_arn": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
 							},
-						},
-						"scanner_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+							"target_vault_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(2, 50),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
+								),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"scan_setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"malware_scanner": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MalwareScanner](),
+							},
+							"resource_types": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+								},
+							},
+							"scanner_role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

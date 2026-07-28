@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_bedrock_evaluation_job
+```
+```release-note:new-list-resource
+aws_bedrock_evaluation_job
+```

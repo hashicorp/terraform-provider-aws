@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_arczonalshift_autoshift_observer_notification_status
+```
+
+```release-note:enhancement
+resource/aws_arczonalshift_autoshift_observer_notification_status: Add resource identity support
+```

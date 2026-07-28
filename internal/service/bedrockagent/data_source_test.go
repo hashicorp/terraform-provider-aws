@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -18,6 +19,8 @@ import (
 )
 
 func testAccDataSource_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -46,6 +49,8 @@ func testAccDataSource_basic(t *testing.T) {
 }
 
 func testAccDataSource_full(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -92,6 +97,8 @@ func testAccDataSource_full(t *testing.T) {
 }
 
 func testAccDataSource_fullSemantic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -139,6 +146,8 @@ func testAccDataSource_fullSemantic(t *testing.T) {
 }
 
 func testAccDataSource_fullHierarchical(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -187,6 +196,8 @@ func testAccDataSource_fullHierarchical(t *testing.T) {
 }
 
 func testAccDataSource_fullCustomTranformation(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -233,6 +244,8 @@ func testAccDataSource_fullCustomTranformation(t *testing.T) {
 }
 
 func testAccDataSource_parsing(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -282,18 +295,30 @@ func testAccDataSource_parsing(t *testing.T) {
 }
 
 func testAccDataSource_parsingModality(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
-	foundationModel := "amazon.titan-embed-text-v2:0"
+	foundationModel := "amazon.titan-embed-text-v1"
 	parsingModel := "anthropic.claude-3-sonnet-20240229-v1:0"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDataSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_parsingModality(rName, foundationModel, parsingModel),
@@ -334,6 +359,8 @@ func testAccDataSource_parsingModality(t *testing.T) {
 }
 
 func testAccDataSource_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -353,12 +380,22 @@ func testAccDataSource_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceDataSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func testAccDataSource_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -418,6 +455,8 @@ func testAccDataSource_update(t *testing.T) {
 }
 
 func testAccDataSource_webConfiguration(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -460,6 +499,8 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
 
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -493,6 +534,70 @@ func testAccDataSource_bedrockDataAutomation(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDataSource_managedKBConnector_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource types.DataSource
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_managedKBConnector_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "MANAGED_KNOWLEDGE_BASE_CONNECTOR"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"data_source_configuration.0.managed_knowledge_base_connector_configuration.0.connector_parameters",
+				},
+			},
+		},
+	})
+}
+
+func testAccDataSource_managedKBConnector_mediaExtraction(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource types.DataSource
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_managedKBConnector_mediaExtraction(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, t, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "MANAGED_KNOWLEDGE_BASE_CONNECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.media_extraction_configuration.0.audio_extraction_configuration.0.audio_extraction_status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.managed_knowledge_base_connector_configuration.0.media_extraction_configuration.0.image_extraction_configuration.0.image_extraction_status", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"data_source_configuration.0.managed_knowledge_base_connector_configuration.0.connector_parameters",
+				},
 			},
 		},
 	})
@@ -644,7 +749,7 @@ resource "aws_bedrockagent_data_source" "test" {
 }
 
 func testAccDataSourceConfig_parsingModality(rName, embeddingModel, parsingModel string) string {
-	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_RDS_supplementalDataStorage(rName, embeddingModel), fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
   name                 = %[1]q
   knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
@@ -892,6 +997,122 @@ resource "aws_bedrockagent_data_source" "test" {
       parsing_strategy = "BEDROCK_DATA_AUTOMATION"
       bedrock_data_automation_configuration {
         parsing_modality = "MULTIMODAL"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_managedKBConnector_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        StringEquals = {
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    type = "MANAGED"
+
+    managed_knowledge_base_configuration {
+      embedding_model_type = "MANAGED"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`, rName)
+}
+
+func testAccDataSourceConfig_managedKBConnector_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_managedKBConnector_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = aws_s3_bucket.test.bucket
+          bucketOwnerAccountId = data.aws_caller_identity.current.account_id
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_managedKBConnector_mediaExtraction(rName string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_managedKBConnector_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = aws_s3_bucket.test.bucket
+          bucketOwnerAccountId = data.aws_caller_identity.current.account_id
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        audio_extraction_configuration {
+          audio_extraction_status = "ENABLED"
+        }
+        image_extraction_configuration {
+          image_extraction_status = "DISABLED"
+        }
+      }
+
+      deletion_protection_configuration {
+        deletion_protection_status = "DISABLED"
       }
     }
   }

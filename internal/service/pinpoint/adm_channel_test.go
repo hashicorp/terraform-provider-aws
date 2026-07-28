@@ -92,7 +92,7 @@ func testAccCheckADMChannelExists(ctx context.Context, t *testing.T, n string, c
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint ADM channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging ADM channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -128,7 +128,7 @@ func testAccCheckADMChannelDestroy(ctx context.Context, t *testing.T) resource.T
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint ADM Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging ADM Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

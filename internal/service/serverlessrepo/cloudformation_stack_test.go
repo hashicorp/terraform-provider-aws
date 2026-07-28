@@ -14,9 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfserverlessrepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
@@ -25,6 +28,82 @@ import (
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
 // the aws_cloudformation_stack sweeper will clean these up as well.
+
+func TestFlattenNonDefaultCloudFormationParameters(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name             string
+		cfParams         []cloudformationtypes.Parameter
+		parameterDefs    []awstypes.ParameterDefinition
+		configuredParams map[string]any
+		expected         map[string]any
+	}{
+		{
+			name: "non-default value included",
+			cfParams: []cloudformationtypes.Parameter{
+				{ParameterKey: aws.String("Param1"), ParameterValue: aws.String("custom")},
+			},
+			parameterDefs: []awstypes.ParameterDefinition{
+				{Name: aws.String("Param1"), DefaultValue: aws.String("default")},
+			},
+			configuredParams: map[string]any{},
+			expected:         map[string]any{"Param1": "custom"},
+		},
+		{
+			name: "NoEcho preserves configured value",
+			cfParams: []cloudformationtypes.Parameter{
+				{ParameterKey: aws.String("Secret"), ParameterValue: aws.String("****")},
+			},
+			parameterDefs: []awstypes.ParameterDefinition{
+				{Name: aws.String("Secret"), NoEcho: aws.Bool(true)},
+			},
+			configuredParams: map[string]any{"Secret": "my-secret"},
+			expected:         map[string]any{"Secret": "my-secret"},
+		},
+		{
+			name: "NoEcho not in config is excluded",
+			cfParams: []cloudformationtypes.Parameter{
+				{ParameterKey: aws.String("Secret"), ParameterValue: aws.String("****")},
+			},
+			parameterDefs: []awstypes.ParameterDefinition{
+				{Name: aws.String("Secret"), NoEcho: aws.Bool(true)},
+			},
+			configuredParams: map[string]any{},
+			expected:         map[string]any{},
+		},
+		{
+			name: "configured param matching default is included",
+			cfParams: []cloudformationtypes.Parameter{
+				{ParameterKey: aws.String("Param1"), ParameterValue: aws.String("default")},
+			},
+			parameterDefs: []awstypes.ParameterDefinition{
+				{Name: aws.String("Param1"), DefaultValue: aws.String("default")},
+			},
+			configuredParams: map[string]any{"Param1": "default"},
+			expected:         map[string]any{"Param1": "default"},
+		},
+		{
+			name: "unconfigured param matching default is excluded",
+			cfParams: []cloudformationtypes.Parameter{
+				{ParameterKey: aws.String("Param1"), ParameterValue: aws.String("default")},
+			},
+			parameterDefs: []awstypes.ParameterDefinition{
+				{Name: aws.String("Param1"), DefaultValue: aws.String("default")},
+			},
+			configuredParams: map[string]any{},
+			expected:         map[string]any{},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			result := tfserverlessrepo.FlattenNonDefaultCloudFormationParameters(tc.cfParams, tc.parameterDefs, tc.configuredParams)
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Errorf("unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
 
 func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -98,6 +177,14 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfserverlessrepo.ResourceCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -238,6 +325,45 @@ func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 	})
 }
 
+func TestAccServerlessRepoCloudFormationStack_noChangeUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack cloudformationtypes.Stack
+	stackName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	appARN := testAccCloudFormationApplicationID()
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
+
+	// This config explicitly sets `passwordLength = "32"`, which matches the
+	// application's `passwordLength` default. Before the fix, Read pruned
+	// default-matching parameters from state, producing perpetual drift and
+	// failing the second apply with "No updates are to be performed".
+	// See: https://github.com/hashicorp/terraform-provider-aws/issues/16485
+	config := testAccCloudFormationStackConfig_defaultParameter(stackName, appARN)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists(ctx, t, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "parameters.passwordLength", "32"),
+				),
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stack cloudformationtypes.Stack
@@ -347,6 +473,34 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
   parameters = {
     functionName = "func-%[1]s"
     endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+  }
+}
+`, stackName, appARN)
+}
+
+// testAccCloudFormationStackConfig_defaultParameter is identical to the basic
+// config but also explicitly sets `passwordLength` to its application-default
+// value of "32". This exercises the default-matching parameter pruning bug
+// described in https://github.com/hashicorp/terraform-provider-aws/issues/16485.
+func testAccCloudFormationStackConfig_defaultParameter(stackName, appARN string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
+  name           = %[1]q
+  application_id = %[2]q
+
+  capabilities = [
+    "CAPABILITY_IAM",
+    "CAPABILITY_RESOURCE_POLICY",
+  ]
+
+  parameters = {
+    functionName   = "func-%[1]s"
+    endpoint       = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+    passwordLength = "32"
   }
 }
 `, stackName, appARN)

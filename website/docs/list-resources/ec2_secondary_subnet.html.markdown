@@ -43,7 +43,7 @@ This list resource supports the following arguments:
 
 * `filter` - (Optional) One or more filters to apply to the search.
   If multiple `filter` blocks are provided, they all must be true.
-  For a full reference of filter names, see [describe-secondary-subnets in the AWS CLI reference][describe-secondary-subnets].
+  For a full reference of filter names, see [describe-secondary-subnets in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-secondary-subnets.html).
   See [`filter` Block](#filter-block) below.
 * `region` - (Optional) Region to query. Defaults to provider region.
 
@@ -52,8 +52,6 @@ This list resource supports the following arguments:
 The `filter` block supports the following arguments:
 
 * `name` - (Required) Name of the filter.
-  For a full reference of filter names, see [describe-secondary-subnets in the AWS CLI reference][describe-secondary-subnets].
+  For a full reference of filter names, see [describe-secondary-subnets in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-secondary-subnets.html).
   `default-for-az` is not supported.
 * `values` - (Required) One or more values to match.
-
-[describe-secondary-subnets]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-secondary-subnets.html

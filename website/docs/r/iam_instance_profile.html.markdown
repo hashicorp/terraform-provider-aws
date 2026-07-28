@@ -58,9 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `create_date` - Creation timestamp of the instance profile.
 * `id` - Instance profile's ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `unique_id` - [Unique ID][1] assigned by AWS.
-
-  [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
+* `unique_id` - [Unique ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs) assigned by AWS.
 
 ## Import
 

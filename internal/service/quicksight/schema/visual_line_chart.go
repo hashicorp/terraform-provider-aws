@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,9 +23,9 @@ func lineChartVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idSchema(),
+				attrVisualID:      idSchema(),
 				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
-				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -40,13 +41,13 @@ func lineChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"axis_binding":          stringEnumSchema[awstypes.AxisBinding](attrOptional),
+										"axis_binding":          sdkschema.StringEnumSchema[awstypes.AxisBinding](sdkschema.AttrOptional),
 										"line_style_settings":   lineChartLineStyleSettingsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
 										"marker_style_settings": lineChartMarkerStyleSettingsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
 									},
 								},
 							},
-							"field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartFieldWells.html
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartFieldWells.html
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 1,
@@ -88,10 +89,10 @@ func lineChartVisualSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Optional: true,
 													},
-													"periods_backward":    intBetweenSchema(attrOptional, 0, 1000),
-													"periods_forward":     intBetweenSchema(attrOptional, 1, 1000),
-													"prediction_interval": intBetweenSchema(attrOptional, 50, 95),
-													"seasonality":         intBetweenSchema(attrOptional, 1, 180),
+													"periods_backward":    sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 0, 1000),
+													"periods_forward":     sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 1000),
+													"prediction_interval": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 50, 95),
+													"seasonality":         sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 180),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -113,7 +114,7 @@ func lineChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"date": utcTimestampStringSchema(attrRequired),
+																"date": sdkschema.UTCTimestampStringSchema(sdkschema.AttrRequired),
 																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
@@ -128,8 +129,8 @@ func lineChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"end_date":   utcTimestampStringSchema(attrRequired),
-																"start_date": utcTimestampStringSchema(attrRequired),
+																"end_date":   sdkschema.UTCTimestampStringSchema(sdkschema.AttrRequired),
+																"start_date": sdkschema.UTCTimestampStringSchema(sdkschema.AttrRequired),
 																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
@@ -159,7 +160,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"treatment_option": stringEnumSchema[awstypes.MissingDataTreatmentOption](attrOptional),
+													"treatment_option": sdkschema.StringEnumSchema[awstypes.MissingDataTreatmentOption](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -183,7 +184,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"treatment_option": stringEnumSchema[awstypes.MissingDataTreatmentOption](attrOptional),
+													"treatment_option": sdkschema.StringEnumSchema[awstypes.MissingDataTreatmentOption](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -205,8 +206,8 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrRequired),
-													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													"axis_binding": sdkschema.StringEnumSchema[awstypes.AxisBinding](sdkschema.AttrRequired),
+													attrFieldID:    sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													"field_value": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -233,8 +234,8 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrRequired),
-													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													"axis_binding": sdkschema.StringEnumSchema[awstypes.AxisBinding](sdkschema.AttrRequired),
+													attrFieldID:    sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -254,7 +255,7 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
-							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
 								MinItems:         1,
@@ -271,16 +272,232 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							names.AttrType:           stringEnumSchema[awstypes.LineChartType](attrOptionalComputed),
+							names.AttrType:           sdkschema.StringEnumSchema[awstypes.LineChartType](sdkschema.AttrOptionalComputed),
 							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 						},
 					},
 				},
-				"column_hierarchies": columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
-				"subtitle":           visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
-				"title":              visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+				attrColumnHierarchies: columnHierarchiesSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnHierarchy.html
+				attrSubtitle:          visualSubtitleLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
+				attrTitle:             visualTitleLabelOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
+			},
+		},
+	}
+}
+
+func lineChartVisualDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartVisual.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				attrVisualID:      idDataSourceSchema(),
+				names.AttrActions: visualCustomActionsDataSourceSchema(),
+				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartConfiguration.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"contribution_analysis_defaults": contributionAnalysisDefaultsDataSourceSchema(),
+							"data_labels":                    dataLabelOptionsDataSourceSchema(),
+							"default_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartDefaultSeriesSettings.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"axis_binding":          sdkschema.StringEnumDataSourceSchema[awstypes.AxisBinding](),
+										"line_style_settings":   lineChartLineStyleSettingsDataSourceSchema(),
+										"marker_style_settings": lineChartMarkerStyleSettingsDataSourceSchema(),
+									},
+								},
+							},
+							attrFieldWells: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartFieldWells.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"line_chart_aggregated_field_wells": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartAggregatedFieldWells.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"category":        dimensionFieldDataSourceSchema(),
+													"colors":          dimensionFieldDataSourceSchema(),
+													"small_multiples": dimensionFieldDataSourceSchema(),
+													names.AttrValues:  measureFieldDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"forecast_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ForecastConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"forecast_properties": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TimeBasedForecastProperties.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"lower_boundary":      floatComputedOnly(),
+													"periods_backward":    intComputedOnly(),
+													"periods_forward":     intComputedOnly(),
+													"prediction_interval": intComputedOnly(),
+													"seasonality":         intComputedOnly(),
+													"upper_boundary":      floatComputedOnly(),
+												},
+											},
+										},
+										"scenario": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ForecastScenario.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"what_if_point_scenario": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WhatIfPointScenario.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"date":          stringComputedOnly(),
+																names.AttrValue: floatComputedOnly(),
+															},
+														},
+													},
+													"what_if_range_scenario": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_WhatIfRangeScenario.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"end_date":      stringComputedOnly(),
+																"start_date":    stringComputedOnly(),
+																names.AttrValue: floatComputedOnly(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"legend": legendOptionsDataSourceSchema(),
+							"primary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"axis_options": axisDisplayOptionsDataSourceSchema(),
+										"missing_data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"treatment_option": sdkschema.StringEnumDataSourceSchema[awstypes.MissingDataTreatmentOption](),
+												},
+											},
+										},
+									},
+								},
+							},
+							"primary_y_axis_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"reference_lines":              referenceLineDataSourceSchema(),
+							"secondary_y_axis_display_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineSeriesAxisDisplayOptions.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"axis_options": axisDisplayOptionsDataSourceSchema(),
+										"missing_data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"treatment_option": sdkschema.StringEnumDataSourceSchema[awstypes.MissingDataTreatmentOption](),
+												},
+											},
+										},
+									},
+								},
+							},
+							"secondary_y_axis_label_options": chartAxisLabelOptionsDataSourceSchema(),
+							"series": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SeriesItem.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data_field_series_item": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataFieldSeriesItem.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"axis_binding": sdkschema.StringEnumDataSourceSchema[awstypes.AxisBinding](),
+													attrFieldID:    stringComputedOnly(),
+													"field_value":  stringComputedOnly(),
+													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"line_style_settings":   lineChartLineStyleSettingsDataSourceSchema(),
+																"marker_style_settings": lineChartMarkerStyleSettingsDataSourceSchema(),
+															},
+														},
+													},
+												},
+											},
+										},
+										"field_series_item": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSeriesItem.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"axis_binding": sdkschema.StringEnumDataSourceSchema[awstypes.AxisBinding](),
+													attrFieldID:    stringComputedOnly(),
+													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"line_style_settings":   lineChartLineStyleSettingsDataSourceSchema(),
+																"marker_style_settings": lineChartMarkerStyleSettingsDataSourceSchema(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(),
+							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"category_items_limit_configuration":  itemsLimitConfigurationDataSourceSchema(),
+										"category_sort":                       fieldSortOptionsDataSourceSchema(),
+										"color_items_limit_configuration":     itemsLimitConfigurationDataSourceSchema(),
+										"small_multiples_limit_configuration": itemsLimitConfigurationDataSourceSchema(),
+										"small_multiples_sort":                fieldSortOptionsDataSourceSchema(),
+									},
+								},
+							},
+							"tooltip":                tooltipOptionsDataSourceSchema(),
+							names.AttrType:           sdkschema.StringEnumDataSourceSchema[awstypes.LineChartType](),
+							"visual_palette":         visualPaletteDataSourceSchema(),
+							"x_axis_display_options": axisDisplayOptionsDataSourceSchema(),
+							"x_axis_label_options":   chartAxisLabelOptionsDataSourceSchema(),
+						},
+					},
+				},
+				attrColumnHierarchies: columnHierarchiesDataSourceSchema(),
+				attrSubtitle:          visualSubtitleLabelOptionsDataSourceSchema(),
+				attrTitle:             visualTitleLabelOptionsDataSourceSchema(),
 			},
 		},
 	}
@@ -294,13 +511,28 @@ var lineChartLineStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"line_interpolation": stringEnumSchema[awstypes.LineInterpolation](attrOptional),
-				"line_style":         stringEnumSchema[awstypes.LineChartLineStyle](attrOptional),
-				"line_visibility":    stringEnumSchema[awstypes.Visibility](attrOptional),
+				"line_interpolation": sdkschema.StringEnumSchema[awstypes.LineInterpolation](sdkschema.AttrOptional),
+				"line_style":         sdkschema.StringEnumSchema[awstypes.LineChartLineStyle](sdkschema.AttrOptional),
+				"line_visibility":    sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 				"line_width": {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
+			},
+		},
+	}
+})
+
+var lineChartLineStyleSettingsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"line_interpolation": sdkschema.StringEnumDataSourceSchema[awstypes.LineInterpolation](),
+				"line_style":         sdkschema.StringEnumDataSourceSchema[awstypes.LineChartLineStyle](),
+				"line_visibility":    sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+				"line_width":         stringComputedOnly(),
 			},
 		},
 	}
@@ -314,13 +546,28 @@ var lineChartMarkerStyleSettingsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"marker_color": hexColorSchema(attrOptional),
-				"marker_shape": stringEnumSchema[awstypes.LineChartMarkerShape](attrOptional),
+				"marker_color": hexColorSchema(sdkschema.AttrOptional),
+				"marker_shape": sdkschema.StringEnumSchema[awstypes.LineChartMarkerShape](sdkschema.AttrOptional),
 				"marker_size": {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"marker_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				"marker_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+			},
+		},
+	}
+})
+
+var lineChartMarkerStyleSettingsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"marker_color":      stringComputedOnly(),
+				"marker_shape":      sdkschema.StringEnumDataSourceSchema[awstypes.LineChartMarkerShape](),
+				"marker_size":       stringComputedOnly(),
+				"marker_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -338,7 +585,7 @@ func expandLineChartVisual(tfList []any) *awstypes.LineChartVisual {
 
 	apiObject := &awstypes.LineChartVisual{}
 
-	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
+	if v, ok := tfMap[attrVisualID].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
@@ -347,13 +594,13 @@ func expandLineChartVisual(tfList []any) *awstypes.LineChartVisual {
 	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandLineChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrColumnHierarchies].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
 	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrTitle].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
@@ -414,7 +661,7 @@ func expandLineChartConfiguration(tfList []any) *awstypes.LineChartConfiguration
 	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
 		apiObject.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[attrSortConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandLineChartSortConfiguration(v)
 	}
 	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
@@ -922,7 +1169,7 @@ func flattenLineChartVisual(apiObject *awstypes.LineChartVisual) []any {
 	}
 
 	tfMap := map[string]any{
-		"visual_id": aws.ToString(apiObject.VisualId),
+		attrVisualID: aws.ToString(apiObject.VisualId),
 	}
 
 	if apiObject.Actions != nil {
@@ -932,13 +1179,13 @@ func flattenLineChartVisual(apiObject *awstypes.LineChartVisual) []any {
 		tfMap["chart_configuration"] = flattenLineChartConfiguration(apiObject.ChartConfiguration)
 	}
 	if apiObject.ColumnHierarchies != nil {
-		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+		tfMap[attrColumnHierarchies] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
 	}
 	if apiObject.Subtitle != nil {
 		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
 	}
 	if apiObject.Title != nil {
-		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+		tfMap[attrTitle] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
 	return []any{tfMap}
@@ -991,7 +1238,7 @@ func flattenLineChartConfiguration(apiObject *awstypes.LineChartConfiguration) [
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
 	}
 	if apiObject.SortConfiguration != nil {
-		tfMap["sort_configuration"] = flattenLineChartSortConfiguration(apiObject.SortConfiguration)
+		tfMap[attrSortConfiguration] = flattenLineChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)

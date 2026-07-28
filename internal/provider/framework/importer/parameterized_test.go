@@ -44,15 +44,15 @@ var regionalSingleParameterizedWithIDSchema = schema.Schema{
 }
 
 func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name)
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func regionalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(name,
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true),
 		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
 	)
 }
@@ -487,15 +487,15 @@ var globalSingleParameterizedWithIDSchema = schema.Schema{
 }
 
 func globalSingleParameterIdentitySpec(name string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(name)
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func globalSingleParameterIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func globalSingleParameterIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func globalSingleParameterIdentitySpecWithDuplicates(name string, duplicateAttrs []string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(name,
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true),
 		inttypes.WithIdentityDuplicateAttrs(duplicateAttrs...),
 	)
 }

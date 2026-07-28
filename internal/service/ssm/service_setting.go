@@ -39,27 +39,29 @@ func resourceServiceSetting() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"setting_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					validation.StringMatch(regexache.MustCompile(`^/ssm/`), "setting_id must begin with '/ssm/'"),
-				),
-			},
-			"setting_value": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"setting_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validation.StringMatch(regexache.MustCompile(`^/ssm/`), "setting_id must begin with '/ssm/'"),
+					),
+				},
+				"setting_value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

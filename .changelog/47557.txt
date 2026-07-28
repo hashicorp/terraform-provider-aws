@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_eip
+```
+```release-note:enhancement
+resource/aws_eip: Add resource identity support
+```

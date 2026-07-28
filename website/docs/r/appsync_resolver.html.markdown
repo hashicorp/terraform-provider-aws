@@ -101,7 +101,7 @@ resource "aws_appsync_resolver" "Mutation_pipelineTest" {
 }
 ```
 
-## Example Usage JS
+### Example Usage JS
 
 ```terraform
 resource "aws_appsync_resolver" "example" {

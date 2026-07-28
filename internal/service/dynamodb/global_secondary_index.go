@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -29,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -40,7 +38,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 const (
@@ -58,7 +55,6 @@ const (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc=testAccGlobalSecondaryIndexImportStateIdFunc)
 // @Testing(importStateIdAttribute="arn")
-// @Testing(requireEnvVar="TF_AWS_EXPERIMENT_dynamodb_global_secondary_index")
 func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGlobalSecondaryIndex{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -67,10 +63,6 @@ func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithCo
 
 	return r, nil
 }
-
-var (
-	_ resource.ResourceWithValidateConfig = &resourceGlobalSecondaryIndex{}
-)
 
 type resourceGlobalSecondaryIndex struct {
 	framework.ResourceWithModel[resourceGlobalSecondaryIndexModel]
@@ -607,55 +599,6 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 	}
 }
 
-const (
-	globalSecondaryIndexExperimentalFlagEnvVar = "TF_AWS_EXPERIMENT_dynamodb_global_secondary_index"
-)
-
-func (r *resourceGlobalSecondaryIndex) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	if flag := os.Getenv(globalSecondaryIndexExperimentalFlagEnvVar); flag != "" {
-		response.Diagnostics.AddWarning(
-			"Experimental Resource Type Enabled: \"aws_dynamodb_global_secondary_index\"",
-			fmt.Sprintf("The experimental resource type \"aws_dynamodb_global_secondary_index\" has been enabled by setting the environment variable \""+globalSecondaryIndexExperimentalFlagEnvVar+"\" to %q.", flag)+
-				"\n\nPlease be aware that experimental features are not covered by any SLA or support agreement, and may not be suitable for production workloads. "+
-				"Experimental features may change without notice, including removal from the provider.",
-		)
-		tflog.Info(ctx, "Experimental resource type enabled", map[string]any{
-			string(semconv.FeatureFlagKeyKey):           globalSecondaryIndexExperimentalFlagEnvVar,
-			string(semconv.FeatureFlagResultValueKey):   flag,
-			string(semconv.FeatureFlagResultVariantKey): "enabled", // nosemgrep:ci.literal-enabled-string-constant
-		})
-	} else {
-		response.Diagnostics.AddError(
-			"Experimental Resource Type Not Enabled: \"aws_dynamodb_global_secondary_index\"",
-			"The experimental resource type \"aws_dynamodb_global_secondary_index\" is not enabled. "+
-				"To enable this resource type, set the environment variable \""+globalSecondaryIndexExperimentalFlagEnvVar+"\" to any value before running Terraform."+
-				"\n\nPlease be aware that experimental features are not covered by any SLA or support agreement, and may not be suitable for production workloads. "+
-				"Experimental features may change without notice, including removal from the provider.",
-		)
-		tflog.Error(ctx, "Experimental resource type not enabled", map[string]any{
-			string(semconv.FeatureFlagKeyKey):                  globalSecondaryIndexExperimentalFlagEnvVar,
-			string(semconv.FeatureFlagResultValueKey):          nil,
-			string(semconv.FeatureFlagResultVariantKey):        "disabled",
-			string(semconv.FeatureFlagResultReasonDefault.Key): semconv.FeatureFlagResultReasonDefault.Value,
-		})
-	}
-}
-
-type resourceGlobalSecondaryIndexModel struct {
-	framework.WithRegionModel
-
-	ARN                   types.String                                                `tfsdk:"arn"`
-	IndexName             types.String                                                `tfsdk:"index_name"`
-	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
-	TableName             types.String                                                `tfsdk:"table_name"`
-	OnDemandThroughput    fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
-	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
-	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
-	WarmThroughput        fwtypes.ObjectValueOf[warmThroughputModel]                  `tfsdk:"warm_throughput"`
-
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-}
-
 func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecondaryIndexModel, index *awstypes.GlobalSecondaryIndexDescription, table *awstypes.TableDescription) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
@@ -698,6 +641,21 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 	}
 
 	return diags
+}
+
+type resourceGlobalSecondaryIndexModel struct {
+	framework.WithRegionModel
+
+	ARN                   types.String                                                `tfsdk:"arn"`
+	IndexName             types.String                                                `tfsdk:"index_name"`
+	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
+	TableName             types.String                                                `tfsdk:"table_name"`
+	OnDemandThroughput    fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
+	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
+	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
+	WarmThroughput        fwtypes.ObjectValueOf[warmThroughputModel]                  `tfsdk:"warm_throughput"`
+
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 type onDemandThroughputModel struct {

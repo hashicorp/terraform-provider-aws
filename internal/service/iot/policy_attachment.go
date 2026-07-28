@@ -31,17 +31,19 @@ func resourcePolicyAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTarget: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTarget: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

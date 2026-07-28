@@ -25,6 +25,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newBucketNotificationDataSource,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newBucketObjectLockConfigurationDataSource,
 			TypeName: "aws_s3_bucket_object_lock_configuration",
 			Name:     "Bucket Object Lock Configuration",
@@ -34,6 +40,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceBucketReplicationConfiguration,
 			TypeName: "aws_s3_bucket_replication_configuration",
 			Name:     "Bucket Replication Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newBucketsDataSource,
+			TypeName: "aws_s3_buckets",
+			Name:     "Buckets",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -58,7 +70,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -68,7 +80,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_s3_bucket_metadata_configuration",
 			Name:     "Bucket Metadata Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -82,7 +94,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				ResourceType:        "DirectoryBucket",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
 			Import: inttypes.FrameworkImport{
@@ -99,7 +111,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newDirectoryBucketResourceAsListResource,
@@ -110,7 +122,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				ResourceType:        "DirectoryBucket",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},
 	})
@@ -182,7 +194,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Bucket",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithV6_0SDKv2Fix(),
 			),
 			Import: inttypes.SDKv2Import{
@@ -200,7 +212,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_acl",
 			Name:     "Bucket ACL",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
@@ -218,7 +230,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_cors_configuration",
 			Name:     "Bucket CORS Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
@@ -242,7 +254,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_logging",
 			Name:     "Bucket Logging",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
@@ -260,7 +272,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_notification",
 			Name:     "Bucket Notification",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -294,7 +306,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_ownership_controls",
 			Name:     "Bucket Ownership Controls",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -304,7 +316,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_policy",
 			Name:     "Bucket Policy",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -314,7 +326,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_public_access_block",
 			Name:     "Bucket Public Access Block",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -336,7 +348,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
 			Name:     "Bucket Server Side Encryption Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
@@ -348,7 +360,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_versioning",
 			Name:     "Bucket Versioning",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
@@ -360,7 +372,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_website_configuration",
 			Name:     "Bucket Website Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
@@ -409,44 +421,60 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrBucket,
 				ResourceType:        "Bucket",
 			}),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketACLResourceAsListResource,
 			TypeName: "aws_s3_bucket_acl",
 			Name:     "Bucket ACL",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
+		},
+		{
+			Factory:  newBucketLoggingResourceAsListResource,
+			TypeName: "aws_s3_bucket_logging",
+			Name:     "Bucket Logging",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.WithVersion(1),
+			),
+		},
+		{
+			Factory:  newBucketNotificationResourceAsListResource,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketOwnershipControlsResourceAsListResource,
 			TypeName: "aws_s3_bucket_ownership_controls",
 			Name:     "Bucket Ownership Controls",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketPolicyResourceAsListResource,
 			TypeName: "aws_s3_bucket_policy",
 			Name:     "Bucket Policy",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketPublicAccessBlockResourceAsListResource,
 			TypeName: "aws_s3_bucket_public_access_block",
 			Name:     "Bucket Public Access Block",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketServerSideEncryptionConfigurationResourceAsListResource,
 			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
 			Name:     "Bucket Server Side Encryption Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 		},
@@ -455,7 +483,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_s3_bucket_versioning",
 			Name:     "Bucket Versioning",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
 		},

@@ -282,7 +282,7 @@ func TestExpandLogging_collections(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandInterfaceContract(t *testing.T) {
@@ -296,7 +296,7 @@ func TestExpandInterfaceContract(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandExpander(t *testing.T) {
@@ -557,10 +557,9 @@ func TestExpandExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
-//go:fix inline
 func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
 	return new(v)
 }
@@ -710,7 +709,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandInterfaceTypedExpander(t *testing.T) {
@@ -858,7 +857,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestExpandTypedExpander(t *testing.T) {
@@ -1105,7 +1104,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenLogging_collections(t *testing.T) {
@@ -1163,7 +1162,7 @@ func TestFlattenLogging_collections(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenInterfaceContract(t *testing.T) {
@@ -1197,7 +1196,7 @@ func TestFlattenInterfaceContract(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenInterface(t *testing.T) {
@@ -1382,7 +1381,7 @@ func TestFlattenInterface(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 func TestFlattenFlattener(t *testing.T) {
@@ -1643,7 +1642,7 @@ func TestFlattenFlattener(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 // TestFlattenFlattener_PointerToListNestedObject tests that AutoFlex properly calls
@@ -1682,7 +1681,7 @@ func TestFlattenFlattener_PointerToListNestedObject(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 // Test types for TestFlattenFlattener_PointerToListNestedObject
@@ -1754,7 +1753,7 @@ func TestFlattenFlattener_StructValue(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{})
 }
 
 // tfFlattenerStructValueModel is a Flattener that strictly requires a struct value.

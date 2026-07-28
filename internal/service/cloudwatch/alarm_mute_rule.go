@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -112,13 +113,13 @@ func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"alarm_names": schema.ListAttribute{
+						"alarm_names": schema.SetAttribute{
 							ElementType: types.StringType,
-							CustomType:  fwtypes.ListOfStringType,
+							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
-							Validators: []validator.List{
+							Validators: []validator.Set{
 								// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-mute-rules.html#defining-alarm-mute-rules
-								listvalidator.SizeAtMost(100),
+								setvalidator.SizeAtMost(100),
 							},
 						},
 					},
@@ -402,7 +403,7 @@ type scheduleModel struct {
 }
 
 type muteTargetsModel struct {
-	AlarmNames fwtypes.ListOfString `tfsdk:"alarm_names"`
+	AlarmNames fwtypes.SetOfString `tfsdk:"alarm_names"`
 }
 
 // This validator ensures the timestamp has seconds set to 00.

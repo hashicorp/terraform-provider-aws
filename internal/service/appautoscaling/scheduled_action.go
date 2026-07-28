@@ -37,81 +37,83 @@ func resourceScheduledAction() *schema.Resource {
 		UpdateWithoutTimeout: resourceScheduledActionPut,
 		DeleteWithoutTimeout: resourceScheduledActionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"end_time": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.IsRFC3339Time,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scalable_dimension": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scalable_target_action": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMaxCapacity: {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-							AtLeastOneOf: []string{
-								"scalable_target_action.0.max_capacity",
-								"scalable_target_action.0.min_capacity",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"end_time": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.IsRFC3339Time,
+					DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"scalable_dimension": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"scalable_target_action": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMaxCapacity: {
+								Type:         nullable.TypeNullableInt,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+								AtLeastOneOf: []string{
+									"scalable_target_action.0.max_capacity",
+									"scalable_target_action.0.min_capacity",
+								},
 							},
-						},
-						"min_capacity": {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
-							AtLeastOneOf: []string{
-								"scalable_target_action.0.max_capacity",
-								"scalable_target_action.0.min_capacity",
+							"min_capacity": {
+								Type:         nullable.TypeNullableInt,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+								AtLeastOneOf: []string{
+									"scalable_target_action.0.max_capacity",
+									"scalable_target_action.0.min_capacity",
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"service_namespace": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// The AWS API normalizes start_time and end_time to UTC. Uses
-			// suppressEquivalentTime to allow any timezone to be used.
-			names.AttrStartTime: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.IsRFC3339Time,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
-			},
-			"timezone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "UTC",
-			},
+				names.AttrSchedule: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"service_namespace": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// The AWS API normalizes start_time and end_time to UTC. Uses
+				// suppressEquivalentTime to allow any timezone to be used.
+				names.AttrStartTime: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.IsRFC3339Time,
+					DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
+				},
+				"timezone": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "UTC",
+				},
+			}
 		},
 	}
 }

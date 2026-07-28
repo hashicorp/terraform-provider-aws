@@ -51,9 +51,3 @@ This data source exports the following attributes in addition to the arguments a
 
 See the [LB Trust Store Resource](/docs/providers/aws/r/lb_trust_store.html) for details
 on the returned attributes - they are identical.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `read` - (Default `20m`)

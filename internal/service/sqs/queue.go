@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -211,7 +212,7 @@ func resourceQueue() *schema.Resource {
 
 		CustomizeDiff: resourceQueueCustomizeDiff,
 
-		Schema: queueSchema,
+		Schema: maps.Clone(queueSchema),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),

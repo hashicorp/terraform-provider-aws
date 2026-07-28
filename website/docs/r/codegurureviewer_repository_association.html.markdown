@@ -51,7 +51,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `kms_key_details` - (Optional) An object describing the KMS key to asssociate. Block is documented below.
 
-## repository
+### repository
 
 This configuration block supports the following:
 
@@ -76,7 +76,7 @@ This configuration block supports the following:
 * `bucket_name` - (Required) The name of the S3 bucket used for associating a new S3 repository. Note: The name must begin with `codeguru-reviewer-`.
 * `name` - (Required) The name of the repository in the S3 bucket.
 
-## kms_key_details
+### kms_key_details
 
 This configuration block supports the following:
 

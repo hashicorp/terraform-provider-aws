@@ -380,12 +380,12 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func RegionalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute("region", false),
-			StringIdentityAttribute(name, true),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}
@@ -397,46 +397,12 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 	return identity
 }
 
-func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
-	identity := Identity{
-		Attributes: []IdentityAttribute{
-			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute("region", false),
-			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
-		},
-		IsSingleParameter: true,
-	}
-
-	for _, opt := range opts {
-		opt(&identity)
-	}
-
-	return identity
-}
-
-func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func GlobalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute(name, true),
-		},
-		IsSingleParameter: true,
-	}
-
-	for _, opt := range opts {
-		opt(&identity)
-	}
-
-	return identity
-}
-
-func GlobalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
-	identity := Identity{
-		IsGlobalResource: true,
-		Attributes: []IdentityAttribute{
-			StringIdentityAttribute("account_id", false),
-			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}

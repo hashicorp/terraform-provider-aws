@@ -72,7 +72,12 @@ func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.C
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	var input observabilityadmin.StartTelemetryEnrichmentInput
-	_, err := conn.StartTelemetryEnrichment(ctx, &input)
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.StartTelemetryEnrichment(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return

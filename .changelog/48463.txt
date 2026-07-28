@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Restore HTTP request and response body content in `TF_LOG=DEBUG` output for resources, data sources, and list resources. Redaction continues to apply to ephemeral resources and actions
+```

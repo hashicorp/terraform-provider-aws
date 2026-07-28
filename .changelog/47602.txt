@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `private_endpoint` argument to support private connectivity to VPC-hosted MCP servers via Amazon VPC Lattice
+```
+
+```release-note:note
+resource/aws_bedrockagentcore_gateway_target: Because we cannot easily test the behavior of `private_endpoint`, it is best effort and we ask for community help in testing
+```
