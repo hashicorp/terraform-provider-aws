@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage a CloudWatch log resource policy.
 
+!> **WARNING:**: in most cases, [AWS will create and manage this policy on your behalf](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-infrastructure-V2-CloudWatchLogs.html): "If the log group currently does not have a resource policy, and the user setting up the logging has the logs:PutResourcePolicy, logs:DescribeResourcePolicies, and logs:DescribeLogGroups permissions for the log group, then AWS automatically creates the following policy for it when you begin sending the logs to CloudWatch Logs"
+
 ## Example Usage
 
 ### Elasticsearch Log Publishing
