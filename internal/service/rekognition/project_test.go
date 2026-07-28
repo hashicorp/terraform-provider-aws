@@ -149,7 +149,6 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
-	autoUpdate := "ENABLED"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
