@@ -185,6 +185,8 @@ Set the [`count` meta-argument](https://developer.hashicorp.com/terraform/langua
 Other resources in the configuration should have a single instance, unless more than one is needed, for example EC2 Subnets when testing ELB Load Balancers.
 
 For **property entities**, multiple instances of the parent resource must be created and each **property entity** resource must be associated with an instance of the parent resource.
+The `basic` test configuration should also include an instance of the parent resource _without_ the property resource.
+It should validate that this parent resource's identity is _not_ included in the list results using `querycheck.ExpectNoIdentity`.
 
 The `includeResource` test should set the `tags` attribute if the resource type supports tagging.
 Tags should only be applied to the resource that is being tested.
