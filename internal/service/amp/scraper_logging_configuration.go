@@ -15,17 +15,17 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,6 +34,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,6 +60,18 @@ type scraperLoggingConfigurationResource struct {
 func (r *scraperLoggingConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"scraper_components": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringEnumType[awstypes.ScraperComponentType](),
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"scraper_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -77,7 +90,7 @@ func (r *scraperLoggingConfigurationResource) Schema(ctx context.Context, reques
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						names.AttrCloudWatchLogs: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[scraperCloudWatchLogDestinationModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogDestinationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
@@ -94,22 +107,6 @@ func (r *scraperLoggingConfigurationResource) Schema(ctx context.Context, reques
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"scraper_component": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperComponentModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrType: schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.ScraperComponentType](),
-							Required:   true,
-						},
-						"options": schema.MapAttribute{
-							CustomType:  fwtypes.MapOfStringType,
-							ElementType: types.StringType,
-							Optional:    true,
 						},
 					},
 				},
@@ -138,7 +135,13 @@ func (r *scraperLoggingConfigurationResource) Create(ctx context.Context, reques
 	if response.Diagnostics.HasError() {
 		return
 	}
-	input.ScraperComponents = expandScraperComponents(ctx, data.ScraperComponents)
+	if scraperComponents := fwflex.ExpandFrameworkStringyValueSet[awstypes.ScraperComponentType](ctx, data.ScraperComponents); len(scraperComponents) > 0 {
+		input.ScraperComponents = tfslices.ApplyToAll(scraperComponents, func(v awstypes.ScraperComponentType) awstypes.ScraperComponent {
+			return awstypes.ScraperComponent{
+				Type: v,
+			}
+		})
+	}
 
 	_, err := conn.UpdateScraperLoggingConfiguration(ctx, &input)
 
@@ -148,11 +151,20 @@ func (r *scraperLoggingConfigurationResource) Create(ctx context.Context, reques
 		return
 	}
 
-	if _, err := waitScraperLoggingConfigurationCreated(ctx, conn, scraperID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	output, err := waitScraperLoggingConfigurationCreated(ctx, conn, scraperID, r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("scraper_id"), scraperID)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper Logging Configuration (%s) create", scraperID), err.Error())
 
 		return
 	}
+
+	// Set values for unknowns.
+	data.ScraperComponents = fwflex.FlattenFrameworkStringyValueSetOfStringEnum(ctx, tfslices.ApplyToAll(output.ScraperComponents, func(v awstypes.ScraperComponent) awstypes.ScraperComponentType {
+		return v.Type
+	}))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -182,10 +194,14 @@ func (r *scraperLoggingConfigurationResource) Read(ctx context.Context, request 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flattenIntoModel(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.ScraperComponents = fwflex.FlattenFrameworkStringyValueSetOfStringEnum(ctx, tfslices.ApplyToAll(output.ScraperComponents, func(v awstypes.ScraperComponent) awstypes.ScraperComponentType {
+		return v.Type
+	}))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -205,7 +221,13 @@ func (r *scraperLoggingConfigurationResource) Update(ctx context.Context, reques
 	if response.Diagnostics.HasError() {
 		return
 	}
-	input.ScraperComponents = expandScraperComponents(ctx, new.ScraperComponents)
+	if scraperComponents := fwflex.ExpandFrameworkStringyValueSet[awstypes.ScraperComponentType](ctx, new.ScraperComponents); len(scraperComponents) > 0 {
+		input.ScraperComponents = tfslices.ApplyToAll(scraperComponents, func(v awstypes.ScraperComponentType) awstypes.ScraperComponent {
+			return awstypes.ScraperComponent{
+				Type: v,
+			}
+		})
+	}
 
 	_, err := conn.UpdateScraperLoggingConfiguration(ctx, &input)
 
@@ -259,46 +281,6 @@ func (r *scraperLoggingConfigurationResource) Delete(ctx context.Context, reques
 
 func (r *scraperLoggingConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("scraper_id"), request, response)
-}
-
-// flattenIntoModel fills data from the API output, handling the autoflex-incompatible scraper_components field.
-func (r *scraperLoggingConfigurationResource) flattenIntoModel(ctx context.Context, output *amp.DescribeScraperLoggingConfigurationOutput, data *scraperLoggingConfigurationResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	diags.Append(fwflex.Flatten(ctx, output, data)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Only flatten scraper_components if they were already in state (user-configured).
-	// The API returns default components even when none were configured by the user.
-	if !data.ScraperComponents.IsNull() && len(output.ScraperComponents) > 0 {
-		componentPtrs := make([]*scraperComponentModel, len(output.ScraperComponents))
-		for i, c := range output.ScraperComponents {
-			component := scraperComponentModel{
-				Type: fwtypes.StringEnumValue(c.Type),
-			}
-
-			if c.Config != nil && c.Config.Options != nil {
-				elements := make(map[string]attr.Value, len(c.Config.Options))
-				for k, v := range c.Config.Options {
-					elements[k] = basetypes.NewStringValue(v)
-				}
-				optionsMap, d := fwtypes.NewMapValueOf[basetypes.StringValue](ctx, elements)
-				diags.Append(d...)
-				if !diags.HasError() {
-					component.Options = optionsMap
-				}
-			} else {
-				component.Options = fwtypes.NewMapValueOfNull[basetypes.StringValue](ctx)
-			}
-			componentPtrs[i] = &component
-		}
-
-		data.ScraperComponents = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, componentPtrs)
-	}
-
-	return diags
 }
 
 func findScraperLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeScraperLoggingConfigurationOutput, error) {
@@ -405,22 +387,13 @@ func waitScraperLoggingConfigurationDeleted(ctx context.Context, conn *amp.Clien
 type scraperLoggingConfigurationResourceModel struct {
 	framework.WithRegionModel
 	LoggingDestination fwtypes.ListNestedObjectValueOf[scraperLoggingDestinationModel] `tfsdk:"logging_destination"`
-	ScraperComponents  fwtypes.ListNestedObjectValueOf[scraperComponentModel]          `tfsdk:"scraper_component" autoflex:"-"`
+	ScraperComponents  fwtypes.SetOfStringEnum[awstypes.ScraperComponentType]          `tfsdk:"scraper_components" autoflex:"-"`
 	ScraperID          types.String                                                    `tfsdk:"scraper_id"`
 	Timeouts           timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
 type scraperLoggingDestinationModel struct {
-	CloudwatchLogs fwtypes.ListNestedObjectValueOf[scraperCloudWatchLogDestinationModel] `tfsdk:"cloudwatch_logs"`
-}
-
-type scraperComponentModel struct {
-	Type    fwtypes.StringEnum[awstypes.ScraperComponentType] `tfsdk:"type"`
-	Options fwtypes.MapOfString                               `tfsdk:"options"`
-}
-
-type scraperCloudWatchLogDestinationModel struct {
-	LogGroupARN fwtypes.ARN `tfsdk:"log_group_arn"`
+	CloudwatchLogs fwtypes.ListNestedObjectValueOf[cloudWatchLogDestinationModel] `tfsdk:"cloudwatch_logs"`
 }
 
 var (
@@ -430,22 +403,24 @@ var (
 
 func (m scraperLoggingDestinationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	var v awstypes.ScraperLoggingDestination
 
-	cwData, d := m.CloudwatchLogs.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
+	switch {
+	case !m.CloudwatchLogs.IsNull():
+		data, d := m.CloudwatchLogs.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.ScraperLoggingDestinationMemberCloudWatchLogs
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
 	}
 
-	if cwData == nil {
-		return nil, diags
-	}
-
-	return &awstypes.ScraperLoggingDestinationMemberCloudWatchLogs{
-		Value: awstypes.CloudWatchLogDestination{
-			LogGroupArn: cwData.LogGroupARN.ValueStringPointer(),
-		},
-	}, diags
+	return v, diags
 }
 
 func (m *scraperLoggingDestinationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -453,41 +428,19 @@ func (m *scraperLoggingDestinationModel) Flatten(ctx context.Context, v any) dia
 
 	switch t := v.(type) {
 	case awstypes.ScraperLoggingDestinationMemberCloudWatchLogs:
-		var data scraperCloudWatchLogDestinationModel
+		var data cloudWatchLogDestinationModel
 		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
 		if diags.HasError() {
 			return diags
 		}
 		m.CloudwatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("scraperLoggingDestinationModel.Flatten: %T", v),
+		)
 	}
 
 	return diags
-}
-
-func expandScraperComponents(ctx context.Context, src fwtypes.ListNestedObjectValueOf[scraperComponentModel]) []awstypes.ScraperComponent {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	components, diags := src.ToSlice(ctx)
-	if diags.HasError() {
-		return nil
-	}
-
-	result := make([]awstypes.ScraperComponent, len(components))
-	for i, component := range components {
-		result[i] = awstypes.ScraperComponent{
-			Type: component.Type.ValueEnum(),
-		}
-
-		if !component.Options.IsNull() && !component.Options.IsUnknown() {
-			optionsMap := make(map[string]string)
-			component.Options.ElementsAs(ctx, &optionsMap, false)
-			result[i].Config = &awstypes.ComponentConfig{
-				Options: optionsMap,
-			}
-		}
-	}
-
-	return result
 }

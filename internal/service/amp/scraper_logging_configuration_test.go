@@ -9,10 +9,15 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/amp"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,7 +42,6 @@ func TestAccAMPScraperLoggingConfiguration_basic(t *testing.T) {
 	var v amp.DescribeScraperLoggingConfigurationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper_logging_configuration.test"
-	scraperResourceName := "aws_prometheus_scraper.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -52,46 +56,20 @@ func TestAccAMPScraperLoggingConfiguration_basic(t *testing.T) {
 				Config: testAccScraperLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "scraper_id", scraperResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logging_destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_destination.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "logging_destination.0.cloudwatch_logs.0.log_group_arn"),
 				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "scraper_id"),
-				ImportStateVerifyIdentifierAttribute: "scraper_id",
-			},
-		},
-	})
-}
-
-func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v amp.DescribeScraperLoggingConfigurationOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper_logging_configuration.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckScraperLoggingConfiguration(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "scraper_component.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "scraper_component.0.type", "COLLECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "scraper_component.1.type", "EXPORTER"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"cloudwatch_logs": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"log_group_arn": knownvalue.NotNull(),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_components"), tfknownvalue.SetNotEmpty()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -134,6 +112,50 @@ func TestAccAMPScraperLoggingConfiguration_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v amp.DescribeScraperLoggingConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper_logging_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckScraperLoggingConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_component"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.ScraperComponentTypeCollector),
+						tfknownvalue.StringExact(awstypes.ScraperComponentTypeExporter),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "scraper_id"),
+				ImportStateVerifyIdentifierAttribute: "scraper_id",
 			},
 		},
 	})
@@ -217,13 +239,7 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_prometheus_scraper_logging_configuration" "test" {
   scraper_id = aws_prometheus_scraper.test.id
 
-  scraper_component {
-    type = "COLLECTOR"
-  }
-
-  scraper_component {
-    type = "EXPORTER"
-  }
+  scraper_components = ["COLLECTOR", "EXPORTER"]
 
   logging_destination {
     cloudwatch_logs {

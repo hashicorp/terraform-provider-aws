@@ -60,16 +60,7 @@ resource "aws_prometheus_scraper_logging_configuration" "example" {
 resource "aws_prometheus_scraper_logging_configuration" "example" {
   scraper_id = aws_prometheus_scraper.example.id
 
-  scraper_components {
-    type = "COLLECTOR"
-  }
-
-  scraper_components {
-    type = "EXPORTER"
-    options = {
-      "log_level" = "debug"
-    }
-  }
+  scraper_components = ["COLLECTOR", "EXPORTER"]
 
   logging_destination {
     cloudwatch_logs {
@@ -81,34 +72,31 @@ resource "aws_prometheus_scraper_logging_configuration" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `logging_destination` - (Required) Configuration block for the logging destination. See [`logging_destination`](#logging_destination).
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `scraper_id` - (Required) The ID of the scraper to configure logging for.
+* `logging_destination` - (Required) Configuration block for the logging destination. See [`logging_destination` Block](#logging_destination-block) below.
+* `scraper_id` - (Required) ID of the scraper to configure logging for.
 
 The following arguments are optional:
 
-* `scraper_components` - (Optional) Configuration blocks for scraper components to log. See [`scraper_components`](#scraper_components).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `scraper_components` - (Optional) Scraper components to log. Valid values: `COLLECTOR`, `EXPORTER`, `SERVICE_DISCOVERY`.
 
-### `logging_destination`
+### `logging_destination` Block
 
-* `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. See [`cloudwatch_logs`](#cloudwatch_logs).
+The `logging_destination` block supports the following arguments:
 
-### `cloudwatch_logs`
+* `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. See [`cloudwatch_logs` Block](#cloudwatch_logs-block) below.
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch Logs log group. Must end with `:*`.
+### `cloudwatch_logs` Block
 
-### `scraper_components`
+The `cloudwatch_logs` block supports the following arguments:
 
-* `type` - (Required) The type of scraper component. Valid values: `COLLECTOR`, `EXPORTER`.
-* `options` - (Optional) Map of configuration options for the scraper component.
+* `log_group_arn` - (Required) ARN of the CloudWatch Logs log group. Must end with `:*`.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `scraper_id` - The ID of the scraper.
+This resource exports no additional attributes.
 
 ## Timeouts
 
