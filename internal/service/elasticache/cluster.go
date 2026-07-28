@@ -1045,6 +1045,10 @@ func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.
 
 // clusterValidateTransitEncryption validates that `transit_encryption_enabled` is not set for Redis or Valkey engines
 func clusterValidateTransitEncryption(_ context.Context, diff *schema.ResourceDiff, v any) error {
+
+	if _, ok := diff.GetOk("replication_group_id"); ok {
+		return nil
+	}
 	if v, ok := diff.GetOk("transit_encryption_enabled"); !ok || !v.(bool) {
 		return nil
 	}
