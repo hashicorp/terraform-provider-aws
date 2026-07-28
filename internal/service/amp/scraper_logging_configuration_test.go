@@ -133,7 +133,7 @@ func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName),
+				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName, awstypes.ScraperComponentTypeCollector, awstypes.ScraperComponentTypeExporter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
 				),
@@ -156,6 +156,23 @@ func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "scraper_id"),
 				ImportStateVerifyIdentifierAttribute: "scraper_id",
+			},
+			{
+				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName, awstypes.ScraperComponentTypeServiceDiscovery),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_component"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.ScraperComponentTypeServiceDiscovery),
+					})),
+				},
 			},
 		},
 	})
@@ -228,7 +245,7 @@ resource "aws_prometheus_scraper_logging_configuration" "test" {
 `, rName))
 }
 
-func testAccScraperLoggingConfigurationConfig_scraperComponents(rName string) string {
+func testAccScraperLoggingConfigurationConfig_scraperComponents(rName string, components ...awstypes.ScraperComponentType) string {
 	return acctest.ConfigCompose(
 		testAccScraperConfig_basic(rName),
 		fmt.Sprintf(`
@@ -239,7 +256,7 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_prometheus_scraper_logging_configuration" "test" {
   scraper_id = aws_prometheus_scraper.test.id
 
-  scraper_components = ["COLLECTOR", "EXPORTER"]
+  scraper_components = [%[2]s]
 
   logging_destination {
     cloudwatch_logs {
@@ -247,5 +264,5 @@ resource "aws_prometheus_scraper_logging_configuration" "test" {
     }
   }
 }
-`, rName))
+`, rName, acctest.ListOfStrings(components...)))
 }
