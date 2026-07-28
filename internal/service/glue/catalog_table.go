@@ -1039,6 +1039,16 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
 	}
 
+	// SPARK-dialect views require a StorageDescriptor with columns on both
+	// CreateTable and UpdateTable. If the user did not supply one explicitly,
+	// synthesise a minimal descriptor so Glue accepts the request. Glue will
+	// populate the actual columns after validating the view SQL.
+	if viewDefinitionHasDialect(d, awstypes.ViewDialectSpark) && apiObject.StorageDescriptor == nil {
+		apiObject.StorageDescriptor = &awstypes.StorageDescriptor{
+			Columns: []awstypes.Column{},
+		}
+	}
+
 	if v, ok := d.GetOk("view_expanded_text"); ok {
 		apiObject.ViewExpandedText = aws.String(v.(string))
 	}
