@@ -279,7 +279,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			name := d.Id()
-			if v, ok := d.GetOk(names.AttrVersion); ok && v.(int) > 0 {
+			if v, ok := d.GetOk(names.AttrVersion); ok {
 				name = fmt.Sprintf("%s:%d", name, v.(int))
 			}
 			return findParameterByName(ctx, conn, name, true)
