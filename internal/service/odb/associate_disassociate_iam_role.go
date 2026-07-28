@@ -33,7 +33,7 @@ import (
 
 var AssociateDisassociateIAMRole = newResourceAssociateDisassociateIAMRole
 
-// @FrameworkResource("aws_odb__iam_role_association", name="IAM Role Association")
+// @FrameworkResource("aws_odb_iam_role_association", name="IAM Role Association")
 func newResourceAssociateDisassociateIAMRole(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAssociateDisassociateIAMRole{}
 

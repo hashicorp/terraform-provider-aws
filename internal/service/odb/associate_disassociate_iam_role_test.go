@@ -31,7 +31,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var associateDisassociateIAMRole odbtypes.IamRole
-	resourceName := "aws_odb_associate_disassociate_iam_role.test"
+	resourceName := "aws_odb_iam_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -81,7 +81,7 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var associateDisassociateIAMRole odbtypes.IamRole
-	resourceName := "aws_odb_associate_disassociate_iam_role.test"
+	resourceName := "aws_odb_iam_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -132,7 +132,7 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 	}
 
 	var iamRole odbtypes.IamRole
-	resourceName := "aws_odb_associate_disassociate_iam_role.test"
+	resourceName := "aws_odb_iam_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -165,7 +165,7 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_odb_associate_disassociate_iam_role" {
+			if rs.Type != "aws_odb_iam_role_association" {
 				continue
 			}
 
@@ -234,7 +234,7 @@ data "aws_odb_cloud_autonomous_vm_cluster" "test" {
   id = "avmc_hvlokll3j2"
 }
 
-resource "aws_odb_associate_disassociate_iam_role" "test" {
+resource "aws_odb_iam_role_association" "test" {
   aws_integration = "KmsTde"
   iam_role_arn   = data.aws_iam_role.test.arn
   resource_arn   = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
@@ -252,7 +252,7 @@ data "aws_odb_cloud_vm_cluster" "test" {
   id = "vmc_fh3d42fmeu"
 }
 
-resource "aws_odb_associate_disassociate_iam_role" "test" {
+resource "aws_odb_iam_role_association" "test" {
   aws_integration = "KmsTde"
   iam_role_arn   = data.aws_iam_role.test.arn
   resource_arn   = data.aws_odb_cloud_vm_cluster.test.arn

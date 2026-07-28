@@ -1,7 +1,7 @@
 ---
 subcategory: "Oracle Database@AWS"
 layout: "aws"
-page_title: "AWS: aws_odb_associate_disassociate_iam_role"
+page_title: "AWS: aws_odb_iam_role_association"
 description: |-
   Provides details about an AWS Oracle Database@AWS Associate Disassociate IAM Role.
 ---
@@ -16,7 +16,7 @@ Documentation guidelines:
 - Use "example" instead of "test" in examples
 --->
 
-# Data Source: aws_odb_associate_disassociate_iam_role
+# Data Source: aws_odb_iam_role_association
 
 Provides details about an AWS Oracle Database@AWS Associate Disassociate IAM Role.
 
@@ -25,7 +25,7 @@ Provides details about an AWS Oracle Database@AWS Associate Disassociate IAM Rol
 ### Basic Usage
 
 ```terraform
-data "aws_odb_associate_disassociate_iam_role" "example" {
+data "aws_odb_iam_role_association" "example" {
   composite_arn {
     iam_role_arn = "data.aws_iam_role.arn"
     resource_arn = "aws_odb_cloud_vm_cluster.test.arn"

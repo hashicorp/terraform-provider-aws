@@ -21,7 +21,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	dataSourceName := "data.aws_odb_associate_disassociate_iam_role.test"
+	dataSourceName := "data.aws_odb_iam_role_association.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -44,7 +44,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_avmc(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	dataSourceName := "data.aws_odb_associate_disassociate_iam_role.test"
+	dataSourceName := "data.aws_odb_iam_role_association.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -67,7 +67,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_vmc(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	dataSourceName := "data.aws_odb_associate_disassociate_iam_role.test"
+	dataSourceName := "data.aws_odb_iam_role_association.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -96,7 +96,7 @@ data "aws_odb_cloud_autonomous_vm_cluster" "test" {
 }
 
 
-data "aws_odb_associate_disassociate_iam_role" "test" {
+data "aws_odb_iam_role_association" "test" {
   composite_arn {
     iam_role_arn = data.aws_iam_role.test.arn
     resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
@@ -118,7 +118,7 @@ data "aws_odb_cloud_vm_cluster" "test" {
 }
 
 
-data "aws_odb_associate_disassociate_iam_role" "test" {
+data "aws_odb_iam_role_association" "test" {
   composite_arn {
     iam_role_arn = data.aws_iam_role.test.arn
     resource_arn = data.aws_odb_cloud_vm_cluster.test.arn

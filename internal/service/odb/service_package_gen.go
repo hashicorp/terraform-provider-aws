@@ -23,12 +23,6 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceAssociateDisassociateIAMRole,
-			TypeName: "aws_odb_associate_disassociate_iam_role",
-			Name:     "Associate Disassociate IAM Role",
-			Region:   inttypes.ResourceRegionDefault(),
-		},
-		{
 			Factory:  newDataSourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
@@ -110,6 +104,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newDataSourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_iam_role_association",
+			Name:     "IAM Role Association",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
@@ -142,12 +142,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAssociateDisassociateIAMRole,
-			TypeName: "aws_odb_associate_disassociate_iam_role",
-			Name:     "Associate Disassociate IAM Role",
-			Region:   inttypes.ResourceRegionDefault(),
-		},
-		{
 			Factory:  newResourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
@@ -173,6 +167,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newResourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_iam_role_association",
+			Name:     "IAM Role Association",
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceNetwork,

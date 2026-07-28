@@ -28,7 +28,7 @@ import (
 var AssociateDisassociateIAMRoleDataSource = newDataSourceAssociateDisassociateIAMRole
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_odb_associate_disassociate_iam_role", name="Associate Disassociate IAM Role")
+// @FrameworkDataSource("aws_odb_iam_role_association", name="IAM Role Association")
 func newDataSourceAssociateDisassociateIAMRole(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAssociateDisassociateIAMRole{}, nil
 }

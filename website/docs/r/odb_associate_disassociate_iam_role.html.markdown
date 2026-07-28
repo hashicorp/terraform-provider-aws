@@ -1,12 +1,12 @@
 ---
 subcategory: "Oracle Database@AWS"
 layout: "aws"
-page_title: "AWS: aws_odb_associate_disassociate_iam_role"
+page_title: "AWS: aws_odb_iam_role_association"
 description: |-
   Manages an AWS Oracle Database@AWS Associate Disassociate IAM Role.
 ---
 
-# Resource: aws_odb_associate_disassociate_iam_role
+# Resource: aws_odb_iam_role_association
 
 Manages an AWS Oracle Database@AWS Associate Disassociate IAM Role.
 
@@ -17,7 +17,7 @@ Currently supported `resource_arn` targets are Cloud VM Clusters and Cloud Auton
 ### Basic Usage
 
 ```terraform
-resource "aws_odb_associate_disassociate_iam_role" "example" {
+resource "aws_odb_iam_role_association" "example" {
   aws_integration = "KmsTde"
   iam_role_arn   = "arn:aws:iam::123456789012:role/odb-iam-role-example"
   resource_arn   = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
@@ -57,7 +57,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_odb_associate_disassociate_iam_role.example
+  to = aws_odb_iam_role_association.example
   id = "arn:aws:iam::123456789012:role/odb-iam-role-example,arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
 }
 ```
@@ -65,5 +65,5 @@ import {
 Using `terraform import`, import an Oracle Database@AWS Associate Disassociate IAM Role using the IAM role ARN and resource ARN, separated by a comma. Specify the IAM role ARN first and the resource ARN second. For example:
 
 ```console
-% terraform import aws_odb_associate_disassociate_iam_role.example "arn:aws:iam::123456789012:role/odb-iam-role-example,arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
+% terraform import aws_odb_iam_role_association.example "arn:aws:iam::123456789012:role/odb-iam-role-example,arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
 ```
