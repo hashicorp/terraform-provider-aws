@@ -36,6 +36,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
@@ -87,7 +88,6 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrName: schema.StringAttribute{
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 48),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
 				},
 				Required: true,
@@ -122,7 +122,6 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					tfstringvalidator.AlsoRequiresWhenEquals(
 						awstypes.MemoryStrategyTypeCustom,
 						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
-						path.MatchRelative().AtParent().AtName("memory_execution_role_arn"),
 					),
 					tfstringvalidator.ConflictsWithWhenNotEquals(
 						awstypes.MemoryStrategyTypeCustom,
@@ -237,7 +236,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
-					errorIfSingleBlockRemoved("reflection_configuration"),
+					tflistplanmodifier.RequiresReplaceIfEmptied,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
