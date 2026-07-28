@@ -133,7 +133,7 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.setID()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := waitProjectCreated(ctx, conn, plan.ID.ValueString(), in.Feature, createTimeout)
+	output, err := waitProjectCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.State.SetAttribute(ctx, path.Root(names.AttrName), plan.Name.ValueString())
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
@@ -228,7 +228,7 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), state.Feature.ValueEnum(), deleteTimeout)
+	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
@@ -256,11 +256,11 @@ func (r *projectResource) ValidateConfig(ctx context.Context, req resource.Valid
 	}
 }
 
-func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
+func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),
 		Target:                    enum.Slice(awstypes.ProjectStatusCreated),
-		Refresh:                   statusProject(conn, name, feature),
+		Refresh:                   statusProject(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -274,11 +274,11 @@ func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name stri
 	return nil, err
 }
 
-func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
+func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusDeleting),
 		Target:                    []string{},
-		Refresh:                   statusProject(conn, name, feature),
+		Refresh:                   statusProject(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -315,7 +315,7 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 	return tfresource.AssertSingleValueResult(out.ProjectDescriptions)
 }
 
-func statusProject(conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
+func statusProject(conn *rekognition.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findProjectByName(ctx, conn, name)
 		if retry.NotFound(err) {
