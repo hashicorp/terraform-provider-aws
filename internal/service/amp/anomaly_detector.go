@@ -407,7 +407,6 @@ func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id, works
 		Target:                    enum.Slice(awstypes.AnomalyDetectorStatusCodeActive),
 		Refresh:                   statusAnomalyDetector(conn, id, workspaceID),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -428,7 +427,6 @@ func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id, works
 		Target:                    enum.Slice(awstypes.AnomalyDetectorStatusCodeActive),
 		Refresh:                   statusAnomalyDetector(conn, id, workspaceID),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 

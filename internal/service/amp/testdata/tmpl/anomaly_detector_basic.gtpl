@@ -1,7 +1,3 @@
-resource "aws_prometheus_workspace" "test" {
-{{- template "region" }}
-}
-
 resource "aws_prometheus_anomaly_detector" "test" {
 {{- template "region" }}
   alias        = var.rName
@@ -17,4 +13,8 @@ resource "aws_prometheus_anomaly_detector" "test" {
     skip = true
   }
 {{- template "tags" . }}
+}
+
+resource "aws_prometheus_workspace" "test" {
+{{- template "region" }}
 }

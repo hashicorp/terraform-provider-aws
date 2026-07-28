@@ -7,9 +7,6 @@ provider "aws" {
   }
 }
 
-resource "aws_prometheus_workspace" "test" {
-}
-
 resource "aws_prometheus_anomaly_detector" "test" {
   alias        = var.rName
   workspace_id = aws_prometheus_workspace.test.id
@@ -26,6 +23,10 @@ resource "aws_prometheus_anomaly_detector" "test" {
 
   tags = var.resource_tags
 }
+
+resource "aws_prometheus_workspace" "test" {
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string

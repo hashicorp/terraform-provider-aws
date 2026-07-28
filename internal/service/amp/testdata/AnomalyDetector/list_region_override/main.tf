@@ -1,10 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_prometheus_workspace" "test" {
-  region = var.region
-}
-
 resource "aws_prometheus_anomaly_detector" "test" {
   count  = var.resource_count
   region = var.region
@@ -21,6 +17,10 @@ resource "aws_prometheus_anomaly_detector" "test" {
   missing_data_action {
     skip = true
   }
+}
+
+resource "aws_prometheus_workspace" "test" {
+  region = var.region
 }
 
 variable "rName" {

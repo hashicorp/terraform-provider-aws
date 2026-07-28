@@ -1,10 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_prometheus_workspace" "first" {}
-
-resource "aws_prometheus_workspace" "second" {}
-
 resource "aws_prometheus_anomaly_detector" "first" {
   alias        = "${var.rName}-first"
   workspace_id = aws_prometheus_workspace.first.id
@@ -34,6 +30,10 @@ resource "aws_prometheus_anomaly_detector" "second" {
     skip = true
   }
 }
+
+resource "aws_prometheus_workspace" "first" {}
+
+resource "aws_prometheus_workspace" "second" {}
 
 variable "rName" {
   description = "Name for resource"

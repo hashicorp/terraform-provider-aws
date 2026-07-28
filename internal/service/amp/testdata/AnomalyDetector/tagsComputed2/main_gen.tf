@@ -3,9 +3,6 @@
 
 provider "null" {}
 
-resource "aws_prometheus_workspace" "test" {
-}
-
 resource "aws_prometheus_anomaly_detector" "test" {
   alias        = var.rName
   workspace_id = aws_prometheus_workspace.test.id
@@ -25,6 +22,10 @@ resource "aws_prometheus_anomaly_detector" "test" {
     (var.knownTagKey)   = var.knownTagValue
   }
 }
+
+resource "aws_prometheus_workspace" "test" {
+}
+
 resource "null_resource" "test" {}
 
 variable "rName" {
