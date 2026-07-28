@@ -130,7 +130,7 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	plan.ID = plan.Name
+	plan.setID()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	output, err := waitProjectCreated(ctx, conn, plan.ID.ValueString(), in.Feature, createTimeout)
@@ -168,7 +168,9 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := findProjectByName(ctx, conn, state.ID.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
+	state.setID()
+
+	out, err := findProjectByName(ctx, conn, state.ID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -290,23 +292,15 @@ func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name stri
 	return nil, err
 }
 
-func findProjectByName(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) (*awstypes.ProjectDescription, error) {
-	features := []awstypes.CustomizationFeature{}
-	if len((string)(feature)) == 0 {
-		// we don't know the type on import, so we lookup both
-		features = append(features, awstypes.CustomizationFeatureContentModeration, awstypes.CustomizationFeatureCustomLabels)
-	} else {
-		features = append(features, feature)
-	}
-
-	in := &rekognition.DescribeProjectsInput{
+func findProjectByName(ctx context.Context, conn *rekognition.Client, name string) (*awstypes.ProjectDescription, error) {
+	input := rekognition.DescribeProjectsInput{
 		ProjectNames: []string{
 			name,
 		},
-		Features: features,
+		Features: awstypes.CustomizationFeature("").Values(), // pass all possible to values to filter since it defaults to CUSTOM_LABELS
 	}
 
-	out, err := conn.DescribeProjects(ctx, in)
+	out, err := conn.DescribeProjects(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -318,16 +312,12 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 		return nil, err
 	}
 
-	if out == nil || len(out.ProjectDescriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return &out.ProjectDescriptions[0], nil
+	return tfresource.AssertSingleValueResult(out.ProjectDescriptions)
 }
 
 func statusProject(conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findProjectByName(ctx, conn, name, feature)
+		out, err := findProjectByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -338,6 +328,10 @@ func statusProject(conn *rekognition.Client, name string, feature awstypes.Custo
 
 		return out, string(out.Status), nil
 	}
+}
+
+func (p *projectResourceModel) setID() {
+	p.ID = p.Name
 }
 
 type projectResourceModel struct {

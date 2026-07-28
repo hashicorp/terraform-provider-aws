@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -80,6 +79,7 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_contentModeration(rName+"-1", "ENABLED"),
@@ -254,7 +254,7 @@ func testAccCheckProjectExists(ctx context.Context, t *testing.T, name string) r
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).RekognitionClient(ctx)
-		_, err := tfrekognition.FindProjectByName(ctx, conn, rs.Primary.ID, "")
+		_, err := tfrekognition.FindProjectByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameProject, rs.Primary.ID, err)
@@ -273,7 +273,7 @@ func testAccCheckProjectDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, err := tfrekognition.FindProjectByName(ctx, conn, rs.Primary.ID, awstypes.CustomizationFeature(rs.Primary.Attributes["feature"]))
+			_, err := tfrekognition.FindProjectByName(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				continue
 			}
