@@ -182,10 +182,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Parameter",
 			}),
-			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.IntIdentityAttribute(names.AttrVersion, false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
+				ImportID:     parameterImportID{},
 			},
 		},
 		{
@@ -264,7 +270,12 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Parameter",
 			}),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.IntIdentityAttribute(names.AttrVersion, false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
 		},
 		{
 			Factory:  newPatchGroupResourceAsListResource,

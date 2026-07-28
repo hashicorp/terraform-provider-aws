@@ -7,7 +7,10 @@ package ssm
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,6 +40,9 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 // @Testing(importIgnore="has_value_wo")
 // @IdentityAttribute("name")
+// @IdentityAttribute("version", valueType="int", optional="true")
+// @MutableIdentity
+// @ImportIDHandler("parameterImportID")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
@@ -271,7 +278,11 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
-			return findParameterByName(ctx, conn, d.Id(), true)
+			name := d.Id()
+			if v, ok := d.GetOk(names.AttrVersion); ok && v.(int) > 0 {
+				name = fmt.Sprintf("%s:%d", name, v.(int))
+			}
+			return findParameterByName(ctx, conn, name, true)
 		},
 		func(err error) (bool, error) {
 			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
@@ -413,6 +424,8 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
+	d.Set(names.AttrVersion, nil)
+
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
@@ -512,4 +525,31 @@ func shouldUpdateParameter(d *schema.ResourceData) bool {
 	// Since the user has not specified a preference, obey lifecycle rules
 	// if it is not a new resource, otherwise overwrite should be set to false.
 	return !d.IsNewResource()
+}
+
+var _ inttypes.SDKv2ImportID = parameterImportID{}
+
+type parameterImportID struct{}
+
+func (parameterImportID) Parse(id string) (string, map[string]any, error) {
+	result := map[string]any{
+		names.AttrName: id,
+	}
+
+	if idx := strings.LastIndex(id, ":"); idx != -1 {
+		name := id[:idx]
+		versionStr := id[idx+1:]
+
+		if version, err := strconv.Atoi(versionStr); err == nil {
+			result[names.AttrName] = name
+			result[names.AttrVersion] = version
+			return name, result, nil
+		}
+	}
+
+	return id, result, nil
+}
+
+func (parameterImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
 }
