@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -24,8 +25,11 @@ import (
 )
 
 const (
-	testAccAutonomousDatabaseAdminPasswordEnv = "TF_VAR_odb_test_admin_password"
-	testAccAutonomousDatabaseNetworkIDEnv     = "TF_VAR_odb_test_network_id"
+	testAccAutonomousDatabaseAdminPasswordEnv              = "TF_VAR_odb_test_admin_password"
+	testAccAutonomousDatabaseAdminPasswordSecretARNEnv     = "TF_VAR_odb_test_admin_password_secret_arn"
+	testAccAutonomousDatabaseAdminPasswordSecretRoleARNEnv = "TF_VAR_odb_test_admin_password_secret_role_arn"
+	testAccAutonomousDatabaseExternalIDTypeEnv             = "TF_VAR_odb_test_external_id_type"
+	testAccAutonomousDatabaseNetworkIDEnv                  = "TF_VAR_odb_test_network_id"
 )
 
 func TestAccODBAutonomousDatabase_basic(t *testing.T) {
@@ -175,6 +179,51 @@ func TestAccODBAutonomousDatabase_allArguments(t *testing.T) {
 	})
 }
 
+func TestAccODBAutonomousDatabase_adminPasswordSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var database odbtypes.AutonomousDatabase
+	resourceName := "aws_odb_autonomous_database.test"
+	dataSourceName := "data.aws_odb_autonomous_database.test"
+	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
+	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccAutonomousDatabaseAdminPasswordSourcePreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutonomousDatabaseDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutonomousDatabaseConfigAdminPasswordSource(displayName, dbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAutonomousDatabaseExists(ctx, t, resourceName, &database),
+					resource.TestCheckResourceAttr(resourceName, "admin_password_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_password_source.0.customer_managed_aws_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_password_source.0.customer_managed_aws_secret.0.secret_arn", os.Getenv(testAccAutonomousDatabaseAdminPasswordSecretARNEnv)),
+					resource.TestCheckResourceAttr(resourceName, "admin_password_source.0.customer_managed_aws_secret.0.iam_role_arn", os.Getenv(testAccAutonomousDatabaseAdminPasswordSecretRoleARNEnv)),
+					resource.TestCheckResourceAttr(resourceName, "admin_password_source.0.customer_managed_aws_secret.0.external_id_type", os.Getenv(testAccAutonomousDatabaseExternalIDTypeEnv)),
+					resource.TestCheckResourceAttrPair(resourceName, "admin_password_source.0.customer_managed_aws_secret.0.secret_arn", dataSourceName, "admin_password_source.0.customer_managed_aws_secret.0.secret_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "admin_password_source.0.customer_managed_aws_secret.0.iam_role_arn", dataSourceName, "admin_password_source.0.customer_managed_aws_secret.0.iam_role_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "admin_password_source.0.customer_managed_aws_secret.0.external_id_type", dataSourceName, "admin_password_source.0.customer_managed_aws_secret.0.external_id_type"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSource},
+			},
+		},
+	})
+}
+
 func TestAccODBAutonomousDatabase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -236,6 +285,26 @@ func testAccAutonomousDatabasePreCheck(ctx context.Context, t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseAdminPasswordEnv)
 	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseNetworkIDEnv)
 	testAccAutonomousDatabaseServicePreCheck(ctx, t)
+}
+
+func testAccAutonomousDatabaseAdminPasswordSourcePreCheck(ctx context.Context, t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseAdminPasswordSecretARNEnv)
+	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseAdminPasswordSecretRoleARNEnv)
+	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseExternalIDTypeEnv)
+	acctest.SkipIfEnvVarNotSet(t, testAccAutonomousDatabaseNetworkIDEnv)
+	testAccAutonomousDatabaseServicePreCheck(ctx, t)
+
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
+	role, err := tfodb.FindAutonomousDatabaseSecretsManagerIntegration(ctx, conn)
+	if retry.NotFound(err) {
+		t.Skip("skipping acceptance testing: AWS Secrets Manager integration is not enabled")
+	}
+	if err != nil {
+		t.Fatalf("unexpected Secrets Manager integration PreCheck error: %s", err)
+	}
+	if role.Status != odbtypes.OciIamRoleStatusAvailable {
+		t.Skipf("skipping acceptance testing: AWS Secrets Manager integration status is %s", role.Status)
+	}
 }
 
 func testAccAutonomousDatabaseServicePreCheck(ctx context.Context, t *testing.T) {
@@ -306,6 +375,26 @@ variable "odb_test_network_id" {
 `
 }
 
+func testAccAutonomousDatabaseAdminPasswordSourceConfigPrerequisites() string {
+	return `
+variable "odb_test_admin_password_secret_arn" {
+  type = string
+}
+
+variable "odb_test_admin_password_secret_role_arn" {
+  type = string
+}
+
+variable "odb_test_external_id_type" {
+  type = string
+}
+
+variable "odb_test_network_id" {
+  type = string
+}
+`
+}
+
 func testAccAutonomousDatabaseConfigBasic(displayName, dbName string, computeCount float64, characterSet, environment string) string {
 	return acctest.ConfigCompose(
 		testAccAutonomousDatabaseConfigPrerequisites(),
@@ -327,6 +416,38 @@ resource "aws_odb_autonomous_database" "test" {
   }
 }
 `, characterSet, computeCount, dbName, displayName, environment),
+	)
+}
+
+func testAccAutonomousDatabaseConfigAdminPasswordSource(displayName, dbName string) string {
+	return acctest.ConfigCompose(
+		testAccAutonomousDatabaseAdminPasswordSourceConfigPrerequisites(),
+		fmt.Sprintf(`
+resource "aws_odb_autonomous_database" "test" {
+  character_set            = "AL32UTF8"
+  compute_count            = 2
+  data_storage_size_in_tbs = 1
+  db_name                  = %[1]q
+  db_workload              = "OLTP"
+  display_name             = %[2]q
+  license_model            = "LICENSE_INCLUDED"
+  odb_network_id           = var.odb_test_network_id
+  source                   = "NONE"
+
+  admin_password_source {
+    customer_managed_aws_secret {
+      external_id_type = var.odb_test_external_id_type
+      iam_role_arn     = var.odb_test_admin_password_secret_role_arn
+      secret_arn       = var.odb_test_admin_password_secret_arn
+    }
+  }
+}
+`, dbName, displayName),
+		`
+data "aws_odb_autonomous_database" "test" {
+  id = aws_odb_autonomous_database.test.id
+}
+`,
 	)
 }
 

@@ -41,6 +41,7 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 				Description: "Unique identifier of the Autonomous Database.",
 			},
 			names.AttrARN:                          framework.ARNAttributeComputedOnly(),
+			"admin_password_source":                computedAdminPasswordSourceAttribute(ctx),
 			"actual_used_data_storage_size_in_tbs": schema.Float64Attribute{Computed: true, Description: "Actual amount of data storage currently in use, in TB."},
 			"allocated_storage_size_in_tbs":        schema.Float64Attribute{Computed: true, Description: "Amount of storage currently allocated, in TB."},
 			"allowlisted_ips": schema.ListAttribute{
@@ -122,6 +123,12 @@ func (d *dataSourceAutonomousDatabase) Schema(ctx context.Context, _ datasource.
 	}
 }
 
+func computedAdminPasswordSourceAttribute(ctx context.Context) schema.ListAttribute {
+	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseAdminPasswordSourceModel](ctx)
+	attribute.Description = "Source of the ADMIN password."
+	return attribute
+}
+
 func computedCustomerContactsAttribute(ctx context.Context) schema.ListAttribute {
 	attribute := framework.DataSourceComputedListOfObjectAttribute[autonomousDatabaseCustomerContactModel](ctx)
 	attribute.Description = "Customer contacts that receive operational notifications from OCI."
@@ -172,6 +179,7 @@ func (d *dataSourceAutonomousDatabase) Read(ctx context.Context, req datasource.
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	data.ByolComputeCountLimit = flattenAutonomousDatabaseByolComputeCountLimit(out.ByolComputeCountLimit)
+	resp.Diagnostics.Append(flattenAutonomousDatabaseAdminPasswordSource(ctx, out.AdminPasswordSourceSummary, &data.AdminPasswordSource)...)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.CustomerContacts, &data.CustomerContactsToSendToOCI)...)
 	resp.Diagnostics.Append(flattenAutonomousDatabaseScheduledOperations(ctx, out.ScheduledOperations, &data.ScheduledOperations)...)
 	if out.EncryptionSummary != nil {
@@ -190,6 +198,7 @@ func (d *dataSourceAutonomousDatabase) Read(ctx context.Context, req datasource.
 type autonomousDatabaseDataSourceModel struct {
 	framework.WithRegionModel
 	ActualUsedDataStorageSizeInTBs       tftypes.Float64                                                                `tfsdk:"actual_used_data_storage_size_in_tbs"`
+	AdminPasswordSource                  fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]    `tfsdk:"admin_password_source" autoflex:"-"`
 	AllocatedStorageSizeInTBs            tftypes.Float64                                                                `tfsdk:"allocated_storage_size_in_tbs"`
 	AllowlistedIps                       fwtypes.ListValueOf[tftypes.String]                                            `tfsdk:"allowlisted_ips"`
 	AutoRefreshFrequencyInSeconds        tftypes.Int32                                                                  `tfsdk:"auto_refresh_frequency_in_seconds"`

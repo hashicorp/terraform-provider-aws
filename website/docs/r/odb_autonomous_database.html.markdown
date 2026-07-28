@@ -44,6 +44,24 @@ resource "aws_odb_autonomous_database" "example" {
 }
 ```
 
+### AWS Secrets Manager ADMIN Password
+
+To retrieve the ADMIN password from AWS Secrets Manager, first enable the account-level [`aws_odb_autonomous_database_secrets_manager_integration`](./odb_autonomous_database_secrets_manager_integration.html.markdown). Then create a customer-managed IAM role that trusts the Oracle-managed service role exported by that resource and grants `secretsmanager:GetSecretValue` permission on the secret.
+
+```terraform
+resource "aws_odb_autonomous_database" "example" {
+  # Other required Autonomous Database configuration omitted.
+
+  admin_password_source {
+    customer_managed_aws_secret {
+      external_id_type = "compartment_ocid"
+      iam_role_arn     = "arn:aws:iam::123456789012:role/ADBSSecretManagerReadRole"
+      secret_arn       = "arn:aws:secretsmanager:us-east-1:123456789012:secret:adbs-admin-password"
+    }
+  }
+}
+```
+
 ### Reading the Created Database
 
 ```terraform
@@ -57,6 +75,7 @@ data "aws_odb_autonomous_database" "example" {
 This resource supports the following arguments:
 
 * `admin_password` - (Optional, Sensitive) Password for the `ADMIN` user. Must be between 12 and 30 characters. This value is stored in Terraform state. Conflicts with `admin_password_wo`.
+* `admin_password_source` - (Optional) Source of the `ADMIN` password. Conflicts with `admin_password` and `admin_password_wo`. See [`admin_password_source` Block](#admin_password_source-block) below.
 * `admin_password_wo` - (Optional, Sensitive, Write-only) Password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Requires Terraform 1.11 or later. Set `admin_password_wo_version` with this argument. Conflicts with `admin_password`.
 * `admin_password_wo_version` - (Optional) Arbitrary integer stored in state. Change this value together with `admin_password_wo` to rotate the ADMIN password.
 * `allowlisted_ips` - (Optional) List of between 1 and 1024 IP addresses allowed to access the database.
@@ -106,6 +125,18 @@ This resource supports the following arguments:
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys overwrite those defined at the provider level.
 * `time_of_auto_refresh_start` - (Optional) RFC3339 timestamp at which automatic refresh begins.
 * `transportable_tablespace` - (Optional) Transportable tablespace configuration. See [`transportable_tablespace` Block](#transportable_tablespace-block) below. Changing this value creates a new resource.
+
+### `admin_password_source` Block
+
+At most one `admin_password_source` block can be configured.
+
+#### `customer_managed_aws_secret` Block
+
+Exactly one `customer_managed_aws_secret` block must be configured.
+
+* `external_id_type` - (Required) OCI identifier type used as the external ID when OCI assumes the customer-managed IAM role. Valid values are `database_ocid`, `compartment_ocid`, and `tenant_ocid`.
+* `iam_role_arn` - (Required) ARN of the customer-managed IAM role OCI assumes to retrieve the secret. Its trust policy must allow the Oracle-managed service role to assume it.
+* `secret_arn` - (Required) ARN of the AWS Secrets Manager secret containing the ADMIN password.
 
 ### `customer_contacts_to_send_to_oci` Block
 
