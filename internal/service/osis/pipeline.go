@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -301,7 +302,7 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, pipeline, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, pipeline, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -385,6 +386,10 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
+}
+
+func (r *pipelineResource) flatten(ctx context.Context, pipeline *awstypes.Pipeline, data *pipelineResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, pipeline, data)
 }
 
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {

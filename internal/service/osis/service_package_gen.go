@@ -69,6 +69,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newPipelineResourceAsListResource,
+			TypeName: "aws_osis_pipeline",
+			Name:     "Pipeline",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "pipeline_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "pipeline_name"),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+		{
 			Factory:  newPipelineEndpointResourceAsListResource,
 			TypeName: "aws_osis_pipeline_endpoint",
 			Name:     "Pipeline Endpoint",
