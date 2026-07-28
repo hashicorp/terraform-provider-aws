@@ -82,30 +82,26 @@ type listResourcePolicyModel struct {
 
 func listResourcePolicies(ctx context.Context, conn *osis.Client, input *osis.ListPipelinesInput) iter.Seq2[*osis.GetResourcePolicyOutput, error] {
 	return func(yield func(*osis.GetResourcePolicyOutput, error) bool) {
-		pages := osis.NewListPipelinesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+		for pipeline, err := range listPipelines(ctx, conn, input) {
 			if err != nil {
-				yield(nil, fmt.Errorf("listing OpenSearch Ingestion Resource Policy resources: %w", err))
+				yield(nil, err)
 				return
 			}
 
-			for _, pipeline := range page.Pipelines {
-				pipelineARN := aws.ToString(pipeline.PipelineArn)
-				output, err := findResourcePolicyByResourceARN(ctx, conn, pipelineARN)
+			pipelineARN := aws.ToString(pipeline.PipelineArn)
+			output, err := findResourcePolicyByResourceARN(ctx, conn, pipelineARN)
 
-				if retry.NotFound(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-					continue
-				}
+			if retry.NotFound(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
 
-				if err != nil {
-					yield(nil, fmt.Errorf("getting resource policy for pipeline %s: %w", pipelineARN, err))
-					return
-				}
+			if err != nil {
+				yield(nil, fmt.Errorf("getting resource policy for pipeline %s: %w", pipelineARN, err))
+				return
+			}
 
-				if !yield(output, nil) {
-					return
-				}
+			if !yield(output, nil) {
+				return
 			}
 		}
 	}
