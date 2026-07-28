@@ -9,8 +9,9 @@ var (
 	ResourceAutonomousDatabase         = newResourceAutonomousDatabase
 	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
 
-	FindCloudAutonomousVmClusterByID  = findCloudAutonomousVmClusterByID
-	FindAutonomousDatabaseByID        = findAutonomousDatabaseByID
-	FindExadataInfraResourceByID      = findExadataInfraResourceByID
-	FindCloudVmClusterForResourceByID = findCloudVmClusterForResourceByID
+	FindCloudAutonomousVmClusterByID                = findCloudAutonomousVmClusterByID
+	FindAutonomousDatabaseByID                      = findAutonomousDatabaseByID
+	FindAutonomousDatabaseSecretsManagerIntegration = findAutonomousDatabaseSecretsManagerIntegration
+	FindExadataInfraResourceByID                    = findExadataInfraResourceByID
+	FindCloudVmClusterForResourceByID               = findCloudVmClusterForResourceByID
 )
