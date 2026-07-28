@@ -40,7 +40,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 // @Testing(importIgnore="has_value_wo")
 // @IdentityAttribute("name")
-// @IdentityAttribute("version", valueType="int", optional="true")
+// @IdentityAttribute("version", valueType="int", optional="true", testNotNull="true")
 // @MutableIdentity
 // @ImportIDHandler("parameterImportID")
 // @Testing(idAttrDuplicates="name")
@@ -551,5 +551,5 @@ func (parameterImportID) Parse(id string) (string, map[string]any, error) {
 }
 
 func (parameterImportID) Create(d *schema.ResourceData) string {
-	return d.Id()
+	return d.Get(names.AttrName).(string)
 }
