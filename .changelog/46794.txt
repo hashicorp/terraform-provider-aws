@@ -1,7 +1,7 @@
-```release-note:enhancement
-resource/aws_odb_iam_role_association: New resource to manage IAM role association/disassociation for Oracle Database@AWS resources.
+```release-note:new-resource
+aws_odb_iam_role_association
 ```
 
-```release-note:enhancement
-data-source/aws_odb_iam_role_association: New data source to read IAM role association status for Oracle Database@AWS resources.
+```release-note:new-data-source
+aws_odb_iam_role_association
 ```
