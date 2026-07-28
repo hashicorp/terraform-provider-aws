@@ -5,7 +5,3 @@ aws_prometheus_anomaly_detector
 ```release-note:new-list-resource
 aws_prometheus_anomaly_detector
 ```
-
-```release-note:enhancement
-resource/aws_prometheus_anomaly_detector: Add resource identity support
-```
