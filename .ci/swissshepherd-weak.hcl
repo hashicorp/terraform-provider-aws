@@ -1057,6 +1057,7 @@ check "schema_docs" {
     "resource/aws_cloudwatch_log_group",
     "resource/aws_cloudwatch_log_metric_filter",
     "resource/aws_cloudwatch_log_resource_policy",
+    "resource/aws_cloudwatch_log_storage_tier_policy",
     "resource/aws_cloudwatch_log_stream",
     "resource/aws_cloudwatch_log_subscription_filter",
     "resource/aws_cloudwatch_log_transformer",
