@@ -318,10 +318,7 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
-		var (
-			err error
-		)
-		err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 			_, err := conn.UpdateMemory(ctx, &input)
 
 			// IAM propagation - retry if role validation fails
