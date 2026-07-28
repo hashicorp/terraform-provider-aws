@@ -12,10 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -44,6 +42,12 @@ type dataSourceAssociateDisassociateIAMRole struct {
 func (d *dataSourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrResourceARN: schema.StringAttribute{
+				Required: true,
+			},
 			"aws_integration": schema.StringAttribute{
 				Computed: true,
 			},
@@ -53,28 +57,6 @@ func (d *dataSourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req
 			},
 			names.AttrStatusReason: schema.StringAttribute{
 				Computed: true,
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"composite_arn": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceCompositeARNModel](ctx),
-				Validators: []validator.List{
-					// Only one combination of resource ARN and IAM role ARN is mandatory
-					listvalidator.SizeAtMost(1),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.IsRequired(),
-				},
-				Description: "Combination of resource ARN and IAM role ARN is mandatory",
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrIAMRoleARN: schema.StringAttribute{
-							Required: true,
-						},
-						names.AttrResourceARN: schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -87,13 +69,11 @@ func (d *dataSourceAssociateDisassociateIAMRole) Read(ctx context.Context, req d
 		return
 	}
 
-	var combinedARNs []dataSourceCompositeARNModel
-	data.CombinedARN.ElementsAs(ctx, &combinedARNs, false)
-
-	out, err := FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx, conn, combinedARNs[0].ResourceARN.ValueString(), combinedARNs[0].IAMRoleARN.ValueString())
+	associationDescription := iamRoleAssociationDescription(data.IAMRoleARN, data.ResourceARN)
+	out, err := FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx, conn, data.ResourceARN.ValueString(), data.IAMRoleARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameAssociateDisassociateIAMRole, data.CombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameAssociateDisassociateIAMRole, associationDescription, err),
 			err.Error(),
 		)
 		return
@@ -160,13 +140,9 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 
 type dataSourceAssociateDisassociateIAMRoleModel struct {
 	framework.WithRegionModel
-	CombinedARN    fwtypes.ListNestedObjectValueOf[dataSourceCompositeARNModel] `tfsdk:"composite_arn"`
-	AWSIntegration types.String                                                 `tfsdk:"aws_integration"`
-	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                   `tfsdk:"status"`
-	StatusReason   types.String                                                 `tfsdk:"status_reason"`
-}
-
-type dataSourceCompositeARNModel struct {
-	IAMRoleARN  types.String `tfsdk:"iam_role_arn"`
-	ResourceARN types.String `tfsdk:"resource_arn"`
+	IAMRoleARN     types.String                               `tfsdk:"iam_role_arn"`
+	ResourceARN    types.String                               `tfsdk:"resource_arn"`
+	AWSIntegration types.String                               `tfsdk:"aws_integration"`
+	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus] `tfsdk:"status"`
+	StatusReason   types.String                               `tfsdk:"status_reason"`
 }

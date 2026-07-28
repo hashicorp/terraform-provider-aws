@@ -24,12 +24,10 @@ Provides details about an AWS Oracle Database@AWS Associate Disassociate IAM Rol
 
 ### Basic Usage
 
-```terraform
+```hcl
 data "aws_odb_iam_role_association" "example" {
-  composite_arn {
-    iam_role_arn = "data.aws_iam_role.arn"
-    resource_arn = "aws_odb_cloud_vm_cluster.test.arn"
-  }
+  iam_role_arn = "arn:aws:iam::123456789012:role/odb-iam-role-example"
+  resource_arn = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
 }
 ```
 
@@ -37,7 +35,8 @@ data "aws_odb_iam_role_association" "example" {
 
 The following arguments are required:
 
-* `composite_arn` - (Required) Combination of iam role ARN and resource ARN.
+* `iam_role_arn` - (Required) IAM role ARN to look up.
+* `resource_arn` - (Required) Oracle Database@AWS resource ARN associated with the IAM role.
 
 The following arguments are optional:
 
@@ -47,8 +46,6 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `iam_role_arn` - The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) service role.
-* `resource_arn` - ARN of the resource for which the IAM role is configured.
 * `aws_integration` - The Amazon Web Services integration configuration settings for the Amazon Web Services Identity and Access Management (IAM) service role.
 * `status` - The current status of the Amazon Web Services Identity and Access Management (IAM) service role.
 * `status_reason` - Additional information about the current status of the Amazon Web Services Identity and Access Management (IAM) service role, if applicable.
