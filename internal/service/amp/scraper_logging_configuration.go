@@ -67,22 +67,6 @@ func (r *scraperLoggingConfigurationResource) Schema(ctx context.Context, reques
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"scraper_components": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperComponentModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrType: schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.ScraperComponentType](),
-							Required:   true,
-						},
-						"options": schema.MapAttribute{
-							CustomType:  fwtypes.MapOfStringType,
-							ElementType: types.StringType,
-							Optional:    true,
-						},
-					},
-				},
-			},
 			"logging_destination": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperLoggingDestinationModel](ctx),
 				Validators: []validator.List{
@@ -110,6 +94,22 @@ func (r *scraperLoggingConfigurationResource) Schema(ctx context.Context, reques
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"scraper_component": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperComponentModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.ScraperComponentType](),
+							Required:   true,
+						},
+						"options": schema.MapAttribute{
+							CustomType:  fwtypes.MapOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
 						},
 					},
 				},
@@ -234,9 +234,10 @@ func (r *scraperLoggingConfigurationResource) Delete(ctx context.Context, reques
 	conn := r.Meta().AMPClient(ctx)
 
 	scraperID := fwflex.StringValueFromFramework(ctx, data.ScraperID)
-	var input amp.DeleteScraperLoggingConfigurationInput
-	input.ScraperId = aws.String(scraperID)
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input := amp.DeleteScraperLoggingConfigurationInput{
+		ClientToken: aws.String(create.UniqueId(ctx)),
+		ScraperId:   aws.String(scraperID),
+	}
 	_, err := conn.DeleteScraperLoggingConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -301,10 +302,15 @@ func (r *scraperLoggingConfigurationResource) flattenIntoModel(ctx context.Conte
 }
 
 func findScraperLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeScraperLoggingConfigurationOutput, error) {
-	var input amp.DescribeScraperLoggingConfigurationInput
-	input.ScraperId = aws.String(id)
+	input := amp.DescribeScraperLoggingConfigurationInput{
+		ScraperId: aws.String(id),
+	}
 
-	output, err := conn.DescribeScraperLoggingConfiguration(ctx, &input)
+	return findScraperLoggingConfiguration(ctx, conn, &input)
+}
+
+func findScraperLoggingConfiguration(ctx context.Context, conn *amp.Client, input *amp.DescribeScraperLoggingConfigurationInput) (*amp.DescribeScraperLoggingConfigurationOutput, error) {
+	output, err := conn.DescribeScraperLoggingConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -399,7 +405,7 @@ func waitScraperLoggingConfigurationDeleted(ctx context.Context, conn *amp.Clien
 type scraperLoggingConfigurationResourceModel struct {
 	framework.WithRegionModel
 	LoggingDestination fwtypes.ListNestedObjectValueOf[scraperLoggingDestinationModel] `tfsdk:"logging_destination"`
-	ScraperComponents  fwtypes.ListNestedObjectValueOf[scraperComponentModel]          `tfsdk:"scraper_components" autoflex:"-"`
+	ScraperComponents  fwtypes.ListNestedObjectValueOf[scraperComponentModel]          `tfsdk:"scraper_component" autoflex:"-"`
 	ScraperID          types.String                                                    `tfsdk:"scraper_id"`
 	Timeouts           timeouts.Value                                                  `tfsdk:"timeouts"`
 }

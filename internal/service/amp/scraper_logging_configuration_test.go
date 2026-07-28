@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -87,9 +88,9 @@ func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
 				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "scraper_components.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "scraper_components.0.type", "COLLECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "scraper_components.1.type", "EXPORTER"),
+					resource.TestCheckResourceAttr(resourceName, "scraper_component.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scraper_component.0.type", "COLLECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "scraper_component.1.type", "EXPORTER"),
 				),
 			},
 			{
@@ -98,7 +99,6 @@ func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "scraper_id"),
 				ImportStateVerifyIdentifierAttribute: "scraper_id",
-				ImportStateVerifyIgnore:              []string{"scraper_components"},
 			},
 		},
 	})
@@ -126,6 +126,14 @@ func TestAccAMPScraperLoggingConfiguration_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraperLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -209,11 +217,11 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_prometheus_scraper_logging_configuration" "test" {
   scraper_id = aws_prometheus_scraper.test.id
 
-  scraper_components {
+  scraper_component {
     type = "COLLECTOR"
   }
 
-  scraper_components {
+  scraper_component {
     type = "EXPORTER"
   }
 
