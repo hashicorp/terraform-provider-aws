@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/osis/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -106,12 +107,17 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourcePolicyResource) flatten(ctx context.Context, output *osis.GetResourcePolicyOutput, data *resourcePolicyResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	return diags
 }
 
 func (r *resourcePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
