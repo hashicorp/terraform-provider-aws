@@ -10,6 +10,8 @@ description: |-
 
 Manages a CloudWatch Logs account-level storage tier policy. When set to `INTELLIGENT_TIERING`, CloudWatch Logs automatically moves log data to the most cost-effective storage tier based on access frequency.
 
+~> Deletion of this resource will reset the storage tier policy to `STANDARD` (the default state).
+
 ## Example Usage
 
 ### Basic Usage
@@ -17,14 +19,6 @@ Manages a CloudWatch Logs account-level storage tier policy. When set to `INTELL
 ```terraform
 resource "aws_cloudwatch_log_storage_tier_policy" "example" {
   storage_tier = "INTELLIGENT_TIERING"
-}
-```
-
-### Standard Storage Tier
-
-```terraform
-resource "aws_cloudwatch_log_storage_tier_policy" "example" {
-  storage_tier = "STANDARD"
 }
 ```
 
@@ -37,30 +31,11 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `region` - AWS region where the storage tier policy is configured.
+This resource exports no additional attributes.
 
 ## Import
 
-Import CloudWatch Logs Storage Tier Policy using the region. For example:
-
-```terraform
-import {
-  to = aws_cloudwatch_log_storage_tier_policy.example
-  id = "us-west-2"
-}
-```
-
-**CLI:**
-
-```console
-% terraform import aws_cloudwatch_log_storage_tier_policy.example us-west-2
-```
-
-### Identity Schema
-
-Import using the identity configuration:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
@@ -69,6 +44,33 @@ import {
     region = "us-west-2"
   }
 }
+
+resource "aws_cloudwatch_log_storage_tier_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
 
-This is a regional singleton resource - only one storage tier policy can exist per AWS account per region. When this resource is destroyed, the storage tier policy is reset to `STANDARD` (the default state). The storage tier policy applies to all log groups in the account within the specified region. Setting the policy to `INTELLIGENT_TIERING` enables automatic cost optimization by moving log data to appropriate storage tiers based on access frequency.
+### Identity Schema
+
+#### Required
+
+* `region` (String) Region where this resource is managed.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import storage tier policies using `region`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_storage_tier_policy.example
+  id = "us-west-2"
+}
+```
+
+Using `terraform import`, import storage tier policies using `region`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_storage_tier_policy.example us-west-2
+```
