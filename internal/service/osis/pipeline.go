@@ -274,6 +274,8 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
 	data.PipelineRoleARN = fwflex.StringToFrameworkARN(ctx, pipeline.PipelineRoleArn)
 
+	setTagsOut(ctx, pipeline.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -330,7 +332,7 @@ func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if diff.HasChanges() {
-		input := osis.UpdatePipelineInput{}
+		var input osis.UpdatePipelineInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -389,7 +391,14 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 }
 
 func (r *pipelineResource) flatten(ctx context.Context, pipeline *awstypes.Pipeline, data *pipelineResourceModel) diag.Diagnostics {
-	return fwflex.Flatten(ctx, pipeline, data)
+	diags := fwflex.Flatten(ctx, pipeline, data)
+	if diags.HasError() {
+		return diags
+	}
+
+	setTagsOut(ctx, pipeline.Tags)
+
+	return diags
 }
 
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {
