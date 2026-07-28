@@ -13,8 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -27,8 +30,6 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
-	feature := "CONTENT_MODERATION"
-	autoUpdate := "ENABLED"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -47,11 +48,13 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rekognition", regexache.MustCompile(`project/`+rName+`/\d+$`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_update", autoUpdate),
-					resource.TestCheckResourceAttr(resourceName, "feature", feature),
+					resource.TestCheckResourceAttr(resourceName, "feature", "CUSTOM_LABELS"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_update"), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -159,7 +162,7 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceProject, resourceName),
