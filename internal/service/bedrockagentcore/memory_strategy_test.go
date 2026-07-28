@@ -1169,7 +1169,6 @@ func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
-				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 		},
 	})
@@ -1252,7 +1251,6 @@ func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *tes
 				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
-				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 			{
 				Config: testAccMemoryStrategyConfig_basicNamespaceTemplates(rName, awstypes.MemoryStrategyTypeSemantic, "{sessionId}"),
@@ -1332,7 +1330,6 @@ func TestAccBedrockAgentCoreMemoryStrategy_namespaceTemplatesToNamespaces(t *tes
 				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
-				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 			{
 				Config: testAccMemoryStrategyConfig_basicNamespaces(rName, awstypes.MemoryStrategyTypeSemantic, "{sessionId}"),
@@ -1932,7 +1929,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1957,7 +1954,6 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
-				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/episodic_override/"),
@@ -1991,7 +1987,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -2114,12 +2110,11 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
 func testAccMemoryStrategyConfig_custom(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                      = %[1]q
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = "CUSTOM"
-  description               = "Test custom strategy"
-  namespace_templates       = ["{sessionId}"]
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "CUSTOM"
+  description         = "Test custom strategy"
+  namespace_templates = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -2139,12 +2134,11 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 func testAccMemoryStrategyConfig_customConsolidationOnly(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                      = %[1]q
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = "CUSTOM"
-  description               = "Test custom strategy"
-  namespace_templates       = ["{sessionId}"]
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "CUSTOM"
+  description         = "Test custom strategy"
+  namespace_templates = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -2160,12 +2154,11 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 func testAccMemoryStrategyConfig_customExtractionOnly(rName string, overrideType awstypes.OverrideType, extractionPrompt, extractionModel string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                      = %[1]q
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = "CUSTOM"
-  description               = "Test custom strategy"
-  namespace_templates       = ["{sessionId}"]
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "CUSTOM"
+  description         = "Test custom strategy"
+  namespace_templates = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -2181,12 +2174,11 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 func testAccMemoryStrategyConfig_customInvalid(rName string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                      = %[1]q
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  type                      = "CUSTOM"
-  description               = "Test custom strategy"
-  namespace_templates       = ["default"]
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "CUSTOM"
+  description         = "Test custom strategy"
+  namespace_templates = ["default"]
 }
 `, rName))
 }

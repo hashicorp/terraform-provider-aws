@@ -21,3 +21,7 @@ resource/aws_bedrockagentcore_memory: Add `timeouts.update` with a default value
 ```release-note:enhancement
 resource/aws_bedrockagentcore_memory_strategy: Increase default `timeouts` values to `45m`
 ```
+
+```release-note:note
+resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. This attrribute should be removed from configurations
+```

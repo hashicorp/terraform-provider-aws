@@ -70,8 +70,9 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Optional: true,
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				CustomType:         fwtypes.ARNType,
+				Optional:           true,
+				DeprecationMessage: "memory_execution_role_arn is deprecated. The attribute can be removed from configuration.",
 			},
 			"memory_id": schema.StringAttribute{
 				Required: true,

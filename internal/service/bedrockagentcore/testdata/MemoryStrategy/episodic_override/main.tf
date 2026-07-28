@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                      = "${var.rName}_s"
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  type                      = "CUSTOM"
-  namespace_templates       = [var.namespace_template]
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  name                = "${var.rName}_s"
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "CUSTOM"
+  namespace_templates = [var.namespace_template]
 
   configuration {
     type = "EPISODIC_OVERRIDE"

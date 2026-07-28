@@ -179,7 +179,7 @@ The following arguments are optional:
 
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration` Block](#configuration-block) below.
 * `description` - (Optional) Description of the memory strategy.
-* `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations.
+* `memory_execution_role_arn` - (Optional, **Deprecated**) ARN of the IAM role that the memory service assumes to perform operations.
 * `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured.
 * `namespaces` - (Optional, **Deprecated**) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
 * `reflection_configuration` - (Optional) Configuration for the reflections created with the episodic memory strategy. Valid when `type` is `EPISODIC`, must be omitted for other types. See [`reflection_configuration` Block](#reflection_configuration-block) below.
