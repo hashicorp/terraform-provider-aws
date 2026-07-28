@@ -10,6 +10,7 @@ FEATURES:
 * **New List Resource:** `aws_flow_log` ([#49086](https://github.com/hashicorp/terraform-provider-aws/issues/49086))
 * **New List Resource:** `aws_mailmanager_traffic_policy` ([#49043](https://github.com/hashicorp/terraform-provider-aws/issues/49043))
 * **New Resource:** `aws_bedrock_evaluation_job` ([#49044](https://github.com/hashicorp/terraform-provider-aws/issues/49044))
+* **New Resource:** `aws_cloudwatch_log_storage_tier_policy` ([#49076](https://github.com/hashicorp/terraform-provider-aws/issues/49076))
 * **New Resource:** `aws_mailmanager_traffic_policy` ([#49043](https://github.com/hashicorp/terraform-provider-aws/issues/49043))
 
 ENHANCEMENTS:
@@ -26,6 +27,9 @@ ENHANCEMENTS:
 * resource/aws_fis_experiment_template: Support `MultiRegionClusters` as a value for `action.target.key` ([#48781](https://github.com/hashicorp/terraform-provider-aws/issues/48781))
 * resource/aws_flow_log: Add resource identity support ([#49086](https://github.com/hashicorp/terraform-provider-aws/issues/49086))
 * resource/aws_launch_template: Add `ena_queue_count` argument to `network_interfaces` configuration block ([#48892](https://github.com/hashicorp/terraform-provider-aws/issues/48892))
+* resource/aws_rekognition_collection: Add Resource Identity support ([#49022](https://github.com/hashicorp/terraform-provider-aws/issues/49022))
+* resource/aws_rekognition_project: Add Resource Identity support ([#49022](https://github.com/hashicorp/terraform-provider-aws/issues/49022))
+* resource/aws_rekognition_stream_processor: Add Resource Identity support ([#49022](https://github.com/hashicorp/terraform-provider-aws/issues/49022))
 * resource/aws_secretsmanager_secret: Add `type` argument in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
 * resource/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` arguments in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
 
