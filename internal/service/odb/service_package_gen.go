@@ -154,6 +154,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newResourceAutonomousDatabaseSecretsManagerIntegration,
+			TypeName: "aws_odb_autonomous_database_secrets_manager_integration",
+			Name:     "Autonomous Database Secrets Manager Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
