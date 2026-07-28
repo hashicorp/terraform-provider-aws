@@ -26,6 +26,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Regions for the unit-test fixtures below. These are inputs to the flattener
+// under test -- the ARN it builds embeds the connection's own Region, which for a
+// hosted connection differs from the caller's -- so they are deliberately fixed
+// values and cannot come from a data source.
+const (
+	//lintignore:AWSAT003
+	testRegion = "us-west-2"
+	//lintignore:AWSAT003
+	testRegionAlternate = "eu-west-1"
+	//lintignore:AWSAT003
+	testRegionThird = "ap-southeast-2"
+	//lintignore:AWSAT003
+	testRegionGovCloud = "us-gov-west-1"
+)
+
 func TestConnectionsDataSourceSchema_noSyntheticID(t *testing.T) {
 	t.Parallel()
 
@@ -56,21 +71,20 @@ func TestConnectionsDataSourceSchema_noSyntheticID(t *testing.T) {
 	// schema is derived from connectionsDataSourceItemModel, so it can never
 	// disagree with the model -- a typo in a nested `tfsdk` tag just renames the
 	// attribute, and framework.ValidateModel only walks the top-level model, so
-	// nothing else in the repo notices. These are literals rather than names.*
-	// constants on purpose: they are the documented wire contract, and every one
-	// of them appears in website/docs/d/dx_connections.html.markdown.
+	// nothing else in the repo notices. Every name here is also documented in
+	// website/docs/d/dx_connections.html.markdown.
 	wantNames := []string{
-		"arn",
+		names.AttrARN,
 		"aws_device",
 		"bandwidth",
-		"id",
-		"location",
-		"name",
-		"owner_account_id",
+		names.AttrID,
+		names.AttrLocation,
+		names.AttrName,
+		names.AttrOwnerAccountID,
 		"partner_name",
-		"provider_name",
-		"state",
-		"tags",
+		names.AttrProviderName,
+		names.AttrState,
+		names.AttrTags,
 		"vlan_id",
 	}
 
@@ -96,12 +110,12 @@ func TestConnectionARNInvariant(t *testing.T) {
 
 	testCases := map[string][]awstypes.Connection{
 		"single": {
-			testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit),
+			testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit),
 		},
 		"multiple regions and accounts": {
-			testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit),
-			testConnection("dxcon-fh6ab999", "eu-west-1", "210987654321"),
-			testConnection("dxcon-fg31dyv6", "ap-southeast-2", acctest.Ct12Digit),
+			testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit),
+			testConnection("dxcon-fh6ab999", testRegionAlternate, "210987654321"),
+			testConnection("dxcon-fg31dyv6", testRegionThird, acctest.Ct12Digit),
 		},
 	}
 
@@ -142,7 +156,7 @@ func TestFlattenConnectionsCount(t *testing.T) {
 		},
 		"one": {
 			apiObjects: []awstypes.Connection{
-				testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit),
+				testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit),
 			},
 			want: 1,
 		},
@@ -150,8 +164,8 @@ func TestFlattenConnectionsCount(t *testing.T) {
 		// otherwise a pagination bug that repeats a page would be silently hidden.
 		"duplicate IDs are not deduplicated": {
 			apiObjects: []awstypes.Connection{
-				testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit),
-				testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit),
+				testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit),
+				testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit),
 			},
 			want: 2,
 		},
@@ -171,7 +185,7 @@ func TestFlattenConnectionsCount(t *testing.T) {
 		// case cannot distinguish. AC4 (the pager itself) is covered by
 		// TestFindConnectionsPaginates in connection_find_test.go.
 		"many": {
-			apiObjects: slices.Repeat([]awstypes.Connection{testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit)}, 150),
+			apiObjects: slices.Repeat([]awstypes.Connection{testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit)}, 150),
 			want:       150,
 		},
 	}
@@ -219,19 +233,19 @@ func TestFlattenConnectionsCount(t *testing.T) {
 func TestFlattenConnectionsTagsNeverNull(t *testing.T) {
 	t.Parallel()
 
-	untagged := testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit)
+	untagged := testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit)
 	untagged.Tags = nil
 
-	emptyTags := testConnection("dxcon-fh6ab999", "us-west-2", acctest.Ct12Digit)
+	emptyTags := testConnection("dxcon-fh6ab999", testRegion, acctest.Ct12Digit)
 	emptyTags.Tags = []awstypes.Tag{}
 
-	tagged := testConnection("dxcon-fg31dyv6", "us-west-2", acctest.Ct12Digit)
+	tagged := testConnection("dxcon-fg31dyv6", testRegion, acctest.Ct12Digit)
 	tagged.Tags = []awstypes.Tag{
 		{Key: aws.String("Env"), Value: aws.String("prod")},
 	}
 
 	// Only the AWS-managed tag survives IgnoreAWS() removal as an empty map.
-	onlyAWSTags := testConnection("dxcon-fgu6yv82", "us-west-2", acctest.Ct12Digit)
+	onlyAWSTags := testConnection("dxcon-fgu6yv82", testRegion, acctest.Ct12Digit)
 	onlyAWSTags.Tags = []awstypes.Tag{
 		{Key: aws.String("aws:cloudformation:stack-name"), Value: aws.String("test")},
 	}
@@ -273,19 +287,19 @@ func TestConnectionARNCrossAccount(t *testing.T) {
 		want      string
 	}{
 		"same account": {
-			apiObject: testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit),
+			apiObject: testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit),
 			partition: endpoints.AwsPartitionID,
-			want:      "arn:aws:directconnect:us-west-2:123456789012:dxcon/dxcon-ffabc123",
+			want:      "arn:aws:directconnect:us-west-2:123456789012:dxcon/dxcon-ffabc123", //lintignore:AWSAT003,AWSAT005
 		},
 		"hosted connection in another account": {
-			apiObject: testConnection("dxcon-fh6ab999", "eu-west-1", "210987654321"),
+			apiObject: testConnection("dxcon-fh6ab999", testRegionAlternate, "210987654321"),
 			partition: endpoints.AwsPartitionID,
-			want:      "arn:aws:directconnect:eu-west-1:210987654321:dxcon/dxcon-fh6ab999",
+			want:      "arn:aws:directconnect:eu-west-1:210987654321:dxcon/dxcon-fh6ab999", //lintignore:AWSAT003,AWSAT005
 		},
 		"non-standard partition": {
-			apiObject: testConnection("dxcon-fg31dyv6", "us-gov-west-1", "210987654321"),
+			apiObject: testConnection("dxcon-fg31dyv6", testRegionGovCloud, "210987654321"),
 			partition: endpoints.AwsUsGovPartitionID,
-			want:      "arn:aws-us-gov:directconnect:us-gov-west-1:210987654321:dxcon/dxcon-fg31dyv6",
+			want:      "arn:aws-us-gov:directconnect:us-gov-west-1:210987654321:dxcon/dxcon-fg31dyv6", //lintignore:AWSAT003,AWSAT005
 		},
 	}
 
@@ -319,7 +333,7 @@ func TestFlattenConnectionsNilFields(t *testing.T) {
 	apiObjects := []awstypes.Connection{
 		{},
 		{ConnectionId: aws.String("dxcon-ffabc123")},
-		{OwnerAccount: aws.String(acctest.Ct12Digit), Region: aws.String("us-west-2")},
+		{OwnerAccount: aws.String(acctest.Ct12Digit), Region: aws.String(testRegion)},
 	}
 
 	elements := testFlattenConnections(ctx, t, apiObjects, endpoints.AwsPartitionID, nil)
@@ -329,9 +343,9 @@ func TestFlattenConnectionsNilFields(t *testing.T) {
 	}
 
 	wantARNs := []string{
-		"arn:aws:directconnect:::dxcon/",
-		"arn:aws:directconnect:::dxcon/dxcon-ffabc123",
-		"arn:aws:directconnect:us-west-2:123456789012:dxcon/",
+		"arn:aws:directconnect:::dxcon/",                      //lintignore:AWSAT005
+		"arn:aws:directconnect:::dxcon/dxcon-ffabc123",        //lintignore:AWSAT005
+		"arn:aws:directconnect:us-west-2:123456789012:dxcon/", //lintignore:AWSAT003,AWSAT005
 	}
 
 	for i, element := range elements {
@@ -354,10 +368,10 @@ func TestFlattenConnectionsNilFields(t *testing.T) {
 	}
 }
 
-func TestFlattenConnectionsTagsIgnoreAWS(t *testing.T) {
+func TestFlattenConnectionsTagsIgnored(t *testing.T) {
 	t.Parallel()
 
-	apiObject := testConnection("dxcon-ffabc123", "us-west-2", acctest.Ct12Digit)
+	apiObject := testConnection("dxcon-ffabc123", testRegion, acctest.Ct12Digit)
 	apiObject.Tags = []awstypes.Tag{
 		{Key: aws.String("aws:cloudformation:stack-name"), Value: aws.String("test")},
 		{Key: aws.String("aws:cloudformation:logical-id"), Value: aws.String("Connection")},
@@ -436,7 +450,7 @@ func testConnection(connectionID, region, ownerAccount string) awstypes.Connecti
 }
 
 func testConnectionWithState(connectionID string, state awstypes.ConnectionState) awstypes.Connection {
-	apiObject := testConnection(connectionID, "us-west-2", acctest.Ct12Digit)
+	apiObject := testConnection(connectionID, testRegion, acctest.Ct12Digit)
 	apiObject.ConnectionState = state
 
 	return apiObject
@@ -683,7 +697,7 @@ func testAccCheckConnectionsElementTag(n, resourceName, key, value string) resou
 		}
 
 		// A null tags map has no `tags.%` element count at all.
-		if _, ok := attrs[prefix+"tags.%"]; !ok {
+		if _, ok := attrs[prefix+acctest.CtTagsPercent]; !ok {
 			return fmt.Errorf("%s: %stags is null, want a map", n, prefix)
 		}
 

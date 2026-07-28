@@ -141,7 +141,7 @@ func testStubbedConnectionsClient(t *testing.T, pages ...[]awstypes.Connection) 
 	var page int
 
 	return directconnect.New(directconnect.Options{
-		Region:      "us-west-2",
+		Region:      "us-west-2", //lintignore:AWSAT003 // Stubbed client: no request ever leaves the process.
 		Credentials: aws.AnonymousCredentials{},
 		HTTPClient: testHTTPClientFunc(func(*http.Request) (*http.Response, error) {
 			// Keys are the API's wire names, not the Go field names.

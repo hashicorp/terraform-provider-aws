@@ -75,6 +75,11 @@ func (d *connectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 // flattenConnections takes the partition and ignore-tags configuration as plain
 // parameters so that it can be exercised without a configured provider Meta().
+//
+// It wraps rather than replaces `fwflex.Flatten`: the two per-item fields below
+// cannot come from AutoFlex. The ARN is absent from the API response and has to
+// be synthesized, and the tags must flatten to an empty map rather than null.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenConnections(ctx context.Context, apiObjects []awstypes.Connection, partition string, ignoreTagsConfig *tftags.IgnoreConfig) (fwtypes.ListNestedObjectValueOf[connectionsDataSourceItemModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
