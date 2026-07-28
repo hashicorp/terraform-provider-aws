@@ -401,7 +401,7 @@ func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	return nil, smarterr.NewError(err)
 }
 
-func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
+func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MemoryStatusUpdating),
 		Target:                    enum.Slice(awstypes.MemoryStatusActive),
