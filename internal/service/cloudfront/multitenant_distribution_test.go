@@ -276,6 +276,46 @@ func TestAccCloudFrontMultiTenantDistribution_CustomOrigin_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontMultiTenantDistribution_VPCOrigin_ownerAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_VPCOrigin_ownerAccountID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"vpc_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"origin_keepalive_timeout": knownvalue.Int32Exact(tfcloudfront.DefaultOriginKeepaliveTimeout),
+									"origin_read_timeout":      knownvalue.Int32Exact(tfcloudfront.DefaultOriginReadTimeout),
+									names.AttrOwnerAccountID:   tfknownvalue.AccountID(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -1165,6 +1205,64 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
   name = "Managed-CachingDisabled"
 }
 `
+}
+
+func testAccMultiTenantDistributionConfig_VPCOrigin_ownerAccountID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), `
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    vpc_origin_config {
+      vpc_origin_id    = aws_cloudfront_vpc_origin.test.id
+      owner_account_id = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+`)
 }
 
 func testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath() string {
