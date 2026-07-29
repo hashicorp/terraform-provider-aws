@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_waf_rule: Fix rule deletion when still referenced by a WebACL
-```

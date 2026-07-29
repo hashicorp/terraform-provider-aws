@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sns_topic_subscription: Add `redrive_policy` argument
-```

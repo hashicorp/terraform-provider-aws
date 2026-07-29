@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_s3_bucket_acl: Correctly updates `access_control_policy` when switching configuration to `acl`.
-```

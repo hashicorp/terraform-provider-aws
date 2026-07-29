@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_ec2_coip_pool: Add `arn` attribute
-```

@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_budgets_budget: The `cost_filters` attribute has been removed
-```

@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_bedrockagentcore_evaluator
-```
-
-```release-note:new-list-resource
-aws_bedrockagentcore_evaluator
-```
