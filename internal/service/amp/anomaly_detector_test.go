@@ -71,7 +71,6 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -187,7 +186,6 @@ func TestAccAMPAnomalyDetector_update(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -242,7 +240,6 @@ func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -288,7 +285,6 @@ func TestAccAMPAnomalyDetector_labels(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})

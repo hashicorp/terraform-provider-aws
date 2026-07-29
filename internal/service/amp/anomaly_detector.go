@@ -57,9 +57,9 @@ import (
 func newAnomalyDetectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
@@ -156,15 +156,16 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 												"amount": schema.Float64Attribute{
 													Optional: true,
 													Validators: []validator.Float64{
-														float64validator.ConflictsWith(
+														float64validator.ExactlyOneOf(
 															path.MatchRelative().AtParent().AtName("ratio"),
 														),
+														float64validator.AtLeast(0),
 													},
 												},
 												"ratio": schema.Float64Attribute{
 													Optional: true,
 													Validators: []validator.Float64{
-														float64validator.ConflictsWith(
+														float64validator.ExactlyOneOf(
 															path.MatchRelative().AtParent().AtName("amount"),
 														),
 														float64validator.AtLeast(0),
@@ -183,15 +184,16 @@ func (r *anomalyDetectorResource) Schema(ctx context.Context, req resource.Schem
 												"amount": schema.Float64Attribute{
 													Optional: true,
 													Validators: []validator.Float64{
-														float64validator.ConflictsWith(
+														float64validator.ExactlyOneOf(
 															path.MatchRelative().AtParent().AtName("ratio"),
 														),
+														float64validator.AtLeast(0),
 													},
 												},
 												"ratio": schema.Float64Attribute{
 													Optional: true,
 													Validators: []validator.Float64{
-														float64validator.ConflictsWith(
+														float64validator.ExactlyOneOf(
 															path.MatchRelative().AtParent().AtName("amount"),
 														),
 														float64validator.AtLeast(0),
@@ -412,8 +414,8 @@ func waitAnomalyDetectorCreated(ctx context.Context, conn *amp.Client, id, works
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.AnomalyDetectorDescription); ok {
-		if status := out.Status; status.StatusCode == awstypes.AnomalyDetectorStatusCodeCreationFailed {
-			retry.SetLastError(err, errors.New(*status.StatusReason))
+		if status := out.Status; status != nil && status.StatusCode == awstypes.AnomalyDetectorStatusCodeCreationFailed {
+			retry.SetLastError(err, errors.New(aws.ToString(status.StatusReason)))
 		}
 		return out, smarterr.NewError(err)
 	}
@@ -432,8 +434,8 @@ func waitAnomalyDetectorUpdated(ctx context.Context, conn *amp.Client, id, works
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.AnomalyDetectorDescription); ok {
-		if status := out.Status; status.StatusCode == awstypes.AnomalyDetectorStatusCodeUpdateFailed {
-			retry.SetLastError(err, errors.New(*status.StatusReason))
+		if status := out.Status; status != nil && status.StatusCode == awstypes.AnomalyDetectorStatusCodeUpdateFailed {
+			retry.SetLastError(err, errors.New(aws.ToString(status.StatusReason)))
 		}
 		return out, smarterr.NewError(err)
 	}
@@ -451,8 +453,8 @@ func waitAnomalyDetectorDeleted(ctx context.Context, conn *amp.Client, id, works
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.AnomalyDetectorDescription); ok {
-		if status := out.Status; status.StatusCode == awstypes.AnomalyDetectorStatusCodeDeletionFailed {
-			retry.SetLastError(err, errors.New(*status.StatusReason))
+		if status := out.Status; status != nil && status.StatusCode == awstypes.AnomalyDetectorStatusCodeDeletionFailed {
+			retry.SetLastError(err, errors.New(aws.ToString(status.StatusReason)))
 		}
 		return out, smarterr.NewError(err)
 	}
@@ -471,7 +473,12 @@ func statusAnomalyDetector(conn *amp.Client, id string, workspaceID string) retr
 			return nil, "", smarterr.NewError(err)
 		}
 
-		return out, string(out.Status.StatusCode), nil
+		var statusCode string
+		if out != nil && out.Status != nil {
+			statusCode = string(out.Status.StatusCode)
+		}
+
+		return out, statusCode, nil
 	}
 }
 

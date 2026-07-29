@@ -85,7 +85,7 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 			}
 
 			id := aws.ToString(item.AnomalyDetectorId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), id)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.Arn))
 
 			result := request.NewListResult(ctx)
 
