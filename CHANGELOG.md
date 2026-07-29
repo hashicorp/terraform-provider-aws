@@ -8,7 +8,7 @@ BUG FIXES:
 
 NOTES:
 
-* resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. This attrribute should be removed from configurations ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. Use the `memory_execution_role_arn` attribute on the `aws_bedrockagentcore_memory` resource instead ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
 * resource/aws_bedrockagentcore_memory_strategy: The `namespace` attribute has been deprecated. All configurations using `namespace` should be updated to use the `namespace_templates` attribute instead ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
 
 FEATURES:
