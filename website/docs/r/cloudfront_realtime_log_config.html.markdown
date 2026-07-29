@@ -74,7 +74,7 @@ resource "aws_cloudfront_realtime_log_config" "example" {
 
 ### Logging Custom Data From a CloudFront Function
 
-A viewer request or viewer response [CloudFront Function](cloudfront_function.html) can write arbitrary data into the log record for the request by calling the `cf.logCustomData()` helper method. The data is surfaced in the `viewer-request-log-data` and `viewer-response-log-data` fields, which must be selected in the real-time log configuration for them to be delivered.
+A viewer request or viewer response [CloudFront Function](cloudfront_function.html) can write arbitrary data into the log record for the request by calling the `cf.logCustomData()` helper method, which requires JavaScript runtime 2.0 (`cloudfront-js-2.0`) and the `cloudfront` module. The data is surfaced in the `viewer-request-log-data` and `viewer-response-log-data` fields, which must be selected in the real-time log configuration for them to be delivered.
 
 ```terraform
 resource "aws_cloudfront_function" "example" {
@@ -83,10 +83,12 @@ resource "aws_cloudfront_function" "example" {
   publish = true
 
   code = <<-EOT
+    import cf from 'cloudfront';
+
     function handler(event) {
-      var variant = event.request.uri.indexOf("/beta") === 0 ? "b" : "a"
-      cf.logCustomData("variant=" + variant)
-      return event.request
+      var variant = event.request.uri.indexOf("/beta") === 0 ? "b" : "a";
+      cf.logCustomData("variant=" + variant);
+      return event.request;
     }
   EOT
 }
