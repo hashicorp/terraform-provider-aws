@@ -22,18 +22,18 @@ ephemeral "aws_secretsmanager_random_password" "example" {}
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclude_characters` - (Optional) String of the characters that you don't want in the password.
-* `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
-* `exclude_numbers` - (Optional) Specifies whether to exclude numbers from the password.
-* `exclude_punctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``
-* `exclude_uppercase` - (Optional) Specifies whether to exclude uppercase letters from the password.
-* `include_space` - (Optional) Specifies whether to include the space character.
+* `exclude_lowercase` - (Optional) Whether to exclude lowercase letters from the password.
+* `exclude_numbers` - (Optional) Whether to exclude numbers from the password.
+* `exclude_punctuation` - (Optional) Whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``
+* `exclude_uppercase` - (Optional) Whether to exclude uppercase letters from the password.
+* `include_space` - (Optional) Whether to include the space character.
 * `password_length` - (Optional) Length of the password.
-* `require_each_included_type` - (Optional) Specifies whether to include at least one upper and lowercase letter, one number, and one punctuation.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `require_each_included_type` - (Optional) Whether to include at least one upper and lowercase letter, one number, and one punctuation.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+In addition to all arguments above, the following attributes are exported:
 
 * `random_password` - Random password.
