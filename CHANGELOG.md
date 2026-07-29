@@ -14,6 +14,7 @@ FEATURES:
 * **New List Resource:** `aws_eks_node_group` ([#49073](https://github.com/hashicorp/terraform-provider-aws/issues/49073))
 * **New List Resource:** `aws_flow_log` ([#49086](https://github.com/hashicorp/terraform-provider-aws/issues/49086))
 * **New List Resource:** `aws_mailmanager_traffic_policy` ([#49043](https://github.com/hashicorp/terraform-provider-aws/issues/49043))
+* **New List Resource:** `aws_osis_pipeline` ([#49157](https://github.com/hashicorp/terraform-provider-aws/issues/49157))
 * **New List Resource:** `aws_osis_pipeline_endpoint` ([#44383](https://github.com/hashicorp/terraform-provider-aws/issues/44383))
 * **New List Resource:** `aws_osis_resource_policy` ([#44383](https://github.com/hashicorp/terraform-provider-aws/issues/44383))
 * **New List Resource:** `aws_rekognition_collection` ([#49135](https://github.com/hashicorp/terraform-provider-aws/issues/49135))
