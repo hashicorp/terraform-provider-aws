@@ -1067,6 +1067,42 @@ func TestAccGlueCatalogTable_viewDefinitionFailure(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogTable_viewDefinition_noPerpetualDiff(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionNoPerpetualDiff(rName, "view_original_text_1", "view_expanded_text_1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionNoPerpetualDiff(rName, "view_original_text_1", "view_expanded_text_1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckCatalogTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
@@ -2093,4 +2129,44 @@ resource "aws_glue_connection" "test_athena" {
   }
 }
 `, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinitionNoPerpetualDiff(rName, viewOriginalText, viewExpandedText string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    definer = aws_iam_role.test.arn
+
+    representations {
+      dialect            = "SPARK"
+      dialect_version    = "1.0"
+      view_original_text = %[2]q
+      view_expanded_text = %[3]q
+    }
+  }
+}
+`, rName, viewOriginalText, viewExpandedText)
 }
