@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_keyspaces_keyspace: Add `replication_specification` argument
-```

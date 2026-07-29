@@ -1,3 +1,0 @@
-```release-note:bug
- resource/aws_imagebuilder_image_recipe: Fix `ResourceDependencyException` errors when a dependency is modified
- ```

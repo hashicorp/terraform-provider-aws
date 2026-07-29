@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dms_certificate: Correctly base64 decode `certificate_wallet` value
-```

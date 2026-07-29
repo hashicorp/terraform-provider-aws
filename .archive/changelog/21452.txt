@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_data_catalog_encryption_settings: Disable encryption on resource deletion
-```
