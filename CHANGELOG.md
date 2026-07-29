@@ -1,14 +1,5 @@
 ## 6.57.1 (July 29, 2026)
 
-BUG FIXES:
-
-* provider: Fixes api error UnknownError: UnknownError introduced in release 6.57.0 ([#49175](https://github.com/hashicorp/terraform-provider-aws/issues/49175))
-
-## 6.57.0 (July 29, 2026)
-
-> [!IMPORTANT]
-> Terraform AWS Provider version `v6.57.0` had a significant bug, please avoid this version and use version `v6.57.1` instead.
-
 NOTES:
 
 * resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. This attrribute should be removed from configurations ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
@@ -62,6 +53,12 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_dynamodb_table: No longer replace resource when decreasing `warm_throughput` values ([#49032](https://github.com/hashicorp/terraform-provider-aws/issues/49032))
+* provider: Fixes api error UnknownError: UnknownError introduced in release 6.57.0 ([#49175](https://github.com/hashicorp/terraform-provider-aws/issues/49175))
+
+## 6.57.0 (July 29, 2026)
+
+> [!IMPORTANT]
+> Release v6.57.0 had a significant bug and has been removed from GitHub and the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest/docs). However, if you successfully used v6.57.0 and then downgraded to v6.56.0, your state may refer to features that are not available in the downgraded version. This will cause errors. In that scenario, it is important to upgrade to v6.57.1.
 
 ## 6.56.0 (July 22, 2026)
 
