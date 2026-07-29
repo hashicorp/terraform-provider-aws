@@ -1,10 +1,13 @@
-## 6.58.0 (Unreleased)
+## 6.57.1 (July 29, 2026)
 
 BUG FIXES:
 
 * provider: Fixes api error UnknownError: UnknownError introduced in release 6.57.0 ([#49175](https://github.com/hashicorp/terraform-provider-aws/issues/49175))
 
 ## 6.57.0 (July 29, 2026)
+
+> [!IMPORTANT]
+> Terraform AWS Provider version `v6.57.0` had a significant bug, please avoid this version and use version `v6.57.1` instead.
 
 NOTES:
 
