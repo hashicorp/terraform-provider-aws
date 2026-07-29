@@ -12,6 +12,8 @@ Manages the capacity providers of an ECS Cluster.
 
 More information about capacity providers can be found in the [ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-capacity-providers.html).
 
+~> **NOTE:** When an associated [`aws_ecs_capacity_provider`](ecs_capacity_provider.html) must be replaced, add a [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) lifecycle rule referencing the capacity provider. This recreates the association so the old capacity provider is detached from the cluster before it is deleted, which AWS otherwise disallows.
+
 ## Example Usage
 
 ```terraform

@@ -33,27 +33,29 @@ func resourceBaiduChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"api_key": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			names.AttrSecretKey: {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"api_key": {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+				names.AttrSecretKey: {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }

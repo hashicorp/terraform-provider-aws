@@ -104,10 +104,10 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_ses_event_destination.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_ses_event_destination.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 			},
@@ -120,7 +120,6 @@ func TestAccSESEventDestination_Disappears_configurationSet(t *testing.T) {
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_event_destination.test"
-	configurationSetResourceName := "aws_ses_configuration_set.test"
 	var v awstypes.EventDestination
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -136,7 +135,7 @@ func TestAccSESEventDestination_Disappears_configurationSet(t *testing.T) {
 				Config: testAccEventDestinationConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDestinationExists(ctx, t, resourceName, &v),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceConfigurationSet(), configurationSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceConfigurationSet(), "aws_ses_configuration_set.test"),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

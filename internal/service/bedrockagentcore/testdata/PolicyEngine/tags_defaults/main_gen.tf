@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 resource "aws_bedrockagentcore_policy_engine" "test" {
-  name = replace(var.rName, "-", "_")
+  name = var.rName
 
   tags = var.resource_tags
 }

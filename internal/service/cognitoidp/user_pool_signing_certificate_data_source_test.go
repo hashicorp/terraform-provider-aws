@@ -17,13 +17,15 @@ func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	datasourceName := "data.aws_cognito_user_pool_signing_certificate.test"
 
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolSigningCertificateDataSourceConfig_basic(rName),
+				Config: testAccUserPoolSigningCertificateDataSourceConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCertificate),
 				),
@@ -32,7 +34,7 @@ func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserPoolSigningCertificateDataSourceConfig_basic(rName string) string {
+func testAccUserPoolSigningCertificateDataSourceConfig_basic(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name                     = %[1]q
@@ -45,8 +47,8 @@ resource "aws_cognito_identity_provider" "test" {
   provider_type = "SAML"
 
   provider_details = {
-    MetadataFile          = file("./test-fixtures/saml-metadata.xml")
-    SSORedirectBindingURI = "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"
+    MetadataFile          = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
+    SSORedirectBindingURI = "%[2]s/idp/endpoint/HttpRedirect"
   }
 
   attribute_mapping = {
@@ -63,5 +65,5 @@ resource "aws_cognito_identity_provider" "test" {
 data "aws_cognito_user_pool_signing_certificate" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 }
-`, rName)
+`, rName, idpEntityId)
 }

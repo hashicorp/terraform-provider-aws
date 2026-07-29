@@ -25,6 +25,39 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 }
 ```
 
+### Managed External Secret Rotation
+
+For managed external secrets that are rotated by AWS partner integrations:
+
+```terraform
+resource "aws_secretsmanager_secret" "example" {
+  name = "example-salesforce-client-secret"
+  type = "SalesforceClientSecret"
+}
+
+resource "aws_secretsmanager_secret_rotation" "example" {
+  secret_id = aws_secretsmanager_secret.example.id
+
+  external_secret_rotation_role_arn = aws_iam_role.example.arn
+
+  external_secret_rotation_metadata {
+    key   = "adminSecretArn"
+    value = aws_secretsmanager_secret.example.arn
+  }
+
+  external_secret_rotation_metadata {
+    key   = "apiVersion"
+    value = "v65.0"
+  }
+
+  rotation_rules {
+    automatically_after_days = var.rotation_days
+  }
+}
+```
+
+For more information about managed external secrets and partner-specific metadata requirements, see the [AWS documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) and [partner-specific guides](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html).
+
 ### Rotation Configuration
 
 To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g., RDS) or deploying a custom Lambda function.
@@ -41,6 +74,8 @@ This resource supports the following arguments:
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `rotate_immediately` - (Optional) Specifies whether to rotate the secret immediately or wait until the next scheduled rotation window. The rotation schedule is defined in `rotation_rules`. For secrets that use a Lambda rotation function to rotate, if you don't immediately rotate the secret, Secrets Manager tests the rotation configuration by running the testSecret step (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how.html) of the Lambda rotation function. The test creates an AWSPENDING version of the secret and then removes it. Defaults to `true`.
 * `rotation_lambda_arn` - (Optional) Specifies the ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
+* `external_secret_rotation_metadata` - (Optional) Configuration block for metadata required by the external secret partner. Required for managed external secrets. See details below.
+* `external_secret_rotation_role_arn` - (Optional) ARN of the IAM role that allows Secrets Manager to rotate the secret held by a third-party partner. Required for managed external secrets.
 * `rotation_rules` - (Required) A structure that defines the rotation configuration for this secret. Defined below.
 
 ### rotation_rules
@@ -48,6 +83,11 @@ This resource supports the following arguments:
 * `automatically_after_days` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret. Either `automatically_after_days` or `schedule_expression` must be specified.
 * `duration` - (Optional) - The length of the rotation window in hours. For example, `3h` for a three hour window.
 * `schedule_expression` - (Optional) A `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automatically_after_days` or `schedule_expression` must be specified.
+
+### external_secret_rotation_metadata
+
+* `key` - (Required) The metadata key name. Partner-specific keys are required for each external secret type. See [partner documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html) for required keys.
+* `value` - (Required) The metadata value for the specified key.
 
 ## Attribute Reference
 
@@ -78,7 +118,7 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
+- `secret_id` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
 

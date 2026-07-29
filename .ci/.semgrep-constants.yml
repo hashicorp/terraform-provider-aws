@@ -2272,6 +2272,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-outpost_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrOutpostARN` for the string literal "outpost_arn"
+    paths:
+      include:
+        - "/internal/service/**/*.go"
+    patterns:
+      - pattern: '"outpost_arn"'
+      - pattern-not-regex: '"outpost_arn":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrOutpostARN"
+    options:
+      constant_propagation: false
+
   - id: literal-owner-string-constant
     languages: [go]
     message: Use the constant `names.AttrOwner` for the string literal "owner"

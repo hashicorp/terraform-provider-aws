@@ -10,15 +10,7 @@ description: |-
 
 Provides an AWS App Mesh virtual router resource.
 
-## Breaking Changes
-
-Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92) and [here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), `aws_appmesh_virtual_router` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
-
-* Remove service `service_names` from the `spec` argument. AWS has created a `aws_appmesh_virtual_service` resource for each service name. Import these resource using `terraform import`.
-
-* Add a `listener` configuration block to the `spec` argument.
-
-The Terraform state associated with existing resources will automatically be migrated.
+~> **Note:** Because of backward incompatible API changes ([see issue](https://github.com/awslabs/aws-app-mesh-examples/issues/92), [and here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), resource definitions created with provider versions earlier than v2.3.0 must be modified: remove `service_names` from the `spec` argument (AWS created `aws_appmesh_virtual_service` resources for each — import them with `terraform import`); add a `listener` configuration block to the `spec` argument. Existing Terraform state is automatically migrated.
 
 ## Example Usage
 

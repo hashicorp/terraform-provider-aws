@@ -33,7 +33,7 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 			{
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, resourceName),
+					testAccCheckStreamConsumerExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStreamARN, streamName, names.AttrARN),
@@ -63,7 +63,7 @@ func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
 			{
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, resourceName),
+					testAccCheckStreamConsumerExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesis.ResourceStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,11 +95,11 @@ func TestAccKinesisStreamConsumer_maxConcurrentConsumers(t *testing.T) {
 				// Test creation of max number (5 according to AWS API docs) of concurrent consumers for a single stream
 				Config: testAccStreamConsumerConfig_multiple(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.0", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.1", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.2", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.3", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.4", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.0", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.1", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.2", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.3", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.4", resourceName)),
 				),
 			},
 		},
@@ -121,16 +121,16 @@ func TestAccKinesisStreamConsumer_exceedMaxConcurrentConsumers(t *testing.T) {
 				// Test creation of more than the max number (5 according to AWS API docs) of concurrent consumers for a single stream
 				Config: testAccStreamConsumerConfig_multiple(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.0", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.1", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.2", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.3", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.4", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.5", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.6", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.7", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.8", resourceName)),
-					testAccStreamConsumerExists(ctx, t, fmt.Sprintf("%s.9", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.0", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.1", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.2", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.3", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.4", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.5", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.6", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.7", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.8", resourceName)),
+					testAccCheckStreamConsumerExists(ctx, t, fmt.Sprintf("%s.9", resourceName)),
 				),
 			},
 		},
@@ -151,7 +151,7 @@ func TestAccKinesisStreamConsumer_tags(t *testing.T) {
 			{
 				Config: testAccStreamConsumerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, resourceName),
+					testAccCheckStreamConsumerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -164,7 +164,7 @@ func TestAccKinesisStreamConsumer_tags(t *testing.T) {
 			{
 				Config: testAccStreamConsumerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, resourceName),
+					testAccCheckStreamConsumerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -173,7 +173,7 @@ func TestAccKinesisStreamConsumer_tags(t *testing.T) {
 			{
 				Config: testAccStreamConsumerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(ctx, t, resourceName),
+					testAccCheckStreamConsumerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -208,7 +208,7 @@ func testAccCheckStreamConsumerDestroy(ctx context.Context, t *testing.T) resour
 	}
 }
 
-func testAccStreamConsumerExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckStreamConsumerExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -94,316 +94,318 @@ func resourceBucket() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acceleration_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "acceleration_status is deprecated. Use the aws_s3_bucket_accelerate_configuration resource instead.",
-				ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
-			},
-			"acl": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
-				Deprecated:    "acl is deprecated. Use the aws_s3_bucket_acl resource instead.",
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrBucketPrefix},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63),
-					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
-				),
-			},
-			"bucket_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_namespace": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
-			},
-			names.AttrBucketPrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrBucket},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
-				),
-			},
-			"bucket_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_regional_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cors_rule": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "cors_rule is deprecated. Use the aws_s3_bucket_cors_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_methods": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_origins": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"expose_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"max_age_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acceleration_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					Deprecated:       "acceleration_status is deprecated. Use the aws_s3_bucket_accelerate_configuration resource instead.",
+					ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
+				},
+				"acl": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"grant"},
+					ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
+					Deprecated:    "acl is deprecated. Use the aws_s3_bucket_acl resource instead.",
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrBucketPrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 63),
+						validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+					),
+				},
+				"bucket_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_namespace": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
+				},
+				names.AttrBucketPrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrBucket},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
+					),
+				},
+				"bucket_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_regional_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cors_rule": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					Deprecated: "cors_rule is deprecated. Use the aws_s3_bucket_cors_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_headers": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_methods": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_origins": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"expose_headers": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"max_age_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"grant": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"acl"},
-				Deprecated:    "grant is deprecated. Use the aws_s3_bucket_acl resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"grant": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"acl"},
+					Deprecated:    "grant is deprecated. Use the aws_s3_bucket_acl resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrPermissions: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Set:      schema.HashString,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.Permission](),
+								},
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+								// TypeAmazonCustomerByEmail is not currently supported
+								ValidateFunc: validation.StringInSlice(enum.Slice(
+									types.TypeCanonicalUser,
+									types.TypeGroup,
+								), false),
+							},
+							names.AttrURI: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
-						names.AttrPermissions: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
+					},
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"lifecycle_rule": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					Deprecated: "lifecycle_rule is deprecated. Use the aws_s3_bucket_lifecycle_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"abort_incomplete_multipart_upload_days": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"expiration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validBucketLifecycleTimestamp,
+										},
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"expired_object_delete_marker": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"noncurrent_version_expiration": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"noncurrent_version_transition": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrStorageClass: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+										},
+									},
+								},
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrTags: tftags.TagsSchema(),
+							"transition": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validBucketLifecycleTimestamp,
+										},
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrStorageClass: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"logging": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "logging is deprecated. Use the aws_s3_bucket_logging resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"target_bucket": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"target_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"object_lock_configuration": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "object_lock_configuration is deprecated. Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"object_lock_enabled": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.Permission](),
+								Optional:         true,
+								ForceNew:         true,
+								ConflictsWith:    []string{"object_lock_enabled"},
+								ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
+								Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-							// TypeAmazonCustomerByEmail is not currently supported
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								types.TypeCanonicalUser,
-								types.TypeGroup,
-							), false),
-						},
-						names.AttrURI: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"lifecycle_rule": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "lifecycle_rule is deprecated. Use the aws_s3_bucket_lifecycle_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"abort_incomplete_multipart_upload_days": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"expiration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validBucketLifecycleTimestamp,
-									},
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"expired_object_delete_marker": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-								},
-							},
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"noncurrent_version_expiration": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"noncurrent_version_transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
-									},
-								},
-							},
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrTags: tftags.TagsSchema(),
-						"transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validBucketLifecycleTimestamp,
-									},
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"logging": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "logging is deprecated. Use the aws_s3_bucket_logging resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"target_bucket": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"target_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"object_lock_configuration": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "object_lock_configuration is deprecated. Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"object_lock_enabled": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ConflictsWith:    []string{"object_lock_enabled"},
-							ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
-							Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
-						},
-						names.AttrRule: {
-							Type:       schema.TypeList,
-							Optional:   true,
-							Deprecated: "rule is deprecated. Use the aws_s3_bucket_object_lock_configuration resource instead.",
-							MaxItems:   1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_retention": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"days": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												names.AttrMode: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
-												},
-												"years": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+							names.AttrRule: {
+								Type:       schema.TypeList,
+								Optional:   true,
+								Deprecated: "rule is deprecated. Use the aws_s3_bucket_object_lock_configuration resource instead.",
+								MaxItems:   1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_retention": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"days": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													names.AttrMode: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
+													},
+													"years": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
 												},
 											},
 										},
@@ -413,326 +415,326 @@ func resourceBucket() *schema.Resource {
 						},
 					},
 				},
-			},
-			"object_lock_enabled": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
-				ForceNew:      true,
-				ConflictsWith: []string{"object_lock_configuration"},
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				Deprecated:            "policy is deprecated. Use the aws_s3_bucket_policy resource instead.",
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"object_lock_enabled": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
+					ForceNew:      true,
+					ConflictsWith: []string{"object_lock_configuration"},
 				},
-			},
-			"replication_configuration": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "replication_configuration is deprecated. Use the aws_s3_bucket_replication_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRole: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"rules": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"delete_marker_replication_status": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
-									},
-									names.AttrDestination: {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										MinItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_control_translation": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrOwner: {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					Computed:              true,
+					Deprecated:            "policy is deprecated. Use the aws_s3_bucket_policy resource instead.",
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"replication_configuration": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "replication_configuration is deprecated. Use the aws_s3_bucket_replication_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRole: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"rules": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"delete_marker_replication_status": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
+										},
+										names.AttrDestination: {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											MinItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"access_control_translation": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrOwner: {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
+																},
 															},
 														},
 													},
-												},
-												names.AttrAccountID: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidAccountID,
-												},
-												names.AttrBucket: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Default:      15,
-																ValidateFunc: validation.IntBetween(10, 15),
-															},
-															names.AttrStatus: {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Default:          types.MetricsStatusEnabled,
-																ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
+													names.AttrAccountID: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidAccountID,
+													},
+													names.AttrBucket: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	Default:      15,
+																	ValidateFunc: validation.IntBetween(10, 15),
+																},
+																names.AttrStatus: {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Default:          types.MetricsStatusEnabled,
+																	ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
+																},
 															},
 														},
 													},
-												},
-												"replica_kms_key_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"replication_time": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Default:      15,
-																ValidateFunc: validation.IntBetween(15, 15),
-															},
-															names.AttrStatus: {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Default:          types.ReplicationTimeStatusEnabled,
-																ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
+													"replica_kms_key_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"replication_time": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	Default:      15,
+																	ValidateFunc: validation.IntBetween(15, 15),
+																},
+																names.AttrStatus: {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Default:          types.ReplicationTimeStatusEnabled,
+																	ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
+																},
 															},
 														},
 													},
-												},
-												names.AttrStorageClass: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.StorageClass](),
+													names.AttrStorageClass: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.StorageClass](),
+													},
 												},
 											},
 										},
-									},
-									names.AttrFilter: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrPrefix: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
+										names.AttrFilter: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrPrefix: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(0, 1024),
+													},
+													names.AttrTags: tftags.TagsSchema(),
 												},
-												names.AttrTags: tftags.TagsSchema(),
 											},
 										},
-									},
-									names.AttrID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
-									},
-									names.AttrPrefix: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									names.AttrPriority: {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"source_selection_criteria": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"sse_kms_encrypted_objects": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Required: true,
+										names.AttrID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 255),
+										},
+										names.AttrPrefix: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										names.AttrPriority: {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"source_selection_criteria": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"sse_kms_encrypted_objects": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"request_payer": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "request_payer is deprecated. Use the aws_s3_bucket_request_payment_configuration resource instead.",
-				ValidateDiagFunc: enum.Validate[types.Payer](),
-			},
-			"server_side_encryption_configuration": {
-				Type:       schema.TypeList,
-				MaxItems:   1,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "server_side_encryption_configuration is deprecated. Use the aws_s3_bucket_server_side_encryption_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRule: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"apply_server_side_encryption_by_default": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"kms_master_key_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sse_algorithm": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+				"request_payer": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					Deprecated:       "request_payer is deprecated. Use the aws_s3_bucket_request_payment_configuration resource instead.",
+					ValidateDiagFunc: enum.Validate[types.Payer](),
+				},
+				"server_side_encryption_configuration": {
+					Type:       schema.TypeList,
+					MaxItems:   1,
+					Optional:   true,
+					Computed:   true,
+					Deprecated: "server_side_encryption_configuration is deprecated. Use the aws_s3_bucket_server_side_encryption_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRule: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"apply_server_side_encryption_by_default": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"kms_master_key_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sse_algorithm": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+													},
 												},
 											},
 										},
-									},
-									"bucket_key_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										"bucket_key_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"versioning": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "versioning is deprecated. Use the aws_s3_bucket_versioning resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"mfa_delete": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"website": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "website is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"error_document": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"index_document": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"website.0.index_document",
-								"website.0.redirect_all_requests_to",
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"versioning": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "versioning is deprecated. Use the aws_s3_bucket_versioning resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
-						},
-						"redirect_all_requests_to": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"website.0.index_document",
-								"website.0.redirect_all_requests_to",
-							},
-							ConflictsWith: []string{
-								"website.0.error_document",
-								"website.0.routing_rules",
-							},
-						},
-						"routing_rules": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsJSON,
-							StateFunc: func(v any) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+							"mfa_delete": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
 						},
 					},
 				},
-			},
-			"website_domain": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "website_domain is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
-			},
-			"website_endpoint": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
-			},
+				"website": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "website is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"error_document": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"index_document": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"website.0.index_document",
+									"website.0.redirect_all_requests_to",
+								},
+							},
+							"redirect_all_requests_to": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"website.0.index_document",
+									"website.0.redirect_all_requests_to",
+								},
+								ConflictsWith: []string{
+									"website.0.error_document",
+									"website.0.routing_rules",
+								},
+							},
+							"routing_rules": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringIsJSON,
+								StateFunc: func(v any) string {
+									json, _ := structure.NormalizeJsonString(v)
+									return json
+								},
+							},
+						},
+					},
+				},
+				"website_domain": {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "website_domain is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+				},
+				"website_endpoint": {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+				},
+			}
 		},
 	}
 }

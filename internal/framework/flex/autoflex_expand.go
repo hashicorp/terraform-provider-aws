@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -551,6 +552,11 @@ func expandString(ctx context.Context, _ *autoExpander, vFrom basetypes.StringVa
 		// timetypes.RFC3339 --> time.Time
 		//
 		if t, ok := vFrom.(timetypes.RFC3339); ok {
+			if vTo.Type() != reflect.TypeFor[time.Time]() {
+				tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+				diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+				return diags
+			}
 			v, d := t.ValueRFC3339Time()
 			diags.Append(d...)
 			if diags.HasError() {
@@ -593,6 +599,11 @@ func expandString(ctx context.Context, _ *autoExpander, vFrom basetypes.StringVa
 			// timetypes.RFC3339 --> *time.Time
 			//
 			if t, ok := vFrom.(timetypes.RFC3339); ok {
+				if tElem != reflect.TypeFor[time.Time]() {
+					tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+					diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+					return diags
+				}
 				v, d := t.ValueRFC3339Time()
 				diags.Append(d...)
 				if diags.HasError() {
@@ -675,6 +686,10 @@ func expandList(ctx context.Context, expander *autoExpander, sourcePath path.Pat
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
 		diags.Append(expandListOrSetOfInt64(ctx, expander, v, vTo, fieldOpts)...)
+		return diags
+
+	case basetypes.Int32Typable:
+		diags.Append(expandListOrSetOfInt32(ctx, expander, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringTypable:
@@ -782,10 +797,7 @@ func expandListOrSetOfInt64(ctx context.Context, expander *autoExpander, vFrom v
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: vFrom.Type(ctx),
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
@@ -936,10 +948,7 @@ func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom v
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: "Set[Int32]",
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }

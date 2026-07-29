@@ -62,7 +62,7 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccProjectImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 		},
@@ -142,7 +142,7 @@ func TestAccDataZoneProject_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccProjectImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccDataZoneProject_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccProjectImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 		},
@@ -250,7 +250,7 @@ func testAccCheckProjectNotRecreated(before, after *datazone.GetProjectOutput) r
 	}
 }
 
-func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccProjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

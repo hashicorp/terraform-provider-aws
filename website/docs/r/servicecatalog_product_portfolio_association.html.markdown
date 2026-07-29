@@ -46,6 +46,14 @@ This resource exports the following attributes in addition to the arguments abov
 - `read` - (Default `10m`)
 - `delete` - (Default `3m`)
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `read` - (Default `10m`)
+* `delete` - (Default `3m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_product_portfolio_association` using the accept language, portfolio ID, and product ID. For example:

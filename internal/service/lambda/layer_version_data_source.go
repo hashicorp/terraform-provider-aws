@@ -29,93 +29,95 @@ func dataSourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLayerVersionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"code_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compatible_architecture": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
-				ConflictsWith:    []string{names.AttrVersion, "layer_version_arn"},
-			},
-			"compatible_architectures": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"compatible_runtime": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
-				ConflictsWith:    []string{names.AttrVersion, "layer_version_arn"},
-			},
-			"compatible_runtimes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"code_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layer_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layer_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"layer_version_arn"},
-			},
-			"layer_version_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"layer_name", names.AttrVersion, "compatible_architecture", "compatible_runtime"},
-			},
-			"license_info": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_code_hash": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
-			},
-			"source_code_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"compatible_runtimes", "layer_version_arn"},
-			},
+				"compatible_architecture": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
+					ConflictsWith:    []string{names.AttrVersion, "layer_version_arn"},
+				},
+				"compatible_architectures": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"compatible_runtime": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
+					ConflictsWith:    []string{names.AttrVersion, "layer_version_arn"},
+				},
+				"compatible_runtimes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"layer_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"layer_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"layer_version_arn"},
+				},
+				"layer_version_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"layer_name", names.AttrVersion, "compatible_architecture", "compatible_runtime"},
+				},
+				"license_info": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_job_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_profile_version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_code_hash": {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
+				},
+				"source_code_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"compatible_runtimes", "layer_version_arn"},
+				},
+			}
 		},
 	}
 }

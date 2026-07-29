@@ -42,36 +42,38 @@ func resourceClientVPNAuthorizationRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_group_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotContainAny(","),
-				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
-			},
-			"authorize_all_groups": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
-			},
-			"client_vpn_endpoint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"target_network_cidr": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_group_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringDoesNotContainAny(","),
+					ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
+				},
+				"authorize_all_groups": {
+					Type:         schema.TypeBool,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
+				},
+				"client_vpn_endpoint_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"target_network_cidr": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+			}
 		},
 	}
 }

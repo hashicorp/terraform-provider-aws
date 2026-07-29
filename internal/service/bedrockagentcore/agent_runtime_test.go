@@ -10,8 +10,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,10 +23,140 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// TestCustomJWTAuthorizerPrivateEndpointRoundTrip proves that AutoFlex round-trips
+// every combination of private_endpoint union arms.
+func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name                    string
+		privateEndpoint         awstypes.PrivateEndpoint
+		privateEndpointOverride awstypes.PrivateEndpoint
+	}{
+		{
+			name: "managed_vpc/managed_vpc",
+			privateEndpoint: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-12345678"),
+					SubnetIds:             []string{"subnet-12345678", "subnet-abcdef01"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-12345678"},
+					RoutingDomain:         aws.String("example.com"),
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-abcdef01"),
+					SubnetIds:             []string{"subnet-abcdef01", "subnet-12345678"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-abcdef01"},
+					RoutingDomain:         aws.String("override.example.com"),
+				},
+			},
+		},
+		{
+			name: "managed_vpc/self_managed_lattice",
+			privateEndpoint: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-12345678"),
+					SubnetIds:             []string{"subnet-12345678", "subnet-abcdef01"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-12345678"},
+					RoutingDomain:         aws.String("example.com"),
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-0123456789abcdef0",
+				},
+			},
+		},
+		{
+			name: "self_managed_lattice/managed_vpc",
+			privateEndpoint: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-0123456789abcdef0",
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					VpcIdentifier:         aws.String("vpc-abcdef01"),
+					SubnetIds:             []string{"subnet-abcdef01", "subnet-12345678"},
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SecurityGroupIds:      []string{"sg-abcdef01"},
+					RoutingDomain:         aws.String("override.example.com"),
+				},
+			},
+		},
+		{
+			name: "self_managed_lattice/self_managed_lattice",
+			privateEndpoint: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-0123456789abcdef0",
+				},
+			},
+			privateEndpointOverride: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rcfg-abcdef0123456789",
+				},
+			},
+		},
+	}
+
+	opts := cmp.Options{
+		cmpopts.IgnoreUnexported(
+			awstypes.CustomJWTAuthorizerConfiguration{},
+			awstypes.ManagedVpcResource{},
+			awstypes.PrivateEndpointMemberManagedVpcResource{},
+			awstypes.PrivateEndpointMemberSelfManagedLatticeResource{},
+			awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{},
+			awstypes.PrivateEndpointOverride{},
+		),
+		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+			in := awstypes.CustomJWTAuthorizerConfiguration{
+				DiscoveryUrl:    aws.String("https://example.com/.well-known/openid-configuration"),
+				AllowedAudience: []string{"aud"},
+				PrivateEndpoint: tc.privateEndpoint,
+				PrivateEndpointOverrides: []awstypes.PrivateEndpointOverride{
+					{
+						Domain:          aws.String("override.example.com"),
+						PrivateEndpoint: tc.privateEndpointOverride,
+					},
+				},
+			}
+
+			var model tfbedrockagentcore.CustomJWTAuthorizerConfigurationModel
+			if diags := fwflex.Flatten(ctx, in, &model); diags.HasError() {
+				t.Fatalf("Flatten: %v", diags)
+			}
+
+			var out awstypes.CustomJWTAuthorizerConfiguration
+			if diags := fwflex.Expand(ctx, model, &out); diags.HasError() {
+				t.Fatalf("Expand: %v", diags)
+			}
+
+			if diff := cmp.Diff(in, out, opts...); diff != "" {
+				t.Errorf("SDK -> model -> SDK round-trip mismatch (-in +out):\n%s", diff)
+			}
+		})
+	}
+}
+
+func testAccRandomAgentRuntimeName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
 
 func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -416,8 +549,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"custom_claim":                   knownvalue.SetSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -458,8 +594,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"custom_claim":                   knownvalue.SetSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -495,8 +634,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 					"weather", "sports",
 					"client-999", "client-888",
 					"openid", names.AttrEmail,
-					string(awstypes.InboundTokenClaimValueTypeString),
-					string(awstypes.ClaimMatchOperatorTypeEquals),
+					awstypes.InboundTokenClaimValueTypeString,
+					awstypes.ClaimMatchOperatorTypeEquals,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
@@ -523,6 +662,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
 									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
@@ -540,7 +680,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":           knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -563,8 +705,8 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 					"weather", "sports",
 					"client-999", "client-888",
 					"openid", names.AttrEmail,
-					string(awstypes.InboundTokenClaimValueTypeStringArray),
-					string(awstypes.ClaimMatchOperatorTypeContains),
+					awstypes.InboundTokenClaimValueTypeStringArray,
+					awstypes.ClaimMatchOperatorTypeContains,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
@@ -591,6 +733,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
 									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
@@ -608,7 +751,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":           knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -650,6 +795,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
 									"custom_claim": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"inbound_token_claim_name":       knownvalue.StringExact("cognito:groups"),
@@ -670,7 +816,9 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":           knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -745,6 +893,24 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolMcp),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "AGUI"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolAgui),
 						}),
 					})),
 				},
@@ -1108,6 +1274,121 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_authorizer_privateEndpointOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// The API omits private_endpoint_overrides on read. Without the preserve fix, the
+				// implicit post-apply empty-plan check fails with "block count changed from 1 to 0".
+				Config: testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides.0.domain", "example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The service omits private_endpoint_overrides from Get, so it cannot be recovered on import.
+				ImportStateVerifyIgnore:              []string{"authorizer_configuration.0.custom_jwt_authorizer.0.private_endpoint_overrides"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rImageUri string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["example-audience"]
+
+      private_endpoint_overrides {
+        domain = "example.com"
+
+        private_endpoint {
+          managed_vpc_resource {
+            endpoint_ip_address_type = "IPV4"
+            subnet_ids               = [aws_subnet.test.id]
+            vpc_identifier           = aws_vpc.test.id
+            security_group_ids       = [aws_security_group.test.id]
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, rImageUri))
+}
+
 func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test_assume" {
@@ -1292,7 +1573,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
-func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimString(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string, inboundTokenClaimValueType awstypes.InboundTokenClaimValueType, claimMatchOperator awstypes.ClaimMatchOperatorType) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q

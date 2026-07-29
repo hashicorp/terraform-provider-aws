@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing a Verified Access Logging Configuration.
 
+~> Deletion of this resource resets the Verified Access Instance Logging Configuration to its default values.
+
 ## Example Usage
 
 ### With CloudWatch Logging

@@ -144,6 +144,7 @@ func ConstOrQuote(constant string) string {
 		"namespace":                     "AttrNamespace",
 		"network_configuration":         "AttrNetworkConfiguration",
 		"network_interface_id":          "AttrNetworkInterfaceID",
+		"outpost_arn":                   "AttrOutpostARN",
 		"owner":                         "AttrOwner",
 		"owner_account_id":              "AttrOwnerAccountID",
 		"owner_id":                      "AttrOwnerID",

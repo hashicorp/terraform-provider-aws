@@ -4,7 +4,7 @@
 resource "aws_bedrockagentcore_policy_engine" "test" {
   region = var.region
 
-  name = replace(var.rName, "-", "_")
+  name = var.rName
 }
 
 variable "rName" {

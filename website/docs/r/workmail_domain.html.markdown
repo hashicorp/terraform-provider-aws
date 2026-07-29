@@ -49,6 +49,34 @@ Each `records` block exports the following:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_workmail_domain.example
+  identity = {
+    organization_id = "m-1234567890abcdef0"
+    domain_name     = "example.com"
+  }
+}
+
+resource "aws_workmail_domain" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_name` (String) Mail domain name.
+* `organization_id` (String) Identifier of the WorkMail organization.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkMail Domain using `organization_id,domain_name`. For example:
 
 ```terraform

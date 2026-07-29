@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_instance: Prevent double base64 encoding of `user_data` and `user_data_base64` on update
-```

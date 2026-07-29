@@ -32,10 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  require_attributes = "required"
-  require_import     = "optional"
-  require_timeouts   = "optional"
-  require_signature  = "forbidden"
+  section "title"      { required = true }
+  section "example"    { required = true }
+  section "arguments"  { required = true }
+  section "attributes" { required = true }
+  section "timeouts"   {}
+  section "import"     {}
+  section "signature"  { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -59,10 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  require_attributes = "required"
-  require_import     = "forbidden"
-  require_timeouts   = "optional"
-  require_signature  = "forbidden"
+  section "title"      { required = true }
+  section "example"    { required = true }
+  section "arguments"  { required = true }
+  section "attributes" { required = true }
+  section "timeouts"   {}
+  section "import"     { forbidden = true }
+  section "signature"  { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -86,10 +92,13 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  require_attributes = "required"
-  require_import     = "forbidden"
-  require_timeouts   = "forbidden"
-  require_signature  = "forbidden"
+  section "title"      { required = true }
+  section "example"    { required = true }
+  section "arguments"  { required = true }
+  section "attributes" { required = true }
+  section "timeouts"   { forbidden = true }
+  section "import"     { forbidden = true }
+  section "signature"  { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -105,10 +114,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  require_attributes = "forbidden"
-  require_import     = "forbidden"
-  require_timeouts   = "forbidden"
-  require_signature  = "required"
+  section "title"      { required = true }
+  section "example"    { required = true }
+  section "signature"  { required = true }
+  section "arguments"  { required = true }
+  section "attributes" { forbidden = true }
+  section "timeouts"   { forbidden = true }
+  section "import"     { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -128,10 +140,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  require_attributes = "forbidden"
-  require_import     = "forbidden"
-  require_timeouts   = "forbidden"
-  require_signature  = "forbidden"
+  section "title"      { required = true }
+  section "example"    { required = true }
+  section "arguments"  { required = true }
+  section "attributes" { forbidden = true }
+  section "timeouts"   { forbidden = true }
+  section "import"     { forbidden = true }
+  section "signature"  { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -151,10 +166,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  require_attributes = "forbidden"
-  require_import     = "forbidden"
-  require_timeouts   = "forbidden"
-  require_signature  = "forbidden"
+  section "title"      { required = true }
+  section "example"    { required = true }
+  section "dependency_management" { }
+  section "arguments"  { required = true }
+  section "attributes" { forbidden = true }
+  section "timeouts"   { forbidden = true }
+  section "import"     { forbidden = true }
+  section "signature"  { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -178,6 +197,7 @@ check "schema_docs" {
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
+    "`{Path}` Block",
     "`{Block}` Block",
     "{Block} Block",
     "{Block} block",
@@ -187,12 +207,15 @@ check "schema_docs" {
     "{Title} Arguments",
     "{Title} Argument Reference",
     "{Title} Attribute Reference",
+    "Nested Schema for `{Path}`",
+    "`{Path}`",
     "`{Block}`",
     "{Block}",
     "{Title}",
   ]
 
   prefer_block_heading_styles = [
+    "`{Path}` Block",
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
@@ -222,7 +245,9 @@ check "frontmatter" {
 }
 
 check "section_presence" {
-  enabled = true
+  enabled                = true
+  allow_unknown_sections = false
+  enforce_order          = true
 }
 
 check "timeouts_section" {

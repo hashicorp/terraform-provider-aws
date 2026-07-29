@@ -196,10 +196,18 @@ func TestAccEC2Instance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "instance/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"capacity_reservation_preference": tfknownvalue.StringExact(awstypes.CapacityReservationPreferenceOpen),
+							"capacity_reservation_target":     knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface"), knownvalue.ListExact([]knownvalue.Check{
@@ -209,6 +217,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
 				},
 			},
 			{
@@ -331,8 +340,8 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "instance/{id}"),
 				),
 			},
 			{
@@ -1156,7 +1165,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 				Config: testAccInstanceConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -3367,7 +3376,7 @@ func TestAccEC2Instance_PrimaryNetworkInterface_basic(t *testing.T) {
 				Config: testAccInstanceConfig_primaryNetworkInterface_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
-					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniResourceName, &eni),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
@@ -3409,7 +3418,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterface(t *testing.T) {
 				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
-					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
 						"device_index":       "0",
@@ -3508,7 +3517,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterfaceSourceDestCheck(
 				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterfaceSourceDestCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
-					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
@@ -3542,8 +3551,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &before),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3572,8 +3581,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &after),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3630,8 +3639,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &before),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3660,8 +3669,8 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &after),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3712,8 +3721,8 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterfaceBefore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &before),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -3740,8 +3749,8 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &after),
-					testAccCheckENIExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
-					testAccCheckENIExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckNetworkInterfaceExists(ctx, t, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -6869,10 +6878,27 @@ func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 				Config: testAccInstanceConfig_capacityReservationSpecificationTargetID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arn", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"capacity_reservation_preference": tfknownvalue.StringExact(""),
+							"capacity_reservation_target": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"capacity_reservation_id":                 knownvalue.NotNull(),
+									"capacity_reservation_resource_group_arn": tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("capacity_reservation_specification").AtSliceIndex(0).AtMapKey("capacity_reservation_target").AtSliceIndex(0).AtMapKey("capacity_reservation_id"),
+						"aws_ec2_capacity_reservation.test", tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringLegacyNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -6964,7 +6990,72 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_basicWithSpot(t *testing.T) {
+// Capacity Blocks must be purchased upfront with real money and only exist
+// for limited GPU/ML instance types, so the acceptance tests below assume an
+// existing pre-provisioned Capacity Block reservation discoverable via the
+// TF_AWS_EC2_CAPACITY_BLOCK_RESERVATION_ID environment variable. Tests are skipped when
+// this and TF_AWS_EC2_CAPACITY_BLOCK_INSTANCE_TYPE are not set.
+func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	reservationID := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_CAPACITY_BLOCK_RESERVATION_ID")
+	instanceType := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_CAPACITY_BLOCK_INSTANCE_TYPE")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(reservationID, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"capacity_reservation_preference": tfknownvalue.StringExact(""),
+							"capacity_reservation_target": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"capacity_reservation_id":                 knownvalue.NotNull(),
+									"capacity_reservation_resource_group_arn": tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification").AtSliceIndex(0).AtMapKey("capacity_reservation_target").AtSliceIndex(0).AtMapKey("capacity_reservation_id"), knownvalue.StringExact(reservationID)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), knownvalue.StringExact(string(awstypes.InstanceLifecycleTypeCapacityBlock))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"market_type":  tfknownvalue.StringExact(string(awstypes.MarketTypeCapacityBlock)),
+							"spot_options": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(reservationID, instanceType),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_spot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -6978,21 +7069,73 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_basicWithSpot(rName),
+				Config: testAccInstanceConfig_spot_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle", "spot"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.market_type", "spot"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_market_options.0.spot_options.0.max_price"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.spot_instance_type", "one-time"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.valid_until", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"market_type": tfknownvalue.StringExact(awstypes.MarketTypeSpot),
+							"spot_options": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"instance_interruption_behavior": tfknownvalue.StringExact(awstypes.SpotInstanceInterruptionBehaviorTerminate),
+									"max_price":                      knownvalue.NotNull(),
+									"spot_instance_type":             tfknownvalue.StringExact(awstypes.SpotInstanceTypeOneTime),
+									"valid_until":                    tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringRegexp(regexache.MustCompile(`^sir-[a-z0-9]{8}$`))),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_spot_instanceMarketOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		// No subnet_id specified requires default VPC with default subnets.
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_spot_instanceMarketOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"market_type": tfknownvalue.StringExact(awstypes.MarketTypeSpot),
+							"spot_options": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"instance_interruption_behavior": tfknownvalue.StringExact(awstypes.SpotInstanceInterruptionBehaviorStop),
+									"max_price":                      knownvalue.NotNull(),
+									"spot_instance_type":             tfknownvalue.StringExact(awstypes.SpotInstanceTypePersistent),
+									"valid_until":                    tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringRegexp(regexache.MustCompile(`^sir-[a-z0-9]{8}$`))),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -10855,6 +10998,29 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, awstypes.CapacityReservationInstancePlatformLinuxUnix))
 }
 
+func testAccInstanceConfig_capacityReservation_capacityBlocksForML(reservationID, instanceType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForRegion(instanceType),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  capacity_reservation_specification {
+    capacity_reservation_target {
+      capacity_reservation_id = %[1]q
+    }
+  }
+
+  instance_market_options {
+    market_type = "capacity-block"
+  }
+}
+`, reservationID, instanceType))
+}
+
 func testAccInstanceConfig_templateBasic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
@@ -11087,7 +11253,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_basicWithSpot(rName string) string {
+func testAccInstanceConfig_spot_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
@@ -11169,6 +11335,32 @@ resource "aws_instance" "test" {
   launch_template {
     name = aws_launch_template.test.name
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_spot_instanceMarketOptions(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+
+  instance_market_options {
+    market_type = "spot"
+
+    spot_options {
+      instance_interruption_behavior = "stop"
+      spot_instance_type             = "persistent"
+    }
+  }
+
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q

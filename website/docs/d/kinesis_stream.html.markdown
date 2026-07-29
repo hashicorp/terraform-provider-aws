@@ -46,7 +46,13 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
 * `stream_mode_details` - [Capacity mode](https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html) of the data stream. Detailed below.
 * `tags` - Map of tags to assigned to the stream.
+* `warm_throughput` - Warm throughput in MB/s for the stream. Detailed below.
 
 ### stream_mode_details Configuration Block
 
 * `stream_mode` - Capacity mode of the stream. Either `ON_DEMAND` or `PROVISIONED`.
+
+### warm_throughput Configuration Block
+
+* `current_mib_ps` - Current warm throughput value on the stream.
+* `target_mib_ps` - Target warm throughput value on the stream.

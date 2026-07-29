@@ -48,7 +48,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "open"),
 					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

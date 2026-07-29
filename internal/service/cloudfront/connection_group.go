@@ -33,6 +33,9 @@ import (
 
 // @FrameworkResource("aws_cloudfront_connection_group", name="Connection Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.ConnectionGroup")
+// @Testing(importIgnore="wait_for_deployment;status")
+// @Testing(importStateIdAttribute="name")
 func newConnectionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionGroupResource{}
 

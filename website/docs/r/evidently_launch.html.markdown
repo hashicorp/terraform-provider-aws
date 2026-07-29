@@ -314,14 +314,6 @@ The `steps` block supports the following arguments:
 * `segment` - (Required) The name or ARN of the segment to use.
 * `weights` - (Required) The traffic allocation percentages among the feature variations to assign to this segment. This is a set of key-value pairs. The keys are variation names. The values represent the amount of traffic to allocate to that variation for this segment. This is expressed in thousandths of a percent, so a weight of 50000 represents 50% of traffic.
 
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-* `create` - (Default `2m`)
-* `delete` - (Default `2m`)
-* `update` - (Default `2m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -342,6 +334,14 @@ The `execution` block supports the following attributes:
 
 * `ended_time` - The date and time that the launch ended.
 * `started_time` - The date and time that the launch started.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
 
 ## Import
 

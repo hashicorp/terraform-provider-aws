@@ -473,19 +473,19 @@ Add a new test named `_tags` with associated configurations, that verifies creat
 func TestAccEKSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
   var cluster1, cluster2, cluster3 eks.Cluster
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_eks_cluster.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckClusterDestroy(ctx),
+    CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(ctx, resourceName, &cluster1),
+          testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
         ),
@@ -498,7 +498,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
       {
         Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(ctx, resourceName, &cluster2),
+          testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -507,7 +507,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
       {
         Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(ctx, resourceName, &cluster3),
+          testAccCheckClusterExists(ctx, t, resourceName, &cluster3),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
         ),

@@ -38,64 +38,66 @@ func ResourceLoadBalancer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"health_check_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-			},
-			"instance_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(0, 65535),
-			},
-			names.AttrIPAddressType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "dualstack",
-				ValidateFunc: validation.StringInSlice([]string{
-					"dualstack",
-					"ipv4",
-				}, false),
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ports": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
-				),
-			},
-			"support_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"health_check_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "/",
+				},
+				"instance_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(0, 65535),
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "dualstack",
+					ValidateFunc: validation.StringInSlice([]string{
+						"dualstack",
+						"ipv4",
+					}, false),
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_ports": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeInt},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 255),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					),
+				},
+				"support_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

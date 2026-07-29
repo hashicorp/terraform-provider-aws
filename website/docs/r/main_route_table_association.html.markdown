@@ -38,14 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the Route Table Association
 * `original_route_table_id` - Used internally, see __Notes__ below
 
-## Notes
-
-On VPC creation, the AWS API always creates an initial Main Route Table. This
-resource records the ID of that Route Table under `original_route_table_id`.
-The "Delete" action for a `main_route_table_association` consists of resetting
-this original table as the Main Route Table for the VPC. You'll see this
-additional Route Table in the AWS console; it must remain intact in order for
-the `main_route_table_association` delete to work properly.
+~> **Note:** On VPC creation, the AWS API always creates an initial Main Route Table. This resource records the ID of that Route Table under `original_route_table_id`. The "Delete" action for a `main_route_table_association` consists of resetting this original table as the Main Route Table for the VPC. You'll see this additional Route Table in the AWS console; it must remain intact in order for the `main_route_table_association` delete to work properly.
 
 ## Timeouts
 

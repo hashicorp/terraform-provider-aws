@@ -27,23 +27,25 @@ func dataSourceResource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceRead,
 
-		Schema: map[string]*schema.Schema{
-			"parent_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"path_part": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"parent_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"path_part": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
