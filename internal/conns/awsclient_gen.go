@@ -151,6 +151,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -159,6 +160,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -848,6 +850,10 @@ func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
 }
 
+func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
+	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicrovms, make(map[string]any)))
+}
+
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {
 	return errs.Must(client[*launchwizard.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
@@ -898,6 +904,10 @@ func (c *AWSClient) MWAAServerlessClient(ctx context.Context) *mwaaserverless.Cl
 
 func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {
 	return errs.Must(client[*macie2.Client](ctx, c, names.Macie2, make(map[string]any)))
+}
+
+func (c *AWSClient) MailManagerClient(ctx context.Context) *mailmanager.Client {
+	return errs.Must(client[*mailmanager.Client](ctx, c, names.MailManager, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect.Client {

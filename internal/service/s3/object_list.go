@@ -96,18 +96,31 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 			rd.Set(names.AttrBucket, bucket)
 			rd.Set(names.AttrKey, key)
 
-			tflog.Info(ctx, "Reading S3 Object")
-			diags := resourceObjectRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading S3 Object", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" || rd.Id() == "/" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", "")
+				if err != nil {
+					tflog.Error(ctx, "Reading S3 Object", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+
+				objectARN, err := newObjectARN(l.Meta().Partition(ctx), bucket, key)
+				if err != nil {
+					tflog.Error(ctx, "Reading S3 Object", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+				rd.Set(names.AttrARN, objectARN.String())
+
+				diags := resourceObjectFlatten(rd, output)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading S3 Object", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = fmt.Sprintf("%s/%s", bucket, key)

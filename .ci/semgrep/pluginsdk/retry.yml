@@ -35,8 +35,8 @@ rules:
     paths:
       exclude:
         # packages wrap SDK error types for compatibility
-        - "internal/retry"
-        - "internal/tfresource"
+        - "/internal/retry"
+        - "/internal/tfresource"
 
   - id: internal-retry-staterefreshfunc-pass-context
     languages: [go]
@@ -56,8 +56,8 @@ rules:
       include:
         - "**/*.go"
       exclude:
-        - "internal/retry"
-        - "internal/tfresource"
+        - "/internal/retry"
+        - "/internal/tfresource"
 
   - id: internal-retry-staterefreshfunc-remove-parent-context
     languages: [go]
@@ -75,8 +75,8 @@ rules:
       include:
         - "**/*.go"
       exclude:
-        - "internal/retry"
-        - "internal/tfresource"
+        - "/internal/retry"
+        - "/internal/tfresource"
 
   - id: internal-retry-statechangeconf-refresh-remove-context
     languages: [go]
@@ -92,8 +92,8 @@ rules:
       include:
         - "**/*.go"
       exclude:
-        - "internal/retry"
-        - "internal/tfresource"
+        - "/internal/retry"
+        - "/internal/tfresource"
 
   - id: internal-retry-notfounderror-drop-lastrequest
     languages: [go]
@@ -112,5 +112,5 @@ rules:
       include:
         - "**/*.go"
       exclude:
-        - "internal/retry"
-        - "internal/tfresource"
+        - "/internal/retry"
+        - "/internal/tfresource"
