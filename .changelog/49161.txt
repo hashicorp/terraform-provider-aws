@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Improves memory usage in AWS API request/response logging.
-```
