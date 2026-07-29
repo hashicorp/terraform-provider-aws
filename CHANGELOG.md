@@ -60,8 +60,6 @@ BUG FIXES:
 > [!IMPORTANT]
 > We identified an unintended regression in this release. To prevent production impact, we are redacting this release while we prepare a fix
 
-
-
 ## 6.56.0 (July 22, 2026)
 
 FEATURES:
