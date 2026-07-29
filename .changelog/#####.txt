@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed
+```

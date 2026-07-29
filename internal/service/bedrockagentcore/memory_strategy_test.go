@@ -1620,10 +1620,29 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
 			},
-			// Step 4: Try to remove consolidation block → should ERROR
+			// Step 4: Remove consolidation block → should replace resource
 			{
-				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
-				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block"),
+				Config: testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						"reflection":   knownvalue.ListSizeExact(0),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
 			},
 			//// Step 5: Change override type → should replace resource
 			{
