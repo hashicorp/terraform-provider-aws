@@ -47,7 +47,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
@@ -57,10 +57,9 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Test import with version.
 			// https://github.com/hashicorp/terraform-provider-aws/issues/37812.
@@ -70,7 +69,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				ImportStateId:                        name + ":1",
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite", "has_value_wo"},
+				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite"},
 			},
 		},
 	})
@@ -97,7 +96,7 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
@@ -124,14 +123,14 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
@@ -139,14 +138,14 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -171,14 +170,14 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_description(name, "updated description", "String", "test"),
@@ -187,14 +186,14 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -361,10 +360,9 @@ func TestAccSSMParameter_tier(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierStandard)),
@@ -404,10 +402,9 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierStandard)),
@@ -424,10 +421,9 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -453,10 +449,9 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_tier(rName, string(awstypes.ParameterTierAdvanced)),
@@ -474,10 +469,9 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -505,10 +499,9 @@ func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -624,7 +617,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test3"),
@@ -711,7 +704,7 @@ func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 		},
 	})
@@ -745,7 +738,7 @@ func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 		},
 	})
@@ -776,10 +769,9 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, true, acctest.CtKey1, acctest.CtValue2),
@@ -831,38 +823,6 @@ func TestAccSSMParameter_Overwrite_removeAttribute(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_updateType(t *testing.T) {
-	ctx := acctest.Context(t)
-	var param awstypes.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
-	resourceName := "aws_ssm_parameter.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccParameterConfig_basic(name, "SecureString", "test2"),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
-			},
-			{
-				Config: testAccParameterConfig_basic(name, "String", "test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterExists(ctx, t, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
@@ -882,7 +842,7 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite", "has_value_wo"},
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
 				Config: testAccParameterConfig_basicOverwriteNoDescription(name, "String", "test2"),
@@ -895,7 +855,38 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
+func TestAccSSMParameter_updateType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "SecureString", "test2"),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_Name_changeForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var beforeParam, afterParam awstypes.Parameter
 	before := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
@@ -915,23 +906,26 @@ func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_basic(after, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, t, resourceName, &afterParam),
-					testAccCheckParameterRecreated(t, &beforeParam, &afterParam),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccSSMParameter_fullPath(t *testing.T) {
+func TestAccSSMParameter_Name_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
 	name := fmt.Sprintf("/path/%s_%s", t.Name(), acctest.RandString(t, 10))
@@ -953,10 +947,9 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -984,10 +977,9 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1110,10 +1102,9 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1140,10 +1131,9 @@ func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1169,10 +1159,9 @@ func TestAccSSMParameter_DataType_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_dataTypeUpdate(rName, "aws:ec2:image"),
@@ -1208,10 +1197,9 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1240,10 +1228,9 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"has_value_wo"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
@@ -1259,7 +1246,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 }
 
 // lintignore:AT002
-func TestAccSSMParameter_importByARN(t *testing.T) {
+func TestAccSSMParameter_ImportByARN_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
@@ -1287,19 +1274,43 @@ func TestAccSSMParameter_importByARN(t *testing.T) {
 				},
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite", "has_value_wo"},
 			},
 		},
 	})
 }
 
-func testAccCheckParameterRecreated(t *testing.T, before, after *awstypes.Parameter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *before.Name == *after.Name {
-			t.Fatalf("Expected change of SSM Param Names, but both were %v", *before.Name)
-		}
-		return nil
-	}
+// lintignore:AT002
+func TestAccSSMParameter_ImportByARN_fullPath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	name := fmt.Sprintf("/path/%s_%s", t.Name(), acctest.RandString(t, 10))
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+				),
+			},
+			// Test import by ARN.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/39050.
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(*terraform.State) (string, error) {
+					return aws.ToString(param.ARN), nil
+				},
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+		},
+	})
 }
 
 func testAccCheckParameterWriteOnlyValueEqual(t *testing.T, param *awstypes.Parameter, writeOnlyValue string) resource.TestCheckFunc {
