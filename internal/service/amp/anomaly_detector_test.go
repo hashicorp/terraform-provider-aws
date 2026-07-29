@@ -67,10 +67,10 @@ func TestAccAMPAnomalyDetector_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
 			},
 		},
 	})
@@ -182,10 +182,10 @@ func TestAccAMPAnomalyDetector_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
 			},
 		},
 	})
@@ -236,10 +236,10 @@ func TestAccAMPAnomalyDetector_randomCutForest(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
 			},
 		},
 	})
@@ -281,10 +281,10 @@ func TestAccAMPAnomalyDetector_labels(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrID, "workspace_id"),
 			},
 		},
 	})
