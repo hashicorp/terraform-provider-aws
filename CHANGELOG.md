@@ -49,6 +49,10 @@ ENHANCEMENTS:
 * resource/aws_secretsmanager_secret: Add `type` argument in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
 * resource/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` arguments in support of [managed external secrets](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
 
+BUG FIXES:
+
+* resource/aws_dynamodb_table: No longer replace resource when decreasing `warm_throughput` values ([#49032](https://github.com/hashicorp/terraform-provider-aws/issues/49032))
+
 ## 6.56.0 (July 22, 2026)
 
 FEATURES:
