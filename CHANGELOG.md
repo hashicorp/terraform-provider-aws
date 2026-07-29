@@ -1,4 +1,4 @@
-## 6.57.1 (Unreleased)
+## 6.57.1 (July 29, 2026)
 
 NOTES:
 
