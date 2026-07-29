@@ -297,19 +297,44 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Managed Scraper using the scraper
-identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_prometheus_scraper.example
-  id = "s-0123abc-0000-0123-a000-000000000000"
+  identity = {
+    id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+  }
+}
+
+resource "aws_prometheus_scraper" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import the Managed Scraper using its identifier.
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the scraper.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import scrapers using `id`. For example:
+
+```terraform
+import {
+  to = aws_prometheus_scraper.example
+  id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+}
+```
+
+Using `terraform import`, import scrapers using `id`.
 For example:
 
 ```console
-% terraform import aws_prometheus_scraper.example s-0123abc-0000-0123-a000-000000000000
+% terraform import aws_prometheus_scraper.example s-b6f487db-4761-4930-9215-e9d588a7efe2
 ```

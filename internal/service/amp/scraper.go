@@ -43,6 +43,8 @@ import (
 
 // @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.57.1")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
@@ -56,7 +58,7 @@ func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, erro
 
 type scraperResource struct {
 	framework.ResourceWithModel[scraperResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
