@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -188,56 +188,19 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 											int32validator.Between(0, 50),
 										},
 									},
-									"trigger_conditions": schema.SingleNestedAttribute{
-										CustomType: fwtypes.NewObjectTypeOf[triggerConditionsModel](ctx),
-										Optional:   true,
-										Computed:   true,
-										Attributes: map[string]schema.Attribute{
-											"message_based_trigger": schema.SingleNestedAttribute{
-												CustomType: fwtypes.NewObjectTypeOf[messageBasedTriggerModel](ctx),
-												Optional:   true,
-												Computed:   true,
-												Attributes: map[string]schema.Attribute{
-													"message_count": schema.Int32Attribute{
-														Optional: true,
-														Computed: true,
-														Default:  int32default.StaticInt32(6),
-														Validators: []validator.Int32{
-															int32validator.Between(1, 50),
-														},
-													},
-												},
-											},
-											"token_based_trigger": schema.SingleNestedAttribute{
-												CustomType: fwtypes.NewObjectTypeOf[tokenBasedTriggerModel](ctx),
-												Optional:   true,
-												Computed:   true,
-												Attributes: map[string]schema.Attribute{
-													"token_count": schema.Int32Attribute{
-														Optional: true,
-														Computed: true,
-														Default:  int32default.StaticInt32(5000),
-														Validators: []validator.Int32{
-															int32validator.Between(100, 500000),
-														},
-													},
-												},
-											},
-											"time_based_trigger": schema.SingleNestedAttribute{
-												CustomType: fwtypes.NewObjectTypeOf[timeBasedTriggerModel](ctx),
-												Optional:   true,
-												Computed:   true,
-												Attributes: map[string]schema.Attribute{
-													"idle_session_timeout": schema.Int32Attribute{
-														Optional: true,
-														Computed: true,
-														Default:  int32default.StaticInt32(20),
-														Validators: []validator.Int32{
-															int32validator.Between(10, 3000),
-														},
-													},
-												},
-											},
+									// trigger_conditions is Computed: the service always returns
+									// the full normalized set (message/token/time) with documented
+									// defaults (6 / 5000 / 20) regardless of input, so the
+									// server-side value is authoritative. Exposed read-only here so
+									// state stays consistent across create/read/update/import;
+									// user-tunable trigger thresholds can be added later once the
+									// input/output normalization is reconciled (see PR caveats).
+									"trigger_conditions": schema.ListAttribute{
+										CustomType:  fwtypes.NewListNestedObjectTypeOf[triggerConditionModel](ctx),
+										ElementType: fwtypes.NewObjectTypeOf[triggerConditionModel](ctx),
+										Computed:    true,
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -882,7 +845,7 @@ type customConfigurationModel struct {
 type selfManagedConfigurationModel struct {
 	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
 	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
-	TriggerConditions           fwtypes.ObjectValueOf[triggerConditionsModel]                 `tfsdk:"trigger_conditions"`
+	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionModel]        `tfsdk:"trigger_conditions"`
 }
 
 type invocationConfigurationModel struct {
@@ -890,10 +853,12 @@ type invocationConfigurationModel struct {
 	TopicARN                  fwtypes.ARN  `tfsdk:"topic_arn"`
 }
 
-type triggerConditionsModel struct {
-	MessageBasedTrigger fwtypes.ObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
-	TokenBasedTrigger   fwtypes.ObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
-	TimeBasedTrigger    fwtypes.ObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
+// triggerConditionModel maps the awstypes.TriggerConditionInput union
+// (message/token/time-based).
+type triggerConditionModel struct {
+	MessageBasedTrigger fwtypes.ListNestedObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
+	TokenBasedTrigger   fwtypes.ListNestedObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
+	TimeBasedTrigger    fwtypes.ListNestedObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
 }
 
 type messageBasedTriggerModel struct {
@@ -909,160 +874,86 @@ type timeBasedTriggerModel struct {
 }
 
 var (
-	_ fwflex.Expander  = triggerConditionsModel{}
-	_ fwflex.Flattener = &triggerConditionsModel{}
+	_ fwflex.Expander  = triggerConditionModel{}
+	_ fwflex.Flattener = &triggerConditionModel{}
 )
 
-func (m triggerConditionsModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	conditions := make([]awstypes.TriggerConditionInput, 0, 3)
-
-	if !m.MessageBasedTrigger.IsNull() && !m.MessageBasedTrigger.IsUnknown() {
+func (m triggerConditionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.MessageBasedTrigger.IsNull():
+		var r awstypes.TriggerConditionInputMemberMessageBasedTrigger
 		p, d := m.MessageBasedTrigger.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-		var condition awstypes.TriggerConditionInputMemberMessageBasedTrigger
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		conditions = append(conditions, &condition)
-	}
-
-	if !m.TokenBasedTrigger.IsNull() && !m.TokenBasedTrigger.IsUnknown() {
+		return &r, diags
+	case !m.TokenBasedTrigger.IsNull():
+		var r awstypes.TriggerConditionInputMemberTokenBasedTrigger
 		p, d := m.TokenBasedTrigger.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-		var condition awstypes.TriggerConditionInputMemberTokenBasedTrigger
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		conditions = append(conditions, &condition)
-	}
-
-	if !m.TimeBasedTrigger.IsNull() && !m.TimeBasedTrigger.IsUnknown() {
+		return &r, diags
+	case !m.TimeBasedTrigger.IsNull():
+		var r awstypes.TriggerConditionInputMemberTimeBasedTrigger
 		p, d := m.TimeBasedTrigger.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-		var condition awstypes.TriggerConditionInputMemberTimeBasedTrigger
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		conditions = append(conditions, &condition)
+		return &r, diags
 	}
-
-	return conditions, diags
+	return nil, diags
 }
 
-func expandTriggerConditions(ctx context.Context, value fwtypes.ObjectValueOf[triggerConditionsModel]) (result []awstypes.TriggerConditionInput, diags diag.Diagnostics) {
-	if value.IsNull() || value.IsUnknown() {
-		return nil, diags
-	}
-
-	model, d := value.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &diags, d)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	expanded, d := model.Expand(ctx)
-	smerr.AddEnrich(ctx, &diags, d)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	result, ok := expanded.([]awstypes.TriggerConditionInput)
-	if !ok {
-		diags.AddError(
-			"Unsupported Type",
-			fmt.Sprintf("trigger conditions expand: %T", expanded),
-		)
-		return nil, diags
-	}
-
-	if len(result) == 0 {
-		return nil, diags
-	}
-
-	return result, diags
-}
-
-func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	conditions, ok := v.([]awstypes.TriggerCondition)
-	if !ok {
-		diags.AddError(
-			"Unsupported Type",
-			fmt.Sprintf("trigger conditions flatten: %T", v),
-		)
-		return diags
-	}
-
-	m.MessageBasedTrigger = fwtypes.NewObjectValueOfNull[messageBasedTriggerModel](ctx)
-	m.TokenBasedTrigger = fwtypes.NewObjectValueOfNull[tokenBasedTriggerModel](ctx)
-	m.TimeBasedTrigger = fwtypes.NewObjectValueOfNull[timeBasedTriggerModel](ctx)
-
+func (m *triggerConditionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	var d diag.Diagnostics
-	for _, condition := range conditions {
-		switch t := condition.(type) {
-		case *awstypes.TriggerConditionMemberMessageBasedTrigger:
-			var model messageBasedTriggerModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
-			if diags.HasError() {
-				return diags
-			}
-			m.MessageBasedTrigger, d = fwtypes.NewObjectValueOf(ctx, &model)
-			smerr.AddEnrich(ctx, &diags, d)
-		case *awstypes.TriggerConditionMemberTokenBasedTrigger:
-			var model tokenBasedTriggerModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
-			if diags.HasError() {
-				return diags
-			}
-			m.TokenBasedTrigger, d = fwtypes.NewObjectValueOf(ctx, &model)
-			smerr.AddEnrich(ctx, &diags, d)
-		case *awstypes.TriggerConditionMemberTimeBasedTrigger:
-			var model timeBasedTriggerModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
-			if diags.HasError() {
-				return diags
-			}
-			m.TimeBasedTrigger, d = fwtypes.NewObjectValueOf(ctx, &model)
-			smerr.AddEnrich(ctx, &diags, d)
-		default:
-			diags.AddError(
-				"Unsupported Type",
-				fmt.Sprintf("trigger condition flatten: %T", condition),
-			)
-		}
+	switch t := v.(type) {
+	case awstypes.TriggerConditionMemberMessageBasedTrigger:
+		var model messageBasedTriggerModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
+		m.MessageBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+	case awstypes.TriggerConditionMemberTokenBasedTrigger:
+		var model tokenBasedTriggerModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.TokenBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+	case awstypes.TriggerConditionMemberTimeBasedTrigger:
+		var model timeBasedTriggerModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.TimeBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("trigger condition flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
-
 	return diags
-}
-
-func flattenTriggerConditions(ctx context.Context, conditions []awstypes.TriggerCondition) (result fwtypes.ObjectValueOf[triggerConditionsModel], diags diag.Diagnostics) {
-	var model triggerConditionsModel
-	smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, conditions))
-	if diags.HasError() {
-		return fwtypes.NewObjectValueOfUnknown[triggerConditionsModel](ctx), diags
-	}
-
-	result, d := fwtypes.NewObjectValueOf(ctx, &model)
-	smerr.AddEnrich(ctx, &diags, d)
-	if diags.HasError() {
-		return fwtypes.NewObjectValueOfUnknown[triggerConditionsModel](ctx), diags
-	}
-
-	return result, diags
 }
 
 var (
@@ -1109,11 +1000,6 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 		if t.SelfManagedConfiguration != nil {
 			var selfManaged selfManagedConfigurationModel
 			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.SelfManagedConfiguration, &selfManaged))
-			if diags.HasError() {
-				return diags
-			}
-			selfManaged.TriggerConditions, d = flattenTriggerConditions(ctx, t.SelfManagedConfiguration.TriggerConditions)
-			smerr.AddEnrich(ctx, &diags, d)
 			if diags.HasError() {
 				return diags
 			}
@@ -1193,11 +1079,6 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 			return nil, diags
 		}
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, sm, &r.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		r.Value.TriggerConditions, d = expandTriggerConditions(ctx, sm.TriggerConditions)
-		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1342,10 +1223,11 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 				TopicArn:                  ic.TopicARN.ValueStringPointer(),
 			}
 		}
-		modifySelfManaged.TriggerConditions, d = expandTriggerConditions(ctx, sm.TriggerConditions)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
+		if !sm.TriggerConditions.IsNull() {
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, sm.TriggerConditions, &modifySelfManaged.TriggerConditions))
+			if diags.HasError() {
+				return nil, diags
+			}
 		}
 		result.SelfManagedConfiguration = modifySelfManaged
 	default:

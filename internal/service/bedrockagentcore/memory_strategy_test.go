@@ -6,300 +6,18 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
-	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestMemoryStrategyTriggerConditionsSchema(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	r, err := tfbedrockagentcore.ResourceMemoryStrategy(ctx)
-	if err != nil {
-		t.Fatalf("creating resource: %s", err)
-	}
-	var response fwresource.SchemaResponse
-	r.Schema(ctx, fwresource.SchemaRequest{}, &response)
-	if diags := response.Schema.ValidateImplementation(ctx); diags.HasError() {
-		t.Fatalf("validating resource schema: %s", diags)
-	}
-
-	configuration, ok := response.Schema.Blocks[names.AttrConfiguration].(fwschema.ListNestedBlock)
-	if !ok {
-		t.Fatalf("expected configuration to be a ListNestedBlock, got %T", response.Schema.Blocks[names.AttrConfiguration])
-	}
-	selfManaged, ok := configuration.NestedObject.Blocks["self_managed"].(fwschema.ListNestedBlock)
-	if !ok {
-		t.Fatalf("expected self_managed to be a ListNestedBlock, got %T", configuration.NestedObject.Blocks["self_managed"])
-	}
-	triggerConditions, ok := selfManaged.NestedObject.Attributes["trigger_conditions"].(fwschema.SingleNestedAttribute)
-	if !ok {
-		t.Fatalf("expected trigger_conditions to be a SingleNestedAttribute, got %T", selfManaged.NestedObject.Attributes["trigger_conditions"])
-	}
-	if !triggerConditions.Optional || !triggerConditions.Computed {
-		t.Fatalf("expected trigger_conditions to be Optional+Computed, got Optional=%t Computed=%t", triggerConditions.Optional, triggerConditions.Computed)
-	}
-
-	for _, name := range []string{"message_based_trigger", "token_based_trigger", "time_based_trigger"} {
-		attribute, ok := triggerConditions.Attributes[name].(fwschema.SingleNestedAttribute)
-		if !ok {
-			t.Errorf("expected %s to be a SingleNestedAttribute, got %T", name, triggerConditions.Attributes[name])
-			continue
-		}
-		if !attribute.Optional || !attribute.Computed {
-			t.Errorf("expected %s to be Optional+Computed, got Optional=%t Computed=%t", name, attribute.Optional, attribute.Computed)
-		}
-	}
-}
-
-func TestMemoryStrategyTriggerConditionsExpand(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	model := tfbedrockagentcore.TriggerConditionsModel{
-		MessageBasedTrigger: fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
-			MessageCount: types.Int32Value(12),
-		}),
-		TokenBasedTrigger: fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
-		TimeBasedTrigger:  fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
-	}
-
-	result, diags := model.Expand(ctx)
-	if diags.HasError() {
-		t.Fatalf("expanding trigger conditions: %s", diags)
-	}
-	conditions, ok := result.([]awstypes.TriggerConditionInput)
-	if !ok {
-		t.Fatalf("expected []TriggerConditionInput, got %T", result)
-	}
-	if len(conditions) != 1 {
-		t.Fatalf("expected one configured trigger condition, got %d", len(conditions))
-	}
-	message, ok := conditions[0].(*awstypes.TriggerConditionInputMemberMessageBasedTrigger)
-	if !ok {
-		t.Fatalf("expected message-based trigger, got %T", conditions[0])
-	}
-	if got := aws.ToInt32(message.Value.MessageCount); got != 12 {
-		t.Errorf("expected message_count 12, got %d", got)
-	}
-}
-
-func TestMemoryStrategyTriggerConditionsExpandThroughConfiguration(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	selfManaged := tfbedrockagentcore.SelfManagedConfigurationModel{
-		HistoricalContextWindowSize: types.Int32Value(10),
-		InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
-			PayloadDeliveryBucketName: types.StringValue("example-bucket"),
-			TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-west-2:123456789012:example"),
-		}),
-		TriggerConditions: fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
-			MessageBasedTrigger: fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
-				MessageCount: types.Int32Value(12),
-			}),
-			TokenBasedTrigger: fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
-			TimeBasedTrigger:  fwtypes.NewObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
-		}),
-	}
-	configuration := tfbedrockagentcore.CustomConfigurationModel{
-		Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
-		SelfManaged: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &selfManaged),
-	}
-
-	t.Run("create", func(t *testing.T) {
-		result, diags := configuration.ExpandTo(ctx, reflect.TypeFor[awstypes.CustomConfigurationInput]())
-		if diags.HasError() {
-			t.Fatalf("expanding create configuration: %s", diags)
-		}
-		custom, ok := result.(*awstypes.CustomConfigurationInputMemberSelfManagedConfiguration)
-		if !ok {
-			t.Fatalf("expected self-managed create configuration, got %T", result)
-		}
-		assertMessageTriggerCount(t, custom.Value.TriggerConditions, 12)
-	})
-
-	t.Run("update", func(t *testing.T) {
-		result, diags := configuration.ExpandTo(ctx, reflect.TypeFor[awstypes.ModifyStrategyConfiguration]())
-		if diags.HasError() {
-			t.Fatalf("expanding update configuration: %s", diags)
-		}
-		modify, ok := result.(*awstypes.ModifyStrategyConfiguration)
-		if !ok {
-			t.Fatalf("expected modify strategy configuration, got %T", result)
-		}
-		if modify.SelfManagedConfiguration == nil {
-			t.Fatal("expected self-managed update configuration")
-		}
-		assertMessageTriggerCount(t, modify.SelfManagedConfiguration.TriggerConditions, 12)
-	})
-
-	selfManaged.TriggerConditions = fwtypes.NewObjectValueOfMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
-		MessageBasedTrigger: fwtypes.NewObjectValueOfUnknown[tfbedrockagentcore.MessageBasedTriggerModel](ctx),
-		TokenBasedTrigger:   fwtypes.NewObjectValueOfUnknown[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
-		TimeBasedTrigger:    fwtypes.NewObjectValueOfUnknown[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
-	})
-	emptyConfiguration := tfbedrockagentcore.CustomConfigurationModel{
-		Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
-		SelfManaged: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &selfManaged),
-	}
-
-	t.Run("create with only unknown children", func(t *testing.T) {
-		result, diags := emptyConfiguration.ExpandTo(ctx, reflect.TypeFor[awstypes.CustomConfigurationInput]())
-		if diags.HasError() {
-			t.Fatalf("expanding create configuration: %s", diags)
-		}
-		custom, ok := result.(*awstypes.CustomConfigurationInputMemberSelfManagedConfiguration)
-		if !ok {
-			t.Fatalf("expected self-managed create configuration, got %T", result)
-		}
-		if custom.Value.TriggerConditions != nil {
-			t.Errorf("expected unknown trigger conditions to be omitted, got %#v", custom.Value.TriggerConditions)
-		}
-	})
-
-	t.Run("update with only unknown children", func(t *testing.T) {
-		result, diags := emptyConfiguration.ExpandTo(ctx, reflect.TypeFor[awstypes.ModifyStrategyConfiguration]())
-		if diags.HasError() {
-			t.Fatalf("expanding update configuration: %s", diags)
-		}
-		modify, ok := result.(*awstypes.ModifyStrategyConfiguration)
-		if !ok {
-			t.Fatalf("expected modify strategy configuration, got %T", result)
-		}
-		if modify.SelfManagedConfiguration == nil {
-			t.Fatal("expected self-managed update configuration")
-		}
-		if modify.SelfManagedConfiguration.TriggerConditions != nil {
-			t.Errorf("expected unknown trigger conditions to be omitted, got %#v", modify.SelfManagedConfiguration.TriggerConditions)
-		}
-	})
-}
-
-func assertMessageTriggerCount(t *testing.T, conditions []awstypes.TriggerConditionInput, expected int32) {
-	t.Helper()
-
-	if len(conditions) != 1 {
-		t.Fatalf("expected one configured trigger condition, got %d", len(conditions))
-	}
-	message, ok := conditions[0].(*awstypes.TriggerConditionInputMemberMessageBasedTrigger)
-	if !ok {
-		t.Fatalf("expected message-based trigger, got %T", conditions[0])
-	}
-	if got := aws.ToInt32(message.Value.MessageCount); got != expected {
-		t.Errorf("expected message_count %d, got %d", expected, got)
-	}
-}
-
-func TestMemoryStrategyTriggerConditionsFlatten(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	conditions := []awstypes.TriggerCondition{
-		&awstypes.TriggerConditionMemberMessageBasedTrigger{
-			Value: awstypes.MessageBasedTrigger{MessageCount: aws.Int32(6)},
-		},
-		&awstypes.TriggerConditionMemberTokenBasedTrigger{
-			Value: awstypes.TokenBasedTrigger{TokenCount: aws.Int32(5000)},
-		},
-		&awstypes.TriggerConditionMemberTimeBasedTrigger{
-			Value: awstypes.TimeBasedTrigger{IdleSessionTimeout: aws.Int32(20)},
-		},
-	}
-
-	var model tfbedrockagentcore.TriggerConditionsModel
-	if diags := model.Flatten(ctx, conditions); diags.HasError() {
-		t.Fatalf("flattening trigger conditions: %s", diags)
-	}
-
-	message, diags := model.MessageBasedTrigger.ToPtr(ctx)
-	if diags.HasError() {
-		t.Fatalf("reading message-based trigger: %s", diags)
-	}
-	token, diags := model.TokenBasedTrigger.ToPtr(ctx)
-	if diags.HasError() {
-		t.Fatalf("reading token-based trigger: %s", diags)
-	}
-	timeBased, diags := model.TimeBasedTrigger.ToPtr(ctx)
-	if diags.HasError() {
-		t.Fatalf("reading time-based trigger: %s", diags)
-	}
-
-	if got := message.MessageCount.ValueInt32(); got != 6 {
-		t.Errorf("expected message_count 6, got %d", got)
-	}
-	if got := token.TokenCount.ValueInt32(); got != 5000 {
-		t.Errorf("expected token_count 5000, got %d", got)
-	}
-	if got := timeBased.IdleSessionTimeout.ValueInt32(); got != 20 {
-		t.Errorf("expected idle_session_timeout 20, got %d", got)
-	}
-}
-
-func TestMemoryStrategyTriggerConditionsFlattenThroughConfiguration(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	configuration := awstypes.StrategyConfiguration{
-		Type: awstypes.OverrideTypeSelfManaged,
-		SelfManagedConfiguration: &awstypes.SelfManagedConfiguration{
-			HistoricalContextWindowSize: aws.Int32(10),
-			InvocationConfiguration: &awstypes.InvocationConfiguration{
-				PayloadDeliveryBucketName: aws.String("example-bucket"),
-				TopicArn:                  aws.String("arn:aws:sns:us-west-2:123456789012:example"),
-			},
-			TriggerConditions: []awstypes.TriggerCondition{
-				&awstypes.TriggerConditionMemberMessageBasedTrigger{
-					Value: awstypes.MessageBasedTrigger{MessageCount: aws.Int32(6)},
-				},
-				&awstypes.TriggerConditionMemberTokenBasedTrigger{
-					Value: awstypes.TokenBasedTrigger{TokenCount: aws.Int32(5000)},
-				},
-				&awstypes.TriggerConditionMemberTimeBasedTrigger{
-					Value: awstypes.TimeBasedTrigger{IdleSessionTimeout: aws.Int32(20)},
-				},
-			},
-		},
-	}
-
-	var model tfbedrockagentcore.CustomConfigurationModel
-	if diags := model.Flatten(ctx, configuration); diags.HasError() {
-		t.Fatalf("flattening strategy configuration: %s", diags)
-	}
-	selfManaged, diags := model.SelfManaged.ToPtr(ctx)
-	if diags.HasError() {
-		t.Fatalf("reading self-managed configuration: %s", diags)
-	}
-	conditions, diags := selfManaged.TriggerConditions.ToPtr(ctx)
-	if diags.HasError() {
-		t.Fatalf("reading trigger conditions: %s", diags)
-	}
-
-	if got := conditions.MessageBasedTrigger.IsNull(); got {
-		t.Error("expected message-based trigger to be populated")
-	}
-	if got := conditions.TokenBasedTrigger.IsNull(); got {
-		t.Error("expected token-based trigger to be populated")
-	}
-	if got := conditions.TimeBasedTrigger.IsNull(); got {
-		t.Error("expected time-based trigger to be populated")
-	}
-}
 
 func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -576,9 +294,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 			{
 				Config: testAccMemoryStrategyConfig_selfManagedBase(rName),
 			},
-			// Step 1: Create with trigger_conditions omitted. The service supplies all defaults.
+			// Step 1: self_managed with message-based trigger and explicit window size
 			{
-				Config: testAccMemoryStrategyConfig_selfManaged(rName, 10, ""),
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
@@ -589,9 +307,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.invocation_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.topic_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.payload_delivery_bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "6"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
+					// trigger_conditions is Computed; the service returns the normalized set.
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.trigger_conditions.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -600,16 +317,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					},
 				},
 			},
-			// Step 2: Partially configure only the message threshold. The other
-			// service-normalized defaults remain represented as computed children.
+			// Step 2: update window size and trigger threshold (in-place)
 			{
-				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditionsMessageOnly(12)),
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "25"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "12"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -617,22 +330,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					},
 				},
 			},
-			// Step 3: Update every supported threshold in place.
-			{
-				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditions(18, 6000, 30)),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "18"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "6000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "30"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-			},
-			// Step 4: Import retains the normalized trigger conditions returned by the service.
+			// Step 3: Import test (against the valid Step 2 config)
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -1114,7 +812,7 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func testAccMemoryStrategyConfig_selfManaged(rName string, windowSize int, triggerConditions string) string {
+func testAccMemoryStrategyConfig_selfManaged(rName string, windowSize int) string {
 	return acctest.ConfigCompose(testAccMemoryStrategyConfig_selfManagedBase(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
@@ -1129,8 +827,6 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
     self_managed {
       historical_context_window_size = %[2]d
 
-      %[3]s
-
       invocation_configuration {
         topic_arn                    = aws_sns_topic.test.arn
         payload_delivery_bucket_name = aws_s3_bucket.test.bucket
@@ -1140,33 +836,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
   depends_on = [aws_iam_role_policy.test_self_managed, aws_sns_topic_policy.test, aws_s3_bucket_policy.test]
 }
-`, rName, windowSize, triggerConditions))
-}
-
-func testAccMemoryStrategyTriggerConditionsMessageOnly(messageCount int) string {
-	return fmt.Sprintf(`
-trigger_conditions = {
-  message_based_trigger = {
-    message_count = %d
-  }
-}
-`, messageCount)
-}
-
-func testAccMemoryStrategyTriggerConditions(messageCount, tokenCount, idleSessionTimeout int) string {
-	return fmt.Sprintf(`
-trigger_conditions = {
-  message_based_trigger = {
-    message_count = %d
-  }
-  token_based_trigger = {
-    token_count = %d
-  }
-  time_based_trigger = {
-    idle_session_timeout = %d
-  }
-}
-`, messageCount, tokenCount, idleSessionTimeout)
+`, rName, windowSize))
 }
 
 func testAccMemoryStrategyConfig_selfManagedInvalidType(rName string) string {

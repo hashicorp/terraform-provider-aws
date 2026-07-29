@@ -176,18 +176,13 @@ resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
   memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Self-managed processing strategy"
+  namespaces                = ["{sessionId}"]
 
   configuration {
     type = "SELF_MANAGED"
 
     self_managed {
       historical_context_window_size = 10
-
-      trigger_conditions = {
-        message_based_trigger = {
-          message_count = 12
-        }
-      }
 
       invocation_configuration {
         topic_arn                    = aws_sns_topic.example.arn
@@ -205,13 +200,13 @@ The following arguments are required:
 * `name` - (Required) Name of the memory strategy. Changing this forces a new resource, because the service API does not support renaming a strategy.
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
 * `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
+* `namespaces` - (Required) Set of namespace identifiers where this strategy applies. Namespaces help organize and scope memory content.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration`](#configuration) below.
-* `namespaces` - (Optional) Set of namespace identifiers where this strategy applies. Required for all strategies except `CUSTOM` strategies using `SELF_MANAGED` configuration, where the service rejects namespaces and this argument must be omitted.
 
 ### `configuration`
 
@@ -228,7 +223,6 @@ The `self_managed` block supports the following:
 
 * `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration`](#invocation_configuration) below.
 * `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
-* `trigger_conditions` - (Optional) Conditions that trigger memory processing. See [`trigger_conditions`](#trigger_conditions) below. When omitted, the service supplies the documented defaults for all three trigger types.
 
 ### `invocation_configuration`
 
@@ -236,16 +230,6 @@ The `invocation_configuration` block supports the following:
 
 * `topic_arn` - (Required) ARN of the SNS topic for job notifications.
 * `payload_delivery_bucket_name` - (Required) S3 bucket name for event payload delivery.
-
-### `trigger_conditions`
-
-The `trigger_conditions` object supports any combination of the following:
-
-* `message_based_trigger` - (Optional) Message-based condition. Its `message_count` argument accepts values from `1` to `50` and defaults to `6`.
-* `token_based_trigger` - (Optional) Token-based condition. Its `token_count` argument accepts values from `100` to `500000` and defaults to `5000`.
-* `time_based_trigger` - (Optional) Idle-time condition. Its `idle_session_timeout` argument accepts values from `10` to `3000` seconds and defaults to `20`.
-
-The service returns all three normalized conditions even when only a subset is configured. Unconfigured conditions are retained in state as computed values.
 
 ### `consolidation`
 
@@ -266,6 +250,7 @@ The `extraction` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
+* `configuration.self_managed.trigger_conditions` - Normalized set of conditions that trigger memory processing, as returned by the service. Each element contains one of `message_based_trigger` (`message_count`), `token_based_trigger` (`token_count`), or `time_based_trigger` (`idle_session_timeout`). The service populates the full set with defaults, so this is read-only.
 
 ## Timeouts
 
