@@ -555,6 +555,41 @@ func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSService_VolumeConfiguration_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfiguration_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_volumeConfiguration_removed(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "volume_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSService_VolumeConfiguration_volumeInitializationRate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -5315,6 +5350,39 @@ resource "aws_ecs_service" "test" {
       size_in_gb = "8"
     }
   }
+
+  network_configuration {
+    subnets = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName))
+}
+
+func testAccServiceConfig_volumeConfiguration_removed(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseVolumeConfiguration(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test_no_volume" {
+  family                = "%[1]s-no-volume"
+  network_mode          = "awsvpc"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test_no_volume.arn
+  desired_count   = 1
 
   network_configuration {
     subnets = aws_subnet.test[*].id

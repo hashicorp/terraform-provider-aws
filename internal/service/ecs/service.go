@@ -1804,7 +1804,15 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if d.HasChange("volume_configuration") {
-			input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, d.Get("volume_configuration").([]any))
+			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/configure-ebs-volume.html
+			// To remove a managed EBS volume, specify an empty array along with a task definition
+			// whose volume has configuredAtLaunch = false. A nil value is treated as "no change",
+			// which leaves the stale volume configuration in place and fails the update.
+			input.VolumeConfigurations = []awstypes.ServiceVolumeConfiguration{}
+
+			if v := d.Get("volume_configuration").([]any); len(v) > 0 {
+				input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, v)
+			}
 		}
 
 		if d.HasChange("vpc_lattice_configurations") {
