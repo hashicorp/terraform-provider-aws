@@ -30,6 +30,7 @@ ENHANCEMENTS:
 * data-source/aws_secretsmanager_secret_rotation: Add `external_secret_rotation_metadata` and `external_secret_rotation_role_arn` attributes ([#46414](https://github.com/hashicorp/terraform-provider-aws/issues/46414))
 * data-source/aws_vpc: Adds support for `ipv6_cidr_block_associations`. ([#46918](https://github.com/hashicorp/terraform-provider-aws/issues/46918))
 * data-source/aws_vpc: Deprecates `ipv6_association_id` and `ipv6_cidr_block`. ([#46918](https://github.com/hashicorp/terraform-provider-aws/issues/46918))
+* provider: Improves memory usage in AWS API request/response logging. ([#49161](https://github.com/hashicorp/terraform-provider-aws/issues/49161))
 * resource/aws_autoscaling_group: Add `reservations-then-balanced` valid value for `availability_zone_distribution.capacity_distribution_strategy` ([#48934](https://github.com/hashicorp/terraform-provider-aws/issues/48934))
 * resource/aws_bedrockagentcore_memory: Add `timeouts.update` with a default value of `30m` ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
 * resource/aws_bedrockagentcore_memory_strategy: Add `configuration.reflection` configuration block for `EPISODIC_OVERRIDE` strategy type ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
