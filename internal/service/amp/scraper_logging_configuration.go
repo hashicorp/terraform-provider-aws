@@ -41,6 +41,9 @@ import (
 )
 
 // @FrameworkResource("aws_prometheus_scraper_logging_configuration", name="ScraperLoggingConfiguration")
+// @IdentityAttribute("scraper_id")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="scraper_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp;amp.DescribeScraperLoggingConfigurationOutput")
 func newScraperLoggingConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperLoggingConfigurationResource{}
@@ -54,6 +57,7 @@ func newScraperLoggingConfigurationResource(_ context.Context) (resource.Resourc
 
 type scraperLoggingConfigurationResource struct {
 	framework.ResourceWithModel[scraperLoggingConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -277,10 +281,6 @@ func (r *scraperLoggingConfigurationResource) Delete(ctx context.Context, reques
 
 		return
 	}
-}
-
-func (r *scraperLoggingConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("scraper_id"), request, response)
 }
 
 func findScraperLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeScraperLoggingConfigurationOutput, error) {

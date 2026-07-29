@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -53,7 +54,10 @@ func TestAccAMPScraperLoggingConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperLoggingConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ScraperLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
 				),
@@ -72,6 +76,10 @@ func TestAccAMPScraperLoggingConfiguration_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/ScraperLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -98,7 +106,10 @@ func TestAccAMPScraperLoggingConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperLoggingConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ScraperLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraperLoggingConfiguration, resourceName),
@@ -223,26 +234,6 @@ func testAccCheckScraperLoggingConfigurationExists(ctx context.Context, t *testi
 
 		return nil
 	}
-}
-
-func testAccScraperLoggingConfigurationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccScraperConfig_basic(rName),
-		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = "/aws/prometheus/scraper-logs/%[1]s"
-}
-
-resource "aws_prometheus_scraper_logging_configuration" "test" {
-  scraper_id = aws_prometheus_scraper.test.id
-
-  logging_destination {
-    cloudwatch_logs {
-      log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
-    }
-  }
-}
-`, rName))
 }
 
 func testAccScraperLoggingConfigurationConfig_scraperComponents(rName string, components ...awstypes.ScraperComponentType) string {

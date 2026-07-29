@@ -108,17 +108,43 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AMP Scraper Logging Configuration using the `scraper_id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_prometheus_scraper_logging_configuration.example
-  id = "s-example1234567890abcdef0"
+  identity = {
+    scraper_id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+  }
+}
+
+resource "aws_prometheus_scraper_logging_configuration" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import AMP Scraper Logging Configuration using the `scraper_id`. For example:
+### Identity Schema
+
+#### Required
+
+* `scraper_id` (String) ID of the scraper.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import scraper logging configurations using `scraper_id`. For example:
+
+```terraform
+import {
+  to = aws_prometheus_scraper_logging_configuration.example
+  id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+}
+```
+
+Using `terraform import`, import scraper logging configurations using `scraper_id`. For example:
 
 ```console
-% terraform import aws_prometheus_scraper_logging_configuration.example s-example1234567890abcdef0
+% terraform import aws_prometheus_scraper_logging_configuration.example s-b6f487db-4761-4930-9215-e9d588a7efe2
 ```
