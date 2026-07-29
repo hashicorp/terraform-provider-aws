@@ -144,7 +144,7 @@ func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_component"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_components"), knownvalue.SetExact([]knownvalue.Check{
 						tfknownvalue.StringExact(awstypes.ScraperComponentTypeCollector),
 						tfknownvalue.StringExact(awstypes.ScraperComponentTypeExporter),
 					})),
@@ -169,7 +169,7 @@ func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_component"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_components"), knownvalue.SetExact([]knownvalue.Check{
 						tfknownvalue.StringExact(awstypes.ScraperComponentTypeServiceDiscovery),
 					})),
 				},
