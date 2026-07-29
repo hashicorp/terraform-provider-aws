@@ -25,6 +25,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* resource/aws_ssm_parameter: Correctly imports when passing ARN value. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
+* resource/aws_ssm_parameter: Prevents errors when importing specific version. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 
 ## 6.57.1 (July 29, 2026)
 
