@@ -1,10 +1,6 @@
 ## 6.58.0 (Unreleased)
 
-BUG FIXES:
-
-* provider: Fixes api error UnknownError: UnknownError introduced in release 6.57.0 ([#49175](https://github.com/hashicorp/terraform-provider-aws/issues/49175))
-
-## 6.57.0 (July 29, 2026)
+## 6.57.1 (July 29, 2026)
 
 NOTES:
 
