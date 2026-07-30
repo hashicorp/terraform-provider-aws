@@ -411,8 +411,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearch v1.75.2 h1:beN9zAikmj02svv6prmka
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.75.2/go.mod h1:M+TxuIkZorRrZHdFqm6dvwno3iO4qp9+cct4ANCiB3Y=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.34.2 h1:qJaLjpNcJxHyOImgEZEtlr7nzy8m1gqEXg9dbx15c4s=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.34.2/go.mod h1:+BRX0/QmKnQtEBl5wBUPBb9wkcYewR2nzkLY/9qhWpY=
-github.com/aws/aws-sdk-go-v2/service/organizations v1.53.0 h1:hhqxOJHJnE1tpM4mdB1ZakrXAn8hL99gTXkKvqjdMqM=
-github.com/aws/aws-sdk-go-v2/service/organizations v1.53.0/go.mod h1:WgSFAx/LWEGO1Fs40g9h7F1gl5Bez6HawtlrNRDHBoA=
+github.com/aws/aws-sdk-go-v2/service/organizations v1.53.2 h1:CKGWtcihXL01E3MkyYNuXtdOsqZBiZ3wpGuZfw5iZbU=
+github.com/aws/aws-sdk-go-v2/service/organizations v1.53.2/go.mod h1:Tcm1rwufT0G51pJqWgYvkwRLVHvAz+PTfPkY4SV0tbA=
 github.com/aws/aws-sdk-go-v2/service/osis v1.24.0 h1:7TSTXkCRF2S2QRcC8u+1uWrbpoACpGL5XrxeiGEWYms=
 github.com/aws/aws-sdk-go-v2/service/osis v1.24.0/go.mod h1:uCfX+SbPeZKsYr9dOg16eo8Q3t0vxjEjlg4sTsJK0TE=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.65.0 h1:V659Hb8BZjxbTLSANdeD5LIj/L/RzfeMm3GRcDB/eOk=
