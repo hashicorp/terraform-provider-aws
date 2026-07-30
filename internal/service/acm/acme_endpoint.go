@@ -183,9 +183,9 @@ func (r *acmeEndpointResource) Create(ctx context.Context, req resource.CreateRe
 	input.IdempotencyToken = aws.String(create.UniqueId(ctx))
 	input.CertificateTags = expandCertificateTags(ctx, plan.CertificateTags)
 
-	// An ACME endpoint has no user-supplied name, so there is no identifier to report until the ARN comes back.
 	out, err := conn.CreateAcmeEndpoint(ctx, &input)
 	if err != nil {
+		// No smerr.ID: an ACME endpoint has no user-supplied name, so no identifier exists until the ARN is returned.
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
