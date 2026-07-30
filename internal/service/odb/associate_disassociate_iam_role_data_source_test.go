@@ -75,8 +75,8 @@ data "aws_odb_cloud_autonomous_vm_cluster" "test" {
 
 resource "aws_odb_iam_role_association" "fixture" {
   aws_integration = "KmsTde"
-  iam_role_arn   = %[2]q
-  resource_arn   = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
+  iam_role_arn    = %[2]q
+  resource_arn    = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
 }
 
 data "aws_odb_iam_role_association" "test" {
@@ -94,8 +94,8 @@ data "aws_odb_cloud_vm_cluster" "test" {
 
 resource "aws_odb_iam_role_association" "fixture" {
   aws_integration = "KmsTde"
-  iam_role_arn   = %[2]q
-  resource_arn   = data.aws_odb_cloud_vm_cluster.test.arn
+  iam_role_arn    = %[2]q
+  resource_arn    = data.aws_odb_cloud_vm_cluster.test.arn
 }
 
 data "aws_odb_iam_role_association" "test" {
