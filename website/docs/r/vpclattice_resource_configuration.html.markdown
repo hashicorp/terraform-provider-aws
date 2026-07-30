@@ -120,6 +120,7 @@ The following arguments are optional:
 * `allow_association_to_shareable_service_network` (Optional) Allow or Deny the association of this resource to a shareable service network.
 * `custom_domain_name` - (Optional) Custom domain name for your resource configuration. Additionally, provide a `domain_verification_id` to prove your ownership of a domain.
 * `domain_verification_id` - (Optional) The domain verification ID of your verified custom domain name. If you don't provide an ID, you must configure the DNS settings yourself.
+* `group_domain` - (Optional) Group domain for a group resource configuration. Only applicable when `type` is `GROUP`. Domains created for child resources are subdomains of this group domain, and child resources inherit the verification status of the domain. Changing this value forces a new resource.
 * `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resource_configuration_group_id` is not.
 * `resource_configuration_group_id` (Optional) ID of Resource Configuration where `type` is `CHILD`.
 * `resource_gateway_identifier` - (Optional) ID of the Resource Gateway used to access the resource. MUST be specified if `resource_configuration_group_id` is not.

@@ -103,6 +103,12 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"group_domain": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -529,6 +535,7 @@ type resourceConfigurationResourceModel struct {
 	DomainVerificationARN                     fwtypes.ARN                                                           `tfsdk:"domain_verification_arn"`
 	DomainVerificationID                      types.String                                                          `tfsdk:"domain_verification_id"`
 	DomainVerificationStatus                  fwtypes.StringEnum[awstypes.VerificationStatus]                       `tfsdk:"domain_verification_status"`
+	GroupDomain                               types.String                                                          `tfsdk:"group_domain"`
 	ID                                        types.String                                                          `tfsdk:"id"`
 	Name                                      types.String                                                          `tfsdk:"name"`
 	PortRanges                                fwtypes.SetOfString                                                   `tfsdk:"port_ranges"`
