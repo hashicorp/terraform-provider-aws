@@ -1,35 +1,18 @@
 ## 6.58.0 (Unreleased)
 
-BREAKING CHANGES:
-
-* resource/aws_db_instance: `character_set_name` can no longer be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-
-NOTES:
-
-* resource/aws_dms_s3_endpoint: The `kms_key_arn` attribute has been deprecated. Use `server_side_encryption_kms_key_id` instead ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-
 FEATURES:
 
-* **New Action:** `aws_sfn_start_execution` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Data Source:** `aws_s3control_access_points` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Ephemeral Resource:** `aws_sts_web_identity_token` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Function:** `arn_parse` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Guide:** `Tag Policy Compliance` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New List Resource:** `aws_db_subnet_group` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 * **New List Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
-* **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 * **New Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
 
 ENHANCEMENTS:
 
 * resource/aws_dx_connection: Add `state` attribute ([#42150](https://github.com/hashicorp/terraform-provider-aws/issues/42150))
-* resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 
 BUG FIXES:
 
 * resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
-* resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 * resource/aws_glue_catalog_table: Fix `InvalidInputException: StorageDescriptor is not allowed` error when creating or updating ATHENA-dialect views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_glue_catalog_table: Fix `InvalidInputException` error when creating or updating SPARK-dialect views without an explicit `storage_descriptor` block ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_glue_catalog_table: Fix perpetual diff on `view_definition.representations` fields (`validation_connection`, `view_original_text`, `view_expanded_text`) that AWS Glue does not echo back for validated ATHENA views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
