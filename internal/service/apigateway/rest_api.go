@@ -7,6 +7,7 @@ package apigateway
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,6 +51,12 @@ func resourceRestAPI() *schema.Resource {
 		ReadWithoutTimeout:   resourceRestAPIRead,
 		UpdateWithoutTimeout: resourceRestAPIUpdate,
 		DeleteWithoutTimeout: resourceRestAPIDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -259,6 +267,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(output.Id))
 
+	_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+	}
+
 	if body, ok := d.GetOk("body"); ok {
 		// Terraform implementation uses the `overwrite` mode by default.
 		// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
@@ -285,6 +298,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "creating API Gateway REST API (%s) specification: %s", d.Id(), err)
 		}
 
+		_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+		}
+
 		// Using PutRestApi with mode overwrite will remove any configuration
 		// that was done with CreateRestApi. Reconcile these changes by having
 		// any Terraform configured values overwrite imported configuration.
@@ -298,6 +316,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
+			}
+
+			_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available after OpenAPI import: %s", d.Id(), err)
 			}
 		}
 	}
@@ -570,6 +593,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s): %s", d.Id(), err)
 			}
+
+			_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+			}
 		}
 
 		if d.HasChanges("body", names.AttrParameters) {
@@ -599,6 +627,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) specification: %s", d.Id(), err)
 				}
 
+				_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+				}
+
 				// Using PutRestApi with mode overwrite will remove any configuration
 				// that was done previously. Reconcile these changes by having
 				// any Terraform configured values overwrite imported configuration.
@@ -612,6 +645,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
+					}
+
+					_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 					}
 				}
 			}
@@ -637,6 +675,11 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway REST API (%s): %s", d.Id(), err)
+	}
+
+	_, err = waitRestAPIDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return diags
@@ -818,6 +861,59 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	}
 
 	return operations
+}
+
+func waitRestAPIAvailable(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) (*apigateway.GetRestApiOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ApiStatusPending, awstypes.ApiStatusUpdating),
+		Target:  enum.Slice(awstypes.ApiStatusAvailable),
+		Refresh: statusRestAPI(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
+		if status := out.ApiStatus; status == awstypes.ApiStatusFailed {
+			retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
+		}
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitRestAPIDeleted(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) (*apigateway.GetRestApiOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ApiStatusPending, awstypes.ApiStatusUpdating),
+		Target:  []string{},
+		Refresh: statusRestAPI(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
+		if status := out.ApiStatus; status == awstypes.ApiStatusFailed {
+			retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
+		}
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusRestAPI(conn *apigateway.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findRestAPIByID(ctx, conn, id)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.ApiStatus), nil
+	}
 }
 
 func resourceRestAPIAttrConfigured(d *schema.ResourceData, attr string) bool {
