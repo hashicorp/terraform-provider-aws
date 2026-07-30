@@ -40,8 +40,10 @@ func TestAccCognitoIDPLogDeliveryConfiguration_basic(t *testing.T) {
 					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttrPair("aws_cognito_user_pool.test", names.AttrID, resourceName, names.AttrUserPoolID),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userNotification",
+						"log_level":    "ERROR",
+					}),
 				),
 			},
 			{
@@ -74,8 +76,10 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userNotification",
+						"log_level":    "ERROR",
+					}),
 				),
 			},
 			{
@@ -83,10 +87,14 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "ERROR"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userNotification",
+						"log_level":    "INFO",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userAuthEvents",
+						"log_level":    "ERROR",
+					}),
 				),
 			},
 			{
@@ -118,14 +126,18 @@ func TestAccCognitoIDPLogDeliveryConfiguration_logLevelUpdate(t *testing.T) {
 				Config: testAccLogDeliveryConfigurationConfig_logLevel(rName, "ERROR"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"log_level": "ERROR",
+					}),
 				),
 			},
 			{
 				Config: testAccLogDeliveryConfigurationConfig_logLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"log_level": "INFO",
+					}),
 				),
 			},
 		},
@@ -185,11 +197,15 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "ERROR"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_configurations.1.firehose_configuration.0.stream_arn", "aws_kinesis_firehose_delivery_stream.test", names.AttrARN),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userNotification",
+						"log_level":    "INFO",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userAuthEvents",
+						"log_level":    "ERROR",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "log_configurations.*.firehose_configuration.0.stream_arn", "aws_kinesis_firehose_delivery_stream.test", names.AttrARN),
 				),
 			},
 			{
@@ -198,6 +214,43 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+			},
+		},
+	})
+}
+
+// Verifies that declaring log_configurations blocks in a different order than
+// the Cognito API returns them does not cause a "Provider produced inconsistent
+// result after apply" error. Modeled as a set, block order is not significant,
+// so swapping the order must produce an empty plan.
+func TestAccCognitoIDPLogDeliveryConfiguration_orderSwap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_log_delivery_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogDeliveryConfigurationConfig_order(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
+				),
+			},
+			{
+				Config: testAccLogDeliveryConfigurationConfig_order(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -405,4 +458,44 @@ resource "aws_cognito_log_delivery_configuration" "test" {
   }
 }
 `, rName, logLevel)
+}
+
+func testAccLogDeliveryConfigurationConfig_order(rName string, swapped bool) string {
+	notification := `  log_configurations {
+    event_source = "userNotification"
+    log_level    = "INFO"
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }`
+	authEvents := `  log_configurations {
+    event_source = "userAuthEvents"
+    log_level    = "ERROR"
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }`
+
+	blocks := notification + "\n\n" + authEvents
+	if swapped {
+		blocks = authEvents + "\n\n" + notification
+	}
+
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_log_delivery_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+%[2]s
+}
+`, rName, blocks)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -58,11 +59,11 @@ func (r *logDeliveryConfigurationResource) Schema(ctx context.Context, req resou
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"log_configurations": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[logConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.IsRequired(),
+			"log_configurations": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[logConfigurationModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+					setvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -279,8 +280,8 @@ func findLogDeliveryConfigurationByUserPoolID(ctx context.Context, conn *cognito
 
 type resourceLogDeliveryConfigurationModel struct {
 	framework.WithRegionModel
-	UserPoolID        types.String                                           `tfsdk:"user_pool_id"`
-	LogConfigurations fwtypes.ListNestedObjectValueOf[logConfigurationModel] `tfsdk:"log_configurations"`
+	UserPoolID        types.String                                          `tfsdk:"user_pool_id"`
+	LogConfigurations fwtypes.SetNestedObjectValueOf[logConfigurationModel] `tfsdk:"log_configurations"`
 }
 
 type logConfigurationModel struct {
