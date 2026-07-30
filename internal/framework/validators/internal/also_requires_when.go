@@ -12,12 +12,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-var (
-	_ validator.Bool   = (*alsoRequiresWhenValidator)(nil)
-	_ validator.String = (*alsoRequiresWhenValidator)(nil)
-)
+type ValidatorRequest struct {
+	Config         tfsdk.Config
+	ConfigValue    attr.Value
+	Path           path.Path
+	PathExpression path.Expression
+}
+
+type ValidatorResponse struct {
+	Diagnostics diag.Diagnostics
+}
 
 type When interface {
 	// Eval returns true if the condition is met for the given attribute value.
@@ -33,6 +40,11 @@ func AlsoRequiresWhenValidator(when When, expressions ...path.Expression) alsoRe
 	}}
 }
 
+var (
+	_ validator.Bool   = (*alsoRequiresWhenValidator)(nil)
+	_ validator.String = (*alsoRequiresWhenValidator)(nil)
+)
+
 type alsoRequiresWhenValidator struct {
 	allOfWhenValidator
 }
@@ -41,7 +53,7 @@ func (v alsoRequiresWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v alsoRequiresWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v alsoRequiresWhenValidator) MarkdownDescription(context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.pathExpressions)
 }
 
@@ -112,7 +124,8 @@ func (v allOfWhenValidator) validate(ctx context.Context, request ValidatorReque
 		}
 
 		for _, mp := range matchedPaths {
-			// Skip self.
+			// If the user specifies the same attribute this validator is applied to,
+			// also as part of the input, skip it
 			if mp.Equal(request.Path) {
 				continue
 			}
