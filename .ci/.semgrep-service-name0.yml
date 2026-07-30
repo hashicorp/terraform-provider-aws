@@ -140,6 +140,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ACM"
+            - pattern-not-regex: "(?i)ACME"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
@@ -171,6 +172,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ACM"
+            - pattern-not-regex: "(?i)ACME"
     severity: WARNING
   - id: acm-in-var-name
     languages:
@@ -185,6 +187,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ACM"
+            - pattern-not-regex: "(?i)ACME"
     severity: WARNING
   - id: acmpca-in-func-name
     languages:
