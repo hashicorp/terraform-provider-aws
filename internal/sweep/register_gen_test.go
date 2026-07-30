@@ -147,6 +147,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
@@ -339,6 +340,7 @@ func registerSweepers() {
 	rds.RegisterSweepers()
 	redshift.RegisterSweepers()
 	redshiftserverless.RegisterSweepers()
+	rekognition.RegisterSweepers()
 	resiliencehub.RegisterSweepers()
 	resourceexplorer2.RegisterSweepers()
 	resourcegroups.RegisterSweepers()

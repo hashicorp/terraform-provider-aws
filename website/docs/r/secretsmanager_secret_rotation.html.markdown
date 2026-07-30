@@ -70,32 +70,31 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `rotate_immediately` - (Optional) Specifies whether to rotate the secret immediately or wait until the next scheduled rotation window. The rotation schedule is defined in `rotation_rules`. For secrets that use a Lambda rotation function to rotate, if you don't immediately rotate the secret, Secrets Manager tests the rotation configuration by running the testSecret step (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how.html) of the Lambda rotation function. The test creates an AWSPENDING version of the secret and then removes it. Defaults to `true`.
-* `rotation_lambda_arn` - (Optional) Specifies the ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
 * `external_secret_rotation_metadata` - (Optional) Configuration block for metadata required by the external secret partner. Required for managed external secrets. See details below.
 * `external_secret_rotation_role_arn` - (Optional) ARN of the IAM role that allows Secrets Manager to rotate the secret held by a third-party partner. Required for managed external secrets.
-* `rotation_rules` - (Required) A structure that defines the rotation configuration for this secret. Defined below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rotate_immediately` - (Optional) Whether to rotate the secret immediately or wait until the next scheduled rotation window. The rotation schedule is defined in `rotation_rules`. For secrets that use a Lambda rotation function to rotate, if you don't immediately rotate the secret, Secrets Manager tests the rotation configuration by running the testSecret step (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how.html) of the Lambda rotation function. The test creates an AWSPENDING version of the secret and then removes it. Defaults to `true`.
+* `rotation_lambda_arn` - (Optional) ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
+* `rotation_rules` - (Required) Structure that defines the rotation configuration for this secret. Defined below.
+* `secret_id` - (Required) Secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 
-### rotation_rules
+### `rotation_rules` Block
 
-* `automatically_after_days` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret. Either `automatically_after_days` or `schedule_expression` must be specified.
+* `automatically_after_days` - (Optional) Number of days between automatic scheduled rotations of the secret. Either `automatically_after_days` or `schedule_expression` must be specified.
 * `duration` - (Optional) - The length of the rotation window in hours. For example, `3h` for a three hour window.
-* `schedule_expression` - (Optional) A `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automatically_after_days` or `schedule_expression` must be specified.
+* `schedule_expression` - (Optional) `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automatically_after_days` or `schedule_expression` must be specified.
 
-### external_secret_rotation_metadata
+### `external_secret_rotation_metadata` Block
 
-* `key` - (Required) The metadata key name. Partner-specific keys are required for each external secret type. See [partner documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html) for required keys.
-* `value` - (Required) The metadata value for the specified key.
+* `key` - (Required) Metadata key name. Partner-specific keys are required for each external secret type. See [partner documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html) for required keys.
+* `value` - (Required) Metadata value for the specified key.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the secret.
-* `arn` - Amazon Resource Name (ARN) of the secret.
-* `rotation_enabled` - Specifies whether automatic rotation is enabled for this secret.
+* `rotation_enabled` - Whether automatic rotation is enabled for this secret.
 
 ## Import
 

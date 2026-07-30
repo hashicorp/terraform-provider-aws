@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_autoscaling_group: Better error handling when attempting to create Auto Scaling groups with incompatible options
-```

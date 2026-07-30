@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_eks_cluster: Allow `compute_config.node_role_arn` to update in place when previously unset
-```
