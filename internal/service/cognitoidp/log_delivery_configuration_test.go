@@ -346,7 +346,12 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 func testAccLogDeliveryConfigurationConfig_firehose(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+
+  user_pool_add_ons {
+    advanced_security_mode = "AUDIT"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -485,7 +490,12 @@ func testAccLogDeliveryConfigurationConfig_order(rName string, swapped bool) str
 
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+
+  user_pool_add_ons {
+    advanced_security_mode = "AUDIT"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "test" {
