@@ -14311,7 +14311,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
-	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	instanceConfig := testAccInstanceConfig_orderableClassMySQLGP3()
 	if excludeTFamilyInstances {
 		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
 	}
@@ -14522,7 +14522,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, pgName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName, pgName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {
