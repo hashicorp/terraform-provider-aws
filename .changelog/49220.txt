@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_log_delivery_configuration: Fix `Provider produced inconsistent result after apply` errors when `log_configurations` blocks are declared in a different order than the Cognito API returns them
+```
