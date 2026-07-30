@@ -864,6 +864,91 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 	})
 }
 
+type testAccClusterStorageSettings struct {
+	storageType        string
+	allocatedStorage   int
+	iops               int
+	expectNonEmptyPlan bool
+}
+
+func TestAccRDSCluster_storageTypeUpdateNonAurora_io2ToGP3WithoutIOPS(t *testing.T) {
+	// AWS assigns 3000 IOPS to gp3 storage below 400 GiB, so a subsequent plan
+	// still reports drift. This test covers only the in-place storage transition;
+	// the existing drift is tracked in https://github.com/hashicorp/terraform-provider-aws/issues/41203.
+	testAccClusterStorageTypeUpdateNonAurora(t,
+		testAccClusterStorageSettings{storageType: "io2", allocatedStorage: 100, iops: 1000},
+		testAccClusterStorageSettings{storageType: "gp3", allocatedStorage: 100, expectNonEmptyPlan: true},
+	)
+}
+
+func TestAccRDSCluster_storageTypeUpdateNonAurora_gp3ToIO2WithDifferentIOPS(t *testing.T) {
+	testAccClusterStorageTypeUpdateNonAurora(t,
+		testAccClusterStorageSettings{storageType: "gp3", allocatedStorage: 400, iops: 12000},
+		testAccClusterStorageSettings{storageType: "io2", allocatedStorage: 400, iops: 10000},
+	)
+}
+
+func TestAccRDSCluster_storageTypeUpdateNonAurora_io1ToIO2WithSameIOPS(t *testing.T) {
+	testAccClusterStorageTypeUpdateNonAurora(t,
+		testAccClusterStorageSettings{storageType: "io1", allocatedStorage: 400, iops: 10000},
+		testAccClusterStorageSettings{storageType: "io2", allocatedStorage: 400, iops: 10000},
+	)
+}
+
+func TestAccRDSCluster_storageTypeUpdateNonAurora_io2ToGP3WithDifferentIOPS(t *testing.T) {
+	testAccClusterStorageTypeUpdateNonAurora(t,
+		testAccClusterStorageSettings{storageType: "io2", allocatedStorage: 400, iops: 10000},
+		testAccClusterStorageSettings{storageType: "gp3", allocatedStorage: 400, iops: 12000},
+	)
+}
+
+func testAccClusterStorageTypeUpdateNonAurora(t *testing.T, before, after testAccClusterStorageSettings) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageTypeNonAurora(rName, before),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckClusterStorageSettings(resourceName, before),
+				),
+			},
+			{
+				Config:             testAccClusterConfig_storageTypeNonAurora(rName, after),
+				ExpectNonEmptyPlan: after.expectNonEmptyPlan,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					testAccCheckClusterStorageSettings(resourceName, after),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckClusterStorageSettings(resourceName string, settings testAccClusterStorageSettings) resource.TestCheckFunc {
+	checks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, settings.storageType),
+		resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, strconv.Itoa(settings.allocatedStorage)),
+	}
+	if settings.iops > 0 {
+		checks = append(checks, resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, strconv.Itoa(settings.iops)))
+	}
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
 func TestAccRDSCluster_iops(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -4651,6 +4736,42 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot       = true
 }
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, sType))
+}
+
+func testAccClusterConfig_storageTypeNonAurora(rName string, settings testAccClusterStorageSettings) string {
+	var iopsConfig string
+	if settings.iops > 0 {
+		iopsConfig = fmt.Sprintf("  iops = %d", settings.iops)
+	}
+
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = %[3]q
+  supports_iops              = true
+  supports_clusters          = true
+}
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses, settings.storageType),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  cluster_identifier        = %[1]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = %[2]q
+  allocated_storage         = %[3]d
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
+%[4]s
+}
+`, rName, settings.storageType, settings.allocatedStorage, iopsConfig))
 }
 
 func testAccClusterConfig_storageChange(rName string, sType string) string {
