@@ -1164,9 +1164,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete
 
 		if len(userGroupsToAdd) > 0 && (transitEnabledChanged || transitModeChanged) {
-			// Sequenced path: apply transit encryption changes first, then associate user groups (RBAC requires enforced encryption, which AWS validates).
-
-			// modifyReplicationGroupThenWait modifies the group and waits for it to return to "available" (non-zero delay avoids observing a stale status before the modification begins).
+			// Sequenced path: apply transit encryption changes (each modify waits for "available") then associate user groups; AWS validates that encryption is enforced for RBAC.
 			modifyReplicationGroupThenWait := func(modifyInput *elasticache.ModifyReplicationGroupInput, action string) func() error {
 				return func() error {
 					_, err := conn.ModifyReplicationGroup(ctx, modifyInput)
