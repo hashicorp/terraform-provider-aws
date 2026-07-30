@@ -147,6 +147,23 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiersOrder(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test2"),
+				),
+			},
+			{
+				// Adding an identifier that sorts before the existing ones does not leave a diff behind.
+				Config: testAccIdentityProviderConfig_identifiers(rName, `["test2", "test1", "aaa"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "aaa"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test2"),
+				),
 			},
 		},
 	})
