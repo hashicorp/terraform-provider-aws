@@ -100,7 +100,7 @@ func tagsFromTagDescriptions(tds []awstypes.TagDescription) []awstypes.Tag {
 }
 
 func tagsSchemaConflictsWith(conflictsWith []string) *schema.Schema {
-	v := *tftags.TagsSchema() // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
+	v := *tftags.TagsSchema()
 	v.ConflictsWith = conflictsWith
 
 	return &v

@@ -64,6 +64,16 @@ rules:
     patterns:
       - pattern: "$LHS = *$RHS"
       - pattern-not: "*$LHS2 = *$RHS"
+      - metavariable-type:
+          metavariable: $RHS
+          types:
+            - "*bool"
+            - "*float32"
+            - "*float64"
+            - "*int32"
+            - "*int64"
+            - "*string"
+            - "*time.Time"
     severity: WARNING
 
   - id: pointer-conversion-conditional-bool

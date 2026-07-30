@@ -72,7 +72,7 @@ func (p *getVpcResourcesBlockingEncryptionEnforcementPaginator) NextPage(ctx con
 		return nil, fmt.Errorf("no more pages available")
 	}
 
-	params := *p.params // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
+	params := *p.params
 	params.NextToken = p.nextToken
 
 	var limit *int32

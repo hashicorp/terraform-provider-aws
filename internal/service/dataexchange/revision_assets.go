@@ -386,7 +386,7 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 			if resp.Diagnostics.HasError() {
 				return
 			}
-			assets[i] = *asset // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
+			assets[i] = *asset
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 
 		case !asset.ImportAssetsFromSignedURL.IsNull():
@@ -571,7 +571,7 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 				if resp.Diagnostics.HasError() {
 					return
 				}
-				assets[i] = *asset // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
+				assets[i] = *asset
 				existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 			}()
 		case !asset.CreateS3DataAccessFromS3Bucket.IsNull():
@@ -651,7 +651,7 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 			createS3DataAccessFromS3Bucket.AccessPointARN = flex.StringToFramework(ctx, newAsset.AssetDetails.S3DataAccessAsset.S3AccessPointArn)
 			createS3DataAccessFromS3Bucket.AccessPointAlias = flex.StringToFramework(ctx, newAsset.AssetDetails.S3DataAccessAsset.S3AccessPointAlias)
 			asset.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, createS3DataAccessFromS3Bucket)
-			assets[i] = *asset // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
+			assets[i] = *asset
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 		}
 	}

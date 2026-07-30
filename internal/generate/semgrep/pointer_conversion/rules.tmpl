@@ -56,6 +56,12 @@ rules:
     patterns:
       - pattern: "$LHS = *$RHS"
       - pattern-not: "*$LHS2 = *$RHS"
+      - metavariable-type:
+          metavariable: $RHS
+          types:
+            {{- range $key, $value := . }}
+            - "*{{ $value.Typ }}"
+            {{- end }}
     severity: WARNING
 {{ range $key, $value := . }}
   - id: pointer-conversion-conditional-{{ $key }}

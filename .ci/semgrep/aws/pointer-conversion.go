@@ -84,13 +84,42 @@ func intConversion() int {
 	return int(*i)
 }
 
-func assignment() string {
-	var ptr *string
+func assignment() {
+	var ptrBool *bool
+	var ptrFloat32 *float32
+	var ptrFloat64 *float64
+	var ptrInt32 *int32
+	var ptrInt64 *int64
+	var ptrString *string
+	var ptrTime *time.Time
 
 	// ruleid: pointer-conversion-on-assignment
-	val := *ptr
+	valBool := *ptrBool
+	_ = valBool
 
-	return val
+	// ruleid: pointer-conversion-on-assignment
+	valFloat32 := *ptrFloat32
+	_ = valFloat32
+
+	// ruleid: pointer-conversion-on-assignment
+	valFloat64 := *ptrFloat64
+	_ = valFloat64
+
+	// ruleid: pointer-conversion-on-assignment
+	valInt32 := *ptrInt32
+	_ = valInt32
+
+	// ruleid: pointer-conversion-on-assignment
+	valInt64 := *ptrInt64
+	_ = valInt64
+
+	// ruleid: pointer-conversion-on-assignment
+	valString := *ptrString
+	_ = valString
+
+	// ruleid: pointer-conversion-on-assignment
+	valTime := *ptrTime
+	_ = valTime
 }
 
 func assignmentToRef(ref *string) {
@@ -98,6 +127,19 @@ func assignmentToRef(ref *string) {
 
 	// ok: pointer-conversion-on-assignment
 	*ref = *ptr
+}
+
+type exampleStruct struct {
+	Field string
+}
+
+func assignmentOfStruct() {
+	var ptr *exampleStruct
+
+	// ok: pointer-conversion-on-assignment
+	val := *ptr
+
+	_ = val
 }
 
 func conditionalsBool() bool {
