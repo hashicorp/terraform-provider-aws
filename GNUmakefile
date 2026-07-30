@@ -173,6 +173,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
+changelog-convert: ## Convert go-changelog fragment to Changie format
+	@.ci/scripts/convert-changelog.sh $(FILE)
+
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
 ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
@@ -1226,6 +1229,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	cache-info \
+	changelog-convert \
 	changelog-misspell \
 	ci \
 	ci-quick \
