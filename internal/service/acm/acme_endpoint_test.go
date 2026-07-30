@@ -172,6 +172,19 @@ func TestAccACMACMEEndpoint_allowedKeyAlgorithms(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "certificate_authority.0.public_certificate_authority.0.allowed_key_algorithms.*", string(awstypes.PublicKeyAlgorithmEcPrime256V1)),
 				),
 			},
+			{
+				// allowed_key_algorithms is Optional+Computed, so omitting it retains the configured value rather than clearing it.
+				Config: testAccACMEEndpointConfig_noAllowedKeyAlgorithms(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckACMEEndpointExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority.0.public_certificate_authority.0.allowed_key_algorithms.#", "2"),
+				),
+			},
 		},
 	})
 }
@@ -340,6 +353,18 @@ resource "aws_acm_acme_endpoint" "test" {
   }
 }
 `, algorithms)
+}
+
+func testAccACMEEndpointConfig_noAllowedKeyAlgorithms() string {
+	return `
+resource "aws_acm_acme_endpoint" "test" {
+  authorization_behavior = "PRE_APPROVED"
+
+  certificate_authority {
+    public_certificate_authority {}
+  }
+}
+`
 }
 
 func testAccACMEEndpointConfig_certificateTags(tagKey, tagValue string) string {
