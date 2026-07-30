@@ -10,6 +10,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -53,6 +55,10 @@ func (d *foundationModelDataSource) Schema(ctx context.Context, request datasour
 			},
 			"model_id": schema.StringAttribute{
 				Required: true,
+			},
+			"model_lifecycle": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[foundationModelLifecycleModel](ctx),
+				Computed:   true,
 			},
 			"model_name": schema.StringAttribute{
 				Computed: true,
@@ -105,14 +111,25 @@ func (d *foundationModelDataSource) Read(ctx context.Context, request datasource
 
 type foundationModelDataSourceModel struct {
 	framework.WithRegionModel
-	CustomizationsSupported    fwtypes.SetOfString `tfsdk:"customizations_supported"`
-	ID                         types.String        `tfsdk:"id"`
-	InferenceTypesSupported    fwtypes.SetOfString `tfsdk:"inference_types_supported"`
-	InputModalities            fwtypes.SetOfString `tfsdk:"input_modalities"`
-	ModelARN                   fwtypes.ARN         `tfsdk:"model_arn"`
-	ModelID                    types.String        `tfsdk:"model_id"`
-	ModelName                  types.String        `tfsdk:"model_name"`
-	OutputModalities           fwtypes.SetOfString `tfsdk:"output_modalities"`
-	ProviderName               types.String        `tfsdk:"provider_name"`
-	ResponseStreamingSupported types.Bool          `tfsdk:"response_streaming_supported"`
+	CustomizationsSupported    fwtypes.SetOfString                                  `tfsdk:"customizations_supported"`
+	ID                         types.String                                         `tfsdk:"id"`
+	InferenceTypesSupported    fwtypes.SetOfString                                  `tfsdk:"inference_types_supported"`
+	InputModalities            fwtypes.SetOfString                                  `tfsdk:"input_modalities"`
+	ModelARN                   fwtypes.ARN                                          `tfsdk:"model_arn"`
+	ModelID                    types.String                                         `tfsdk:"model_id"`
+	ModelLifecycle             fwtypes.ObjectValueOf[foundationModelLifecycleModel] `tfsdk:"model_lifecycle"`
+	ModelName                  types.String                                         `tfsdk:"model_name"`
+	OutputModalities           fwtypes.SetOfString                                  `tfsdk:"output_modalities"`
+	ProviderName               types.String                                         `tfsdk:"provider_name"`
+	ResponseStreamingSupported types.Bool                                           `tfsdk:"response_streaming_supported"`
+}
+
+// foundationModelLifecycleModel maps AWS SDK FoundationModelLifecycle, shared by
+// both the singular and plural (aws_bedrock_foundation_models) data sources.
+type foundationModelLifecycleModel struct {
+	EndOfLifeTime            timetypes.RFC3339                                           `tfsdk:"end_of_life_time"`
+	LegacyTime               timetypes.RFC3339                                           `tfsdk:"legacy_time"`
+	PublicExtendedAccessTime timetypes.RFC3339                                           `tfsdk:"public_extended_access_time"`
+	StartOfLifeTime          timetypes.RFC3339                                           `tfsdk:"start_of_life_time"`
+	Status                   fwtypes.StringEnum[awstypes.FoundationModelLifecycleStatus] `tfsdk:"status"`
 }
