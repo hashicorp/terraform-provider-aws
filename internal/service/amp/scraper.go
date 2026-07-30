@@ -271,13 +271,14 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
-	data.ID = fwflex.StringToFramework(ctx, output.ScraperId)
+	scraperID := aws.ToString(output.ScraperId)
+	data.ID = fwflex.StringValueToFramework(ctx, scraperID)
 
-	scraper, err := waitScraperCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	scraper, err := waitScraperCreated(ctx, conn, scraperID, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) create", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) create", scraperID), err.Error())
 
 		return
 	}
@@ -301,7 +302,8 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 
 	conn := r.Meta().AMPClient(ctx)
 
-	scraper, err := findScraperByID(ctx, conn, data.ID.ValueString())
+	scraperID := fwflex.StringValueFromFramework(ctx, data.ID)
+	scraper, err := findScraperByID(ctx, conn, scraperID)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -311,23 +313,16 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Scraper (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Scraper (%s)", scraperID), err.Error())
 
 		return
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, scraper, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, scraper, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Additional fields.
-	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
-		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, string(v.Value))
-	}
-
-	setTagsOut(ctx, scraper.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -356,22 +351,23 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
+		scraperID := fwflex.StringValueFromFramework(ctx, new.ID)
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 			Value: []byte(new.ScrapeConfiguration.ValueString()),
 		}
-		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
+		input.ScraperId = aws.String(scraperID)
 
 		_, err := conn.UpdateScraper(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Scraper (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Scraper (%s)", scraperID), err.Error())
 
 			return
 		}
 
-		if _, err := waitScraperUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) update", new.ID.ValueString()), err.Error())
+		if _, err := waitScraperUpdated(ctx, conn, scraperID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) update", scraperID), err.Error())
 
 			return
 		}
@@ -389,9 +385,10 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	conn := r.Meta().AMPClient(ctx)
 
+	scraperID := fwflex.StringValueFromFramework(ctx, data.ID)
 	input := amp.DeleteScraperInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
-		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
+		ScraperId:   aws.String(scraperID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)
 
@@ -400,16 +397,33 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Scraper (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Scraper (%s)", scraperID), err.Error())
 
 		return
 	}
 
-	if _, err := waitScraperDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := waitScraperDeleted(ctx, conn, scraperID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) delete", scraperID), err.Error())
 
 		return
 	}
+}
+
+func (r *scraperResource) flatten(ctx context.Context, scraper *awstypes.ScraperDescription, data *scraperResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, scraper, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Additional fields.
+	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
+		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, string(v.Value))
+	}
+
+	setTagsOut(ctx, scraper.Tags)
+
+	return diags
 }
 
 type scraperResourceModel struct {
