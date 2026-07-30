@@ -12,6 +12,15 @@ pull request**, named for the PR number: `.changelog/<PR_NUMBER>.txt`.
 > [`docs/design-decisions/changie-migration.md`](../docs/design-decisions/changie-migration.md).
 > Keep new entries in this format until that migration lands.
 
+> [!IMPORTANT]
+> The example blocks in this file are **indented** on purpose. `go-changelog`
+> treats every file in this directory as a changelog entry and extracts any
+> fenced block that begins with ` ```release-note ` at the **start of a line**.
+> Indenting the examples keeps this README from being parsed as an entry (which
+> would otherwise emit bogus `#README.md` links into `CHANGELOG.md`). In a real
+> `.changelog/<PR_NUMBER>.txt` file, the fence must start at column 0 with no
+> leading whitespace.
+
 ## When is an entry required?
 
 Only for **user-facing** changes:
@@ -34,11 +43,12 @@ refactors, or dependency bumps that have no user-facing effect.
 
 ## Format
 
-Each entry is one or more fenced blocks tagged with a type:
+Each entry is one or more fenced blocks tagged with a type (shown indented here;
+in a real entry file the fence starts at column 0):
 
-```release-note:TYPE
-<component>: <description>
-```
+    ```release-note:TYPE
+    <component>: <description>
+    ```
 
 `<component>` is the resource/data source/etc. name (for example
 `resource/aws_s3_bucket`, `data-source/aws_s3_bucket`) or `provider` for
@@ -52,54 +62,54 @@ prefix, no verb).
 
 ### FEATURES
 
-```release-note:new-resource
-aws_bedrockagentcore_api_key_credential_provider
-```
+    ```release-note:new-resource
+    aws_bedrockagentcore_api_key_credential_provider
+    ```
 
-```release-note:new-data-source
-aws_s3control_access_points
-```
+    ```release-note:new-data-source
+    aws_s3control_access_points
+    ```
 
-```release-note:new-ephemeral
-aws_sts_web_identity_token
-```
+    ```release-note:new-ephemeral
+    aws_sts_web_identity_token
+    ```
 
-```release-note:new-list-resource
-aws_db_subnet_group
-```
+    ```release-note:new-list-resource
+    aws_db_subnet_group
+    ```
 
-```release-note:new-function
-arn_parse
-```
+    ```release-note:new-function
+    arn_parse
+    ```
 
-```release-note:new-action
-aws_sfn_start_execution
-```
+    ```release-note:new-action
+    aws_sfn_start_execution
+    ```
 
-```release-note:new-guide
-Tag Policy Compliance
-```
+    ```release-note:new-guide
+    Tag Policy Compliance
+    ```
 
 ### ENHANCEMENTS
 
-```release-note:enhancement
-resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument
-```
+    ```release-note:enhancement
+    resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument
+    ```
 
 ### BUG FIXES
 
-```release-note:bug
-resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters`
-```
+    ```release-note:bug
+    resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters`
+    ```
 
 ### NOTES
 
-```release-note:note
-resource/aws_dms_s3_endpoint: The `kms_key_arn` attribute has been deprecated. Use `server_side_encryption_kms_key_id` instead
-```
+    ```release-note:note
+    resource/aws_dms_s3_endpoint: The `kms_key_arn` attribute has been deprecated. Use `server_side_encryption_kms_key_id` instead
+    ```
 
 ### BREAKING CHANGES
 
-```release-note:breaking-change
-resource/aws_db_instance: `character_set_name` can no longer be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`
-```
+    ```release-note:breaking-change
+    resource/aws_db_instance: `character_set_name` can no longer be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`
+    ```
