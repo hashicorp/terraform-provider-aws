@@ -20,10 +20,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_dx_connection: Add `state` attribute ([#42150](https://github.com/hashicorp/terraform-provider-aws/issues/42150))
 * resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 
 BUG FIXES:
 
+* resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
+* resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 * resource/aws_ssm_parameter: Correctly imports when passing ARN value. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 * resource/aws_ssm_parameter: Prevents errors when importing specific version. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
