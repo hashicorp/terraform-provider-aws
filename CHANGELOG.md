@@ -16,7 +16,9 @@ FEATURES:
 * **New Function:** `arn_parse` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 * **New Guide:** `Tag Policy Compliance` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
 * **New List Resource:** `aws_db_subnet_group` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* **New List Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
 * **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* **New Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
 
 ENHANCEMENTS:
 
