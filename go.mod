@@ -93,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.67.2
-	github.com/aws/aws-sdk-go-v2/service/dax v1.32.0
+	github.com/aws/aws-sdk-go-v2/service/dax v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.10.0
