@@ -2985,8 +2985,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 resource "aws_api_gateway_rest_api" "test" {
-  name        = "test"
-  description = %[2]q
+  name                 = "test"
+  description          = %[2]q
   endpoint_access_mode = "BASIC"
   security_policy      = "SecurityPolicy_TLS13_1_2_2021_06"
 
