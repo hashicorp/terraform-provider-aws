@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.43.2
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.51.0
