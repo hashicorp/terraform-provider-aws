@@ -17,31 +17,6 @@ type iamRoleAssociationDisassociationDSTest struct {
 
 var iamRoleAssociationDisassociationDSTestEntity = iamRoleAssociationDisassociationDSTest{}
 
-func TestAccODBAssociateDisassociateIAMRoleDataSource_basic(t *testing.T) {
-	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	dataSourceName := "data.aws_odb_iam_role_association.test"
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: iamRoleAssociationDisassociationDSTestEntity.testAccAssociateDisassociateIAMRoleDataSourceAutonomousCloudVmClusterConfig(fixtures),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "CONNECTED"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccODBAssociateDisassociateIAMRoleDataSource_avmc(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
