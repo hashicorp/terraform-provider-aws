@@ -93,7 +93,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
 						"event_source": "userAuthEvents",
-						"log_level":    "ERROR",
+						"log_level":    "INFO",
 					}),
 				),
 			},
@@ -203,7 +203,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
 						"event_source": "userAuthEvents",
-						"log_level":    "ERROR",
+						"log_level":    "INFO",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "log_configurations.*.firehose_configuration.0.stream_arn", "aws_kinesis_firehose_delivery_stream.test", names.AttrARN),
 				),
@@ -414,6 +414,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
+
+  # Cognito adds a "LogDeliveryEnabled" tag to the stream when log delivery is
+  # configured against it; ignore that out-of-band tag to keep the plan empty.
+  lifecycle {
+    ignore_changes = [tags, tags_all]
+  }
 }
 
 resource "aws_cognito_log_delivery_configuration" "test" {
@@ -430,7 +436,7 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 
   log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     firehose_configuration {
       stream_arn = aws_kinesis_firehose_delivery_stream.test.arn
@@ -476,7 +482,7 @@ func testAccLogDeliveryConfigurationConfig_order(rName string, swapped bool) str
   }`
 	authEvents := `  log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     cloud_watch_logs_configuration {
       log_group_arn = aws_cloudwatch_log_group.test.arn
