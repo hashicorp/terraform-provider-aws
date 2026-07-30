@@ -80,16 +80,24 @@ The `evaluation_config` block supports the following arguments. Exactly one of `
 The `automated` block supports the following arguments:
 
 * `custom_metric_config` - (Optional) Configuration for custom metrics to compute for the evaluation job. See [`custom_metric_config` Block](#custom_metric_config-block) below.
-* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`dataset_metric_config` Block](#dataset_metric_config-block) below.
+* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`evaluation_config.automated.dataset_metric_config` Block](#evaluation_configautomateddataset_metric_config-block) below.
 * `evaluator_model_config` - (Optional) Configuration for the evaluator (judge) model. Required for automated jobs that use an LLM-as-judge metric, or that evaluate a knowledge base. See [`evaluator_model_config` Block](#evaluator_model_config-block) below.
 
-### `dataset_metric_config` Block
+### `evaluation_config.automated.dataset_metric_config` Block
 
-The `dataset_metric_config` block, used by both the `automated` and `human` blocks, supports the following arguments:
+The `dataset_metric_config` block supports the following arguments:
 
 * `dataset` - (Required) Prompt dataset to use. See [`dataset` Block](#dataset-block) below.
 * `metric_names` - (Required) Names of the metrics to use for the evaluation job.
 * `task_type` - (Required) Type of task to evaluate. Common values are `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, and `Custom`. Use `General` for automated evaluation jobs that use a judge model (`evaluator_model_config`).
+
+### `evaluation_config.human.dataset_metric_config` Block
+
+The `dataset_metric_config` block supports the following arguments:
+
+* `dataset` - (Required) Prompt dataset to use. See [`dataset` Block](#dataset-block) below.
+* `metric_names` - (Required) Names of the metrics to use for the evaluation job.
+* `task_type` - (Required) Type of task to evaluate. Common values are `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, and `Custom`.
 
 ### `dataset` Block
 
@@ -156,7 +164,7 @@ The `value` block supports the following arguments. Exactly one of `float_value`
 The `human` block supports the following arguments:
 
 * `custom_metric` - (Optional) One or more custom metrics for your human workers to use. See [`evaluation_config.human.custom_metric` Block](#evaluation_confighumancustom_metric-block) below.
-* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`dataset_metric_config` Block](#dataset_metric_config-block) above.
+* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`evaluation_config.human.dataset_metric_config` Block](#evaluation_confighumandataset_metric_config-block) below.
 * `human_workflow_config` - (Optional) Configuration for the human workflow. See [`human_workflow_config` Block](#human_workflow_config-block) below.
 
 ### `evaluation_config.human.custom_metric` Block
