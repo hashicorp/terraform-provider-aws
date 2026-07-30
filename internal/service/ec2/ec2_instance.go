@@ -1033,9 +1033,16 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Default:  true,
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				// Suppress diff if network_interface is set
-				_, ok := d.GetOk("network_interface")
-				return ok
+				// Suppress diff if the primary network interface is managed as a
+				// separate resource, via either network_interface or
+				// primary_network_interface. In that case source_dest_check is
+				// configured on aws_network_interface and this attribute only
+				// mirrors what Read observed there.
+				if _, ok := d.GetOk("network_interface"); ok {
+					return true
+				}
+
+				return hasConfiguredPrimaryNetworkInterface(d)
 			},
 		},
 		"spot_instance_request_id": {
@@ -1420,7 +1427,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	// SourceDestCheck can only be modified on an instance without manually specified network interfaces.
 	// SourceDestCheck, in that case, is configured at the network interface level
-	if _, ok := d.GetOk("network_interface"); !ok {
+	_, hasNetworkInterface := d.GetOk("network_interface")
+	if !hasNetworkInterface && !hasConfiguredPrimaryNetworkInterface(d) {
 		// If we have a new resource and source_dest_check is still true, don't modify
 		sourceDestCheck := d.Get("source_dest_check").(bool)
 
@@ -2383,6 +2391,26 @@ func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*s
 	}
 
 	return rootDeviceName, nil
+}
+
+// hasConfiguredPrimaryNetworkInterface reports whether a `primary_network_interface`
+// block is present in the practitioner's configuration.
+//
+// `primary_network_interface` is Optional+Computed and Read always populates it, so
+// `d.GetOk` returns true even for an instance that never configured the block. Only
+// the raw configuration distinguishes the two.
+func hasConfiguredPrimaryNetworkInterface(d *schema.ResourceData) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+
+	v := rawConfig.GetAttr("primary_network_interface")
+	if v.IsNull() || !v.IsKnown() {
+		return false
+	}
+
+	return v.LengthInt() > 0
 }
 
 func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces any, primaryNetworkInterface any) []awstypes.InstanceNetworkInterfaceSpecification {
