@@ -17,7 +17,7 @@ type iamRoleAssociationDisassociationDSTest struct {
 
 var iamRoleAssociationDisassociationDSTestEntity = iamRoleAssociationDisassociationDSTest{}
 
-func TestAccODBAssociateDisassociateIAMRoleDataSource_avmc(t *testing.T) {
+func testAccIAMRoleAssociationDataSource_avmc(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -30,7 +30,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_avmc(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: iamRoleAssociationDisassociationDSTestEntity.testAccAssociateDisassociateIAMRoleDataSourceAutonomousCloudVmClusterConfig(fixtures),
@@ -42,7 +42,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_avmc(t *testing.T) {
 	})
 }
 
-func TestAccODBAssociateDisassociateIAMRoleDataSource_vmc(t *testing.T) {
+func testAccIAMRoleAssociationDataSource_vmc(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -55,7 +55,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_vmc(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: iamRoleAssociationDisassociationDSTestEntity.testAccAssociateDisassociateIAMRoleDataSourceCloudVmClusterConfig(fixtures),

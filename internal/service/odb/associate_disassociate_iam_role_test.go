@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -38,6 +37,24 @@ type iamRoleAssociationTestFixtures struct {
 	resourceID string
 }
 
+func TestAccODBIAMRoleAssociation_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"DataSource": {
+			"avmc": testAccIAMRoleAssociationDataSource_avmc,
+			"vmc":  testAccIAMRoleAssociationDataSource_vmc,
+		},
+		"Resource": {
+			"avmc":               testAccIAMRoleAssociation_avmc,
+			"vmc":                testAccIAMRoleAssociation_vmc,
+			acctest.CtDisappears: testAccIAMRoleAssociation_disappears,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
 func testAccIAMRoleAssociationAVMCFixtures(t *testing.T) iamRoleAssociationTestFixtures {
 	t.Helper()
 
@@ -56,7 +73,7 @@ func testAccIAMRoleAssociationVMCFixtures(t *testing.T) iamRoleAssociationTestFi
 	}
 }
 
-func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
+func testAccIAMRoleAssociation_vmc(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -72,12 +89,12 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(fixtures),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
+					testAccCheckAssociateDisassociateIAMRoleExists(ctx, t, resourceName, &associateDisassociateIAMRole),
 				),
 			},
 			{
@@ -108,7 +125,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 	})
 }
 
-func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
+func testAccIAMRoleAssociation_avmc(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -124,12 +141,12 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(fixtures),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
+					testAccCheckAssociateDisassociateIAMRoleExists(ctx, t, resourceName, &associateDisassociateIAMRole),
 				),
 			},
 			{
@@ -160,7 +177,7 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 	})
 }
 
-func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
+func testAccIAMRoleAssociation_disappears(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -177,12 +194,12 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(fixtures),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &iamRole),
+					testAccCheckAssociateDisassociateIAMRoleExists(ctx, t, resourceName, &iamRole),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.AssociateDisassociateIAMRole, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -196,9 +213,9 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_iam_role_association" {
@@ -230,7 +247,7 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name string, associateDisassociateIAMRole *odbtypes.IamRole) resource.TestCheckFunc {
+func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, t *testing.T, name string, associateDisassociateIAMRole *odbtypes.IamRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -247,7 +264,7 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		resp, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, resourceARN, iamRoleARN)
 		if err != nil {
