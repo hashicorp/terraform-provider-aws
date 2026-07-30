@@ -33,7 +33,7 @@ func (v conflictsWithWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v conflictsWithWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v conflictsWithWhenValidator) MarkdownDescription(context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are not also configured: %[1]q", v.pathExpressions)
 }
 
