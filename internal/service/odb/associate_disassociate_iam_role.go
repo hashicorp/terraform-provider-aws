@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -184,6 +185,10 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 		return
 	}
 	output, err := conn.DisassociateIamRoleFromResource(ctx, &input)
+
+	if errs.IsA[*odbtypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*odbtypes.ValidationException](err, "doesn't have any role associated") {
+		return
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
