@@ -91,12 +91,12 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 						return "", errors.New("resource not found in state")
 					}
 
-					iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
+					iamRoleARN, ok := rs.Primary.Attributes[names.AttrIAMRoleARN]
 					if !ok || iamRoleARN == "" {
 						return "", errors.New("missing iam_role_arn in state")
 					}
 
-					resourceARN, ok := rs.Primary.Attributes["resource_arn"]
+					resourceARN, ok := rs.Primary.Attributes[names.AttrResourceARN]
 					if !ok || resourceARN == "" {
 						return "", errors.New("missing resource_arn in state")
 					}
@@ -143,12 +143,12 @@ func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
 						return "", errors.New("resource not found in state")
 					}
 
-					iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
+					iamRoleARN, ok := rs.Primary.Attributes[names.AttrIAMRoleARN]
 					if !ok || iamRoleARN == "" {
 						return "", errors.New("missing iam_role_arn in state")
 					}
 
-					resourceARN, ok := rs.Primary.Attributes["resource_arn"]
+					resourceARN, ok := rs.Primary.Attributes[names.AttrResourceARN]
 					if !ok || resourceARN == "" {
 						return "", errors.New("missing resource_arn in state")
 					}
@@ -205,12 +205,12 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 				continue
 			}
 
-			resourceARN, ok := rs.Primary.Attributes["resource_arn"]
+			resourceARN, ok := rs.Primary.Attributes[names.AttrResourceARN]
 			if !ok || resourceARN == "" {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("resource ARN not found in state"))
 			}
 
-			iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
+			iamRoleARN, ok := rs.Primary.Attributes[names.AttrIAMRoleARN]
 			if !ok || iamRoleARN == "" {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
 			}
@@ -237,12 +237,12 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, name, errors.New("not found"))
 		}
 
-		resourceARN, ok := rs.Primary.Attributes["resource_arn"]
+		resourceARN, ok := rs.Primary.Attributes[names.AttrResourceARN]
 		if !ok || resourceARN == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("resource ARN not found in state"))
 		}
 
-		iamRoleARN, ok := rs.Primary.Attributes["iam_role_arn"]
+		iamRoleARN, ok := rs.Primary.Attributes[names.AttrIAMRoleARN]
 		if !ok || iamRoleARN == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
 		}
