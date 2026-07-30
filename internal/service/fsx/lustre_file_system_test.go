@@ -983,6 +983,40 @@ func TestAccFSxLustreFileSystem_intelligentTiering(t *testing.T) {
 	})
 }
 
+func TestAccFSxLustreFileSystem_dataReadCacheConfiguration_proportional(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, t, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.0.sizing_mode", "PROPORTIONAL_TO_THROUGHPUT_CAPACITY"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_read_cache_configuration.0.size"),
+				),
+			},
+			{
+				// Verify no perpetual diff on subsequent plan
+				Config: testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem awstypes.FileSystem
@@ -2201,4 +2235,24 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 }
 `, throughputCapacity, cacheSize))
+}
+
+func testAccLustreFileSystemConfig_dataReadCacheConfiguration_proportional(rName string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), `
+resource "aws_fsx_lustre_file_system" "test" {
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "PERSISTENT_2"
+  storage_type        = "INTELLIGENT_TIERING"
+  throughput_capacity = 4000
+
+  metadata_configuration {
+    mode = "USER_PROVISIONED"
+    iops = 6000
+  }
+
+  data_read_cache_configuration {
+    sizing_mode = "PROPORTIONAL_TO_THROUGHPUT_CAPACITY"
+  }
+}
+`)
 }

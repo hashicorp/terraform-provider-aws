@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloud9_environment_ec2: Add `connection_type` and `image_id` arguments
-```

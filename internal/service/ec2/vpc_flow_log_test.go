@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	checkFlowLogARN = tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`))
+)
+
 func TestAccVPCFlowLog_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
@@ -44,16 +48,31 @@ func TestAccVPCFlowLog_basic(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deliver_cross_account_role", ""),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkFlowLogARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deliver_cross_account_role"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_options"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("eni_id"), knownvalue.Null()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrIAMRoleARN), iamRoleResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("log_destination"), cloudwatchLogGroupResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_destination_type"), tfknownvalue.StringExact(awstypes.LogDestinationTypeCloudWatchLogs)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_format"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_aggregation_interval"), knownvalue.Int64Exact(600)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_nat_gateway_id"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnetID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tag_field_specification"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("traffic_type"), tfknownvalue.StringExact(awstypes.TrafficTypeAll)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayAttachmentID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayID), knownvalue.Null()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), vpcResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -525,6 +544,40 @@ func TestAccVPCFlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_tagFieldSpecifications(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_tagFieldSpecifications(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+					resource.TestCheckResourceAttr(resourceName, "tag_field_specification.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag_field_specification.*", map[string]string{
+						names.AttrResourceType: "instance",
+						"tag_keys.#":           "2",
+						"tag_keys.0":           "Name",
+						"tag_keys.1":           "Environment",
+					}),
 				),
 			},
 			{
@@ -1172,6 +1225,32 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
   log_format           = "$${version} $${vpc-id} $${subnet-id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_tagFieldSpecifications(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  log_format           = "$${version} $${vpc-id} $${instance-tag} $${instance-tag-2}"
+
+  tag_field_specification {
+    resource_type = "instance"
+    tag_keys      = ["Name", "Environment"]
+  }
 
   tags = {
     Name = %[1]q

@@ -97,13 +97,51 @@ func dataSourceVPC() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"ipv6_cidr_block": {
-					Type:     schema.TypeString,
+				"ipv6_cidr_block_associations": {
+					Type:     schema.TypeSet,
 					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipv6_address_attribute": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipv6_cidr_block": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ipv6_pool": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"network_border_group": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ip_source": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"ipv6_cidr_block": {
+					Type:       schema.TypeString,
+					Deprecated: "ipv6_cidr_block is deprecated. Use ipv6_cidr_block_associations instead.",
+					Computed:   true,
 				},
 				"ipv6_association_id": {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:       schema.TypeString,
+					Deprecated: "ipv6_association_id is deprecated. Use ipv6_cidr_block_associations instead.",
+					Computed:   true,
 				},
 				"main_route_table_id": {
 					Type:     schema.TypeString,
@@ -212,6 +250,23 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	if err := d.Set("cidr_block_associations", cidrAssociations); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cidr_block_associations: %s", err)
+	}
+
+	ipv6Associations := []any{}
+	for _, v := range vpc.Ipv6CidrBlockAssociationSet {
+		association := map[string]any{
+			names.AttrAssociationID:  aws.ToString(v.AssociationId),
+			"ipv6_address_attribute": aws.String(string(v.Ipv6AddressAttribute)),
+			"ipv6_cidr_block":        aws.ToString(v.Ipv6CidrBlock),
+			"ipv6_pool":              aws.ToString(v.Ipv6Pool),
+			"network_border_group":   aws.ToString(v.NetworkBorderGroup),
+			"ip_source":              aws.String(string(v.IpSource)),
+			names.AttrState:          aws.ToString(aws.String(string(v.Ipv6CidrBlockState.State))),
+		}
+		ipv6Associations = append(ipv6Associations, association)
+	}
+	if err := d.Set("ipv6_cidr_block_associations", ipv6Associations); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ipv6_cidr_block_associations: %s", err)
 	}
 
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 {

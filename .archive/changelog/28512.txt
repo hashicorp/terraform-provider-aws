@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_appstream_stack: Add `streaming_experience_settings` attribute
-```

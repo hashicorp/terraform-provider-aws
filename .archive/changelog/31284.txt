@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: Fix changing replicas to the default `Managed by DynamoDB` encryption setting
-```

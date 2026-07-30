@@ -48,3 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_changed_date` - Last updated date of the secret in UTC.
 * `policy` - Resource-based policy document that's attached to the secret.
 * `tags` - Tags of the secret.
+* `type` - Type of secret for managed external secrets.
