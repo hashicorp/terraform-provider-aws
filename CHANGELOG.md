@@ -30,6 +30,9 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* resource/aws_glue_catalog_table: Fix `InvalidInputException: StorageDescriptor is not allowed` error when creating or updating ATHENA-dialect views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
+* resource/aws_glue_catalog_table: Fix `InvalidInputException` error when creating or updating SPARK-dialect views without an explicit `storage_descriptor` block ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
+* resource/aws_glue_catalog_table: Fix perpetual diff on `view_definition.representations` fields (`validation_connection`, `view_original_text`, `view_expanded_text`) that AWS Glue does not echo back for validated ATHENA views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_ssm_parameter: Correctly imports when passing ARN value. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 * resource/aws_ssm_parameter: Prevents errors when importing specific version. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 
