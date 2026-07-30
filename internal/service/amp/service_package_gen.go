@@ -111,6 +111,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute("workspace_id", true),
 			}),
 		},
+		{
+			Factory:  newScraperResourceAsListResource,
+			TypeName: "aws_prometheus_scraper",
+			Name:     "Scraper",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
 	})
 }
 

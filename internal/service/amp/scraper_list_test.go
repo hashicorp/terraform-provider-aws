@@ -23,11 +23,9 @@ import (
 
 func TestAccAMPScraper_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	resourceName1 := "aws_amp_scraper.test[0]"
-	resourceName2 := "aws_amp_scraper.test[1]"
+	resourceName1 := "aws_prometheus_scraper.test[0]"
+	resourceName2 := "aws_prometheus_scraper.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -37,7 +35,7 @@ func TestAccAMPScraper_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccScraperPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
@@ -68,13 +66,13 @@ func TestAccAMPScraper_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_amp_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					tfquerycheck.ExpectNoResourceObject("aws_amp_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_amp_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
-					tfquerycheck.ExpectNoResourceObject("aws_amp_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
@@ -83,10 +81,8 @@ func TestAccAMPScraper_List_basic(t *testing.T) {
 
 func TestAccAMPScraper_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	resourceName1 := "aws_amp_scraper.test[0]"
+	resourceName1 := "aws_prometheus_scraper.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -95,7 +91,7 @@ func TestAccAMPScraper_List_includeResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccScraperPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
@@ -129,9 +125,9 @@ func TestAccAMPScraper_List_includeResource(t *testing.T) {
 					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_amp_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					querycheck.ExpectResourceKnownValues("aws_amp_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						// TIP: Add checks for _all_ resource attributes, including "region".
 						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("aps", "scraper:"+rName+"-0")),
@@ -152,11 +148,9 @@ func TestAccAMPScraper_List_includeResource(t *testing.T) {
 
 func TestAccAMPScraper_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	resourceName1 := "aws_amp_scraper.test[0]"
-	resourceName2 := "aws_amp_scraper.test[1]"
+	resourceName1 := "aws_prometheus_scraper.test[0]"
+	resourceName2 := "aws_prometheus_scraper.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -167,7 +161,7 @@ func TestAccAMPScraper_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccScraperPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
@@ -200,9 +194,9 @@ func TestAccAMPScraper_List_regionOverride(t *testing.T) {
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity1.Checks()),
 
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper.test", identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity2.Checks()),
 				},
 			},
 		},
