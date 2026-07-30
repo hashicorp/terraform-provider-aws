@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -267,7 +266,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(output.Id))
 
-	_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 	}
@@ -298,7 +297,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "creating API Gateway REST API (%s) specification: %s", d.Id(), err)
 		}
 
-		_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 		}
@@ -318,7 +317,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
 			}
 
-			_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available after OpenAPI import: %s", d.Id(), err)
 			}
@@ -594,7 +593,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s): %s", d.Id(), err)
 			}
 
-			_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 			}
@@ -627,7 +626,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) specification: %s", d.Id(), err)
 				}
 
-				_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+				err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 				}
@@ -647,7 +646,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 						return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
 					}
 
-					_, err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+					err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 					}
@@ -677,7 +676,7 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway REST API (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitRestAPIDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitRestAPIDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to be deleted: %s", d.Id(), err)
 	}
@@ -863,28 +862,28 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	return operations
 }
 
-func waitRestAPIAvailable(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) (*apigateway.GetRestApiOutput, error) {
+func waitRestAPIAvailable(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ApiStatusPending, awstypes.ApiStatusUpdating),
-		Target:  enum.Slice(awstypes.ApiStatusAvailable),
+		Pending: enum.Slice(types.ApiStatusPending, types.ApiStatusUpdating),
+		Target:  enum.Slice(types.ApiStatusAvailable),
 		Refresh: statusRestAPI(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
-		if status := out.ApiStatus; status == awstypes.ApiStatusFailed {
+		if status := out.ApiStatus; status == types.ApiStatusFailed {
 			retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
 		}
-		return out, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
-func waitRestAPIDeleted(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) (*apigateway.GetRestApiOutput, error) {
+func waitRestAPIDeleted(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ApiStatusPending, awstypes.ApiStatusUpdating),
+		Pending: enum.Slice(types.ApiStatusPending, types.ApiStatusUpdating),
 		Target:  []string{},
 		Refresh: statusRestAPI(conn, id),
 		Timeout: timeout,
@@ -892,13 +891,13 @@ func waitRestAPIDeleted(ctx context.Context, conn *apigateway.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
-		if status := out.ApiStatus; status == awstypes.ApiStatusFailed {
+		if status := out.ApiStatus; status == types.ApiStatusFailed {
 			retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
 		}
-		return out, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func statusRestAPI(conn *apigateway.Client, id string) retry.StateRefreshFunc {

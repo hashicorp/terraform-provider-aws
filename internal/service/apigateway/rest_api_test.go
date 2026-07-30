@@ -3053,7 +3053,7 @@ resource "aws_api_gateway_rest_api" "test" {
       }
     }
 
-    "x-amazon-apigateway-minimum-compression-size"   = 0
+    "x-amazon-apigateway-minimum-compression-size" = 0
 
     "x-amazon-apigateway-request-validators" = {
       all = {
