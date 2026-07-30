@@ -67,6 +67,9 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 4096),
+				},
 				Optional: true,
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
