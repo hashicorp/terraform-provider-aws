@@ -214,6 +214,40 @@ func TestValidParamGroupName(t *testing.T) {
 	}
 }
 
+func TestValidParamGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "1testing123",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing--123",
+			ErrCount: 1,
+		},
+		{
+			Value:    acctest.RandStringFromCharSet(t, 230, acctest.CharSetAlpha),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := tfrds.ValidParamGroupNamePrefix(tc.Value, "aws_db_parameter_group_name")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the DB Parameter Group name prefix to trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
 func TestValidSubnetGroupName(t *testing.T) {
 	t.Parallel()
 
