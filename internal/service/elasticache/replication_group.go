@@ -1141,32 +1141,121 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if d.HasChange("transit_encryption_enabled") {
-			input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
-			requestUpdate = true
-		}
+		// RBAC user groups require transit_encryption_mode = "required"; sequence transit encryption changes before associating user groups.
+		oldTransitEnabled, newTransitEnabled := d.GetChange("transit_encryption_enabled")
+		transitEnabledChanged := d.HasChange("transit_encryption_enabled")
+		transitModeChanged := d.HasChange("transit_encryption_mode")
+		targetTransitMode := awstypes.TransitEncryptionMode(d.Get("transit_encryption_mode").(string))
 
-		if d.HasChange("transit_encryption_mode") {
-			input.TransitEncryptionMode = awstypes.TransitEncryptionMode(d.Get("transit_encryption_mode").(string))
-			requestUpdate = true
-		}
-
+		var userGroupsToAdd, userGroupsToRemove []string
 		if d.HasChange("user_group_ids") {
 			o, n := d.GetChange("user_group_ids")
 			ns, os := n.(*schema.Set), o.(*schema.Set)
-			add, del := ns.Difference(os), os.Difference(ns)
+			if add := ns.Difference(os); add.Len() > 0 {
+				userGroupsToAdd = flex.ExpandStringValueSet(add)
+			}
+			if del := os.Difference(ns); del.Len() > 0 {
+				userGroupsToRemove = flex.ExpandStringValueSet(del)
+			}
+		}
 
-			if add.Len() > 0 {
-				if d.HasChanges("auth_token", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
-					// Transitioning to RBAC.
-					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string))
+		// Transitioning to RBAC while deleting the auth token.
+		authTokenToRBAC := d.HasChanges("auth_token", "auth_token_update_strategy") &&
+			awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete
+
+		if len(userGroupsToAdd) > 0 && (transitEnabledChanged || transitModeChanged) {
+			// Sequenced path: apply transit encryption changes first, then associate user groups (RBAC requires enforced encryption, which AWS validates).
+
+			// modifyReplicationGroupThenWait modifies the group and waits for it to return to "available" (non-zero delay avoids observing a stale status before the modification begins).
+			modifyReplicationGroupThenWait := func(modifyInput *elasticache.ModifyReplicationGroupInput, action string) func() error {
+				return func() error {
+					_, err := conn.ModifyReplicationGroup(ctx, modifyInput)
+					if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+						return nil
+					}
+					if err != nil {
+						return fmt.Errorf("modifying ElastiCache Replication Group (%s) %s: %w", d.Id(), action, err)
+					}
+					if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), 60*time.Second); err != nil {
+						return fmt.Errorf("waiting for ElastiCache Replication Group (%s) %s: %w", d.Id(), action, err)
+					}
+					return nil
 				}
-				input.UserGroupIdsToAdd = flex.ExpandStringValueSet(add)
-				requestUpdate = true
 			}
 
-			if del.Len() > 0 {
-				input.UserGroupIdsToRemove = flex.ExpandStringValueSet(del)
+			if transitEnabledChanged && !oldTransitEnabled.(bool) && newTransitEnabled.(bool) {
+				preferredInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+					ReplicationGroupId:       aws.String(d.Id()),
+					TransitEncryptionEnabled: aws.Bool(true),
+					TransitEncryptionMode:    awstypes.TransitEncryptionModePreferred,
+				}
+				updateFuncs = append(updateFuncs, modifyReplicationGroupThenWait(&preferredInput, "transit encryption preferred"))
+			}
+
+			if transitModeChanged {
+				targetModeInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+					ReplicationGroupId:       aws.String(d.Id()),
+					TransitEncryptionEnabled: aws.Bool(true),
+					TransitEncryptionMode:    targetTransitMode,
+				}
+				updateFuncs = append(updateFuncs, modifyReplicationGroupThenWait(&targetModeInput, fmt.Sprintf("transit encryption %s", targetTransitMode)))
+			}
+
+			userGroupInput := elasticache.ModifyReplicationGroupInput{
+				ApplyImmediately:   aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+				ReplicationGroupId: aws.String(d.Id()),
+				UserGroupIdsToAdd:  userGroupsToAdd,
+			}
+			if len(userGroupsToRemove) > 0 {
+				userGroupInput.UserGroupIdsToRemove = userGroupsToRemove
+			}
+			if authTokenToRBAC {
+				userGroupInput.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyTypeDelete
+			}
+			updateFuncs = append(updateFuncs, func() error {
+				_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
+					func(ctx context.Context) (any, error) {
+						return conn.ModifyReplicationGroup(ctx, &userGroupInput)
+					},
+					func(err error) (bool, error) {
+						// Retry only while the group is busy; encryption rejections are surfaced directly as AWS's constraint.
+						if errs.IsA[*awstypes.InvalidReplicationGroupStateFault](err) {
+							return true, err
+						}
+						return false, err
+					},
+				)
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+					return nil
+				}
+				if err != nil {
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s) user groups: %w", d.Id(), err)
+				}
+				if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), 60*time.Second); err != nil {
+					return fmt.Errorf("waiting for ElastiCache Replication Group (%s) user groups: %w", d.Id(), err)
+				}
+				return nil
+			})
+		} else {
+			if transitEnabledChanged {
+				input.TransitEncryptionEnabled = aws.Bool(newTransitEnabled.(bool))
+				requestUpdate = true
+			}
+			if transitModeChanged {
+				input.TransitEncryptionMode = targetTransitMode
+				requestUpdate = true
+			}
+			if len(userGroupsToAdd) > 0 {
+				if authTokenToRBAC {
+					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyTypeDelete
+				}
+				input.UserGroupIdsToAdd = userGroupsToAdd
+				requestUpdate = true
+			}
+			if len(userGroupsToRemove) > 0 {
+				input.UserGroupIdsToRemove = userGroupsToRemove
 				requestUpdate = true
 			}
 		}
