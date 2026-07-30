@@ -96,6 +96,10 @@ func (v oneOfWhenValidator) validate(ctx context.Context, request ValidatorReque
 		}
 
 		for _, mp := range matchedPaths {
+			if mp.Equal(request.Path) {
+				continue
+			}
+
 			var mpVal attr.Value
 			response.Diagnostics.Append(request.Config.GetAttribute(ctx, mp, &mpVal)...)
 			if response.Diagnostics.HasError() {
