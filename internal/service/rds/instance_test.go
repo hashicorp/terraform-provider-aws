@@ -8279,7 +8279,7 @@ func testAccInstanceConfig_orderableClassDB2() string {
 }
 
 func testAccInstanceConfig_orderableClassMySQL() string {
-	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "standard")
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "gp2")
 }
 
 func testAccInstanceConfig_orderableClassMySQLGP3() string {
@@ -14237,7 +14237,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = local.engine_version.engine
   engine_version = local.engine_version.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
@@ -14304,11 +14304,11 @@ resource "aws_db_instance" "test" {
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
-	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	instanceConfig := testAccInstanceConfig_orderableClassMySQLGP3()
 	if excludeTFamilyInstances {
 		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
 	}
@@ -14460,7 +14460,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_customParamGroupAndUpdateableInstanceClass(rName string, oddClasses bool, pgName string) string {
@@ -14519,7 +14519,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, pgName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName, pgName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {
@@ -14579,7 +14579,7 @@ resource "aws_db_instance" "test" {
   replicate_source_db     = aws_db_instance.source.identifier
   skip_final_snapshot     = true
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", oddClasses, evenClasses, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_promote(rName string) string {
@@ -14641,7 +14641,7 @@ resource "aws_db_instance" "test" {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", oddClasses, evenClasses, rName))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName string, deletionProtection bool, oddClasses bool) string {
@@ -14691,7 +14691,7 @@ resource "aws_db_instance" "test" {
 
   deletion_protection = %[6]t
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName, deletionProtection))
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName, deletionProtection))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_password(rName, password string) string {
@@ -14741,7 +14741,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = local.engine_version.engine
   engine_version = local.engine_version.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = [%[2]s]
 }
