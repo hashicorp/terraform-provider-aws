@@ -19,8 +19,8 @@ Currently supported `resource_arn` targets are Cloud VM Clusters and Cloud Auton
 ```terraform
 resource "aws_odb_iam_role_association" "example" {
   aws_integration = "KmsTde"
-  iam_role_arn   = "arn:aws:iam::123456789012:role/odb-iam-role-example"
-  resource_arn   = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
+  iam_role_arn    = "arn:aws:iam::123456789012:role/odb-iam-role-example"
+  resource_arn    = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
 }
 ```
 
