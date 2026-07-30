@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_eks_cluster: Add `force_update_version` argument
-```

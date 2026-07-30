@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dms_replication_task: Fix `panic: interface conversion: interface {} is float64, not string`
-```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_rds_engine_version: Add `supports_limitless_database` attribute
-```

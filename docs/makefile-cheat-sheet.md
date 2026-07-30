@@ -157,9 +157,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-code-quality`<sup>D</sup> | Semgrep Checks / Code Quality Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
-| `semgrep-constants`<sup>D</sup> | Fix constants with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-constants`<sup>D</sup> | Semgrep Checks / Constants Check | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-docker`<sup>D</sup> | Run Semgrep |  | ✔️ |  |
 | `semgrep-fix`<sup>D</sup> | Fix Semgrep issues that have fixes |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-fix-constants`<sup>D</sup> | Fix constants with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-fix-core` | Fix Semgrep issues in core directories |  |  | `SEMGREP_ARGS` |
 | `semgrep-naming`<sup>D</sup> | Semgrep Checks / Test Configs Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-naming-cae`<sup>D</sup> | Semgrep Checks / Naming Scan Caps/`AWS`/EC2 | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |

@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix `failed to get rate limit token, retry quota exceeded` errors
-```
