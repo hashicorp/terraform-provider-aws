@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -110,9 +110,8 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 			}
 		}
 		err = errors.New("no IAM role found for the vm cluster : " + resourceARN)
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 
 	case "cloud-autonomous-vm-cluster":
@@ -130,9 +129,8 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 			}
 		}
 		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + resourceARN)
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	return nil, errors.New("IAM role association / disassociation not supported : " + resourceARN)

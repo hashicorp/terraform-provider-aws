@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -237,10 +236,10 @@ func (r *resourceAssociateDisassociateIAMRole) ImportState(ctx context.Context, 
 }
 
 func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Client, resourceARN *string, iamRoleARN *string, timeout time.Duration) (*odbtypes.IamRole, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.IamRoleStatusAssociating),
 		Target:  enum.Slice(odbtypes.IamRoleStatusFailed, odbtypes.IamRoleStatusConnected),
-		Refresh: statusAssociateDisassociateIAMRole(ctx, conn, resourceARN, iamRoleARN),
+		Refresh: statusAssociateDisassociateIAMRole(conn, resourceARN, iamRoleARN),
 		Timeout: timeout,
 	}
 
@@ -253,10 +252,10 @@ func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Clie
 }
 
 func waitAssociateDisassociateIAMRoleDeleted(ctx context.Context, conn *odb.Client, resourceARN *string, iamEoleARN *string, timeout time.Duration) (*odb.DisassociateIamRoleFromResourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.IamRoleStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusAssociateDisassociateIAMRole(ctx, conn, resourceARN, iamEoleARN),
+		Refresh: statusAssociateDisassociateIAMRole(conn, resourceARN, iamEoleARN),
 		Timeout: timeout,
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -266,8 +265,8 @@ func waitAssociateDisassociateIAMRoleDeleted(ctx context.Context, conn *odb.Clie
 	return nil, err
 }
 
-func statusAssociateDisassociateIAMRole(ctx context.Context, conn *odb.Client, resourceARN *string, roleARN *string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAssociateDisassociateIAMRole(conn *odb.Client, resourceARN *string, roleARN *string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, *resourceARN, *roleARN)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -305,9 +304,8 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			}
 		}
 		err = errors.New("no IAM role found for the vm cluster : " + resourceARN)
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 
 	case "cloud-autonomous-vm-cluster":
@@ -325,9 +323,8 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			}
 		}
 		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + resourceARN)
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	return nil, errors.New("IAM role association / disassociation not supported : " + resourceARN)
