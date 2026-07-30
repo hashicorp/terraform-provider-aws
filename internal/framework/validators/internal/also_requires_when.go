@@ -27,14 +27,14 @@ type When interface {
 }
 
 func AlsoRequiresWhenValidator(when When, expressions ...path.Expression) alsoRequiresWhenValidator {
-	return alsoRequiresWhenValidator{whenValidator{
+	return alsoRequiresWhenValidator{allOfWhenValidator{
 		when:            when,
 		pathExpressions: expressions,
 	}}
 }
 
 type alsoRequiresWhenValidator struct {
-	whenValidator
+	allOfWhenValidator
 }
 
 func (v alsoRequiresWhenValidator) Description(ctx context.Context) string {
@@ -74,7 +74,7 @@ func (v alsoRequiresWhenValidator) ValidateString(ctx context.Context, request v
 }
 
 func (v alsoRequiresWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.whenValidator.validate(ctx, request, response, v.eval)
+	v.allOfWhenValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
@@ -88,12 +88,12 @@ func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path
 	return diags
 }
 
-type whenValidator struct {
+type allOfWhenValidator struct {
 	when            When
 	pathExpressions path.Expressions
 }
 
-func (v whenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
+func (v allOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
