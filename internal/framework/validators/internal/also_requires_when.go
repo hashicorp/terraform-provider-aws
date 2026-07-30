@@ -124,8 +124,6 @@ func (v allOfWhenValidator) validate(ctx context.Context, request ValidatorReque
 		}
 
 		for _, mp := range matchedPaths {
-			// If the user specifies the same attribute this validator is applied to,
-			// also as part of the input, skip it
 			if mp.Equal(request.Path) {
 				continue
 			}
