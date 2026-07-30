@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `provider_name` (Required) - The provider name
 * `provider_type` (Required) - The provider type.  [See AWS API for valid values](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-ProviderType)
 * `attribute_mapping` (Optional) - The map of attribute mapping of user pool attributes. [AttributeMapping in AWS API documentation](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-AttributeMapping)
-* `idp_identifiers` (Optional) - The list of identity providers.
+* `idp_identifiers` (Optional) - The set of identity provider identifiers.
 * `provider_details` (Optional) - The map of identity details, such as access token
 
 ## Attribute Reference
