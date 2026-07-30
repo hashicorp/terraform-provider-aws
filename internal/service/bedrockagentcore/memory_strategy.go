@@ -92,7 +92,10 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrName: schema.StringAttribute{
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), `Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 48 characters.`),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 				Required: true,
 			},

@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_bedrockagentcore_memory_strategy: Add plan-time validation of `description`
 ```
+
+```release-note:bug
+resource/aws_bedrockagentcore_memory_strategy: Force resource replacement when `name` is modified
+```
