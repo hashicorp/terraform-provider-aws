@@ -968,6 +968,34 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 		diags.Append(expandMapOfString(ctx, expander, v, vTo)...)
 		return diags
 
+	case basetypes.ListTypable:
+		data, d := v.ToMapValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+		case reflect.Slice:
+			//
+			// types.Map(OfList[types.String]) -> map[string][]string.
+			//
+			switch k := tMapElem.Elem().Kind(); k {
+			case reflect.String:
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(data.Elements()),
+				})
+				var out map[string][]string
+				diags.Append(data.ElementsAs(ctx, &out, false)...)
+
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(out))
+				return diags
+			}
+		}
+
 	case basetypes.MapTypable:
 		data, d := v.ToMapValue(ctx)
 		diags.Append(d...)
@@ -977,7 +1005,7 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
 		case reflect.Map:
 			//
-			// types.Map(OfMap) -> map[string]map[string]string.
+			// types.Map(OfMap[types.String]) -> map[string]map[string]string.
 			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
@@ -998,7 +1026,7 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 				switch k := tMapElem.Elem().Elem().Kind(); k {
 				case reflect.String:
 					//
-					// types.Map(OfMap) -> map[string]map[string]*string.
+					// types.Map(OfMap[types.String]) -> map[string]map[string]*string.
 					//
 					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
 						logAttrKeySourceSize: len(data.Elements()),
