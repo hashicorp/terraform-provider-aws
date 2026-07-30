@@ -46,6 +46,6 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `aws_integration` - The Amazon Web Services integration configuration settings for the Amazon Web Services Identity and Access Management (IAM) service role.
-* `status` - The current status of the Amazon Web Services Identity and Access Management (IAM) service role.
+* `aws_integration` - Amazon Web Services integration configuration settings for the Amazon Web Services Identity and Access Management (IAM) service role.
+* `status` - Current status of the Amazon Web Services Identity and Access Management (IAM) service role.
 * `status_reason` - Additional information about the current status of the Amazon Web Services Identity and Access Management (IAM) service role, if applicable.
