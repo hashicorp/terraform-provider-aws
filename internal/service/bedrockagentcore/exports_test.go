@@ -53,9 +53,11 @@ type (
 	CustomJWTAuthorizerConfigurationModel  = customJWTAuthorizerConfigurationModel
 	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
 	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
+	InvocationConfigurationModel           = invocationConfigurationModel
 	ManagedVPCResourceModel                = managedVPCResourceModel
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel
+	SelfManagedConfigurationModel          = selfManagedConfigurationModel
 	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel
 )

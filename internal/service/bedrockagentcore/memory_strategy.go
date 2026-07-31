@@ -1016,7 +1016,7 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 
 	case awstypes.OverrideTypeSelfManaged:
 		var r awstypes.CustomConfigurationInputMemberSelfManagedConfiguration
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias.SelfManagedConfiguration, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
