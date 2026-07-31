@@ -71,6 +71,12 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 }
 
 func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
+	// Tests that end with an ACTIVE paid subscription cannot delete their
+	// CloudFront distribution until the scheduled cancellation takes effect
+	// at the end of the billing cycle, so they always leave the distribution
+	// and web ACL behind for later cleanup. Opt in explicitly.
+	acctest.SkipIfEnvVarNotSet(t, "PRICINGPLANMANAGER_PAID_PLAN_TESTS")
+
 	ctx := acctest.Context(t)
 	var v pricingplanmanager.GetSubscriptionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -86,7 +92,7 @@ func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriptionConfig_basic(rName),
+				Config: testAccSubscriptionConfig_resourceARNsBase(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
 				),
@@ -109,7 +115,7 @@ func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccSubscriptionConfig_basic(rName),
+				Config: testAccSubscriptionConfig_resourceARNsBase(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
 				),
@@ -121,6 +127,128 @@ func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arns"), knownvalue.SetSizeExact(2)),
 				},
+			},
+		},
+	})
+}
+
+func TestAccPricingPlanManagerSubscription_planTier(t *testing.T) {
+	// Tests that end with an ACTIVE paid subscription cannot delete their
+	// CloudFront distribution until the scheduled cancellation takes effect
+	// at the end of the billing cycle, so they always leave the distribution
+	// and web ACL behind for later cleanup. Opt in explicitly.
+	acctest.SkipIfEnvVarNotSet(t, "PRICINGPLANMANAGER_PAID_PLAN_TESTS")
+
+	ctx := acctest.Context(t)
+	var v pricingplanmanager.GetSubscriptionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pricingplanmanager_subscription.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingPlanManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriptionConfig_tier(rName, "FREE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("FREE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact(string(awstypes.StatusActive))),
+				},
+			},
+			// Tier upgrades take effect immediately.
+			{
+				Config: testAccSubscriptionConfig_tier(rName, "PRO"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("PRO")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact(string(awstypes.StatusActive))),
+				},
+			},
+			// Downgrades are scheduled by AWS for the end of the current billing
+			// period: the API keeps reporting the old tier with a DOWNGRADE
+			// scheduled change, while plan_tier tracks the desired tier.
+			{
+				Config: testAccSubscriptionConfig_tier(rName, "FREE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("FREE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scheduled_change"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"change_type": knownvalue.StringExact(string(awstypes.ScheduledChangeTypeDowngrade)),
+							"plan_tier":   knownvalue.StringExact("FREE"),
+						}),
+					})),
+				},
+			},
+			// Raising the tier back before the downgrade takes effect reverts
+			// the pending scheduled change.
+			{
+				Config: testAccSubscriptionConfig_tier(rName, "PRO"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("PRO")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scheduled_change"), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccPricingPlanManagerSubscription_approvalModeManual(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v pricingplanmanager.GetSubscriptionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pricingplanmanager_subscription.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingPlanManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Paid-tier subscriptions created with MANUAL approval mode park in
+			// PENDING_APPROVAL and do not start billing until approved.
+			{
+				Config: testAccSubscriptionConfig_approvalMode(rName, "PRO", "MANUAL"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_mode"), knownvalue.StringExact(string(awstypes.ApprovalModeManual))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("plan_tier"), knownvalue.StringExact("PRO")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact(string(awstypes.StatusPendingApproval))),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				// approval_mode is a create-time-only argument, not returned by the API.
+				ImportStateVerifyIgnore: []string{"approval_mode"},
 			},
 		},
 	})
@@ -199,7 +327,7 @@ func testAccSubscriptionConfig_base(rName string) string {
 	// lintignore:AWSAT003
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
-  enabled    = false
+  enabled    = true
   comment    = %[1]q
   web_acl_id = aws_wafv2_web_acl.test.arn
 
@@ -209,13 +337,9 @@ resource "aws_cloudfront_distribution" "test" {
     target_origin_id       = "test"
     viewer_protocol_policy = "allow-all"
 
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "all"
-      }
-    }
+    # Managed-CachingOptimized. Flat-rate plan eligibility requires modern
+    # cache settings (a cache policy) rather than legacy forwarded_values.
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
   origin {
@@ -274,6 +398,23 @@ resource "aws_pricingplanmanager_subscription" "test" {
 `)
 }
 
+// Additional resources such as CloudFront KeyValueStores are incompatible
+// with the FREE tier, and subscriptions in PENDING_APPROVAL cannot be
+// modified, so the resource_arns tests run on an active paid tier.
+func testAccSubscriptionConfig_resourceARNsBase(rName string) string {
+	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), `
+resource "aws_pricingplanmanager_subscription" "test" {
+  plan_family = "CloudFront"
+  plan_tier   = "PRO"
+
+  resource_arns = [
+    aws_cloudfront_distribution.test.arn,
+    aws_wafv2_web_acl.test.arn,
+  ]
+}
+`)
+}
+
 func testAccSubscriptionConfig_resourceARNs(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test" {
@@ -282,7 +423,7 @@ resource "aws_cloudfront_key_value_store" "test" {
 
 resource "aws_pricingplanmanager_subscription" "test" {
   plan_family = "CloudFront"
-  plan_tier   = "FREE"
+  plan_tier   = "PRO"
 
   resource_arns = [
     aws_cloudfront_distribution.test.arn,
@@ -291,4 +432,33 @@ resource "aws_pricingplanmanager_subscription" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccSubscriptionConfig_tier(rName, tier string) string {
+	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), fmt.Sprintf(`
+resource "aws_pricingplanmanager_subscription" "test" {
+  plan_family = "CloudFront"
+  plan_tier   = %[1]q
+
+  resource_arns = [
+    aws_cloudfront_distribution.test.arn,
+    aws_wafv2_web_acl.test.arn,
+  ]
+}
+`, tier))
+}
+
+func testAccSubscriptionConfig_approvalMode(rName, tier, approvalMode string) string {
+	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), fmt.Sprintf(`
+resource "aws_pricingplanmanager_subscription" "test" {
+  approval_mode = %[2]q
+  plan_family   = "CloudFront"
+  plan_tier     = %[1]q
+
+  resource_arns = [
+    aws_cloudfront_distribution.test.arn,
+    aws_wafv2_web_acl.test.arn,
+  ]
+}
+`, tier, approvalMode))
 }
