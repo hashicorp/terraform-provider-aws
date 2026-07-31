@@ -584,15 +584,10 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 
 	harnessID := aws.ToString(out.Harness.HarnessId)
 
-	if _, err := waitHarnessCreated(ctx, conn, harnessID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	harness, err := waitHarnessCreated(ctx, conn, harnessID, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		// Taint the resource.
 		response.State.SetAttribute(ctx, path.Root("harness_id"), harnessID)
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
-		return
-	}
-
-	harness, err := findHarnessByID(ctx, conn, harnessID)
-	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
 		return
 	}
