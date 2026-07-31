@@ -89,7 +89,7 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroupEgressRule_moveWithSingleSource(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_moveWithSingleDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SecurityGroupRule
 	var group awstypes.SecurityGroup

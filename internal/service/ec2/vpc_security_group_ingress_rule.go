@@ -172,7 +172,7 @@ func (r *securityGroupRuleResource) validateMoveSupport(ctx context.Context, req
 
 	// security group rule ID required in order to populate the target state but is null in case of multiple sources
 	if fwflex.EmptyStringAsNull(source.SecurityGroupRuleID).IsNull() || source.SecurityGroupRuleID.IsUnknown() {
-		response.Diagnostics.AddError("Multiple Sources", "Only one source is allowed")
+		response.Diagnostics.AddError("Multiple Sources/Destinations", "Only one source/destination is allowed")
 		return legacySecurityGroupRuleResourceModel{}, true
 	}
 
