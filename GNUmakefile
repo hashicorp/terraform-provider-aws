@@ -804,7 +804,7 @@ sweeper-check: sweeper-linked sweeper-unlinked ## [CI] Provider Checks / Sweeper
 
 sweeper-linked: ## [CI] Provider Checks / Sweeper Functions Linked
 	@echo "make: Provider Checks / Sweeper Functions Linked..." ; \
-	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
+	$(GO_VER) test -c -o ./sweeper-bin ./internal/sweep/ ; \
 	count=`strings ./sweeper-bin | \
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-linked: found $$count, expected more than 0" ; \
