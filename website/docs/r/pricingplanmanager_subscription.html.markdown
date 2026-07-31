@@ -55,7 +55,7 @@ The following arguments are required:
 
 * `plan_family` - (Required, Forces new resource) Pricing plan family to subscribe to, such as `CloudFront`.
 * `plan_tier` - (Required) Tier level for the subscription, such as `FREE`, `PRO`, `BUSINESS`, or `PREMIUM`. Upgrades take effect immediately. Downgrades are scheduled by AWS to take effect at the end of the current billing period: until then AWS keeps billing the old tier and this argument reflects the desired (scheduled) tier, with the pending change exposed in `scheduled_change`. Raising the tier again before the downgrade takes effect reverts the pending change.
-* `resource_arns` - (Required) Set of ARNs of the AWS resources to include in the subscription, between 1 and 10 entries. For subscriptions in the `CloudFront` plan family, the resources must include exactly one CloudFront distribution and exactly one WAF web ACL, and can also include other supported resources such as Route 53 hosted zones and CloudFront KeyValueStores.
+* `resource_arns` - (Required) Set of ARNs of the AWS resources to include in the subscription, between 1 and 10 entries. For subscriptions in the `CloudFront` plan family, the resources must include exactly one CloudFront distribution and exactly one WAF web ACL, and can also include other supported resources such as Route 53 hosted zones (any tier) and CloudFront KeyValueStores (paid tiers only). Associated resources are protected by AWS while covered — for example, a hosted zone cannot be deleted until it is disassociated from the plan.
 
 The following arguments are optional:
 

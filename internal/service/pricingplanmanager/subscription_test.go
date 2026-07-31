@@ -71,15 +71,10 @@ func TestAccPricingPlanManagerSubscription_basic(t *testing.T) {
 }
 
 func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
-	// Tests that end with an ACTIVE paid subscription cannot delete their
-	// CloudFront distribution until the scheduled cancellation takes effect
-	// at the end of the billing cycle, so they always leave the distribution
-	// and web ACL behind for later cleanup. Opt in explicitly.
-	acctest.SkipIfEnvVarNotSet(t, "PRICINGPLANMANAGER_PAID_PLAN_TESTS")
-
 	ctx := acctest.Context(t)
 	var v pricingplanmanager.GetSubscriptionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
 	resourceName := "aws_pricingplanmanager_subscription.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -101,7 +96,7 @@ func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccSubscriptionConfig_resourceARNs(rName),
+				Config: testAccSubscriptionConfig_resourceARNs(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
 				),
@@ -114,8 +109,11 @@ func TestAccPricingPlanManagerSubscription_resourceARNs(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_arns"), knownvalue.SetSizeExact(3)),
 				},
 			},
+			// The hosted zone stays in the configuration: it is protected from
+			// deletion while associated with the plan, so it can only be removed
+			// after the disassociation has been applied.
 			{
-				Config: testAccSubscriptionConfig_resourceARNsBase(rName),
+				Config: testAccSubscriptionConfig_resourceARNsDisassociated(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriptionExists(ctx, t, resourceName, &v),
 				),
@@ -398,14 +396,14 @@ resource "aws_pricingplanmanager_subscription" "test" {
 `)
 }
 
-// Additional resources such as CloudFront KeyValueStores are incompatible
-// with the FREE tier, and subscriptions in PENDING_APPROVAL cannot be
-// modified, so the resource_arns tests run on an active paid tier.
+// CloudFront KeyValueStores are incompatible with the FREE tier, but Route 53
+// hosted zones can be associated with it, so the resource_arns tests use a
+// hosted zone to stay off paid tiers.
 func testAccSubscriptionConfig_resourceARNsBase(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), `
 resource "aws_pricingplanmanager_subscription" "test" {
   plan_family = "CloudFront"
-  plan_tier   = "PRO"
+  plan_tier   = "FREE"
 
   resource_arns = [
     aws_cloudfront_distribution.test.arn,
@@ -415,23 +413,41 @@ resource "aws_pricingplanmanager_subscription" "test" {
 `)
 }
 
-func testAccSubscriptionConfig_resourceARNs(rName string) string {
+func testAccSubscriptionConfig_resourceARNs(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudfront_key_value_store" "test" {
-  name = %[1]q
+resource "aws_route53_zone" "test" {
+  name = %[2]q
 }
 
 resource "aws_pricingplanmanager_subscription" "test" {
   plan_family = "CloudFront"
-  plan_tier   = "PRO"
+  plan_tier   = "FREE"
 
   resource_arns = [
     aws_cloudfront_distribution.test.arn,
     aws_wafv2_web_acl.test.arn,
-    aws_cloudfront_key_value_store.test.arn,
+    aws_route53_zone.test.arn,
   ]
 }
-`, rName))
+`, rName, domainName))
+}
+
+func testAccSubscriptionConfig_resourceARNsDisassociated(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccSubscriptionConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[2]q
+}
+
+resource "aws_pricingplanmanager_subscription" "test" {
+  plan_family = "CloudFront"
+  plan_tier   = "FREE"
+
+  resource_arns = [
+    aws_cloudfront_distribution.test.arn,
+    aws_wafv2_web_acl.test.arn,
+  ]
+}
+`, rName, domainName))
 }
 
 func testAccSubscriptionConfig_tier(rName, tier string) string {
