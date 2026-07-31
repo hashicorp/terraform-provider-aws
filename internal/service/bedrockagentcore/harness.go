@@ -203,6 +203,32 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								},
 							},
 						},
+						"managed_memory_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessManagedMemoryConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"encryption_key_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
+									"event_expiry_duration": schema.Int32Attribute{
+										Optional: true,
+									},
+									"strategies": schema.ListAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.HarnessManagedMemoryStrategyType](),
+										ElementType: types.StringType,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1412,6 +1438,7 @@ func (m harnessEnvironmentArtifactModel) expandToUpdatedHarnessEnvironmentArtifa
 
 type harnessMemoryConfigurationModel struct {
 	AgentCoreMemoryConfiguration fwtypes.ListNestedObjectValueOf[harnessAgentCoreMemoryConfigurationModel] `tfsdk:"agentcore_memory_configuration"`
+	ManagedMemoryConfiguration   fwtypes.ListNestedObjectValueOf[harnessManagedMemoryConfigurationModel]   `tfsdk:"managed_memory_configuration"`
 }
 
 var (
@@ -1429,6 +1456,14 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 			return diags
 		}
 		m.AgentCoreMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	case awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
+		var data harnessManagedMemoryConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 
 	case awstypes.UnknownUnionMember:
 		fwflex.HandleFlattenUnkownUnionMember(ctx, t.Tag, &diags)
@@ -1492,3 +1527,12 @@ type harnessAgentCoreMemoryRetrievalConfigModel struct {
 	StrategyID     types.String  `tfsdk:"strategy_id"`
 	TopK           types.Int32   `tfsdk:"top_k"`
 }
+
+type harnessManagedMemoryConfigurationModel struct {
+	ARN                 fwtypes.ARN                                                         `tfsdk:"arn"`
+	EncryptionKeyARN    fwtypes.ARN                                                         `tfsdk:"encryption_key_arn"`
+	EventExpiryDuration types.Int32                                                         `tfsdk:"event_expiry_duration"`
+	Strategies          fwtypes.ListOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
+}
+
+// HarnessMemoryConfigurationMemberManagedMemoryConfiguration
