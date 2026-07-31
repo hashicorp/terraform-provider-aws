@@ -7,12 +7,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_api_gateway_rest_api: Added timeouts to schema for waiters ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
+* resource/aws_api_gateway_rest_api: Add configurable resource timeouts. ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
 * resource/aws_dx_connection: Add `state` attribute ([#42150](https://github.com/hashicorp/terraform-provider-aws/issues/42150))
+* resource/aws_prometheus_scraper: Add `destination.cloudwatch` configuration block for CloudWatch Metrics destination support ([#49088](https://github.com/hashicorp/terraform-provider-aws/issues/49088))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_rest_api: Added waiters after CUD calls ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
+* resource/aws_api_gateway_rest_api: Wait for the REST API to reach an available state on create and update, and to be fully deleted on delete, preventing intermittent `BadRequestException: There is already an update in progress` errors ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
 * resource/aws_bedrockagentcore_agent_runtime: Allow `:` (colon) in the `match_value_string` and `match_value_string_list` attributes of `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` ([#48437](https://github.com/hashicorp/terraform-provider-aws/issues/48437))
 * resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
