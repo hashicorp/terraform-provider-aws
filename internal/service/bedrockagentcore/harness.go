@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -55,6 +56,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="harness_id")
+// @Testing(importIgnore="memory")
 func newHarnessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &harnessResource{}
 
@@ -539,11 +541,14 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 func (r *harnessResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data harnessResourceModel
+	var config, data harnessResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	memoryIsConfigured := config.Memory.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true, UnhandledUnknownAsZero: true}) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
@@ -595,7 +600,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
 	// private_endpoint_overrides can be restored after Flatten.
 	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, memoryIsConfigured))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -617,6 +622,12 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	// When importing, all attributes other than `harness_id` will be null.
+	// During a read of an existing resource, `harness_name` will be set as it is a required attribute.
+	isImport := data.HarnessName.IsNull()
+
+	memoryIsConfigured := data.Memory.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true, UnhandledUnknownAsZero: true}) > 0
+
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	harnessID := fwflex.StringValueFromFramework(ctx, data.HarnessID)
@@ -632,7 +643,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	priorAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, memoryIsConfigured || isImport))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -718,7 +729,7 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
+func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
@@ -726,7 +737,9 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 		return diags
 	}
 
-	diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
+	if populateMemory {
+		diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
+	}
 
 	return diags
 }

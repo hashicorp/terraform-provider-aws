@@ -103,6 +103,27 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("truncation"), knownvalue.NotNull()),
 				},
 			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("memory.#", "1"),
+					acctest.ImportCheckResourceAttr("memory.0.agentcore_memory_configuration.#", "0"),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.#", "1"),
+					acctest.ImportMatchResourceAttr("memory.0.managed_memory_configuration.0.arn", regexache.MustCompile(`^arn:[^:]+:bedrock-agentcore:[^:]+:\d{12}:memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+$`)),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.encryption_key_arn", ""),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.event_expiry_duration", ""),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.strategies.#", ""),
+				),
+			},
 		},
 	})
 }
@@ -184,6 +205,14 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -225,6 +254,14 @@ func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 		},
 	})
@@ -268,6 +305,14 @@ func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -305,7 +350,11 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
-				ImportStateVerifyIgnore:              []string{"model.0.bedrock_model_config.0.temperature", "model.0.bedrock_model_config.0.top_p"},
+				ImportStateVerifyIgnore: []string{
+					"memory",
+					"model.0.bedrock_model_config.0.temperature",
+					"model.0.bedrock_model_config.0.top_p",
+				},
 			},
 		},
 	})
@@ -349,6 +398,14 @@ func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -380,6 +437,14 @@ func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -410,6 +475,14 @@ func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 		},
 	})
@@ -451,6 +524,17 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore: []string{
+					"environment_variables",
+					"memory",
 				},
 			},
 		},
@@ -495,6 +579,20 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration(t *testi
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore: []string{
+					"memory.0.agentcore_memory_configuration.0.retrieval_config.0.relevance_score",
+				},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					// TODO: float32 precision issue
+					acctest.ImportMatchResourceAttr("memory.0.agentcore_memory_configuration.0.retrieval_config.0.relevance_score", regexache.MustCompile(`^0\.34`)),
+				),
+			},
 		},
 	})
 }
@@ -536,6 +634,14 @@ func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 		},
 	})
@@ -579,6 +685,14 @@ func TestAccBedrockAgentCoreHarness_authorizerConfiguration(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -621,6 +735,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 			{
 				Config: testAccHarnessConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
