@@ -457,7 +457,7 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
+func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -474,7 +474,7 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_memory(rName, 0.25),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration(rName, 0.25),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -485,7 +485,7 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccHarnessConfig_memory(rName, 0.35),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration(rName, 0.35),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -965,7 +965,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 `, rName, key, value))
 }
 
-func testAccHarnessConfig_memory(rName string, relevanceScore float32) string {
+func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration(rName string, relevanceScore float32) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
