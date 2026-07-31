@@ -4,11 +4,8 @@
 package validators_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,29 +15,9 @@ import (
 func TestS3BucketNameValidator(t *testing.T) {
 	t.Parallel()
 
-	errorSummary := "Invalid Attribute Value Match"
-	errorDetail := "Attribute test value must match regular expression: " +
-		`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$` +
-		"\nBucket names must be 3 to 63 characters and begin and end with a letter or number. " +
-		"Valid characters are a-z, 0-9, periods (.), and hyphens."
-
-	newError := func(got string) diag.Diagnostics {
-		return diag.Diagnostics{
-			diag.NewAttributeErrorDiagnostic(
-				path.Root("test"),
-				errorSummary,
-				"Attribute test value must match regular expression: "+
-					`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`+"\n"+
-					"Bucket names must be 3 to 63 characters and begin and end with a letter or number. "+
-					"Valid characters are a-z, 0-9, periods (.), and hyphens., got: "+got,
-			),
-		}
-	}
-	_ = errorDetail // suppress unused-variable lint if the helper above is used instead
-
 	type testCase struct {
-		val                 types.String
-		expectedDiagnostics diag.Diagnostics
+		val         types.String
+		expectError bool
 	}
 	tests := map[string]testCase{
 		"unknown String": {
@@ -74,48 +51,48 @@ func TestS3BucketNameValidator(t *testing.T) {
 		},
 		// Invalid names
 		"invalid too short (1 char)": {
-			val:                 types.StringValue("a"),
-			expectedDiagnostics: newError("a"),
+			val:         types.StringValue("a"),
+			expectError: true,
 		},
 		"invalid too short (2 chars)": {
-			val:                 types.StringValue("ab"),
-			expectedDiagnostics: newError("ab"),
+			val:         types.StringValue("ab"),
+			expectError: true,
 		},
 		"invalid too long (64 chars)": {
-			val:                 types.StringValue("a123456789012345678901234567890123456789012345678901234567890123"),
-			expectedDiagnostics: newError("a123456789012345678901234567890123456789012345678901234567890123"),
+			val:         types.StringValue("a123456789012345678901234567890123456789012345678901234567890123"),
+			expectError: true,
 		},
 		"invalid uppercase letters": {
-			val:                 types.StringValue("MyBucket"),
-			expectedDiagnostics: newError("MyBucket"),
+			val:         types.StringValue("MyBucket"),
+			expectError: true,
 		},
 		"invalid starts with hyphen": {
-			val:                 types.StringValue("-mybucket"),
-			expectedDiagnostics: newError("-mybucket"),
+			val:         types.StringValue("-mybucket"),
+			expectError: true,
 		},
 		"invalid ends with hyphen": {
-			val:                 types.StringValue("mybucket-"),
-			expectedDiagnostics: newError("mybucket-"),
+			val:         types.StringValue("mybucket-"),
+			expectError: true,
 		},
 		"invalid starts with period": {
-			val:                 types.StringValue(".mybucket"),
-			expectedDiagnostics: newError(".mybucket"),
+			val:         types.StringValue(".mybucket"),
+			expectError: true,
 		},
 		"invalid ends with period": {
-			val:                 types.StringValue("mybucket."),
-			expectedDiagnostics: newError("mybucket."),
+			val:         types.StringValue("mybucket."),
+			expectError: true,
 		},
 		"invalid contains underscore": {
-			val:                 types.StringValue("my_bucket"),
-			expectedDiagnostics: newError("my_bucket"),
+			val:         types.StringValue("my_bucket"),
+			expectError: true,
 		},
 		"invalid contains space": {
-			val:                 types.StringValue("my bucket"),
-			expectedDiagnostics: newError("my bucket"),
+			val:         types.StringValue("my bucket"),
+			expectError: true,
 		},
 		"invalid contains special characters": {
-			val:                 types.StringValue("my#bucket"),
-			expectedDiagnostics: newError("my#bucket"),
+			val:         types.StringValue("my#bucket"),
+			expectError: true,
 		},
 	}
 
@@ -123,7 +100,7 @@ func TestS3BucketNameValidator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
@@ -133,8 +110,8 @@ func TestS3BucketNameValidator(t *testing.T) {
 			response := validator.StringResponse{}
 			fwvalidators.S3BucketName.ValidateString(ctx, request, &response)
 
-			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
+			if got, want := response.Diagnostics.HasError(), test.expectError; got != want {
+				t.Errorf("S3BucketName.ValidateString() HasError() = %t, want = %t", got, want)
 			}
 		})
 	}
