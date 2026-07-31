@@ -78,7 +78,7 @@ type oneOfWhenValidator struct {
 }
 
 func (v oneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+	if request.ConfigValue.IsUnknown() {
 		return
 	}
 

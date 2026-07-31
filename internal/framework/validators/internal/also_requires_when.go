@@ -106,7 +106,7 @@ type allOfWhenValidator struct {
 }
 
 func (v allOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+	if request.ConfigValue.IsUnknown() {
 		return
 	}
 
