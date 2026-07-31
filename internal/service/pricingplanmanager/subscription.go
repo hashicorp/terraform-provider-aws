@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -41,8 +42,11 @@ import (
 func newSubscriptionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriptionResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
+	// Auto-approval of paid-tier subscriptions (approval_mode IMMEDIATE) has
+	// been observed to take anywhere from minutes to over half an hour.
+	r.SetDefaultCreateTimeout(60 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -104,6 +108,7 @@ func (r *subscriptionResource) Schema(ctx context.Context, req resource.SchemaRe
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
+				Delete: true,
 			}),
 		},
 	}
@@ -135,17 +140,29 @@ func (r *subscriptionResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	arn := aws.ToString(out.Subscription.Arn)
-	output, err := waitSubscriptionSynced(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
+
+	// Persist state before waiting so that a failed or timed-out wait leaves
+	// the subscription tracked (and destroyable) instead of leaked.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, &pricingplanmanager.GetSubscriptionOutput{ETag: out.ETag, Subscription: out.Subscription}, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	manualApproval := plan.ApprovalMode.ValueEnum() == awstypes.ApprovalModeManual
+	output, err := waitSubscriptionCreated(ctx, conn, arn, manualApproval, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.Subscription, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ETag = flex.StringToFramework(ctx, output.ETag)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -170,11 +187,10 @@ func (r *subscriptionResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.Subscription, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, output, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.ETag = flex.StringToFramework(ctx, output.ETag)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -191,30 +207,73 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 
 	arn := state.ARN.ValueString()
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	// Every mutation invalidates the subscription's entity tag, so each
-	// successive call must use the value returned by the previous one.
-	etag := state.ETag.ValueStringPointer()
 
-	if !plan.PlanTier.Equal(state.PlanTier) || !plan.UsageLevel.Equal(state.UsageLevel) {
-		input := pricingplanmanager.UpdateSubscriptionInput{
-			Arn:      aws.String(arn),
-			IfMatch:  etag,
-			PlanTier: plan.PlanTier.ValueStringPointer(),
-			// Omitting usageLevel resets it to the plan tier's default.
-			UsageLevel: plan.UsageLevel.ValueStringPointer(),
+	// Re-read for the current entity tag and any pending scheduled change.
+	// Every mutation invalidates the entity tag, so each successive call must
+	// use the value returned by the previous one.
+	current, err := findSubscriptionByARN(ctx, conn, arn)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+	etag := current.ETag
+
+	// usage_level is Optional+Computed: when it is not set in configuration it
+	// is unknown in the plan and must not trigger an update by itself.
+	usageLevelChanged := !plan.UsageLevel.IsUnknown() && !plan.UsageLevel.Equal(state.UsageLevel)
+
+	if !plan.PlanTier.Equal(state.PlanTier) || usageLevelChanged {
+		// A pending scheduled change (e.g. an earlier downgrade) blocks
+		// further modifications and must be reverted first.
+		if current.Subscription.ScheduledChange != nil {
+			input := pricingplanmanager.CancelSubscriptionChangeInput{
+				Arn:     aws.String(arn),
+				IfMatch: etag,
+			}
+
+			if _, err := conn.CancelSubscriptionChange(ctx, &input); err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
+
+			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
+
+			current, err = findSubscriptionByARN(ctx, conn, arn)
+			if err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
+			etag = current.ETag
 		}
 
-		out, err := conn.UpdateSubscription(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-			return
-		}
+		// Reverting a pending change may already have restored the desired
+		// tier; only call UpdateSubscription when the actual values still
+		// differ.
+		if aws.ToString(current.Subscription.PlanTier) != plan.PlanTier.ValueString() ||
+			(!plan.UsageLevel.IsUnknown() && aws.ToString(current.Subscription.UsageLevel) != plan.UsageLevel.ValueString()) {
+			input := pricingplanmanager.UpdateSubscriptionInput{
+				Arn:      aws.String(arn),
+				IfMatch:  etag,
+				PlanTier: plan.PlanTier.ValueStringPointer(),
+				// Omitting usageLevel resets it to the plan tier's default.
+				UsageLevel: plan.UsageLevel.ValueStringPointer(),
+			}
 
-		etag = out.ETag
+			out, err := conn.UpdateSubscription(ctx, &input)
+			if err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
 
-		if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-			return
+			etag = out.ETag
+
+			if _, err := waitSubscriptionSynced(ctx, conn, arn, updateTimeout); err != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+				return
+			}
 		}
 	}
 
@@ -269,11 +328,10 @@ func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.Subscription, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSubscription(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ETag = flex.StringToFramework(ctx, output.ETag)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -288,6 +346,7 @@ func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	arn := state.ARN.ValueString()
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
 	// Re-read to get the current entity tag; the one in state may be stale.
 	output, err := findSubscriptionByARN(ctx, conn, arn)
@@ -299,10 +358,45 @@ func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	// Cancellation of an active subscription is scheduled by the service to
-	// take effect at the end of the current billing period; until then the
+	// A pending scheduled change blocks cancellation and must be reverted
+	// first. If the pending change is itself a cancellation, there is
+	// nothing left to do.
+	if sc := output.Subscription.ScheduledChange; sc != nil {
+		if sc.ChangeType == awstypes.ScheduledChangeTypeCancellation {
+			return
+		}
+
+		input := pricingplanmanager.CancelSubscriptionChangeInput{
+			Arn:     aws.String(arn),
+			IfMatch: output.ETag,
+		}
+
+		if _, err := conn.CancelSubscriptionChange(ctx, &input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+
+		// The revert transitions the subscription through SYNC_IN_PROGRESS;
+		// cancelling before it settles returns a ConflictException.
+		if _, err := waitSubscriptionSynced(ctx, conn, arn, deleteTimeout); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+
+		output, err = findSubscriptionByARN(ctx, conn, arn)
+		if retry.NotFound(err) {
+			return
+		}
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+	}
+
+	// Cancellation of an active paid subscription is scheduled by the service
+	// to take effect at the end of the current billing period; until then the
 	// subscription remains visible with a scheduled CANCELLATION change.
-	// Subscriptions pending approval are deleted immediately.
+	// Free-tier and pending-approval subscriptions are removed immediately.
 	input := pricingplanmanager.CancelSubscriptionInput{
 		Arn:     aws.String(arn),
 		IfMatch: output.ETag,
@@ -355,13 +449,33 @@ func statusSubscription(conn *pricingplanmanager.Client, arn string) retry.State
 	}
 }
 
-// waitSubscriptionSynced waits for an in-flight change to settle. A paid
-// subscription created with MANUAL approval mode parks in PENDING_APPROVAL
-// until ApprovePaidSubscription is called, so that status is also terminal.
+// waitSubscriptionCreated waits for a new subscription to become usable. A
+// paid subscription created with MANUAL approval mode parks in
+// PENDING_APPROVAL until ApprovePaidSubscription is called, so that status is
+// terminal; with IMMEDIATE approval, paid subscriptions pass through
+// PENDING_APPROVAL before being auto-approved.
+func waitSubscriptionCreated(ctx context.Context, conn *pricingplanmanager.Client, arn string, manualApproval bool, timeout time.Duration) (*pricingplanmanager.GetSubscriptionOutput, error) {
+	pending := enum.Slice(awstypes.StatusSyncInProgress)
+	target := enum.Slice(awstypes.StatusActive)
+	if manualApproval {
+		target = enum.Slice(awstypes.StatusPendingApproval)
+	} else {
+		pending = append(pending, string(awstypes.StatusPendingApproval))
+	}
+
+	return waitSubscriptionStatus(ctx, conn, arn, pending, target, timeout)
+}
+
+// waitSubscriptionSynced waits for an in-flight modification of an active
+// subscription to settle.
 func waitSubscriptionSynced(ctx context.Context, conn *pricingplanmanager.Client, arn string, timeout time.Duration) (*pricingplanmanager.GetSubscriptionOutput, error) {
+	return waitSubscriptionStatus(ctx, conn, arn, enum.Slice(awstypes.StatusSyncInProgress), enum.Slice(awstypes.StatusActive), timeout)
+}
+
+func waitSubscriptionStatus(ctx context.Context, conn *pricingplanmanager.Client, arn string, pending, target []string, timeout time.Duration) (*pricingplanmanager.GetSubscriptionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StatusSyncInProgress),
-		Target:  enum.Slice(awstypes.StatusActive, awstypes.StatusPendingApproval),
+		Pending: pending,
+		Target:  target,
 		Refresh: statusSubscription(conn, arn),
 		Timeout: timeout,
 	}
@@ -376,6 +490,27 @@ func waitSubscriptionSynced(ctx context.Context, conn *pricingplanmanager.Client
 	}
 
 	return nil, smarterr.NewError(err)
+}
+
+// flattenSubscription copies the API response into the model. plan_tier and
+// usage_level hold the desired values: while a downgrade is scheduled the API
+// keeps reporting the old tier until the end of the billing period, so the
+// scheduled target values are mapped back into those arguments (the pending
+// change itself is exposed via scheduled_change).
+func flattenSubscription(ctx context.Context, output *pricingplanmanager.GetSubscriptionOutput, data *subscriptionResourceModel) diag.Diagnostics {
+	diags := flex.Flatten(ctx, output.Subscription, data)
+	if diags.HasError() {
+		return diags
+	}
+
+	if sc := output.Subscription.ScheduledChange; sc != nil && sc.ChangeType == awstypes.ScheduledChangeTypeDowngrade {
+		data.PlanTier = flex.StringToFramework(ctx, sc.PlanTier)
+		data.UsageLevel = flex.StringToFramework(ctx, sc.UsageLevel)
+	}
+
+	data.ETag = flex.StringToFramework(ctx, output.ETag)
+
+	return diags
 }
 
 type subscriptionResourceModel struct {

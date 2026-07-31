@@ -12,7 +12,7 @@ resource "aws_pricingplanmanager_subscription" "test" {
 }
 
 resource "aws_cloudfront_distribution" "test" {
-  enabled    = false
+  enabled    = true
   comment    = var.rName
   web_acl_id = aws_wafv2_web_acl.test.arn
 
@@ -22,13 +22,9 @@ resource "aws_cloudfront_distribution" "test" {
     target_origin_id       = "test"
     viewer_protocol_policy = "allow-all"
 
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "all"
-      }
-    }
+    # Managed-CachingOptimized. Flat-rate plan eligibility requires modern
+    # cache settings (a cache policy) rather than legacy forwarded_values.
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
   origin {
