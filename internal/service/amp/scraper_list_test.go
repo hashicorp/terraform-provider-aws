@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -50,10 +49,10 @@ func TestAccAMPScraper_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("aps", "scraper:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkScraperARN),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("aps", "scraper:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkScraperARN),
 				},
 			},
 
@@ -67,11 +66,11 @@ func TestAccAMPScraper_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
 					tfquerycheck.ExpectNoResourceObject("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -109,7 +108,7 @@ func TestAccAMPScraper_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("aps", "scraper:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkScraperARN),
 				},
 			},
 
@@ -126,13 +125,22 @@ func TestAccAMPScraper_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					querycheck.ExpectResourceKnownValues("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						// TIP: Add checks for _all_ resource attributes, including "region".
-						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("aps", "scraper:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAlias), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkScraperARN),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDestination), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"amp": knownvalue.ListSizeExact(1),
+						})})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRoleARN), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("role_configuration"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("scrape_configuration"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrSource), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"eks": knownvalue.ListSizeExact(1),
+							"vpc": knownvalue.ListSizeExact(0),
+						})})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -177,10 +185,10 @@ func TestAccAMPScraper_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("aps", "scraper:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkScraperARNAlternateRegion),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("aps", "scraper:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkScraperARNAlternateRegion),
 				},
 			},
 
@@ -202,3 +210,5 @@ func TestAccAMPScraper_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+// TODO Test filters

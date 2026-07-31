@@ -80,6 +80,7 @@ func (l *scraperListResource) List(ctx context.Context, request list.ListRequest
 			var data scraperResourceModel
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				data.ARN = fwflex.StringToFramework(ctx, item.Arn)
 				data.ID = fwflex.StringValueToFramework(ctx, scraperID)
 
 				if request.IncludeResource {

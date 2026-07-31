@@ -277,7 +277,7 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 	scraper, err := waitScraperCreated(ctx, conn, scraperID, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), scraperID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) create", scraperID), err.Error())
 
 		return
