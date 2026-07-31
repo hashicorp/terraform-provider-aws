@@ -94,7 +94,7 @@ func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path
 	if matchedValue.IsNull() {
 		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 			requestPath,
-			fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", matchedPath, requestPath, v.when.String()),
+			fmt.Sprintf("Attribute %[1]s must be configured when %[2]s %[3]s", matchedPath, requestPath, v.when.String()),
 		))
 	}
 	return diags
