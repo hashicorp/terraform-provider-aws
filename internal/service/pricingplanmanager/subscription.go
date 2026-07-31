@@ -497,7 +497,7 @@ func waitSubscriptionStatus(ctx context.Context, conn *pricingplanmanager.Client
 // keeps reporting the old tier until the end of the billing period, so the
 // scheduled target values are mapped back into those arguments (the pending
 // change itself is exposed via scheduled_change).
-func flattenSubscription(ctx context.Context, output *pricingplanmanager.GetSubscriptionOutput, data *subscriptionResourceModel) diag.Diagnostics {
+func flattenSubscription(ctx context.Context, output *pricingplanmanager.GetSubscriptionOutput, data *subscriptionResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	diags := flex.Flatten(ctx, output.Subscription, data)
 	if diags.HasError() {
 		return diags
