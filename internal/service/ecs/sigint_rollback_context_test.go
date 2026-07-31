@@ -8,9 +8,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 )
 
 // Documents the refresh-vs-wait context failure mode. This does not call
@@ -95,44 +92,4 @@ func TestRollbackRoutine_parentWaitContextSurvivesRefreshCancel(t *testing.T) {
 	if rollbacks != 0 {
 		t.Fatalf("parent wait context should not roll back when only refresh child cancels, got %d", rollbacks)
 	}
-}
-
-func TestServiceDeploymentWaitRefreshStatus(t *testing.T) {
-	t.Parallel()
-
-	t.Run("successful terminals pass through", func(t *testing.T) {
-		t.Parallel()
-		for _, status := range []string{
-			string(awstypes.ServiceDeploymentStatusSuccessful),
-			string(awstypes.ServiceDeploymentStatusRollbackSuccessful),
-			string(awstypes.ServiceDeploymentStatusInProgress),
-		} {
-			got, err := serviceDeploymentWaitRefreshStatus(status, nil)
-			if err != nil {
-				t.Fatalf("status %s: unexpected err: %v", status, err)
-			}
-			if got != status {
-				t.Fatalf("status %s: got %q", status, got)
-			}
-		}
-	})
-
-	t.Run("failed terminals return errors", func(t *testing.T) {
-		t.Parallel()
-		for _, status := range []string{
-			string(awstypes.ServiceDeploymentStatusStopped),
-			string(awstypes.ServiceDeploymentStatusRollbackFailed),
-		} {
-			got, err := serviceDeploymentWaitRefreshStatus(status, aws.String("boom"))
-			if err == nil {
-				t.Fatalf("status %s: expected error", status)
-			}
-			if err.Error() != "boom" {
-				t.Fatalf("status %s: got err %v", status, err)
-			}
-			if got != status {
-				t.Fatalf("status %s: got %q", status, got)
-			}
-		}
-	})
 }

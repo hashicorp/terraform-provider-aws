@@ -2417,25 +2417,9 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 			awstypes.ServiceDeploymentStatusRollbackRequested,
 			awstypes.ServiceDeploymentStatusRollbackInProgress,
 		),
-		// Only successful terminals. Failed terminals are returned as Refresh errors.
-		Target: enum.Slice(
-			awstypes.ServiceDeploymentStatusSuccessful,
-			awstypes.ServiceDeploymentStatusRollbackSuccessful,
-		),
+		Target: deploymentTerminalStates,
 		Refresh: func(ctx context.Context) (any, string, error) {
-			input := ecs.DescribeServiceDeploymentsInput{
-				ServiceDeploymentArns: []string{primaryDeploymentArn},
-			}
-			output, err := findServiceDeployments(ctx, conn, &input)
-			if err != nil {
-				return nil, "", err
-			}
-			if len(output) == 0 {
-				return nil, serviceStatusPending, nil
-			}
-
-			deployment := output[0]
-			status, err := serviceDeploymentWaitRefreshStatus(string(deployment.Status), deployment.StatusReason)
+			status, err := findDeploymentStatus(ctx, conn, primaryDeploymentArn)
 			return nil, status, err
 		},
 		Timeout: 1 * time.Hour, // Maximum time before SIGKILL
@@ -2443,21 +2427,6 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
-}
-
-// serviceDeploymentWaitRefreshStatus maps a raw AWS service deployment status for
-// waitForDeploymentTerminalStatus. Failed terminals become errors; others pass through.
-func serviceDeploymentWaitRefreshStatus(status string, statusReason *string) (string, error) {
-	switch awstypes.ServiceDeploymentStatus(status) {
-	case awstypes.ServiceDeploymentStatusStopped, awstypes.ServiceDeploymentStatusRollbackFailed:
-		message := "Deployment failed"
-		if statusReason != nil {
-			message = aws.ToString(statusReason)
-		}
-		return status, errors.New(message)
-	default:
-		return status, nil
-	}
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
