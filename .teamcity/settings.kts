@@ -120,7 +120,7 @@ project {
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
             // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/go-mod-cache")
             // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/go-build-cache")
-            // text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
+
             // set variable to false by default
             text("POST_GITHUB_COMMENT", "false")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
