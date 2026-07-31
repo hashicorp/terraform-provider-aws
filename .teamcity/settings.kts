@@ -48,7 +48,7 @@ project {
     }
 
     if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-        buildType(PullRequest)
+        buildType(PullRequest(DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)))
     }
 
     if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
@@ -129,12 +129,12 @@ project {
     subProject(Services)
 }
 
-object PullRequest : BuildType({
+class PullRequest(terraformVersion: String) : BuildType({
     name = "Pull Request"
 
     params {
         text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
-        text("TERRAFORM_CORE_VERSION", DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion))
+        text("TERRAFORM_CORE_VERSION", terraformVersion)
     }
 
     vcs {
