@@ -47,6 +47,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Standard Bedrock AgentCore resource name validator.
+var validResourceName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`),
+	`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 48 characters.`,
+)
+
 // @FrameworkResource("aws_bedrockagentcore_memory_strategy", name="Memory Strategy")
 func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceMemoryStrategy{}
@@ -92,7 +98,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrName: schema.StringAttribute{
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), `Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 48 characters.`),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
