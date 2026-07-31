@@ -61,12 +61,12 @@ func (v exactlyOneOfWhenValidator) eval(_ context.Context, requestPath path.Path
 	case count == 0:
 		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 			requestPath,
-			fmt.Sprintf("No attribute configured when one (and only one) of %[1]s is required", expressions),
+			fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. No attribute configured.", expressions, requestPath, v.when.String()),
 		))
 	case count > 1:
 		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 			requestPath,
-			fmt.Sprintf("%[1]d attributes configured when one (and only one) of %[2]s is required", count, expressions),
+			fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. %[4]d attributes configured.", expressions, requestPath, v.when.String(), count),
 		))
 	}
 	return diags
