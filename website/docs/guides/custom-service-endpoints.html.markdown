@@ -279,6 +279,7 @@ provider "aws" {
 |EventBridge Pipes|`pipes`|`AWS_ENDPOINT_URL_PIPES`|`pipes`|
 |Polly|`polly`|`AWS_ENDPOINT_URL_POLLY`|`polly`|
 |Pricing Calculator|`pricing`|`AWS_ENDPOINT_URL_PRICING`|`pricing`|
+|Pricing Plan Manager|`pricingplanmanager`|`AWS_ENDPOINT_URL_PRICING_PLAN_MANAGER`|`pricing_plan_manager`|
 |Amazon Q Business|`qbusiness`|`AWS_ENDPOINT_URL_QBUSINESS`|`qbusiness`|
 |QLDB (Quantum Ledger Database)|`qldb`|`AWS_ENDPOINT_URL_QLDB`|`qldb`|
 |QuickSight|`quicksight`|`AWS_ENDPOINT_URL_QUICKSIGHT`|`quicksight`|
