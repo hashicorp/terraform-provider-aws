@@ -1527,7 +1527,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayRestAPI_waiters(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Description_updateAttributeAndBody(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var conf apigateway.GetRestApiOutput
@@ -1543,7 +1543,7 @@ func TestAccAPIGatewayRestAPI_waiters(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_waiters(rName, "description1"),
+				Config: testAccRestAPIConfig_Description_updateAttributeAndBody(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
@@ -1557,7 +1557,7 @@ func TestAccAPIGatewayRestAPI_waiters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
-				Config: testAccRestAPIConfig_waiters(rName, "description2"),
+				Config: testAccRestAPIConfig_Description_updateAttributeAndBody(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
@@ -2944,46 +2944,10 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, title, failOnWarnings)
 }
 
-func testAccRestAPIConfig_waiters(rName, oasDescription string) string {
+func testAccRestAPIConfig_Description_updateAttributeAndBody(rName, oasDescription string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_default_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint" "test" {
-  private_dns_enabled = false
-  security_group_ids  = [aws_default_security_group.test.id]
-
-  service_name      = "com.amazonaws.${data.aws_region.current.region}.execute-api"
-  subnet_ids        = [aws_subnet.test.id]
-  vpc_endpoint_type = "Interface"
-  vpc_id            = aws_vpc.test.id
-}
-
 resource "aws_api_gateway_rest_api" "test" {
   name                 = "test"
   description          = %[2]q
@@ -3108,6 +3072,42 @@ resource "aws_api_gateway_rest_api" "test" {
   endpoint_configuration {
     types = ["PRIVATE"]
   }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_default_security_group.test.id]
+
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.execute-api"
+  subnet_ids        = [aws_subnet.test.id]
+  vpc_endpoint_type = "Interface"
+  vpc_id            = aws_vpc.test.id
 }
 `, rName, oasDescription))
 }
