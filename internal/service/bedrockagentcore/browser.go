@@ -76,6 +76,9 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					validResourceName,
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

@@ -73,10 +73,10 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 4096),
 				},
-				Optional: true,
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
 				CustomType:         fwtypes.ARNType,
@@ -97,13 +97,13 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				},
 			},
 			names.AttrName: schema.StringAttribute{
+				Required: true,
 				Validators: []validator.String{
 					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Required: true,
 			},
 			"namespaces": schema.SetAttribute{
 				CustomType:         fwtypes.SetOfStringType,

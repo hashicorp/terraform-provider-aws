@@ -90,8 +90,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z0-9_-]+$`),
-						"must contain only letters, numbers, hyphens, and underscores",
+						regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_\-\.\/]{0,63}$`),
+						`Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters.`,
 					),
 					stringvalidator.LengthBetween(1, 64),
 				},
