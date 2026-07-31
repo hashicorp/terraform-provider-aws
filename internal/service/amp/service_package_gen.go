@@ -121,6 +121,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
+		{
+			Factory:  newScraperLoggingConfigurationResourceAsListResource,
+			TypeName: "aws_prometheus_scraper_logging_configuration",
+			Name:     "ScraperLoggingConfiguration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("scraper_id", true)),
+		},
 	})
 }
 

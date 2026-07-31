@@ -35,7 +35,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -126,7 +125,7 @@ func (r *scraperLoggingConfigurationResource) Schema(ctx context.Context, reques
 
 func (r *scraperLoggingConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data scraperLoggingConfigurationResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -135,10 +134,12 @@ func (r *scraperLoggingConfigurationResource) Create(ctx context.Context, reques
 
 	scraperID := fwflex.StringValueFromFramework(ctx, data.ScraperID)
 	var input amp.UpdateScraperLoggingConfigurationInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additiona fields.
 	if scraperComponents := fwflex.ExpandFrameworkStringyValueSet[awstypes.ScraperComponentType](ctx, data.ScraperComponents); len(scraperComponents) > 0 {
 		input.ScraperComponents = tfslices.ApplyToAll(scraperComponents, func(v awstypes.ScraperComponentType) awstypes.ScraperComponent {
 			return awstypes.ScraperComponent{
@@ -170,12 +171,12 @@ func (r *scraperLoggingConfigurationResource) Create(ctx context.Context, reques
 		return v.Type
 	}))
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *scraperLoggingConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data scraperLoggingConfigurationResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -186,7 +187,7 @@ func (r *scraperLoggingConfigurationResource) Read(ctx context.Context, request 
 	output, err := findScraperLoggingConfigurationByID(ctx, conn, scraperID)
 
 	if retry.NotFound(err) {
-		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
 		return
@@ -198,21 +199,18 @@ func (r *scraperLoggingConfigurationResource) Read(ctx context.Context, request 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	// Set attributes for import.
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.ScraperComponents = fwflex.FlattenFrameworkStringyValueSetOfStringEnum(ctx, tfslices.ApplyToAll(output.ScraperComponents, func(v awstypes.ScraperComponent) awstypes.ScraperComponentType {
-		return v.Type
-	}))
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *scraperLoggingConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new scraperLoggingConfigurationResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -221,10 +219,12 @@ func (r *scraperLoggingConfigurationResource) Update(ctx context.Context, reques
 
 	scraperID := fwflex.StringValueFromFramework(ctx, new.ScraperID)
 	var input amp.UpdateScraperLoggingConfigurationInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
 	if scraperComponents := fwflex.ExpandFrameworkStringyValueSet[awstypes.ScraperComponentType](ctx, new.ScraperComponents); len(scraperComponents) > 0 {
 		input.ScraperComponents = tfslices.ApplyToAll(scraperComponents, func(v awstypes.ScraperComponentType) awstypes.ScraperComponent {
 			return awstypes.ScraperComponent{
@@ -247,12 +247,12 @@ func (r *scraperLoggingConfigurationResource) Update(ctx context.Context, reques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, new))
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *scraperLoggingConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data scraperLoggingConfigurationResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -281,6 +281,21 @@ func (r *scraperLoggingConfigurationResource) Delete(ctx context.Context, reques
 
 		return
 	}
+}
+
+func (r *scraperLoggingConfigurationResource) flatten(ctx context.Context, loggingConfiguration *amp.DescribeScraperLoggingConfigurationOutput, data *scraperLoggingConfigurationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, loggingConfiguration, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Additional fields.
+	data.ScraperComponents = fwflex.FlattenFrameworkStringyValueSetOfStringEnum(ctx, tfslices.ApplyToAll(loggingConfiguration.ScraperComponents, func(v awstypes.ScraperComponent) awstypes.ScraperComponentType {
+		return v.Type
+	}))
+
+	return diags
 }
 
 func findScraperLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*amp.DescribeScraperLoggingConfigurationOutput, error) {
