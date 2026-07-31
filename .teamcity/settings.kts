@@ -42,6 +42,7 @@ val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.ge
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 val defaultTerraformVersion = "1.15.8"
+val pullRequestTerraformVersion = DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
@@ -120,8 +121,7 @@ project {
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
             // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/go-mod-cache")
             // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/go-build-cache")
-            text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
-            text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+            // text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
             // set variable to false by default
             text("POST_GITHUB_COMMENT", "false")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
@@ -133,6 +133,11 @@ project {
 
 object PullRequest : BuildType({
     name = "Pull Request"
+
+    params {
+        text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+        text("TERRAFORM_CORE_VERSION", pullRequestTerraformVersion)
+    }
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
