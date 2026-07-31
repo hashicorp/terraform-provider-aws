@@ -84,6 +84,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`) Paid-tier subscriptions created with `IMMEDIATE` approval mode pass through `PENDING_APPROVAL` while AWS auto-approves them, which can take from minutes to over half an hour.
+* `delete` - (Default `30m`) Reverting a pending scheduled change before cancellation waits out the intermediate `SYNC_IN_PROGRESS` status.
 * `update` - (Default `30m`)
 
 ## Import
