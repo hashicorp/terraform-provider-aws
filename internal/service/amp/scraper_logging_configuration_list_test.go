@@ -23,8 +23,8 @@ import (
 
 func TestAccAMPScraperLoggingConfiguration_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_amp_scraper_logging_configuration.test[0]"
-	resourceName2 := "aws_amp_scraper_logging_configuration.test[1]"
+	resourceName1 := "aws_prometheus_scraper_logging_configuration.test[0]"
+	resourceName2 := "aws_prometheus_scraper_logging_configuration.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -66,13 +66,13 @@ func TestAccAMPScraperLoggingConfiguration_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper_logging_configuration.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_amp_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
-					tfquerycheck.ExpectNoResourceObject("aws_amp_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper_logging_configuration.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectNoResourceObject("aws_prometheus_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper_logging_configuration.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_amp_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
-					tfquerycheck.ExpectNoResourceObject("aws_amp_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper_logging_configuration.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectNoResourceObject("aws_prometheus_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
@@ -81,7 +81,7 @@ func TestAccAMPScraperLoggingConfiguration_List_basic(t *testing.T) {
 
 func TestAccAMPScraperLoggingConfiguration_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_amp_scraper_logging_configuration.test[0]"
+	resourceName1 := "aws_prometheus_scraper_logging_configuration.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 
@@ -119,9 +119,9 @@ func TestAccAMPScraperLoggingConfiguration_List_includeResource(t *testing.T) {
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper_logging_configuration.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
-					querycheck.ExpectResourceKnownValues("aws_amp_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper_logging_configuration.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_prometheus_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceKnownValues("aws_prometheus_scraper_logging_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("logging_destination"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrCloudWatchLogs: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"log_group_arn": knownvalue.NotNull(),
@@ -139,8 +139,8 @@ func TestAccAMPScraperLoggingConfiguration_List_includeResource(t *testing.T) {
 
 func TestAccAMPScraperLoggingConfiguration_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_amp_scraper_logging_configuration.test[0]"
-	resourceName2 := "aws_amp_scraper_logging_configuration.test[1]"
+	resourceName1 := "aws_prometheus_scraper_logging_configuration.test[0]"
+	resourceName2 := "aws_prometheus_scraper_logging_configuration.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -185,9 +185,9 @@ func TestAccAMPScraperLoggingConfiguration_List_regionOverride(t *testing.T) {
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper_logging_configuration.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper_logging_configuration.test", identity1.Checks()),
 
-					tfquerycheck.ExpectIdentityFunc("aws_amp_scraper_logging_configuration.test", identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_prometheus_scraper_logging_configuration.test", identity2.Checks()),
 				},
 			},
 		},
