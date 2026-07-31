@@ -42,13 +42,14 @@ val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.ge
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 val defaultTerraformVersion = "1.15.8"
+var pullRequestTerraformVersion = DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
         buildType(FullBuild)
     }
 
     if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-        buildType(PullRequest(DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)))
+        buildType(PullRequest(pullRequestTerraformVersion))
     }
 
     if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
