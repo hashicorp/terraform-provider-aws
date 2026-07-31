@@ -2144,10 +2144,10 @@ func statusService(conn *ecs.Client, serviceName, clusterNameOrARN string) retry
 	}
 }
 
-// waitCtx is the parent waitServiceStable context. It must not be the per-poll
+// parentCtx is the parent waitServiceStable context. It must not be the per-poll
 // Refresh context: internal/retry wraps each Refresh in WithTimeout + defer
 // cancel(), and sigint_rollback treats context cancel as user SIGINT.
-func statusServiceWaitForStable(waitCtx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
+func statusServiceWaitForStable(parentCtx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
 	var primaryTaskSet *awstypes.Deployment
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
@@ -2194,8 +2194,7 @@ func statusServiceWaitForStable(waitCtx context.Context, conn *ecs.Client, servi
 
 			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
-				//nolint:contextcheck // waitCtx is the parent wait; refresh ctx is cancelled each poll
-				go rollbackRoutine(waitCtx, conn, sigintConfig, primaryDeploymentArn)
+				go rollbackRoutine(parentCtx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
 			}
 
