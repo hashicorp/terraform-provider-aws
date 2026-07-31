@@ -1,0 +1,4 @@
+```release-note:bug
+ecs
+`aws_ecs_service` - Fix `sigint_rollback` wait for deployment terminal status to use raw AWS statuses and return a non-nil Refresh result so Target matching works
+```
