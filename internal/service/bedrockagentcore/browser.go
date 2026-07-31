@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -160,7 +160,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 												names.AttrBucket: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+														fwvalidators.S3BucketName,
 													},
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -280,7 +280,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 									names.AttrBucket: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+											fwvalidators.S3BucketName,
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
