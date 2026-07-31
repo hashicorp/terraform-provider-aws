@@ -42,8 +42,6 @@ val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.ge
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 val defaultTerraformVersion = "1.15.8"
-val pullRequestTerraformVersion = DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)
-
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
         buildType(FullBuild)
@@ -136,7 +134,7 @@ object PullRequest : BuildType({
 
     params {
         text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
-        text("TERRAFORM_CORE_VERSION", pullRequestTerraformVersion)
+        text("TERRAFORM_CORE_VERSION", DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion))
     }
 
     vcs {
