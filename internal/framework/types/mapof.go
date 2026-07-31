@@ -22,7 +22,7 @@ var (
 
 var (
 	// MapOfListOfStringType is a custom type used for defining a map[string][]string.
-	MapOfListOfStringType = mapTypeOf[MapOfString]{basetypes.MapType{ElemType: ListOfStringType}}
+	MapOfListOfStringType = mapTypeOf[ListOfString]{basetypes.MapType{ElemType: ListOfStringType}}
 
 	// MapOfMapOfStringType is a custom type used for defining a map[string]map[string]string.
 	MapOfMapOfStringType = mapTypeOf[MapOfString]{basetypes.MapType{ElemType: MapOfStringType}}
