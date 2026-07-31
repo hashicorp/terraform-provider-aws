@@ -2144,7 +2144,10 @@ func statusService(conn *ecs.Client, serviceName, clusterNameOrARN string) retry
 	}
 }
 
-func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
+// waitCtx is the parent waitServiceStable context. It must not be the per-poll
+// Refresh context: internal/retry wraps each Refresh in WithTimeout + defer
+// cancel(), and sigint_rollback treats context cancel as user SIGINT.
+func statusServiceWaitForStable(waitCtx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
 	var primaryTaskSet *awstypes.Deployment
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
@@ -2189,13 +2192,10 @@ func statusServiceWaitForStable(conn *ecs.Client, serviceName, clusterNameOrARN 
 				}
 			}
 
-			// Use the parent wait context, not this refresh's context. Each poll
-			// wraps Refresh in context.WithTimeout + defer cancel(); if the
-			// rollback goroutine watched that child context it would treat every
-			// successful poll return as SIGINT and call StopServiceDeployment.
 			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
-				go rollbackRoutine(sigintConfig.waitCtx, conn, sigintConfig, primaryDeploymentArn)
+				//nolint:contextcheck // waitCtx is the parent wait; refresh ctx is cancelled each poll
+				go rollbackRoutine(waitCtx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
 			}
 
@@ -2340,8 +2340,6 @@ type rollbackState struct {
 	rollbackRoutineStarted bool
 	rollbackRoutineStopped chan struct{}
 	waitGroup              sync.WaitGroup
-	// waitCtx is the parent context for waitServiceStable (not per-refresh).
-	waitCtx context.Context
 }
 
 func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollbackState, primaryDeploymentArn *string) {
@@ -2435,13 +2433,12 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 		rollbackRoutineStarted: false,
 		rollbackRoutineStopped: make(chan struct{}),
 		waitGroup:              sync.WaitGroup{},
-		waitCtx:                ctx,
 	}
 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
 		Timeout: timeout,
 	}
 
