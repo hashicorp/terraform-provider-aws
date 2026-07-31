@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_workforce: Add `workforce_vpc_config` argument
-```

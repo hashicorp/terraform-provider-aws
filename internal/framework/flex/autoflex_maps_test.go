@@ -64,6 +64,14 @@ type awsMapOfStringPointer struct {
 	FieldInner map[string]*string
 }
 
+type tfMapOfListOfString struct {
+	Field1 fwtypes.MapValueOf[fwtypes.ListValueOf[types.String]] `tfsdk:"field1"`
+}
+
+type awsMapOfListOfString struct {
+	Field1 map[string][]string
+}
+
 type awsMapOfInt struct {
 	Field1 map[string]int
 }
@@ -159,6 +167,22 @@ func TestExpandMaps(t *testing.T) {
 			WantTarget: &awsMapOfStringPointer{
 				FieldInner: map[string]*string{
 					"x": aws.String("y"),
+				},
+			},
+		},
+		"map of list of string": {
+			Source: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("y"),
+						types.StringValue("z"),
+					}),
+				}),
+			},
+			Target: &awsMapOfListOfString{},
+			WantTarget: &awsMapOfListOfString{
+				Field1: map[string][]string{
+					"x": {"y", "z"},
 				},
 			},
 		},

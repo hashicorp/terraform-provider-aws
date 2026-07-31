@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_iam_access_key: Add `create_date` attribute
-```

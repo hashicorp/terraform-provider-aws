@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appmesh_route: Handle zero `max_retries`
-```

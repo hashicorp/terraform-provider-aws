@@ -523,62 +523,9 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EKS Node Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("ami_type", nodeGroup.AmiType)
-	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
-	d.Set("capacity_type", nodeGroup.CapacityType)
-	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
-	d.Set("disk_size", nodeGroup.DiskSize)
-	d.Set("instance_types", nodeGroup.InstanceTypes)
-	d.Set("labels", nodeGroup.Labels)
-	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+	if err := resourceNodeGroupFlatten(ctx, nodeGroup, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("node_group_name", nodeGroup.NodegroupName)
-	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
-	if nodeGroup.NodeRepairConfig != nil {
-		if err := d.Set("node_repair_config", []any{flattenNodeRepairConfig(nodeGroup.NodeRepairConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting node_repair_config: %s", err)
-		}
-	} else {
-		d.Set("node_repair_config", nil)
-	}
-	d.Set("node_role_arn", nodeGroup.NodeRole)
-	d.Set("release_version", nodeGroup.ReleaseVersion)
-	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
-	}
-	if err := d.Set(names.AttrResources, flattenNodegroupResources(nodeGroup.Resources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
-	}
-	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []any{flattenNodegroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
-		}
-	} else {
-		d.Set("scaling_config", nil)
-	}
-	d.Set(names.AttrStatus, nodeGroup.Status)
-	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
-	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting taint: %s", err)
-	}
-	if nodeGroup.UpdateConfig != nil {
-		if err := d.Set("update_config", []any{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting update_config: %s", err)
-		}
-	} else {
-		d.Set("update_config", nil)
-	}
-	d.Set(names.AttrVersion, nodeGroup.Version)
-	if nodeGroup.WarmPoolConfig != nil {
-		if err := d.Set("warm_pool_config", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting warm_pool_config: %s", err)
-		}
-	} else {
-		d.Set("warm_pool_config", nil)
-	}
-
-	setTagsOut(ctx, nodeGroup.Tags)
 
 	return diags
 }
@@ -725,6 +672,67 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	return diags
+}
+
+func resourceNodeGroupFlatten(ctx context.Context, nodeGroup *types.Nodegroup, d *schema.ResourceData) error {
+	d.Set("ami_type", nodeGroup.AmiType)
+	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
+	d.Set("capacity_type", nodeGroup.CapacityType)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
+	d.Set("disk_size", nodeGroup.DiskSize)
+	d.Set("instance_types", nodeGroup.InstanceTypes)
+	d.Set("labels", nodeGroup.Labels)
+	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+		return fmt.Errorf("setting launch_template: %w", err)
+	}
+	d.Set("node_group_name", nodeGroup.NodegroupName)
+	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
+	if nodeGroup.NodeRepairConfig != nil {
+		if err := d.Set("node_repair_config", []any{flattenNodeRepairConfig(nodeGroup.NodeRepairConfig)}); err != nil {
+			return fmt.Errorf("setting node_repair_config: %w", err)
+		}
+	} else {
+		d.Set("node_repair_config", nil)
+	}
+	d.Set("node_role_arn", nodeGroup.NodeRole)
+	d.Set("release_version", nodeGroup.ReleaseVersion)
+	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
+		return fmt.Errorf("setting remote_access: %w", err)
+	}
+	if err := d.Set(names.AttrResources, flattenNodegroupResources(nodeGroup.Resources)); err != nil {
+		return fmt.Errorf("setting resources: %w", err)
+	}
+	if nodeGroup.ScalingConfig != nil {
+		if err := d.Set("scaling_config", []any{flattenNodegroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+			return fmt.Errorf("setting scaling_config: %w", err)
+		}
+	} else {
+		d.Set("scaling_config", nil)
+	}
+	d.Set(names.AttrStatus, nodeGroup.Status)
+	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
+	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
+		return fmt.Errorf("setting taint: %w", err)
+	}
+	if nodeGroup.UpdateConfig != nil {
+		if err := d.Set("update_config", []any{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+			return fmt.Errorf("setting update_config: %w", err)
+		}
+	} else {
+		d.Set("update_config", nil)
+	}
+	d.Set(names.AttrVersion, nodeGroup.Version)
+	if nodeGroup.WarmPoolConfig != nil {
+		if err := d.Set("warm_pool_config", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
+			return fmt.Errorf("setting warm_pool_config: %w", err)
+		}
+	} else {
+		d.Set("warm_pool_config", nil)
+	}
+
+	setTagsOut(ctx, nodeGroup.Tags)
+
+	return nil
 }
 
 func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) (*types.Nodegroup, error) {

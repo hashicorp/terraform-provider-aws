@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ec2_traffic_mirror_filter: Add `arn` attribute.
-```
