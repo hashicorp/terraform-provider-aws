@@ -17,8 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -39,6 +39,7 @@ import (
 	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -118,12 +119,6 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				CustomType: fwtypes.SetOfStringType,
 				Optional:   true,
 				Computed:   true,
-				Validators: []validator.Set{
-					setvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("namespaces"),
-						path.MatchRelative().AtParent().AtName("namespace_templates"),
-					),
-				},
 				PlanModifiers: []planmodifier.Set{
 					tfsetplanmodifier.DefaultValueFromPath[fwtypes.SetOfString](path.Root("namespaces")),
 				},
@@ -143,6 +138,11 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					tfstringvalidator.ConflictsWithWhenNotEquals(
 						awstypes.MemoryStrategyTypeEpisodic,
 						path.MatchRelative().AtParent().AtName("reflection_configuration"),
+					),
+					tfstringvalidator.ExactlyOneOfWhenNotEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRoot("namespaces"),
+						path.MatchRoot("namespace_templates"),
 					),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -166,6 +166,10 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									awstypes.OverrideTypeEpisodicOverride,
 									path.MatchRelative().AtParent().AtName("reflection"),
 								),
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRelative().AtParent().AtName("self_managed_configuration"),
+								),
 								tfstringvalidator.ConflictsWithWhenNotEquals(
 									awstypes.OverrideTypeEpisodicOverride,
 									path.MatchRelative().AtParent().AtName("reflection"),
@@ -173,6 +177,23 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								tfstringvalidator.ConflictsWithWhenEquals(
 									awstypes.OverrideTypeSummaryOverride,
 									path.MatchRelative().AtParent().AtName("extraction"),
+								),
+								tfstringvalidator.ConflictsWithWhenEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRoot("namespaces"),
+									path.MatchRoot("namespace_templates"),
+									path.MatchRelative().AtParent().AtName("consolidation"),
+									path.MatchRelative().AtParent().AtName("extraction"),
+									// "reflection" is handled via the ConflictsWithWhenNotEquals above.
+								),
+								tfstringvalidator.ConflictsWithWhenNotEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRelative().AtParent().AtName("self_managed_configuration"),
+								),
+								tfstringvalidator.ExactlyOneOfWhenNotEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRoot("namespaces"),
+									path.MatchRoot("namespace_templates"),
 								),
 							},
 							PlanModifiers: []planmodifier.String{
@@ -236,6 +257,49 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									"namespace_templates": schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
+									},
+								},
+							},
+						},
+						"self_managed_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								tflistplanmodifier.RequiresReplaceIfEmptied,
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"historical_context_window_size": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(0, 50),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"invocation_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[invocationConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"payload_delivery_bucket_name": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														fwvalidators.S3BucketName,
+													},
+												},
+												"topic_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -816,10 +880,11 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 }
 
 type customConfigurationModel struct {
-	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"extraction"`
-	Reflection    fwtypes.ListNestedObjectValueOf[episodicReflectionOverrideDetailsModel] `tfsdk:"reflection"`
-	Type          fwtypes.StringEnum[awstypes.OverrideType]                               `tfsdk:"type"`
+	Consolidation            fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"consolidation"`
+	Extraction               fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"extraction"`
+	Reflection               fwtypes.ListNestedObjectValueOf[episodicReflectionOverrideDetailsModel] `tfsdk:"reflection"`
+	SelfManagedConfiguration fwtypes.ListNestedObjectValueOf[selfManagedConfigurationModel]          `tfsdk:"self_managed_configuration"`
+	Type                     fwtypes.StringEnum[awstypes.OverrideType]                               `tfsdk:"type"`
 }
 
 var (
@@ -943,6 +1008,14 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 
 	case awstypes.OverrideTypeEpisodicOverride:
 		var r awstypes.CustomConfigurationInputMemberEpisodicOverride
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case awstypes.OverrideTypeSelfManaged:
+		var r awstypes.CustomConfigurationInputMemberSelfManagedConfiguration
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
@@ -1236,4 +1309,15 @@ func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v 
 	}
 
 	return diags
+}
+
+type selfManagedConfigurationModel struct {
+	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
+	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
+	//TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_condition"`
+}
+
+type invocationConfigurationModel struct {
+	PayloadDeliveryBucketName types.String `tfsdk:"payload_delivery_bucket_name"`
+	TopicARN                  fwtypes.ARN  `tfsdk:"topic_arn"`
 }
