@@ -328,6 +328,7 @@ This resource supports the following arguments:
   When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
 * `regional_nat_gateway_id` - (Optional) Regional NAT Gateway ID to attach to.
 * `subnet_id` - (Optional) Subnet ID to attach to.
+* `tag_field_specification` - (Optional) Tag configuration for the Flow Logs Amazon EC2 Tags feature fields (e.g., `$${instance-tag}`) used in `log_format`. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `traffic_type` - (Optional) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
@@ -344,6 +345,13 @@ Describes the destination options for a flow log.
 * `hive_compatible_partitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
 * `per_hour_partition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
+### tag_field_specification
+
+Maps a taggable resource type to the tag keys, on resources of that type, to display in Flow Log records via the Amazon EC2 Tags feature fields (e.g., `$${instance-tag}`) in `log_format`. Multiple blocks may be specified to configure tag keys for different resource types.
+
+* `resource_type` - (Required) Resource type to associate the tag keys with. Valid values: `instance`, `network-interface`, `auto-scaling-group`.
+* `tag_keys` - (Required) Ordered list of tag keys, on resources of `resource_type`, to display in Flow Log records. The position of each key determines which field it populates in `log_format` (e.g., the first `instance` tag key populates `$${instance-tag}` and the second populates `$${instance-tag-2}`).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -353,6 +361,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_flow_log.example
+  identity = {
+    id = "fl-1a2b3c4d"
+  }
+}
+
+resource "aws_flow_log" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Flow Log ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Flow Logs using the `id`. For example:
 

@@ -29,23 +29,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDistributionTenantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &distributionTenantResource{}
 
-	r.SetDefaultCreateTimeout(15 * time.Minute)
-	r.SetDefaultUpdateTimeout(15 * time.Minute)
-	r.SetDefaultDeleteTimeout(15 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
 }
 
 const (
 	distributionTenantPollInterval = 30 * time.Second
+	managedCertificateTimeout      = 3 * time.Hour
 )
 
 type distributionTenantResource struct {
@@ -273,6 +276,8 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, data.Timeouts))
+
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
@@ -294,13 +299,6 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// Use create response directly - no extra read needed
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Use AutoFlex to flatten the response
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -313,7 +311,7 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	if data.WaitForDeployment.ValueBool() {
-		if _, err := waitDistributionTenantDeployed(ctx, conn, id); err != nil {
+		if _, err := waitDistributionTenantDeployed(ctx, conn, id, deadline.Remaining()); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) deploy", id), err.Error())
 			return
 		}
@@ -326,7 +324,10 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest); err != nil {
+			// The managed certificate path uses a fixed 3-hour timeout because
+			// waitManagedCertificateReady can legitimately take hours. This will
+			// be replaced with the configured resource timeout in v7.0.0.
+			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, managedCertificateTimeout); err != nil {
 				resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 				return
 			}
@@ -338,18 +339,10 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			// Update the data model with refreshed information
 			resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &data)...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
-
-			// Use AutoFlex to flatten the refreshed response
-			resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &data)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
 			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 		}
 	}
@@ -379,19 +372,10 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 
 	tenant := output.DistributionTenant
 
-	// Flatten the distribution tenant data into the model
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Use AutoFlex to flatten the response
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -405,10 +389,13 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	conn := r.Meta().CloudFrontClient(ctx)
+	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
+	conn := r.Meta().CloudFrontClient(ctx)
 	id := fwflex.StringValueFromFramework(ctx, new.ID)
+
 	var output *cloudfront.UpdateDistributionTenantOutput
+	var err error
 
 	// Check if configuration changed (excluding tags)
 	if !new.ConnectionGroupID.Equal(old.ConnectionGroupID) ||
@@ -418,8 +405,8 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		!new.Enabled.Equal(old.Enabled) ||
 		!new.ManagedCertificateRequest.Equal(old.ManagedCertificateRequest) ||
 		!new.Parameters.Equal(old.Parameters) {
-		input := &cloudfront.UpdateDistributionTenantInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		var input cloudfront.UpdateDistributionTenantInput
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -428,7 +415,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		input.Id = aws.String(id)
 		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
-		_, err := conn.UpdateDistributionTenant(ctx, input)
+		output, err = conn.UpdateDistributionTenant(ctx, &input)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
@@ -441,7 +428,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 			}
 
 			input.IfMatch = aws.String(etag)
-			output, err = conn.UpdateDistributionTenant(ctx, input)
+			output, err = conn.UpdateDistributionTenant(ctx, &input)
 		}
 
 		if err != nil {
@@ -450,7 +437,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		}
 
 		if new.WaitForDeployment.ValueBool() {
-			if _, err := waitDistributionTenantDeployed(ctx, conn, id); err != nil {
+			if _, err := waitDistributionTenantDeployed(ctx, conn, id, deadline.Remaining()); err != nil {
 				resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) deploy", id), err.Error())
 				return
 			}
@@ -463,7 +450,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
-				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest); err != nil {
+				// The managed certificate path uses a fixed 3-hour timeout because
+				// waitManagedCertificateReady can legitimately take hours. This will
+				// be replaced with the configured resource timeout in v7.0.0.
+				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest, managedCertificateTimeout); err != nil {
 					resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 					return
 				}
@@ -475,19 +465,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
-				// Update the model with refreshed information
 				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
 				if resp.Diagnostics.HasError() {
 					return
 				}
-
-				// Manually flatten domains and parameters
-				// Use AutoFlex to flatten the refreshed response
-				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-
 				new.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 			}
 		}
@@ -495,12 +476,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 
 	// Flatten the distribution tenant data into the model
 	if output != nil {
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &new)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Use AutoFlex to flatten the response
 		resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &new)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -520,13 +495,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		// Use AutoFlex to flatten the response
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.DistributionTenant, &new)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
 	}
 
@@ -540,10 +508,12 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
+	deadline := inttypes.NewDeadline(r.DeleteTimeout(ctx, data.Timeouts))
+
 	conn := r.Meta().CloudFrontClient(ctx)
 	id := fwflex.StringValueFromFramework(ctx, data.ID)
 
-	if err := disableDistributionTenant(ctx, conn, id); err != nil {
+	if err := disableDistributionTenant(ctx, conn, id, deadline.Remaining()); err != nil {
 		if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 			return
 		}
@@ -551,7 +521,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	err := deleteDistributionTenant(ctx, conn, id)
+	err := deleteDistributionTenant(ctx, conn, id, deadline.Remaining())
 
 	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 		return
@@ -559,7 +529,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 
 	// Disable distribution tenant if it is not yet disabled and attempt deletion again.
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
-		if err := disableDistributionTenant(ctx, conn, id); err != nil {
+		if err := disableDistributionTenant(ctx, conn, id, deadline.Remaining()); err != nil {
 			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
@@ -568,18 +538,18 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 		}
 
 		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, distributionTenantPollInterval, func(ctx context.Context) (any, error) {
-			return nil, deleteDistributionTenant(ctx, conn, id)
+			return nil, deleteDistributionTenant(ctx, conn, id, deadline.Remaining())
 		})
 	}
 
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
 		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, distributionTenantPollInterval, func(ctx context.Context) (any, error) {
-			return nil, deleteDistributionTenant(ctx, conn, id)
+			return nil, deleteDistributionTenant(ctx, conn, id, deadline.Remaining())
 		})
 	}
 
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
-		if err := disableDistributionTenant(ctx, conn, id); err != nil {
+		if err := disableDistributionTenant(ctx, conn, id, deadline.Remaining()); err != nil {
 			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
@@ -587,7 +557,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 			return
 		}
 
-		err = deleteDistributionTenant(ctx, conn, id)
+		err = deleteDistributionTenant(ctx, conn, id, deadline.Remaining())
 	}
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
@@ -628,7 +598,7 @@ func findDistributionTenant(ctx context.Context, conn *cloudfront.Client, input 
 	return output, nil
 }
 
-func disableDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) error {
+func disableDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
 	output, err := findDistributionTenantByIdentifier(ctx, conn, id)
 
 	if err != nil {
@@ -636,7 +606,7 @@ func disableDistributionTenant(ctx context.Context, conn *cloudfront.Client, id 
 	}
 
 	if aws.ToString(output.DistributionTenant.Status) == distributionTenantStatusInProgress {
-		output, err = waitDistributionTenantDeployed(ctx, conn, id)
+		output, err = waitDistributionTenantDeployed(ctx, conn, id, timeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
@@ -663,14 +633,14 @@ func disableDistributionTenant(ctx context.Context, conn *cloudfront.Client, id 
 		return fmt.Errorf("updating CloudFront Distribution Tenant (%s): %w", id, err)
 	}
 
-	if _, err := waitDistributionTenantDeployed(ctx, conn, id); err != nil {
+	if _, err := waitDistributionTenantDeployed(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
 	}
 
 	return nil
 }
 
-func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) error {
+func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
 	etag, err := distributionTenantETag(ctx, conn, id)
 
 	if err != nil {
@@ -687,19 +657,19 @@ func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id s
 		return fmt.Errorf("deleting CloudFront Distribution Tenant (%s): %w", id, err)
 	}
 
-	if _, err := waitDistributionTenantDeleted(ctx, conn, id); err != nil {
+	if _, err := waitDistributionTenantDeleted(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) delete: %w", id, err)
 	}
 
 	return nil
 }
 
-func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
+func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetDistributionTenantOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionTenantStatusInProgress},
 		Target:     []string{distributionTenantStatusDeployed},
 		Refresh:    statusDistributionTenant(conn, id),
-		Timeout:    30 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
@@ -713,12 +683,12 @@ func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client
 	return nil, err
 }
 
-func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
+func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetDistributionTenantOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionTenantStatusInProgress, distributionTenantStatusDeployed},
 		Target:     []string{},
 		Refresh:    statusDistributionTenant(conn, id),
-		Timeout:    30 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
@@ -762,14 +732,14 @@ func distributionTenantETag(ctx context.Context, conn *cloudfront.Client, id str
 	return aws.ToString(output.ETag), nil
 }
 
-func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, id string, managedCertRequest *awstypes.ManagedCertificateRequest) error {
+func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, id string, managedCertRequest *awstypes.ManagedCertificateRequest, timeout time.Duration) error {
 	if managedCertRequest == nil {
 		// No managed certificate request, nothing to wait for
 		return nil
 	}
 
 	// Wait for distribution tenant to be deployed first
-	dtOutput, err := waitForDistributionTenantDeployed(ctx, conn, id)
+	dtOutput, err := waitDistributionTenantDeployed(ctx, conn, id, timeout)
 	if err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
 	}
@@ -781,35 +751,19 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	// Step 2: Update distribution tenant with the issued certificate
-	return updateDistributionTenantWithManagedCertificate(ctx, conn, dtOutput, mcOutput)
-}
-
-func waitForDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	// Simple loop to wait for deployment - reuse existing logic if needed
-	for {
-		dtOutput, err := findDistributionTenantByIdentifier(ctx, conn, id)
-		if err != nil {
-			return nil, fmt.Errorf("failed reading CloudFront Distribution Tenant (%s): %w", id, err)
-		}
-
-		if aws.ToString(dtOutput.DistributionTenant.Status) == distributionTenantStatusDeployed {
-			return dtOutput, nil
-		}
-
-		time.Sleep(distributionTenantPollInterval)
-	}
+	return updateDistributionTenantWithManagedCertificate(ctx, conn, dtOutput, mcOutput, timeout)
 }
 
 func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
-	timeout := 3 * time.Hour
+	timeout := managedCertificateTimeout
 	deadline := time.Now().Add(timeout)
 
 	for time.Now().Before(deadline) {
-		mcInput := &cloudfront.GetManagedCertificateDetailsInput{
+		input := cloudfront.GetManagedCertificateDetailsInput{
 			Identifier: aws.String(id),
 		}
 
-		mcOutput, err := conn.GetManagedCertificateDetails(ctx, mcInput)
+		output, err := conn.GetManagedCertificateDetails(ctx, &input)
 		if errs.IsA[*awstypes.EntityNotFound](err) {
 			// No managed certificate found - domains are covered by existing certs
 			return nil, nil
@@ -819,9 +773,9 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 		}
 
 		// Check certificate status
-		switch mcOutput.ManagedCertificateDetails.CertificateStatus {
+		switch output.ManagedCertificateDetails.CertificateStatus {
 		case awstypes.ManagedCertificateStatusIssued:
-			return mcOutput, nil
+			return output, nil
 
 		case awstypes.ManagedCertificateStatusPendingValidation:
 			// Certificate still being validated, continue waiting
@@ -829,14 +783,14 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 			continue
 
 		default:
-			return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate failed with status: %s", id, mcOutput.ManagedCertificateDetails.CertificateStatus)
+			return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate failed with status: %s", id, output.ManagedCertificateDetails.CertificateStatus)
 		}
 	}
 
-	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after 3 hours waiting for managed certificate to be issued", id)
+	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after %s waiting for managed certificate to be issued", id, timeout)
 }
 
-func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput) error {
+func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput, timeout time.Duration) error {
 	if mcOutput == nil {
 		return nil
 	}
@@ -854,7 +808,7 @@ func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *c
 	}
 
 	// Update distribution tenant with managed certificate ARN
-	updateInput := &cloudfront.UpdateDistributionTenantInput{
+	input := cloudfront.UpdateDistributionTenantInput{
 		Id:      dtOutput.DistributionTenant.Id,
 		IfMatch: freshOutput.ETag,
 		Customizations: &awstypes.Customizations{
@@ -865,19 +819,19 @@ func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *c
 	}
 
 	// Copy other required fields from current distribution tenant
-	updateInput.ConnectionGroupId = dtOutput.DistributionTenant.ConnectionGroupId
-	updateInput.DistributionId = dtOutput.DistributionTenant.DistributionId
-	updateInput.Domains = convertDomainResultsToDomainItems(dtOutput.DistributionTenant.Domains)
-	updateInput.Enabled = dtOutput.DistributionTenant.Enabled
-	updateInput.Parameters = dtOutput.DistributionTenant.Parameters
+	input.ConnectionGroupId = dtOutput.DistributionTenant.ConnectionGroupId
+	input.DistributionId = dtOutput.DistributionTenant.DistributionId
+	input.Domains = convertDomainResultsToDomainItems(dtOutput.DistributionTenant.Domains)
+	input.Enabled = dtOutput.DistributionTenant.Enabled
+	input.Parameters = dtOutput.DistributionTenant.Parameters
 
-	_, err = conn.UpdateDistributionTenant(ctx, updateInput)
+	_, err = conn.UpdateDistributionTenant(ctx, &input)
 	if err != nil {
 		return fmt.Errorf("updating CloudFront Distribution Tenant (%s) with managed certificate: %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
 	}
 
 	// Wait for the distribution tenant update to be deployed
-	_, err = waitForDistributionTenantDeployed(ctx, conn, aws.ToString(dtOutput.DistributionTenant.Id))
+	_, err = waitDistributionTenantDeployed(ctx, conn, aws.ToString(dtOutput.DistributionTenant.Id), timeout)
 	if err != nil {
 		return fmt.Errorf("failed waiting for CloudFront Distribution Tenant (%s) deploy: %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
 	}

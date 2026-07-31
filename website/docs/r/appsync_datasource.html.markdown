@@ -77,37 +77,37 @@ resource "aws_appsync_datasource" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API ID for the GraphQL API for the data source.
-* `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 * `description` - (Optional) Description of the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [`dynamodb_config` Block](#dynamodb_config-block) for details.
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [`elasticsearch_config` Block](#elasticsearch_config-block) for details.
 * `event_bridge_config` - (Optional) AWS EventBridge settings. See [`event_bridge_config` Block](#event_bridge_config-block) for details.
 * `http_config` - (Optional) HTTP settings. See [`http_config` Block](#http_config-block) for details.
 * `lambda_config` - (Optional) AWS Lambda settings. See [`lambda_config` Block](#lambda_config-block) for details.
+* `name` - (Required) User-supplied name for the data source.
 * `opensearchservice_config` - (Optional) Amazon OpenSearch Service settings. See [`opensearchservice_config` Block](#opensearchservice_config-block) for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `relational_database_config` (Optional) AWS RDS settings. See [`relational_database_config` Block](#relational_database_config-block) for details.
 * `service_role_arn` - (Optional) IAM service role ARN for the data source. Required if `type` is specified as `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `AMAZON_EVENTBRIDGE`, or `AMAZON_OPENSEARCH_SERVICE`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 
 ### `dynamodb_config` Block
 
 The `dynamodb_config` configuration block supports the following arguments:
 
-* `table_name` - (Required) Name of the DynamoDB table.
+* `delta_sync_config` - (Optional) DeltaSyncConfig for a versioned data source. See [`delta_sync_config` Block](#delta_sync_config-block) for details.
 * `region` - (Optional) AWS region of the DynamoDB table. Defaults to current region.
+* `table_name` - (Required) Name of the DynamoDB table.
 * `use_caller_credentials` - (Optional) Set to `true` to use Amazon Cognito credentials with this data source.
-* `delta_sync_config` - (Optional) The DeltaSyncConfig for a versioned data source. See [`delta_sync_config` Block](#delta_sync_config-block) for details.
 * `versioned` - (Optional) Detects Conflict Detection and Resolution with this data source.
 
 ### `delta_sync_config` Block
 
 The `delta_sync_config` configuration block supports the following arguments:
 
-* `base_table_ttl` - (Optional) The number of minutes that an Item is stored in the data source.
-* `delta_sync_table_name` - (Required) The table name.
-* `delta_sync_table_ttl` - (Optional) The number of minutes that a Delta Sync log entry is stored in the Delta Sync table.
+* `base_table_ttl` - (Optional) Number of minutes that an Item is stored in the data source.
+* `delta_sync_table_name` - (Required) Table name.
+* `delta_sync_table_ttl` - (Optional) Number of minutes that a Delta Sync log entry is stored in the Delta Sync table.
 
 ### `elasticsearch_config` Block
 
@@ -126,8 +126,8 @@ The `event_bridge_config` configuration block supports the following arguments:
 
 The `http_config` configuration block supports the following arguments:
 
-* `endpoint` - (Required) HTTP URL.
 * `authorization_config` - (Optional) Authorization configuration in case the HTTP endpoint requires authorization. See [`authorization_config` Block](#authorization_config-block) for details.
+* `endpoint` - (Required) HTTP URL.
 
 ### `authorization_config` Block
 
@@ -141,7 +141,7 @@ The `authorization_config` configuration block supports the following arguments:
 The `aws_iam_config` configuration block supports the following arguments:
 
 * `signing_region` - (Optional) Signing Amazon Web Services Region for IAM authorization.
-* `signing_service_name`- (Optional) Signing service name for IAM authorization.
+* `signing_service_name` - (Optional) Signing service name for IAM authorization.
 
 ### `lambda_config` Block
 
@@ -167,9 +167,9 @@ The `relational_database_config` configuration block supports the following argu
 
 The `http_endpoint_config` configuration block supports the following arguments:
 
-* `db_cluster_identifier` - (Required) Amazon RDS cluster identifier.
 * `aws_secret_store_arn` - (Required) AWS secret store ARN for database credentials.
 * `database_name` - (Optional) Logical database name.
+* `db_cluster_identifier` - (Required) Amazon RDS cluster identifier.
 * `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
 * `schema` - (Optional) Logical schema name.
 

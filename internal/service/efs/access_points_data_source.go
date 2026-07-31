@@ -51,11 +51,11 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fileSystemID := d.Get(names.AttrFileSystemID).(string)
-	input := &efs.DescribeAccessPointsInput{
+	input := efs.DescribeAccessPointsInput{
 		FileSystemId: aws.String(fileSystemID),
 	}
 
-	output, err := findAccessPointDescriptions(ctx, conn, input)
+	output, err := findAccessPointDescriptions(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Access Points: %s", err)
@@ -79,7 +79,6 @@ func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *e
 	var output []awstypes.AccessPointDescription
 
 	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

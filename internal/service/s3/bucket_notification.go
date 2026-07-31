@@ -360,7 +360,13 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
+	return resourceBucketNotificationFlatten(output, d)
+}
+
+func resourceBucketNotificationFlatten(output *s3.GetBucketNotificationConfigurationOutput, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrBucket, d.Id())
 	d.Set("eventbridge", output.EventBridgeConfiguration != nil)
 	if err := d.Set("lambda_function", flattenLambdaFunctionConfigurations(output.LambdaFunctionConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_function: %s", err)

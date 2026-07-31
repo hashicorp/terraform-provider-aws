@@ -8,9 +8,9 @@ import (
 	"github.com/beevik/etree"
 )
 
-// CanonicalXML reads XML in a string and re-writes it canonically, used for
+// canonicalXML reads XML in a string and re-writes it canonically, used for
 // comparing XML for logical equivalency
-func CanonicalXML(s string) (string, error) {
+func canonicalXML(s string) (string, error) {
 	doc := etree.NewDocument()
 	doc.WriteSettings.CanonicalEndTags = true
 	if err := doc.ReadFromString(s); err != nil {

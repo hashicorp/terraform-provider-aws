@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/uxc"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/uxc/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,6 +29,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
+// @Testing(importStateIdAttribute="account_color")
 func newAccountCustomizationsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountCustomizationsResource{}, nil
 }
@@ -168,20 +170,8 @@ func (r *accountCustomizationsResource) Delete(ctx context.Context, req resource
 }
 
 func (r *accountCustomizationsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	conn := r.Meta().UXCClient(ctx)
-
-	output, err := findAccountCustomizations(ctx, conn)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-
-	var state accountCustomizationsResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	// ImportState needs to set some value
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root("account_color"), awstypes.AccountColorNone))
 }
 
 func findAccountCustomizations(ctx context.Context, conn *uxc.Client) (*uxc.GetAccountCustomizationsOutput, error) {

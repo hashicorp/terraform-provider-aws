@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_task_definition: Fix perpetual `container_definitions` diffs on `healthCheck`'s default values
-```

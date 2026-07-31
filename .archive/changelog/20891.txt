@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudhsm_v2_hsm: Enforce `ExactlyOneOf` for `availability_zone` and `subnet_id` arguments
-```

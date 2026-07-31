@@ -69,6 +69,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newPoolResource,
+			TypeName: "aws_pinpointsmsvoicev2_pool",
+			Name:     "Pool",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
@@ -83,6 +96,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute("configuration_set_name", true),
 				inttypes.StringIdentityAttribute("event_destination_name", true),
 			}),
+		},
+		{
+			Factory:  newPoolResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_pool",
+			Name:     "Pool",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 	})
 }

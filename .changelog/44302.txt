@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_bedrockagentcore_api_key_credential_provider
-```
