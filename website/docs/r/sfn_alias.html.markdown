@@ -85,6 +85,12 @@ resource "aws_sfn_alias" "example" {
 }
 ```
 
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the alias.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SFN (Step Functions) Alias using the `arn`. For example:
 
 ```terraform

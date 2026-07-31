@@ -11,8 +11,6 @@ rules:
     paths:
       include:
         - /internal/service/*/generate.go
-      exclude:
-        - /internal/service/uxc/generate.go
     patterns:
       - pattern-regex: "(?s).*servicepackage.*package \\w+"
       - pattern-not-regex: "(?s).*identitytests.*"

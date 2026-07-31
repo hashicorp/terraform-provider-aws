@@ -1,7 +1,17 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_workspacesweb_trust_store" "test" {
+  certificate {
+    body = aws_acmpca_certificate.test.certificate
+  }
+
+  tags = var.resource_tags
+}
+
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   type = "ROOT"
 
   certificate_authority_configuration {
@@ -25,14 +35,6 @@ resource "aws_acmpca_certificate" "test" {
     type  = "YEARS"
     value = 1
   }
-}
-
-resource "aws_workspacesweb_trust_store" "test" {
-  certificate {
-    body = aws_acmpca_certificate.test.certificate
-  }
-
-  tags = var.resource_tags
 }
 
 variable "resource_tags" {

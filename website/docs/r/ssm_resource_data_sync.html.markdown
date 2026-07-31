@@ -97,7 +97,6 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- This note is here because `tfproviderdocs` flags it if it's inside the Import section -->
 **Note:** If `s3_destination.destination_data_sharing` is set, the imported resource will be replaced on the next `terrafrom apply`.
 
 ## Import

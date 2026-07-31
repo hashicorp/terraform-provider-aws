@@ -78,6 +78,12 @@ resource "aws_sfn_activity" "example" {
 }
 ```
 
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the activity.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
 ```terraform

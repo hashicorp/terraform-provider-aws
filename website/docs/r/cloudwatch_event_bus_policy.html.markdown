@@ -151,17 +151,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge policy using the `event_bus_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_bus_policy.DevAccountAccess
+  to = aws_cloudwatch_event_bus_policy.example
+  identity = {
+    event_bus_name = "example-event-bus"
+  }
+}
+
+resource "aws_cloudwatch_event_bus_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `event_bus_name` (String) Name of the event bus.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bus Policies using `event_bus_name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_bus_policy.example
   id = "example-event-bus"
 }
 ```
 
-Using `terraform import`, import an EventBridge policy using the `event_bus_name`. For example:
+Using `terraform import`, import Bus Policies using `event_bus_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus
+% terraform import aws_cloudwatch_event_bus_policy.example example-event-bus
 ```

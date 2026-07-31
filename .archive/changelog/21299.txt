@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_fms_policy: Add `tags` argument and `tags_all` attribute to support resource tagging
-```

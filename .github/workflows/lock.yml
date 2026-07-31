@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: '50 1 * * *'
 
+permissions:
+  issues: write        # required to lock issues
+  pull-requests: write # required to lock pull requests
+
 jobs:
   lock:
     runs-on: ubuntu-latest
