@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_api_gateway_rest_api: Added waiters after CUD calls
 ```
+
+```release-note:enhancement
+resource/aws_api_gateway_rest_api: Added timeouts to schema for waiters
+```
