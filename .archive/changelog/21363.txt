@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_metric_alarm: Fix imported 'treat_missing_data' diff
-```

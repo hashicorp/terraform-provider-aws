@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_ec2_spot_instance_request: Remove `block_duration_minutes` attribute
-```

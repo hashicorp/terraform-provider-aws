@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb: Fix `ValidationError ... Member must have length less than or equal to 20` errors when more than 20 load balancer attributes are being modified
-```

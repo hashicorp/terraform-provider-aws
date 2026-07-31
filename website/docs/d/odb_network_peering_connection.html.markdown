@@ -26,7 +26,7 @@ data "aws_odb_network_peering_connection" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) The unique identifier of the ODB network peering connection.
+* `id` - (Required) Unique identifier of the ODB network peering connection.
 
 The following arguments are optional:
 
@@ -36,14 +36,14 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - Amazon Resource Name (ARN) for the  ODB network peering connection.
+* `created_at` - Created time of the ODB network peering connection.
 * `display_name` - Display name of the ODB network peering connection.
+* `odb_network_arn` - ARN of the ODB network peering connection.
+* `odb_peering_connection_type` - Type of the ODB peering connection.
+* `peer_network_arn` - ARN of the peer network peering connection.
+* `peer_network_cidrs` - Set of peer network cidrs.
+* `percent_progress` - Progress of the ODB network peering connection.
 * `status` - Status of the ODB network peering connection.
 * `status_reason` - Status of the ODB network peering connection.
-* `odb_network_arn` - ARN of the ODB network peering connection.
-* `arn` - The Amazon Resource Name (ARN) for the  ODB network peering connection.
-* `peer_network_arn` - ARN of the peer network peering connection.
-* `odb_peering_connection_type` - Type of the ODB peering connection.
-* `peer_network_cidrs` - Set of peer network cidrs.
-* `created_at` - Created time of the ODB network peering connection.
-* `percent_progress` - Progress of the ODB network peering connection.
 * `tags` - Tags applied to the resource.  
