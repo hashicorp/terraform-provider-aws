@@ -12,18 +12,17 @@ import (
 
 // Demonstrates the bug: attaching rollbackRoutine to a per-refresh child
 // context (cancelled when the refresh returns) falsely triggers rollback.
-// The fix watches the parent wait context instead.
+// The fix watches the parent wait context instead (closed over, not stored
+// on rollbackState — golangci containedctx forbids context.Context fields).
 func TestRollbackRoutine_ignoresRefreshContextCancel(t *testing.T) {
 	t.Parallel()
 
-	parent, parentCancel := context.WithCancel(context.Background())
-	defer parentCancel()
+	parent := t.Context()
 
 	var rollbacks atomic.Int32
 	stopped := make(chan struct{})
 	state := &rollbackState{
 		rollbackRoutineStopped: stopped,
-		waitCtx:                parent,
 	}
 	state.waitGroup.Add(1)
 
@@ -52,23 +51,23 @@ func TestRollbackRoutine_ignoresRefreshContextCancel(t *testing.T) {
 		t.Fatalf("expected buggy child-context cancel to trigger rollback path, got %d", rollbacks.Load())
 	}
 
-	// Fixed path: watch parent wait context.
+	// Fixed path: watch parent wait context (closed over).
 	rollbacks.Store(0)
 	stopped2 := make(chan struct{})
 	state2 := &rollbackState{
 		rollbackRoutineStopped: stopped2,
-		waitCtx:                parent,
 	}
 	state2.waitGroup.Add(1)
 
 	child2, child2Cancel := context.WithCancel(parent)
 	_ = child2
+	waitCtx := parent
 	done2 := make(chan struct{})
 	go func() {
 		defer close(done2)
 		defer state2.waitGroup.Done()
 		select {
-		case <-state2.waitCtx.Done():
+		case <-waitCtx.Done():
 			rollbacks.Add(1)
 		case <-stopped2:
 			return
