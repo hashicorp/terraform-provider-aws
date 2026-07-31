@@ -4991,3 +4991,32 @@ resource "aws_launch_template" "test" {
 }
 `, rName, description, update)
 }
+
+func TestAccEC2LaunchTemplate_userDataTooLong(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccLaunchTemplateConfig_userDataTooLong(rName),
+				ExpectError: regexache.MustCompile(`cannot be longer than 16384 bytes`),
+			},
+		},
+	})
+}
+
+func testAccLaunchTemplateConfig_userDataTooLong(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  # 16385 bytes once base64-decoded: one byte over the EC2 limit
+  user_data = base64encode(join("", ["#!", substr(join("", [for i in range(2048) : "eight_ch"]), 0, 16383)]))
+}
+`, rName)
+}
