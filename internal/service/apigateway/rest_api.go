@@ -871,11 +871,13 @@ func waitRestAPIAvailable(ctx context.Context, conn *apigateway.Client, id strin
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
-		if status := out.ApiStatus; status == types.ApiStatusFailed {
-			retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
-		}
+	out, ok := outputRaw.(*apigateway.GetRestApiOutput)
+	if !ok {
 		return err
+	}
+
+	if out.ApiStatus == types.ApiStatusFailed {
+		retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
 	}
 
 	return err
@@ -883,18 +885,20 @@ func waitRestAPIAvailable(ctx context.Context, conn *apigateway.Client, id strin
 
 func waitRestAPIDeleted(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.ApiStatusPending, types.ApiStatusUpdating),
+		Pending: enum.Slice(types.ApiStatusAvailable, types.ApiStatusPending, types.ApiStatusUpdating),
 		Target:  []string{},
 		Refresh: statusRestAPI(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*apigateway.GetRestApiOutput); ok {
-		if status := out.ApiStatus; status == types.ApiStatusFailed {
-			retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
-		}
+	out, ok := outputRaw.(*apigateway.GetRestApiOutput)
+	if !ok {
 		return err
+	}
+
+	if out.ApiStatus == types.ApiStatusFailed {
+		retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
 	}
 
 	return err
