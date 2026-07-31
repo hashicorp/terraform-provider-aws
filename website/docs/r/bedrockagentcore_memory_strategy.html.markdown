@@ -89,7 +89,6 @@ resource "aws_bedrockagentcore_memory_strategy" "episodic_reflection" {
 resource "aws_bedrockagentcore_memory_strategy" "custom_semantic" {
   name                      = "custom-semantic-strategy"
   memory_id                 = aws_bedrockagentcore_memory.example.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Custom semantic processing strategy"
   namespaces                = ["{sessionId}"]
@@ -163,7 +162,6 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_user_pref" {
 resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
   name                      = "custom-episodic-strategy"
   memory_id                 = aws_bedrockagentcore_memory.example.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Custom episodic processing strategy"
   namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]
@@ -191,7 +189,6 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
 resource "aws_bedrockagentcore_memory_strategy" "custom_episodic_reflection" {
   name                      = "custom-episodic-reflection-strategy"
   memory_id                 = aws_bedrockagentcore_memory.example.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
   type                      = "CUSTOM"
   description               = "Custom episodic strategy with reflection override"
   namespaces                = ["/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}"]

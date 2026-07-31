@@ -1,5 +1,9 @@
 ## 6.58.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_bedrockagentcore_memory_strategy: Remove the deprecated `memory_execution_role_arn` attribute. Use the `memory_execution_role_arn` attribute on the `aws_bedrockagentcore_memory` resource instead. ([#49148](https://github.com/hashicorp/terraform-provider-aws/issues/49148))
+
 FEATURES:
 
 * **New List Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
