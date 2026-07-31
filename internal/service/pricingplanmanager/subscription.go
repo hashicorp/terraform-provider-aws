@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -359,8 +360,8 @@ func statusSubscription(conn *pricingplanmanager.Client, arn string) retry.State
 // until ApprovePaidSubscription is called, so that status is also terminal.
 func waitSubscriptionSynced(ctx context.Context, conn *pricingplanmanager.Client, arn string, timeout time.Duration) (*pricingplanmanager.GetSubscriptionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.StatusSyncInProgress)},
-		Target:  []string{string(awstypes.StatusActive), string(awstypes.StatusPendingApproval)},
+		Pending: enum.Slice(awstypes.StatusSyncInProgress),
+		Target:  enum.Slice(awstypes.StatusActive, awstypes.StatusPendingApproval),
 		Refresh: statusSubscription(conn, arn),
 		Timeout: timeout,
 	}

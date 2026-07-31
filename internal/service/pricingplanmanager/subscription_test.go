@@ -195,6 +195,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 }
 
 func testAccSubscriptionConfig_base(rName string) string {
+	// Web ACLs for CloudFront distributions must be created in us-east-1.
+	// lintignore:AWSAT003
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled    = false
@@ -240,7 +242,6 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  # Web ACLs for CloudFront distributions must be created in us-east-1.
   region = "us-east-1"
 
   name  = %[1]q
