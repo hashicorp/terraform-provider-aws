@@ -2369,8 +2369,11 @@ func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeployment
 	if err != nil {
 		return err
 	}
-	if slices.Contains(deploymentTerminalStates, status) {
-		log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
+	// Empty status means Describe returned no deployment; nothing to roll back.
+	if status == "" || slices.Contains(deploymentTerminalStates, status) {
+		if status != "" {
+			log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
+		}
 		return nil
 	}
 
@@ -2399,6 +2402,7 @@ func findRawServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, deplo
 		return "", err
 	}
 	if len(output) == 0 {
+		// Callers treat empty as "no deployment to act on".
 		return "", nil
 	}
 
@@ -2413,9 +2417,25 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 			awstypes.ServiceDeploymentStatusRollbackRequested,
 			awstypes.ServiceDeploymentStatusRollbackInProgress,
 		),
-		Target: deploymentTerminalStates,
+		// Only successful terminals. Failed terminals are returned as Refresh errors.
+		Target: enum.Slice(
+			awstypes.ServiceDeploymentStatusSuccessful,
+			awstypes.ServiceDeploymentStatusRollbackSuccessful,
+		),
 		Refresh: func(ctx context.Context) (any, string, error) {
-			status, err := findDeploymentStatus(ctx, conn, primaryDeploymentArn)
+			input := ecs.DescribeServiceDeploymentsInput{
+				ServiceDeploymentArns: []string{primaryDeploymentArn},
+			}
+			output, err := findServiceDeployments(ctx, conn, &input)
+			if err != nil {
+				return nil, "", err
+			}
+			if len(output) == 0 {
+				return nil, serviceStatusPending, nil
+			}
+
+			deployment := output[0]
+			status, err := serviceDeploymentWaitRefreshStatus(string(deployment.Status), deployment.StatusReason)
 			return nil, status, err
 		},
 		Timeout: 1 * time.Hour, // Maximum time before SIGKILL
@@ -2423,6 +2443,21 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
+}
+
+// serviceDeploymentWaitRefreshStatus maps a raw AWS service deployment status for
+// waitForDeploymentTerminalStatus. Failed terminals become errors; others pass through.
+func serviceDeploymentWaitRefreshStatus(status string, statusReason *string) (string, error) {
+	switch awstypes.ServiceDeploymentStatus(status) {
+	case awstypes.ServiceDeploymentStatusStopped, awstypes.ServiceDeploymentStatusRollbackFailed:
+		message := "Deployment failed"
+		if statusReason != nil {
+			message = aws.ToString(statusReason)
+		}
+		return status, errors.New(message)
+	default:
+		return status, nil
+	}
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
