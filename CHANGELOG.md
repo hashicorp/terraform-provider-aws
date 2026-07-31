@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_bedrockagentcore_agent_runtime: Allow `:` (colon) in the `match_value_string` and `match_value_string_list` attributes of `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` ([#48437](https://github.com/hashicorp/terraform-provider-aws/issues/48437))
 * resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_glue_catalog_table: Fix `InvalidInputException: StorageDescriptor is not allowed` error when creating or updating ATHENA-dialect views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
