@@ -10,14 +10,18 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+{{- if .UseFIPSParameter }}
 	"net"
+{{- end }}
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+{{- if .UseFIPSParameter }}
 	"time"
+{{- end }}
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
@@ -458,6 +462,8 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectBaseConfigFileEndpoint(),
 		},
 
+{{- if .UseFIPSParameter }}
+
 		// Use FIPS endpoint on Config
 
 		"use fips config": {
@@ -474,6 +480,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			},
 			expected: expectPackageNameConfigEndpoint(),
 		},
+{{- end }}
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
@@ -500,6 +507,7 @@ func defaultEndpoint(ctx context.Context, region string) (url.URL, error) {
 	return ep.URI, nil
 }
 
+{{ if .UseFIPSParameter -}}
 func defaultFIPSEndpoint(ctx context.Context, region string) (url.URL, error) {
 	r := {{ .GoPackage }}.NewDefaultEndpointResolverV2()
 
@@ -517,6 +525,7 @@ func defaultFIPSEndpoint(ctx context.Context, region string) (url.URL, error) {
 
 	return ep.URI, nil
 }
+{{- end }}
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
@@ -613,9 +622,11 @@ func withBaseEndpointInConfigFile(setup *caseSetup) {
 	setup.configFile.baseUrl = baseConfigFileEndpoint
 }
 
+{{ if .UseFIPSParameter -}}
 func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
+{{- end }}
 
 func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) caseExpectations {
 	t.Helper()
@@ -631,6 +642,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 	}
 }
 
+{{ if .UseFIPSParameter -}}
 func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string) caseExpectations {
 	t.Helper()
 
@@ -660,6 +672,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 		region:   expectedCallRegion,
 	}
 }
+{{- end }}
 
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{

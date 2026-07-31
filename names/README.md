@@ -63,6 +63,7 @@ service "" {
     endpoint_api_params      = ""
     endpoint_region_override = ""
     endpoint_only            = bool
+    use_fips_parameter       = bool
   }
 
   resource_prefix {
@@ -107,6 +108,7 @@ The explanation of the attributes of `data/names_data.hcl` are as follows:
 | `endpoint_api_params` | Code | Used in `service_endpoints_gen_test.go` files for API calls that require a configured value |
 | `endpoint_region_override` | Code | Specified alternate regional [endpoint]([https://docs.aws.amazon.com/general/latest/gr/rande.html) for API requests |
 | `endpoint_only` | Code | Bool based on if `not_implemented` is non-blank, whether the service endpoint should be included in the provider `endpoints` configuration |
+| `use_fips_parameter` | Code | Whether the service's AWS SDK for Go v2 endpoint parameters include `UseFIPS`; defaults to `true`. Set to `false` for the rare service whose endpoint rules define no FIPS variants so the generated endpoint resolver and endpoint tests skip FIPS handling |
 | `resource_prefix_actual` | Code | Regular expression to match anomalous TF resource name prefixes (_e.g._, for the resource name `aws_config_config_rule`, `aws_config_` will match all resources); only use if `resource_prefix_correct` is not suitable (_e.g._, `aws_codepipeline_` won't work as there is only one resource named `aws_codepipeline`); takes precedence over `resource_prefix_correct` |
 | `resource_prefix_correct` | Code | Regular expression to match what resource name prefixes _should be_ (_i.e._, `aws_` + `provider_package_correct` + `_`); used if `resource_prefix_actual` is blank |
 | `provider_package_correct` | Code | Shorter of `aws_cli_v2_command_no_dashes` and `v2_package`; should _not_ be blank if either exists; same as [Service Identifier](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier); what the TF AWS Provider package name _should be_; `ProviderPackageActual` takes precedence |

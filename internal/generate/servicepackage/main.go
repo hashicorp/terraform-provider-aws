@@ -132,6 +132,7 @@ func main() {
 		s := ServiceDatum{
 			GenerateClient:          l.GenerateClient(),
 			IsGlobal:                l.IsGlobal(),
+			UseFIPSParameter:        l.UseFIPSParameter(),
 			EndpointRegionOverrides: l.EndpointRegionOverrides(),
 			GoV2Package:             l.GoV2Package(),
 			ProviderPackage:         p,
@@ -261,6 +262,7 @@ func (r ResourceDatum) WrappedImport() bool {
 type ServiceDatum struct {
 	GenerateClient          bool
 	IsGlobal                bool // Is the service global?
+	UseFIPSParameter        bool // Do the service's endpoint parameters include UseFIPS?
 	EndpointRegionOverrides map[string]string
 	GoV2Package             string // AWS SDK for Go v2 package name
 	ProviderPackage         string
