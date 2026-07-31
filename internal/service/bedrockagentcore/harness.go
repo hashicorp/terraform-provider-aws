@@ -725,14 +725,14 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if v := harness.Memory; v != nil {
-		switch v.(type) {
-		case *awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration:
-		default:
-			harness.Memory = nil
-		}
-	}
+
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
+
 	return diags
 }
 
@@ -851,7 +851,7 @@ type harnessResourceModel struct {
 	HarnessName             types.String                                                         `tfsdk:"harness_name"`
 	MaxIterations           types.Int32                                                          `tfsdk:"max_iterations"`
 	MaxTokens               types.Int32                                                          `tfsdk:"max_tokens"`
-	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory"`
+	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory" autoflex:",noflatten"`
 	Model                   fwtypes.ListNestedObjectValueOf[harnessModelConfigurationModel]      `tfsdk:"model"`
 	Skills                  fwtypes.ListNestedObjectValueOf[harnessSkillModel]                   `tfsdk:"skill"`
 	SystemPrompt            fwtypes.ListNestedObjectValueOf[harnessSystemContentBlockModel]      `tfsdk:"system_prompt"`
