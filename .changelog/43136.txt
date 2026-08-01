@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_amplify_app: Add `job_config` argument
-```

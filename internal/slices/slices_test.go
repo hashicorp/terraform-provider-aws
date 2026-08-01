@@ -5,6 +5,7 @@ package slices
 
 import (
 	"errors"
+	"iter"
 	"maps"
 	"strings"
 	"testing"
@@ -405,6 +406,74 @@ func TestCollectWithError(t *testing.T) {
 			if err == nil {
 				if got, want := len(got), len(test.input); !cmp.Equal(got, want) {
 					t.Errorf("CollectWithError() len %d, want %d", got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestCollectAndConcatWithError(t *testing.T) {
+	t.Parallel()
+
+	noError := func(yield func([]int, error) bool) {
+		if !yield([]int{1, 2, 3}, nil) {
+			return
+		}
+		if !yield([]int{4, 5}, nil) {
+			return
+		}
+	}
+	hasError := func(yield func([]int, error) bool) {
+		if !yield([]int{1, 2, 3}, nil) {
+			return
+		}
+		if !yield(nil, errors.New("test error")) {
+			return
+		}
+		if !yield([]int{4, 5}, nil) {
+			return
+		}
+	}
+
+	type testCase struct {
+		input   iter.Seq2[[]int, error]
+		optFns  []FinderOptionsFunc[int]
+		wantErr bool
+		wantLen int
+	}
+	tests := map[string]testCase{
+		"no error": {
+			input:   noError,
+			wantLen: 5,
+		},
+		"has error": {
+			input:   hasError,
+			wantErr: true,
+		},
+		"no error, with filter": {
+			input:   noError,
+			optFns:  []FinderOptionsFunc[int]{WithFilter(func(v int) bool { return v%2 == 0 })},
+			wantLen: 2,
+		},
+		"no error, with return-first-match": {
+			input:   noError,
+			optFns:  []FinderOptionsFunc[int]{WithReturnFirstMatch[int]()},
+			wantLen: 1,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := CollectAndConcatWithError(test.input, test.optFns...)
+
+			if got, want := err != nil, test.wantErr; !cmp.Equal(got, want) {
+				t.Errorf("CollectAndConcatWithError() err %t, want %t", got, want)
+			}
+			if err == nil {
+				if got, want := len(got), test.wantLen; !cmp.Equal(got, want) {
+					t.Errorf("CollectAndConcatWithError() len %d, want %d", got, want)
 				}
 			}
 		})

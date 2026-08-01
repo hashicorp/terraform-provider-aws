@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix failure to detect resources deleted outside of Terraform as missing for numerous resource types
-```

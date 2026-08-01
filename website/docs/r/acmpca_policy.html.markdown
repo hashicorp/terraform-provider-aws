@@ -82,7 +82,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_acmpca_policy.example
   identity = {
-    "arn" = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+    "resource_arn" = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
   }
 }
 
@@ -95,7 +95,7 @@ resource "aws_acmpca_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the ACM PCA certificate authority.
+- `resource_arn` (String) Amazon Resource Name (ARN) of the ACM PCA certificate authority.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_policy` using the `resource_arn` value. For example:
 

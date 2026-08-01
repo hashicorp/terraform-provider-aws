@@ -22,9 +22,9 @@ data "aws_api_gateway_domain_name" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
-* `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
+* `domain_name_id` - (Optional) Identifier for the domain name resource. Supported only for private custom domain names.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -38,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `endpoint_access_mode` - Endpoint access mode of the DomainName. Only available for domain names that use security policies that start with `SecurityPolicy_`.
 * `endpoint_configuration` - List of objects with the endpoint configuration of this domain name. See below.
-* `policy` - A stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
+* `policy` - Stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
 * `regional_certificate_arn` - ARN for an AWS-managed certificate that is used for validating the regional domain name.
 * `regional_certificate_name` - User-friendly name of the certificate that is used by regional endpoint for this domain name.
 * `regional_domain_name` - Hostname for the custom domain's regional endpoint.
@@ -48,5 +48,5 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `endpoint_configuration`
 
-* `ip_address_type` - The IP address types that can invoke an API (RestApi).
+* `ip_address_type` - IP address types that can invoke a DomainName.
 * `types` - List of endpoint types.
