@@ -262,7 +262,7 @@ The following arguments are optional:
 
 ### metrics_config Configuration Block
 
-* `metrics` - (Required) List containing the metrics to be produced by the event source mapping. Valid values: `EventCount`.
+* `metrics` - (Required) List containing the metrics to be produced by the event source mapping. Valid values: `EventCount`, `ErrorCount`, `KafkaMetrics`.
 
 ### provisioned_poller_config Configuration Block
 
