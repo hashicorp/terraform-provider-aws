@@ -84,7 +84,21 @@ func resourceReplicationGroup() *schema.Resource {
 					Optional:      true,
 					Sensitive:     true,
 					ValidateFunc:  validReplicationGroupAuthToken,
-					ConflictsWith: []string{"user_group_ids"},
+					ConflictsWith: []string{"user_group_ids", "auth_token_wo"},
+				},
+				"auth_token_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ValidateFunc:  validReplicationGroupAuthToken,
+					ConflictsWith: []string{"user_group_ids", "auth_token"},
+					RequiredWith:  []string{"auth_token_wo_version"},
+				},
+				"auth_token_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"auth_token_wo"},
 				},
 				"auth_token_update_strategy": {
 					Type:             schema.TypeString,
@@ -454,7 +468,7 @@ func resourceReplicationGroup() *schema.Resource {
 					Type:          schema.TypeSet,
 					Optional:      true,
 					Elem:          &schema.Schema{Type: schema.TypeString},
-					ConflictsWith: []string{"auth_token"},
+					ConflictsWith: []string{"auth_token", "auth_token_wo"},
 				},
 			}
 		},
@@ -555,6 +569,17 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("auth_token"); ok {
 		input.AuthToken = aws.String(v.(string))
+	}
+
+	// Get the write-only auth token value from configuration. It is never
+	// persisted to state, so it must be read from the raw config on each apply.
+	authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+	if authTokenWO != "" {
+		input.AuthToken = aws.String(authTokenWO)
 	}
 
 	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
@@ -1157,7 +1182,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			add, del := ns.Difference(os), os.Difference(ns)
 
 			if add.Len() > 0 {
-				if d.HasChanges("auth_token", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+				if d.HasChanges("auth_token", "auth_token_wo_version", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
 					// Transitioning to RBAC.
 					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string))
 				}
@@ -1186,12 +1211,27 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			})
 		}
 
-		if d.HasChanges("auth_token", "auth_token_update_strategy") {
+		if d.HasChanges("auth_token", "auth_token_wo_version", "auth_token_update_strategy") {
 			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
 			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
+				authToken := d.Get("auth_token").(string)
+
+				// When the write-only token version changes, source the new token
+				// from the write-only argument in configuration.
+				if d.HasChange("auth_token_wo_version") {
+					authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+					diags = append(diags, di...)
+					if diags.HasError() {
+						return diags
+					}
+					if authTokenWO != "" {
+						authToken = authTokenWO
+					}
+				}
+
 				authInput := elasticache.ModifyReplicationGroupInput{
 					ApplyImmediately:        aws.Bool(true),
-					AuthToken:               aws.String(d.Get("auth_token").(string)),
+					AuthToken:               aws.String(authToken),
 					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
 					ReplicationGroupId:      aws.String(d.Id()),
 				}
@@ -1702,17 +1742,18 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 
 func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
-	// Use GetRawConfig to check if auth_token is configured, even if unknown at plan time
-	tokenConfigured := !diff.GetRawConfig().GetAttr("auth_token").IsNull()
+	// Use GetRawConfig to check if auth_token or auth_token_wo is configured, even if unknown at plan time
+	rawConfig := diff.GetRawConfig()
+	tokenConfigured := !rawConfig.GetAttr("auth_token").IsNull() || !rawConfig.GetAttr("auth_token_wo").IsNull()
 
 	if strategyOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
 		if tokenConfigured {
-			return errors.New(`"auth_token" must not be specified when "auth_token_update_strategy" is "DELETE"`)
+			return errors.New(`"auth_token"/"auth_token_wo" must not be specified when "auth_token_update_strategy" is "DELETE"`)
 		}
 		return nil
 	}
 	if strategyOk && !tokenConfigured {
-		return errors.New(`"auth_token_update_strategy": "auth_token" must be specified`)
+		return errors.New(`"auth_token_update_strategy": "auth_token" or "auth_token_wo" must be specified`)
 	}
 
 	return nil
