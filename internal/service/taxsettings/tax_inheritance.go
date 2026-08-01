@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/taxsettings"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/taxsettings/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -32,6 +33,7 @@ import (
 // @FrameworkResource("aws_taxsettings_tax_inheritance", name="Tax Inheritance")
 // @Region(global=true)
 // @SingletonIdentity
+// @Testing(hasNoPreExistingResource=true)
 func newTaxInheritanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &taxInheritanceResource{}
 
@@ -85,7 +87,6 @@ func (r *taxInheritanceResource) Create(ctx context.Context, req resource.Create
 
 func (r *taxInheritanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().TaxSettingsClient(ctx)
-
 	var state taxInheritanceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -121,6 +122,10 @@ func (r *taxInheritanceResource) Update(ctx context.Context, req resource.Update
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+}
+
+func (r *taxInheritanceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("heritage_status"), req, resp)
 }
 
 func (r *taxInheritanceResource) putTaxInheritanceHeritageStatus(ctx context.Context, data *taxInheritanceResourceModel) diag.Diagnostics {
