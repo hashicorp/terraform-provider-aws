@@ -1165,6 +1165,8 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if len(userGroupsToAdd) > 0 && (transitEnabledChanged || transitModeChanged) {
 			// Sequenced path: apply transit encryption changes (each modify waits for "available") then associate user groups; AWS validates that encryption is enforced for RBAC.
+			const modifyDelay = 60 * time.Second
+
 			modifyReplicationGroupThenWait := func(modifyInput *elasticache.ModifyReplicationGroupInput, action string) func() error {
 				return func() error {
 					_, err := conn.ModifyReplicationGroup(ctx, modifyInput)
@@ -1174,7 +1176,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 					if err != nil {
 						return fmt.Errorf("modifying ElastiCache Replication Group (%s) %s: %w", d.Id(), action, err)
 					}
-					if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), 60*time.Second); err != nil {
+					if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), modifyDelay); err != nil {
 						return fmt.Errorf("waiting for ElastiCache Replication Group (%s) %s: %w", d.Id(), action, err)
 					}
 					return nil
@@ -1231,7 +1233,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				if err != nil {
 					return fmt.Errorf("modifying ElastiCache Replication Group (%s) user groups: %w", d.Id(), err)
 				}
-				if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), 60*time.Second); err != nil {
+				if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), modifyDelay); err != nil {
 					return fmt.Errorf("waiting for ElastiCache Replication Group (%s) user groups: %w", d.Id(), err)
 				}
 				return nil
