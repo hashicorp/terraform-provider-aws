@@ -1210,6 +1210,48 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m1, m2 awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName1 := "aws_bedrockagentcore_memory_strategy.test"
+	resourceName2 := "aws_bedrockagentcore_memory_strategy.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Two strategies of different types on the same memory: creating the
+				// second must not fail with "too many results" against the first.
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrType, string(awstypes.MemoryStrategyTypeUserPreference)),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrType, string(awstypes.MemoryStrategyTypeSummarization)),
+				),
+			},
+			{
+				// Updating one of the two strategies must not fail either, for the
+				// same reason.
+				Config: testAccMemoryStrategyConfig_multipleTypesUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrDescription, "Summarization strategy updated"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -2124,6 +2166,32 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
   namespace_templates       = [%[3]q]
 }
 `, rName, strategyType, duplicateNamespace))
+}
+
+func testAccMemoryStrategyConfig_multipleTypes(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test2" {
+  name                      = "%[1]s_summary"
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = "Summarization strategy"
+  namespace_templates       = ["{sessionId}"]
+}
+`, rName, awstypes.MemoryStrategyTypeSummarization))
+}
+
+func testAccMemoryStrategyConfig_multipleTypesUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test2" {
+  name                      = "%[1]s_summary"
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = "Summarization strategy updated"
+  namespace_templates       = ["{sessionId}"]
+}
+`, rName, awstypes.MemoryStrategyTypeSummarization))
 }
 
 func testAccMemoryStrategyConfig_custom(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
