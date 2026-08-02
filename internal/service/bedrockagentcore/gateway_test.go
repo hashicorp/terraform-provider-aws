@@ -618,6 +618,7 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("sports"),
 										knownvalue.StringExact("weather"),
@@ -669,6 +670,7 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("finance"),
 										knownvalue.StringExact("technology"),
@@ -735,6 +737,7 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("sports"),
 										knownvalue.StringExact("weather"),
@@ -805,6 +808,7 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("finance"),
 										knownvalue.StringExact("technology"),
@@ -866,6 +870,7 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("finance"),
 										knownvalue.StringExact("technology"),
@@ -914,6 +919,200 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGateway_customJWTAuthorizerAdvertisedScopeMapping walks
+// advertised_scope_mapping through its full lifecycle:
+//  1. no prior value tracked in Terraform (attribute unset in config/state)
+//  2. a value is set (also exercised via ImportState to confirm a fresh import
+//     correctly discovers a map value that a brand-new Terraform run had no
+//     prior knowledge of)
+//  3. an existing entry's value is edited in place
+//  4. the map is mutated further: grown to two entries, then shrunk back to one
+//     entry under a different key (add + remove in the same apply)
+//  5. the attribute is removed entirely (deleted back to null)
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizerAdvertisedScopeMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+	discoveryURL := "https://accounts.google.com/.well-known/openid-configuration"
+	mapPath := tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0).AtMapKey("advertised_scope_mapping")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Scenario: no prior existing value tracked in Terraform.
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizer(
+					rName, discoveryURL,
+					"weather", "sports",
+					"client-999", "client-888",
+					"weather/read", "weather/write",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mapPath, knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			// Scenario: a value is set where none existed before.
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMapping(
+					rName, discoveryURL,
+					"weather", "sports",
+					"client-999", "client-888",
+					"weather/read", "weather/write",
+					"weather/read", "openid",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mapPath, knownvalue.MapExact(map[string]knownvalue.Check{
+						"weather/read": knownvalue.StringExact("openid"),
+					})),
+				},
+			},
+			// Scenario: existing value not tracked in Terraform. A fresh import
+			// (which always rebuilds state solely from a Read, with no state carried
+			// over) must independently rediscover the map value set in the previous
+			// step, proving the provider correctly surfaces API state for an
+			// attribute a new Terraform run has no local record of.
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if got := states[0].Attributes["authorizer_configuration.0.custom_jwt_authorizer.0.advertised_scope_mapping.weather/read"]; got != "openid" {
+						return fmt.Errorf("imported advertised_scope_mapping[weather/read] = %q, want %q", got, "openid")
+					}
+					return nil
+				},
+			},
+			// Scenario: an existing entry's value is edited in place (same key,
+			// new value).
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMapping(
+					rName, discoveryURL,
+					"weather", "sports",
+					"client-999", "client-888",
+					"weather/read", "weather/write",
+					"weather/read", "email",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mapPath, knownvalue.MapExact(map[string]knownvalue.Check{
+						"weather/read": knownvalue.StringExact("email"),
+					})),
+				},
+			},
+			// Scenario: map mutation - grown from one entry to two.
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMappingTwoEntries(
+					rName, discoveryURL,
+					"weather", "sports",
+					"client-999", "client-888",
+					"weather/read", "weather/write",
+					"openid",
+					"profile",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mapPath, knownvalue.MapExact(map[string]knownvalue.Check{
+						"weather/read":  knownvalue.StringExact("openid"),
+						"weather/write": knownvalue.StringExact("profile"),
+					})),
+				},
+			},
+			// Scenario: map mutation - shrunk back to one entry, but keyed on the
+			// scope that was previously absent (an add and a remove in one apply).
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMapping(
+					rName, discoveryURL,
+					"weather", "sports",
+					"client-999", "client-888",
+					"weather/read", "weather/write",
+					"weather/write", "openid",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mapPath, knownvalue.MapExact(map[string]knownvalue.Check{
+						"weather/write": knownvalue.StringExact("openid"),
+					})),
+				},
+			},
+			// Scenario: the value is deleted (attribute removed from config
+			// entirely, back to null).
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizer(
+					rName, discoveryURL,
+					"weather", "sports",
+					"client-999", "client-888",
+					"weather/read", "weather/write",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, mapPath, knownvalue.Null()),
+				},
 			},
 		},
 	})
@@ -1365,6 +1564,57 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMapping(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, mapKey, mapValue string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+
+      advertised_scope_mapping = {
+        %[9]q = %[10]q
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, mapKey, mapValue))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerAdvertisedScopeMappingTwoEntries(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, advertisedScope1, advertisedScope2 string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = %[2]q
+      allowed_audience = [%[3]q, %[4]q]
+      allowed_clients  = [%[5]q, %[6]q]
+      allowed_scopes   = [%[7]q, %[8]q]
+
+      advertised_scope_mapping = {
+        %[7]q = %[9]q
+        %[8]q = %[10]q
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, advertisedScope1, advertisedScope2))
 }
 
 func testAccGatewayConfig_customJWTAuthorizerCustomClaimString(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator string) string {
