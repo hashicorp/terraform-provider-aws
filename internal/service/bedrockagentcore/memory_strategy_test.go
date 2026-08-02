@@ -1230,7 +1230,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
 			{
 				// Two strategies of different types on the same memory: creating the
 				// second must not fail with "too many results" against the first.
-				Config: testAccMemoryStrategyConfig_multipleTypes(rName),
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName, "Summarization strategy"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
@@ -1241,7 +1241,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
 			{
 				// Updating one of the two strategies must not fail either, for the
 				// same reason.
-				Config: testAccMemoryStrategyConfig_multipleTypesUpdated(rName),
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName, "Summarization strategy updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
@@ -2168,30 +2168,17 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
 `, rName, strategyType, duplicateNamespace))
 }
 
-func testAccMemoryStrategyConfig_multipleTypes(rName string) string {
+func testAccMemoryStrategyConfig_multipleTypes(rName, description string) string {
 	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test2" {
   name                      = "%[1]s_summary"
   memory_id                 = aws_bedrockagentcore_memory.test.id
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = %[2]q
-  description               = "Summarization strategy"
+  description               = %[3]q
   namespace_templates       = ["{sessionId}"]
 }
-`, rName, awstypes.MemoryStrategyTypeSummarization))
-}
-
-func testAccMemoryStrategyConfig_multipleTypesUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"), fmt.Sprintf(`
-resource "aws_bedrockagentcore_memory_strategy" "test2" {
-  name                      = "%[1]s_summary"
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = %[2]q
-  description               = "Summarization strategy updated"
-  namespace_templates       = ["{sessionId}"]
-}
-`, rName, awstypes.MemoryStrategyTypeSummarization))
+`, rName, awstypes.MemoryStrategyTypeSummarization, description))
 }
 
 func testAccMemoryStrategyConfig_custom(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
