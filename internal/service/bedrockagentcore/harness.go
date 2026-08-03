@@ -184,7 +184,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								},
 								Blocks: map[string]schema.Block{
 									"filesystem_configuration": filesystemConfigurationSchema(ctx),
-									"network_configuration": schema.ListNestedBlock{
+									names.AttrNetworkConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
