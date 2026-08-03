@@ -161,6 +161,60 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 	})
 }
 
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_customClientAuthenticationMethod(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_customWithClientAuthenticationMethod(rName, "auth0-client-id", "auth0-client-secret", 1, "https://dev-example.auth0.com/.well-known/openid-configuration", "CLIENT_SECRET_POST"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_authentication_method", "CLIENT_SECRET_POST"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
+				},
+			},
+			{
+				Config: testAccOAuth2CredentialProviderConfig_customWithClientAuthenticationMethod(rName, "auth0-client-id", "auth0-client-secret", 1, "https://dev-example.auth0.com/.well-known/openid-configuration", "CLIENT_SECRET_BASIC"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_authentication_method", "CLIENT_SECRET_BASIC"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
@@ -418,6 +472,28 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   }
 }
 `, rName, clientId, clientSecret, version, discoveryURL)
+}
+
+func testAccOAuth2CredentialProviderConfig_customWithClientAuthenticationMethod(rName, clientId, clientSecret string, version int, discoveryURL, clientAuthenticationMethod string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id_wo                  = %[2]q
+      client_secret_wo              = %[3]q
+      client_credentials_wo_version = %[4]d
+      client_authentication_method  = %[6]q
+
+      oauth_discovery {
+        discovery_url = %[5]q
+      }
+    }
+  }
+}
+`, rName, clientId, clientSecret, version, discoveryURL, clientAuthenticationMethod)
 }
 
 func testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, clientId, clientSecret string, version int, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2 string) string {

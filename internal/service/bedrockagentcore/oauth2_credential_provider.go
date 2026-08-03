@@ -126,6 +126,15 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 	}
 }
 
+func customOAuth2ProviderConfigAttributes(ctx context.Context) map[string]schema.Attribute {
+	attrs := oauth2ClientCredentialsAttributes(ctx)
+	attrs["client_authentication_method"] = schema.StringAttribute{
+		CustomType: fwtypes.StringEnumType[awstypes.ClientAuthenticationMethodType](),
+		Optional:   true,
+	}
+	return attrs
+}
+
 func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNestedBlock {
 	attrs := oauth2ClientCredentialsAttributes(ctx)
 	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
@@ -181,7 +190,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: oauth2ClientCredentialsAttributes(ctx),
+								Attributes: customOAuth2ProviderConfigAttributes(ctx),
 								Blocks: map[string]schema.Block{
 									"oauth_discovery": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
@@ -745,7 +754,8 @@ type oauth2DiscoveryModel struct {
 
 type customOAuth2ProviderConfigModel struct {
 	oauth2ClientCredentialsModel
-	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+	ClientAuthenticationMethod fwtypes.StringEnum[awstypes.ClientAuthenticationMethodType] `tfsdk:"client_authentication_method"`
+	OAuthDiscovery             fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel]       `tfsdk:"oauth_discovery"`
 }
 
 type githubOAuth2ProviderConfigModel struct {
