@@ -61,7 +61,7 @@ resource "aws_s3control_multi_region_access_point" "example" {
 This resource supports the following arguments:
 
 * `account_id` - (Optional) AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `details` - (Required) Configuration block containing details about the Multi-Region Access Point. See [`details` Block](#details) below.
+* `details` - (Required) Configuration block containing details about the Multi-Region Access Point. See [`details` Block](#details-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `details` Block
@@ -69,8 +69,8 @@ This resource supports the following arguments:
 The `details` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the Multi-Region Access Point.
-* `public_access_block` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this Multi-Region Access Point. You can enable the configuration options in any combination. See [`public_access_block` Block](#public_access_block) below.
-* `region` - (Required) Region configuration block to specify the bucket associated with the Multi-Region Access Point. See [`region` Block](#region) below.
+* `public_access_block` - (Optional) Configuration block to manage the `PublicAccessBlock` configuration that you want to apply to this Multi-Region Access Point. You can enable the configuration options in any combination. See [`public_access_block` Block](#public_access_block-block) below.
+* `region` - (Required) Region configuration block to specify the bucket associated with the Multi-Region Access Point. See [`region` Block](#region-block) below.
 
 ### `public_access_block` Block
 
@@ -88,6 +88,10 @@ The `region` configuration block supports the following arguments:
 * `bucket` - (Required) Name of the associated bucket for the Region.
 * `bucket_account_id` - (Optional) AWS account ID that owns the Amazon S3 bucket that's associated with this Multi-Region Access Point.
 
+In addition to the arguments above, the following attribute is exported:
+
+* `region` - Name of the Region.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -98,10 +102,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - AWS account ID and access point name separated by a colon (`:`).
 * `name` - Name of the Multi-Region Access Point.
 * `status` - Status of the Multi-Region Access Point. One of: `READY`, `INCONSISTENT_ACROSS_REGIONS`, `CREATING`, `PARTIALLY_CREATED`, `PARTIALLY_DELETED`, `DELETING`.
-
-### `region` Block
-
-* `region` - Name of the Region.
 
 ## Timeouts
 
