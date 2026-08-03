@@ -11,9 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -26,7 +26,7 @@ import (
 
 func TestAccMailManagerRuleSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -75,7 +75,7 @@ func TestAccMailManagerRuleSet_basic(t *testing.T) {
 
 func TestAccMailManagerRuleSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -93,13 +93,18 @@ func TestAccMailManagerRuleSet_disappears(t *testing.T) {
 				acctest.CheckFrameworkResourceDisappears(ctx, t, tfmailmanager.ResourceRuleSet, resourceName),
 			),
 			ExpectNonEmptyPlan: true,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+				},
+			},
 		}},
 	})
 }
 
 func TestAccMailManagerRuleSet_conditionTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -160,7 +165,7 @@ func TestAccMailManagerRuleSet_conditionTypes(t *testing.T) {
 
 func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -184,7 +189,7 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 							}),
 							testAccRuleSetUnionValue("drop", map[string]knownvalue.Check{}),
 							testAccRuleSetUnionValue("replace_recipient", map[string]knownvalue.Check{
-								"replace_with": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("one@example.com"), knownvalue.StringExact("two@example.com")}),
+								"replace_with": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact(acctest.DefaultEmailAddress), knownvalue.StringExact(acctest.DefaultEmailAddress)}),
 							}),
 						}),
 					})),
@@ -196,7 +201,7 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 
 func TestAccMailManagerRuleSet_evaluateTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_rule_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -265,7 +270,8 @@ func testAccCheckRuleSetDestroy(ctx context.Context, t *testing.T) resource.Test
 }
 
 func testAccRuleSetPreCheck(ctx context.Context, t *testing.T) {
-	_, err := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx).ListRuleSets(ctx, &mailmanager.ListRuleSetsInput{})
+	var input mailmanager.ListRuleSetsInput
+	_, err := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx).ListRuleSets(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -415,12 +421,12 @@ resource "aws_mailmanager_rule_set" "test" {
 
 		action {
 			replace_recipient {
-				replace_with = ["one@example.com", "two@example.com"]
+				replace_with = [%[2]q, %[2]q]
 			}
 		}
 	}
 }
-`, rName)
+`, rName, acctest.DefaultEmailAddress)
 }
 
 func testAccRuleSetConfigEvaluateTypes(rName string) string {
