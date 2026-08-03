@@ -600,14 +600,12 @@ func TestAccBedrockAgentCoreHarness_memory_invalidUnion(t *testing.T) {
     disabled = true
     managed_memory_configuration {}
   }`),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`exactly one of`),
 			},
 			{
 				// Empty memory block (no member).
 				Config: testAccHarnessConfig_memoryRaw(rName, `
   memory {}`),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`exactly one of`),
 			},
 			{
@@ -616,7 +614,6 @@ func TestAccBedrockAgentCoreHarness_memory_invalidUnion(t *testing.T) {
   memory {
     disabled = false
   }`),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`exactly one of`),
 			},
 		},
@@ -644,7 +641,6 @@ func TestAccBedrockAgentCoreHarness_memory_invalidStrategy(t *testing.T) {
       strategies = ["BOGUS_STRATEGY"]
     }
   }`),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`(?i)invalid memory strategy`),
 			},
 		},
@@ -667,7 +663,6 @@ func TestAccBedrockAgentCoreHarness_memory_invalidRelevanceScore(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccHarnessConfig_memory(rName, 5.0),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`relevance_score must be between`),
 			},
 		},
