@@ -37,19 +37,19 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `encryption_configuration` - (Optional, Forces new resource) Block for encryption configuration for the vector index. See [`encryption_configuration` Block](#encryption_configuration-block) below.
+* `metadata_configuration` - (Optional, Forces new resource) Block for metadata configuration for the vector index. See [`metadata_configuration` Block](#metadata_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `encryption_configuration` - (Optional, Forces new resource) Block for encryption configuration for the vector index. See [`encyption_configuration` block](#encyption_configuration-block) below.
-* `metadata_configuration` - (Optional, Forces new resource) Block for metadata configuration for the vector index. See [`metadata_configuration` block](#metadata_configuration-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `encyption_configuration` block
+### `encryption_configuration` Block
 
 The `encryption_configuration` block supports the following attributes:
 
 * `kms_key_arn` - (Optional, Forces new resource) AWS Key Management Service (KMS) customer managed key ID to use for the encryption configuration. This parameter is allowed if and only if `sse_type` is set to `aws:kms`. To specify the KMS key, you must use the format of the KMS key Amazon Resource Name (ARN).
 * `sse_type` - (Optional, Forces new resource) Type of encryption to use. Valid values: `AES256`, `aws:kms`. Defaults to `AES256`.
 
-### `metadata_configuration` block
+### `metadata_configuration` Block
 
 The `metadata_configuration` block supports the following attributes:
 
@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `creation_time` - Date and time when the vector index was created.
 * `index_arn` - ARN of the vector index.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
