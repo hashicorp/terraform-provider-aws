@@ -60,7 +60,7 @@ func (r *ruleSetResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -79,7 +79,7 @@ func (r *ruleSetResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"rule": ruleSetRuleBlock(ctx),
+			names.AttrRule: ruleSetRuleBlock(ctx),
 		},
 	}
 }
@@ -93,8 +93,8 @@ func ruleSetRuleBlock(ctx context.Context) schema.ListNestedBlock {
 				names.AttrName: schema.StringAttribute{Optional: true},
 			},
 			Blocks: map[string]schema.Block{
-				"action":    ruleSetActionBlock(ctx),
-				"condition": ruleSetConditionBlock(ctx),
+				names.AttrAction:    ruleSetActionBlock(ctx),
+				names.AttrCondition: ruleSetConditionBlock(ctx),
 				"unless":    ruleSetConditionBlock(ctx),
 			},
 		},
@@ -176,7 +176,7 @@ func ruleDMARCExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "ip_expression", "number_expression", "string_expression", "verdict_expression"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleDmarcOperator](), Required: true},
-			"values": schema.ListAttribute{
+			names.AttrValues: schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleDmarcPolicy](),
 				Required:   true,
 				Validators: []validator.List{listvalidator.SizeAtLeast(1)},
@@ -192,7 +192,7 @@ func ruleIPExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleIpOperator](), Required: true},
-				"values": schema.ListAttribute{
+				names.AttrValues: schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
 					Required:    true,
@@ -221,8 +221,8 @@ func ruleNumberExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "dmarc_expression", "ip_expression", "string_expression", "verdict_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleNumberOperator](), Required: true},
-				"value":    schema.Float64Attribute{Required: true},
+				"operator":      schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleNumberOperator](), Required: true},
+				names.AttrValue: schema.Float64Attribute{Required: true},
 			},
 			Blocks: map[string]schema.Block{
 				"evaluate": schema.ListNestedBlock{
@@ -244,7 +244,7 @@ func ruleStringExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleStringOperator](), Required: true},
-				"values": schema.ListAttribute{
+				names.AttrValues: schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
 					Required:    true,
@@ -301,8 +301,8 @@ func ruleVerdictExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "dmarc_expression", "ip_expression", "number_expression", "string_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleVerdictOperator](), Required: true},
-				"values":   schema.ListAttribute{CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleVerdict](), Required: true, Validators: []validator.List{listvalidator.SizeBetween(1, 10)}},
+				"operator":        schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleVerdictOperator](), Required: true},
+				names.AttrValues: schema.ListAttribute{CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleVerdict](), Required: true, Validators: []validator.List{listvalidator.SizeBetween(1, 10)}},
 			},
 			Blocks: map[string]schema.Block{
 				"evaluate": ruleVerdictEvaluateBlock(ctx),
@@ -394,13 +394,13 @@ func bounceActionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
 			"diagnostic_message":    schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 256)}},
-			"message":               schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 500)}},
-			"role_arn":              schema.StringAttribute{Required: true},
+			names.AttrMessage: schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 500)}},
+			names.AttrRoleARN: schema.StringAttribute{Required: true},
 			"sender":                schema.StringAttribute{Required: true},
 			"smtp_reply_code": schema.StringAttribute{Required: true, Validators: []validator.String{
 				stringvalidator.RegexMatches(regexache.MustCompile(`^[45][0-9]{2}$`), "must be a 4xx or 5xx SMTP reply code"),
 			}},
-			"status_code": schema.StringAttribute{Required: true, Validators: []validator.String{
+			names.AttrStatusCode: schema.StringAttribute{Required: true, Validators: []validator.String{
 				stringvalidator.RegexMatches(regexache.MustCompile(`^[45]\.[0-9]{1,3}\.[0-9]{1,3}$`), "must be an enhanced SMTP status code beginning with 4 or 5"),
 			}},
 		}},
@@ -414,7 +414,7 @@ func deliverToMailboxActionBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
 			"mailbox_arn":           schema.StringAttribute{Required: true},
-			"role_arn":              schema.StringAttribute{Required: true},
+			names.AttrRoleARN: schema.StringAttribute{Required: true},
 		}},
 	}
 }
@@ -425,9 +425,9 @@ func deliverToQBusinessActionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"application_id":        schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(36, 36)}},
-			"index_id":              schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(36, 36)}},
-			"role_arn":              schema.StringAttribute{Required: true},
+			names.AttrApplicationID: schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(36, 36)}},
+			"index_id":               schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(36, 36)}},
+			names.AttrRoleARN:        schema.StringAttribute{Required: true},
 		}},
 	}
 }
@@ -446,10 +446,10 @@ func invokeLambdaActionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"function_arn":          schema.StringAttribute{Required: true},
-			"invocation_type":       schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.LambdaInvocationType](), Required: true},
-			"retry_time_minutes":    schema.Int32Attribute{Optional: true, Validators: []validator.Int32{int32validator.Between(0, 2160)}},
-			"role_arn":              schema.StringAttribute{Required: true},
+			names.AttrFunctionARN:  schema.StringAttribute{Required: true},
+			"invocation_type":      schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.LambdaInvocationType](), Required: true},
+			"retry_time_minutes":   schema.Int32Attribute{Optional: true, Validators: []validator.Int32{int32validator.Between(0, 2160)}},
+			names.AttrRoleARN:      schema.StringAttribute{Required: true},
 		}},
 	}
 }
@@ -462,8 +462,8 @@ func publishToSNSActionBlock(ctx context.Context) schema.ListNestedBlock {
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
 			"encoding":              schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.SnsNotificationEncoding](), Optional: true},
 			"payload_type":          schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.SnsNotificationPayloadType](), Optional: true},
-			"role_arn":              schema.StringAttribute{Required: true},
-			"topic_arn":             schema.StringAttribute{Required: true},
+			names.AttrRoleARN:  schema.StringAttribute{Required: true},
+			names.AttrTopicARN: schema.StringAttribute{Required: true},
 		}},
 	}
 }
@@ -505,7 +505,7 @@ func sendActionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"role_arn":              schema.StringAttribute{Required: true},
+			names.AttrRoleARN: schema.StringAttribute{Required: true},
 		}},
 	}
 }
@@ -516,8 +516,8 @@ func writeToS3ActionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"role_arn":              schema.StringAttribute{Required: true},
-			"s3_bucket":             schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 62)}},
+			names.AttrRoleARN:  schema.StringAttribute{Required: true},
+			names.AttrS3Bucket: schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 62)}},
 			"s3_prefix":             schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 62)}},
 			"s3_sse_kms_key_id":     schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(20, 2048)}},
 		}},
