@@ -149,11 +149,7 @@ func (r *transitGatewayPolicyTableEntryResource) Create(ctx context.Context, req
 		return
 	}
 
-	planPolicyRule, diags := data.PolicyRule.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	planPolicyRule := data.PolicyRule
 
 	output, err := conn.CreateTransitGatewayPolicyTableEntry(ctx, &input)
 
@@ -198,11 +194,7 @@ func (r *transitGatewayPolicyTableEntryResource) Read(ctx context.Context, reque
 		return
 	}
 
-	statePolicyRule, diags := data.PolicyRule.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	statePolicyRule := data.PolicyRule
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, entry, &data))
 	if response.Diagnostics.HasError() {
@@ -232,11 +224,7 @@ func (r *transitGatewayPolicyTableEntryResource) Update(ctx context.Context, req
 		return
 	}
 
-	planPolicyRule, diags := data.PolicyRule.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	planPolicyRule := data.PolicyRule
 
 	output, err := conn.ModifyTransitGatewayPolicyTableEntry(ctx, &input)
 
@@ -327,12 +315,18 @@ type transitGatewayPolicyRuleMetaDataModel struct {
 }
 
 // fixupTransitGatewayPolicyRule corrects two AWS API quirks after flattening a
-// GetTransitGatewayPolicyTableEntries response into policyRule:
-//   - AWS always returns a non-nil PolicyRule, even when none was configured, so a
-//     rule with no matching criteria at all is collapsed back to null.
-//   - The API never returns the rule's metadata, so it's restored from prior state
+// CreateTransitGatewayPolicyTableEntry/GetTransitGatewayPolicyTableEntries response
+// into policyRule, using priorPolicyRule (the plan on create/update, prior state on
+// read) as the reference:
+//   - AWS always returns a PolicyRule, even when no policy_rule block was configured,
+//     reporting every unset match criterion as "*" (all) rather than omitting it. Such
+//     an all-wildcard rule carries no configuration, so it's restored to the prior
+//     value; returning it verbatim would make Terraform report "block count changed
+//     from 0 to 1" after apply. A rule that wildcards only some criteria (e.g.
+//     protocol = "*" alongside real CIDRs) is a real rule and is kept.
+//   - The API never returns the rule's metadata, so it's restored from the prior value
 //     (unavailable, e.g. on import, it's simply left null).
-func fixupTransitGatewayPolicyRule(ctx context.Context, policyRule *fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel], priorPolicyRule *transitGatewayPolicyRuleModel) diag.Diagnostics {
+func fixupTransitGatewayPolicyRule(ctx context.Context, policyRule *fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel], priorPolicyRule fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel]) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	rule, d := policyRule.ToPtr(ctx)
@@ -341,13 +335,22 @@ func fixupTransitGatewayPolicyRule(ctx context.Context, policyRule *fwtypes.List
 		return diags
 	}
 
-	if rule.DestinationCIDRBlock.IsNull() && rule.Protocol.IsNull() && rule.SourceCIDRBlock.IsNull() {
-		*policyRule = fwtypes.NewListNestedObjectValueOfNull[transitGatewayPolicyRuleModel](ctx)
+	if isUnsetTransitGatewayPolicyRuleCriterion(rule.DestinationCIDRBlock) &&
+		isUnsetTransitGatewayPolicyRuleCriterion(rule.Protocol) &&
+		isUnsetTransitGatewayPolicyRuleCriterion(rule.SourceCIDRBlock) &&
+		isUnsetTransitGatewayPolicyRuleCriterion(rule.DestinationPortRange) &&
+		isUnsetTransitGatewayPolicyRuleCriterion(rule.SourcePortRange) {
+		*policyRule = priorPolicyRule
 		return diags
 	}
 
-	if priorPolicyRule != nil {
-		rule.Metadata = priorPolicyRule.Metadata
+	priorRule, d := priorPolicyRule.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	if priorRule != nil {
+		rule.Metadata = priorRule.Metadata
 	}
 
 	newPolicyRule, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, rule)
@@ -358,4 +361,15 @@ func fixupTransitGatewayPolicyRule(ctx context.Context, policyRule *fwtypes.List
 	*policyRule = newPolicyRule
 
 	return diags
+}
+
+// transitGatewayPolicyRuleWildcard is how AWS reports a policy rule match criterion
+// that matches everything, including one that was never configured.
+const transitGatewayPolicyRuleWildcard = "*"
+
+// isUnsetTransitGatewayPolicyRuleCriterion reports whether a policy rule match
+// criterion carries no configuration. AWS reports an unset criterion as "*" (all)
+// rather than omitting it.
+func isUnsetTransitGatewayPolicyRuleCriterion(v types.String) bool {
+	return v.ValueString() == "" || v.ValueString() == transitGatewayPolicyRuleWildcard
 }
