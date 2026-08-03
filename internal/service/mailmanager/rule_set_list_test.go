@@ -128,14 +128,14 @@ func TestAccMailManagerRuleSet_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceDisplayName("aws_mailmanager_rule_set.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_mailmanager_rule_set.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("created_date"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreatedDate), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("last_modification_date"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
-								"action": knownvalue.ListExact([]knownvalue.Check{
+								names.AttrAction: knownvalue.ListExact([]knownvalue.Check{
 									testAccRuleSetUnionValue("add_header", map[string]knownvalue.Check{
 										"header_name":  knownvalue.StringExact("X-Example"),
 										"header_value": knownvalue.StringExact("example"),
