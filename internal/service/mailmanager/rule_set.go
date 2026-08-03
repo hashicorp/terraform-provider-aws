@@ -216,7 +216,10 @@ func ruleIPExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "dmarc_expression", "number_expression", "string_expression", "verdict_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleIpOperator](), Required: true},
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RuleIpOperator](),
+					Required:   true,
+				},
 				names.AttrValues: schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
@@ -230,9 +233,14 @@ func ruleIPExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 			Blocks: map[string]schema.Block{
 				"evaluate": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ruleIPEvaluateModel](ctx),
-					Validators: []validator.List{listvalidator.SizeBetween(1, 1)},
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"attribute": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleIpEmailAttribute](), Required: true},
+						"attribute": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.RuleIpEmailAttribute](),
+							Required:   true,
+						},
 					}},
 				},
 			},
