@@ -61,7 +61,7 @@ func TestAccResilienceHubV2Policy_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkPolicyARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_slo"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"target": knownvalue.Float64Exact(99.9),
+						names.AttrTarget: knownvalue.Float64Exact(99.9),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_recovery"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
