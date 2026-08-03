@@ -11,13 +11,23 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresiliencehubv2 "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehubv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+var (
+	checkPolicyARN                = tfknownvalue.RegionalARNRegexp("resiliencehub", regexache.MustCompile(`policy/.+`))
+	checkPolicyARNAlternateRegion = tfknownvalue.RegionalARNAlternateRegionRegexp("resiliencehub", regexache.MustCompile(`policy/.+`))
 )
 
 func TestAccResilienceHubV2Policy_basic(t *testing.T) {
@@ -36,18 +46,37 @@ func TestAccResilienceHubV2Policy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "availability_slo.0.target", "99.9"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.disaster_recovery_approach", "ACTIVE_ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rpo_in_minutes", "5"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rto_in_minutes", "10"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`policy/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkPolicyARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_slo"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"target": knownvalue.Float64Exact(99.9),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_recovery"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("multi_az"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("multi_region"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -74,13 +103,19 @@ func TestAccResilienceHubV2Policy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresiliencehubv2.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
