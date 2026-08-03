@@ -13,8 +13,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -58,6 +60,13 @@ func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringvalidator.LengthBetween(0, 615),
 				},
 			},
+			names.AttrKMSKeyID: fwschema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrName: fwschema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -76,6 +85,15 @@ func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest
 		Blocks: map[string]fwschema.Block{
 			"availability_slo": fwschema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[availabilitySLOModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.AtLeastOneOf(
+						path.MatchRoot("availability_slo"),
+						path.MatchRoot("data_recovery"),
+						path.MatchRoot("multi_az"),
+						path.MatchRoot("multi_region"),
+					),
+				},
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						names.AttrTarget: fwschema.Float64Attribute{
@@ -89,6 +107,9 @@ func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"data_recovery": fwschema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataRecoveryTargetsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						"time_between_backups_in_minutes": fwschema.Int32Attribute{
@@ -102,6 +123,9 @@ func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"multi_az": fwschema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[multiAZTargetsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						"disaster_recovery_approach": fwschema.StringAttribute{
@@ -125,6 +149,9 @@ func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"multi_region": fwschema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[multiRegionTargetsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						"disaster_recovery_approach": fwschema.StringAttribute{
@@ -312,6 +339,7 @@ type resourcePolicyModel struct {
 	AvailabilitySlo fwtypes.ListNestedObjectValueOf[availabilitySLOModel]     `tfsdk:"availability_slo"`
 	DataRecovery    fwtypes.ListNestedObjectValueOf[dataRecoveryTargetsModel] `tfsdk:"data_recovery"`
 	Description     types.String                                              `tfsdk:"description"`
+	KMSKeyID        fwtypes.ARN                                               `tfsdk:"kms_key_id"`
 	MultiAz         fwtypes.ListNestedObjectValueOf[multiAZTargetsModel]      `tfsdk:"multi_az"`
 	MultiRegion     fwtypes.ListNestedObjectValueOf[multiRegionTargetsModel]  `tfsdk:"multi_region"`
 	Name            types.String                                              `tfsdk:"name"`
