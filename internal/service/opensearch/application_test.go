@@ -195,6 +195,56 @@ func TestAccOpenSearchApplication_appConfig(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchApplication_appConfigMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var application opensearch.GetApplicationOutput
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")[:30]
+	resourceName := "aws_opensearch_application.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Both a "users" and a "groups" app_config together: creating the
+				// second must not prevent the first from converging, and neither
+				// should show a perpetual diff on the next plan.
+				Config: testAccApplicationConfig_appConfigMultiple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "app_config.*", map[string]string{
+						names.AttrKey:   "opensearchDashboards.dashboardAdmin.users",
+						names.AttrValue: "admin-user",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "app_config.*", map[string]string{
+						names.AttrKey:   "opensearchDashboards.dashboardAdmin.groups",
+						names.AttrValue: "admin-group",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -346,6 +396,24 @@ func testAccApplicationConfig_appConfig2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_application" "test" {
   name = %[1]q
+
+  app_config {
+    key   = "opensearchDashboards.dashboardAdmin.groups"
+    value = "admin-group"
+  }
+}
+`, rName)
+}
+
+func testAccApplicationConfig_appConfigMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_application" "test" {
+  name = %[1]q
+
+  app_config {
+    key   = "opensearchDashboards.dashboardAdmin.users"
+    value = "admin-user"
+  }
 
   app_config {
     key   = "opensearchDashboards.dashboardAdmin.groups"
