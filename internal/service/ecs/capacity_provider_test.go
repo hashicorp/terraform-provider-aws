@@ -476,7 +476,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withLocalStorageC
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.local_storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.local_storage_configuration.0.use_local_storage", "true"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.local_storage_configuration.0.use_local_storage", acctest.CtTrue),
 				),
 			},
 			{
