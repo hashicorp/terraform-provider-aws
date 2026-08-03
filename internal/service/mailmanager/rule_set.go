@@ -450,13 +450,22 @@ func addHeaderActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[addHeaderActionModel](ctx),
 		Validators: actionUnionValidators("archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"header_name": schema.StringAttribute{Required: true, Validators: []validator.String{
-				stringvalidator.LengthBetween(1, 64),
-				stringvalidator.RegexMatches(regexache.MustCompile(`^[Xx]-`), "must begin with X- or x-"),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"header_name": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 64),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[Xx]-`), "must begin with X- or x-"),
+					},
+				},
+				"header_value": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+					},
+				},
 			}},
-			"header_value": schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 128)}},
-		}},
 	}
 }
 
@@ -465,8 +474,16 @@ func archiveActionBlock(ctx context.Context) schema.ListNestedBlock {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[archiveActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"target_archive":        schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 2048)}},
+			"action_failure_policy": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+				Optional:   true,
+			},
+			"target_archive": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 2048),
+				},
+			},
 		}},
 	}
 }
