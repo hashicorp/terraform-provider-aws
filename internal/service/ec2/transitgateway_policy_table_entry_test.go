@@ -168,6 +168,9 @@ func testAccTransitGatewayPolicyTableEntry_fullRule(t *testing.T, semaphore tfsy
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "transit_gateway_policy_table_id",
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_policy_table_id", "policy_rule_number"),
+				// The EC2 API doesn't return policy rule metadata via
+				// GetTransitGatewayPolicyTableEntries, so it can't be recovered on import.
+				ImportStateVerifyIgnore: []string{"policy_rule.0.metadata.0.key", "policy_rule.0.metadata.0.value"},
 			},
 		},
 	})

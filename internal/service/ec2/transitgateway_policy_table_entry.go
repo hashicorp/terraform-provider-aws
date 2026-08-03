@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -148,6 +149,12 @@ func (r *transitGatewayPolicyTableEntryResource) Create(ctx context.Context, req
 		return
 	}
 
+	planPolicyRule, diags := data.PolicyRule.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	output, err := conn.CreateTransitGatewayPolicyTableEntry(ctx, &input)
 
 	if err != nil {
@@ -155,13 +162,14 @@ func (r *transitGatewayPolicyTableEntryResource) Create(ctx context.Context, req
 		return
 	}
 
-	planPolicyRuleNull := data.PolicyRule.IsNull()
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.TransitGatewayPolicyTableEntry, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if planPolicyRuleNull {
-		data.PolicyRule = fwtypes.NewListNestedObjectValueOfNull[transitGatewayPolicyRuleModel](ctx)
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fixupTransitGatewayPolicyRule(ctx, &data.PolicyRule, planPolicyRule))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
@@ -190,13 +198,20 @@ func (r *transitGatewayPolicyTableEntryResource) Read(ctx context.Context, reque
 		return
 	}
 
-	statePolicyRuleNull := data.PolicyRule.IsNull()
+	statePolicyRule, diags := data.PolicyRule.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, entry, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if statePolicyRuleNull {
-		data.PolicyRule = fwtypes.NewListNestedObjectValueOfNull[transitGatewayPolicyRuleModel](ctx)
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fixupTransitGatewayPolicyRule(ctx, &data.PolicyRule, statePolicyRule))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
@@ -217,6 +232,12 @@ func (r *transitGatewayPolicyTableEntryResource) Update(ctx context.Context, req
 		return
 	}
 
+	planPolicyRule, diags := data.PolicyRule.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	output, err := conn.ModifyTransitGatewayPolicyTableEntry(ctx, &input)
 
 	if err != nil {
@@ -224,13 +245,14 @@ func (r *transitGatewayPolicyTableEntryResource) Update(ctx context.Context, req
 		return
 	}
 
-	planPolicyRuleNull := data.PolicyRule.IsNull()
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output.TransitGatewayPolicyTableEntry, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if planPolicyRuleNull {
-		data.PolicyRule = fwtypes.NewListNestedObjectValueOfNull[transitGatewayPolicyRuleModel](ctx)
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fixupTransitGatewayPolicyRule(ctx, &data.PolicyRule, planPolicyRule))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
@@ -302,4 +324,38 @@ type transitGatewayPolicyRuleModel struct {
 type transitGatewayPolicyRuleMetaDataModel struct {
 	MetaDataKey   types.String `tfsdk:"key"`
 	MetaDataValue types.String `tfsdk:"value"`
+}
+
+// fixupTransitGatewayPolicyRule corrects two AWS API quirks after flattening a
+// GetTransitGatewayPolicyTableEntries response into policyRule:
+//   - AWS always returns a non-nil PolicyRule, even when none was configured, so a
+//     rule with no matching criteria at all is collapsed back to null.
+//   - The API never returns the rule's metadata, so it's restored from prior state
+//     (unavailable, e.g. on import, it's simply left null).
+func fixupTransitGatewayPolicyRule(ctx context.Context, policyRule *fwtypes.ListNestedObjectValueOf[transitGatewayPolicyRuleModel], priorPolicyRule *transitGatewayPolicyRuleModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	rule, d := policyRule.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || rule == nil {
+		return diags
+	}
+
+	if rule.DestinationCIDRBlock.IsNull() && rule.Protocol.IsNull() && rule.SourceCIDRBlock.IsNull() {
+		*policyRule = fwtypes.NewListNestedObjectValueOfNull[transitGatewayPolicyRuleModel](ctx)
+		return diags
+	}
+
+	if priorPolicyRule != nil {
+		rule.Metadata = priorPolicyRule.Metadata
+	}
+
+	newPolicyRule, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, rule)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	*policyRule = newPolicyRule
+
+	return diags
 }

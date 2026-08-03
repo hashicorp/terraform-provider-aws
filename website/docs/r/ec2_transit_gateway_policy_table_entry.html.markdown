@@ -72,6 +72,8 @@ The following arguments are optional:
 * `key` - (Optional) Metadata key name for the policy rule.
 * `value` - (Optional) Metadata key value for the policy rule.
 
+~> **Note:** The EC2 API does not return policy rule metadata when describing transit gateway policy table entries, so Terraform cannot detect drift in `metadata` or recover its value when importing this resource. Configure `metadata` explicitly if you need it managed.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
