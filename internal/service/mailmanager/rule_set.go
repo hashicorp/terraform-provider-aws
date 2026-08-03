@@ -89,7 +89,9 @@ func (r *ruleSetResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 func ruleSetRuleBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleSetRuleModel](ctx),
-		Validators: []validator.List{listvalidator.SizeBetween(1, 40)},
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 40),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrName: schema.StringAttribute{
