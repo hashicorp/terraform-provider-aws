@@ -70,7 +70,7 @@ resource "aws_bedrockagentcore_harness" "example" {
   model {
     openai_model_config {
       api_key_arn = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
-      model_id     = "gpt-5"
+      model_id    = "gpt-5"
 
       additional_params = jsonencode({
         reasoning_effort = "high"
@@ -94,7 +94,7 @@ resource "aws_bedrockagentcore_harness" "example" {
   model {
     gemini_model_config {
       api_key_arn = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
-      model_id     = "gemini-2.5-pro"
+      model_id    = "gemini-2.5-pro"
 
       additional_params = jsonencode({
         thinking_budget = 1024

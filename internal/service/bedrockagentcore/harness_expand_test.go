@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -185,7 +186,7 @@ func testHarnessOpenAIModelConfiguration(t *testing.T, additionalParams string) 
 
 	rawObj := tftypes.NewValue(tfObjType, map[string]tftypes.Value{
 		"additional_params": tftypes.NewValue(tftypes.String, additionalParams),
-		"api_key_arn":       tftypes.NewValue(tftypes.String, "arn:aws:bedrock-agentcore:us-east-1:123456789012:api-key/test"),
+		"api_key_arn":       tftypes.NewValue(tftypes.String, testHarnessAPIKeyARN()),
 		"max_tokens":        tftypes.NewValue(tftypes.Number, 1024),
 		"model_id":          tftypes.NewValue(tftypes.String, "gpt-5"),
 		"temperature":       tftypes.NewValue(tftypes.Number, nil),
@@ -218,7 +219,7 @@ func testHarnessGeminiModelConfiguration(t *testing.T, additionalParams string) 
 
 	rawObj := tftypes.NewValue(tfObjType, map[string]tftypes.Value{
 		"additional_params": tftypes.NewValue(tftypes.String, additionalParams),
-		"api_key_arn":       tftypes.NewValue(tftypes.String, "arn:aws:bedrock-agentcore:us-east-1:123456789012:api-key/test"),
+		"api_key_arn":       tftypes.NewValue(tftypes.String, testHarnessAPIKeyARN()),
 		"max_tokens":        tftypes.NewValue(tftypes.Number, 1024),
 		"model_id":          tftypes.NewValue(tftypes.String, "gemini-2.5-pro"),
 		"temperature":       tftypes.NewValue(tftypes.Number, nil),
@@ -238,4 +239,14 @@ func testHarnessGeminiModelConfiguration(t *testing.T, additionalParams string) 
 		LiteLlmModelConfig: fwtypes.NewListNestedObjectValueOfNull[harnessLiteLLMModelConfigModel](ctx),
 		OpenAiModelConfig:  fwtypes.NewListNestedObjectValueOfNull[harnessOpenAIModelConfigModel](ctx),
 	}
+}
+
+func testHarnessAPIKeyARN() string {
+	return arn.ARN{
+		Partition: "aws",
+		Service:   "bedrock-agentcore",
+		Region:    "us-east-1",
+		AccountID: "123456789012",
+		Resource:  "api-key/test",
+	}.String()
 }
