@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -87,36 +86,13 @@ func (d *snapshotsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	input := &rds.DescribeDBSnapshotsInput{}
-	if !data.DBInstanceIdentifier.IsNull() {
-		input.DBInstanceIdentifier = data.DBInstanceIdentifier.ValueStringPointer()
-	}
-	if !data.DBSnapshotIdentifier.IsNull() {
-		input.DBSnapshotIdentifier = data.DBSnapshotIdentifier.ValueStringPointer()
-	}
-	if !data.IncludePublic.IsNull() {
-		input.IncludePublic = data.IncludePublic.ValueBoolPointer()
-	}
-	if !data.IncludeShared.IsNull() {
-		input.IncludeShared = data.IncludeShared.ValueBoolPointer()
-	}
-	if !data.SnapshotType.IsNull() {
-		input.SnapshotType = data.SnapshotType.ValueStringPointer()
-	}
-	if !data.Filters.IsNull() && !data.Filters.IsUnknown() {
-		for _, v := range data.Filters.Elements() {
-			var f snapshotFilterModel
-			if tfsdk.ValueAs(ctx, v, &f).HasError() {
-				continue
-			}
-			input.Filters = append(input.Filters, rdstypes.Filter{
-				Name:   f.Name.ValueStringPointer(),
-				Values: flex.ExpandFrameworkStringValueSet(ctx, f.Values),
-			})
-		}
+	var input rds.DescribeDBSnapshotsInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := findDBSnapshots(ctx, conn, input, tfslices.PredicateTrue[*rdstypes.DBSnapshot]())
+	out, err := findDBSnapshots(ctx, conn, &input, tfslices.PredicateTrue[*rdstypes.DBSnapshot]())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
