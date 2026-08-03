@@ -130,7 +130,10 @@ func ruleBooleanExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("dmarc_expression", "ip_expression", "number_expression", "string_expression", "verdict_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleBooleanOperator](), Required: true},
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RuleBooleanOperator](),
+					Required:   true,
+				},
 			},
 			Blocks: map[string]schema.Block{
 				"evaluate": ruleBooleanEvaluateBlock(ctx),
