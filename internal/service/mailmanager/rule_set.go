@@ -145,7 +145,9 @@ func ruleBooleanExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 func ruleBooleanEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleBooleanEvaluateModel](ctx),
-		Validators: []validator.List{listvalidator.SizeBetween(1, 1)},
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"attribute": schema.StringAttribute{
@@ -159,9 +161,11 @@ func ruleBooleanEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 			Blocks: map[string]schema.Block{
 				"analysis": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
-					Validators:   conditionUnionValidators("attribute", "is_in_address_list"),
-					NestedObject: schema.NestedBlockObject{Attributes: analysisAttributes()},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
+					Validators: conditionUnionValidators("attribute", "is_in_address_list"),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: analysisAttributes(),
+					},
 				},
 				"is_in_address_list": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ruleIsInAddressListModel](ctx),
@@ -171,9 +175,14 @@ func ruleBooleanEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
 							Required:    true,
-							Validators:  []validator.List{listvalidator.SizeBetween(1, 1)},
+							Validators: []validator.List{
+								listvalidator.SizeBetween(1, 1),
+							},
 						},
-						"attribute": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleAddressListEmailAttribute](), Required: true},
+						"attribute": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.RuleAddressListEmailAttribute](),
+							Required:   true,
+						},
 					}},
 				},
 			},
