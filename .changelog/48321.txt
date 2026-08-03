@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_resiliencehubv2_policy
+```
+
+```release-note:new-list-resource
+aws_resiliencehubv2_policy
+```
