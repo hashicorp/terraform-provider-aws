@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -31,9 +31,8 @@ type autoFlexTestCase struct {
 type autoFlexTestCases map[string]autoFlexTestCase
 
 type runChecks struct {
-	CompareDiags  bool
-	CompareTarget bool
-	GoldenLogs    bool // use golden snapshots for log comparison
+	SkipGoldenLogs bool // skip golden snapshots for log comparison
+	PrintLogs      bool // print logs to test output
 }
 
 // diagAF is a testing helper that creates a diag.Diagnostics containing
@@ -77,16 +76,7 @@ func diagAFEmpty() diag.Diagnostics {
 	return diag.Diagnostics{}
 }
 
-// setFieldValue sets a field value in a struct using reflection
-func setFieldValue(structPtr any, fieldName string, value any) {
-	v := reflect.ValueOf(structPtr).Elem()
-	field := v.FieldByName(fieldName)
-	if field.IsValid() && field.CanSet() {
-		field.Set(reflect.ValueOf(value))
-	}
-}
-
-func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks) {
+func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks, opts ...cmp.Option) {
 	t.Helper()
 	for testName, tc := range testCases {
 		t.Run(testName, func(t *testing.T) {
@@ -99,26 +89,36 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 
 			diags := Expand(ctx, tc.Source, tc.Target, tc.Options...)
 
-			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, tc.ExpectedDiags); diff != "" {
-					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
+			if diff := cmp.Diff(diags, tc.ExpectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
-			if checks.GoldenLogs {
+			if !checks.SkipGoldenLogs {
 				lines, err := tflogtest.MultilineJSONDecode(&buf)
 				if err != nil {
 					t.Fatalf("Expand: decoding log lines: %s", err)
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
 
-			if checks.CompareTarget && !diags.HasError() {
-				if diff := cmp.Diff(tc.Target, tc.WantTarget); diff != "" {
+			if checks.PrintLogs {
+				lines, err := tflogtest.MultilineJSONDecode(&buf)
+				if err != nil {
+					t.Fatalf("Expand: decoding log lines: %s", err)
+				}
+				for _, line := range lines {
+					if msg, ok := line["@message"].(string); ok {
+						t.Logf("%s", msg)
+					}
+				}
+			}
+
+			if !diags.HasError() {
+				if diff := cmp.Diff(tc.Target, tc.WantTarget, opts...); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
@@ -140,25 +140,35 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 
 			diags := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
 
-			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
-					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
+			if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
-			if checks.GoldenLogs {
+			if !checks.SkipGoldenLogs {
 				lines, err := tflogtest.MultilineJSONDecode(&buf)
 				if err != nil {
 					t.Fatalf("Flatten: decoding log lines: %s", err)
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
 
-			if checks.CompareTarget && !diags.HasError() {
+			if checks.PrintLogs {
+				lines, err := tflogtest.MultilineJSONDecode(&buf)
+				if err != nil {
+					t.Fatalf("Flatten: decoding log lines: %s", err)
+				}
+				for _, line := range lines {
+					if msg, ok := line["@message"].(string); ok {
+						t.Logf("%s", msg)
+					}
+				}
+			}
+
+			if !diags.HasError() {
 				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
 				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, append(opts, cmpopts.SortSlices(less))...); diff != "" {
 					if !testCase.WantDiff {
@@ -196,25 +206,23 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 			var target Ttarget
 			diags := Flatten(ctx, testCase.source, &target)
 
-			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
-					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
+			if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
-			if checks.GoldenLogs {
+			if !checks.SkipGoldenLogs {
 				lines, err := tflogtest.MultilineJSONDecode(&buf)
 				if err != nil {
 					t.Fatalf("Flatten: decoding log lines: %s", err)
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
 
-			if checks.CompareTarget && !diags.HasError() {
+			if !diags.HasError() {
 				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
 				if diff := cmp.Diff(target, testCase.expectedValue, cmpopts.SortSlices(less)); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)

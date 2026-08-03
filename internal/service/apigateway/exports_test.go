@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -56,4 +56,9 @@ var (
 	FindUsagePlanByID                    = findUsagePlanByID
 	FindUsagePlanKeyByTwoPartKey         = findUsagePlanKeyByTwoPartKey
 	FindVPCLinkByID                      = findVPCLinkByID
+
+	IntegrationCreateImportID         = integrationCreateImportID
+	IntegrationResponseCreateImportID = integrationResponseCreateImportID
+	MethodCreateImportID              = methodCreateImportID
+	MethodResponseCreateImportID      = methodResponseCreateImportID
 )

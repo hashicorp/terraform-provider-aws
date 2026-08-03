@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -7,27 +7,26 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_ALB_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
 	dataSourceName3 := "data.aws_lb.alb_test_with_tags"
 	resourceName := "aws_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerDataSourceConfig_basic(rName),
+				Config: testAccLoadBalancerDataSourceConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -95,19 +94,19 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_ALB_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	resourceName := "aws_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerDataSourceConfig_outpost(rName),
+				Config: testAccLoadBalancerDataSourceConfig_albOutpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -133,13 +132,13 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 
 func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
 	dataSourceName3 := "data.aws_alb.alb_test_with_tags"
 	resourceName := "aws_alb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -168,6 +167,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "connection_logs.#", resourceName, "connection_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "health_check_logs.#", resourceName, "health_check_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
@@ -189,6 +189,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "access_logs.#", resourceName, "access_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "connection_logs.#", resourceName, "connection_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "health_check_logs.#", resourceName, "health_check_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
@@ -210,19 +211,20 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "access_logs.#", resourceName, "access_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "connection_logs.#", resourceName, "connection_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "health_check_logs.#", resourceName, "health_check_logs.#"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccELBV2LoadBalancerDataSource_nlbSecondaryIPAddresses(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_NLB_secondaryIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.nlb_test_with_arn"
 	resourceName := "aws_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -238,7 +240,7 @@ func TestAccELBV2LoadBalancerDataSource_nlbSecondaryIPAddresses(t *testing.T) {
 	})
 }
 
-func testAccLoadBalancerDataSourceConfig_basic(rName string) string {
+func testAccLoadBalancerDataSourceConfig_albBasic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -294,7 +296,7 @@ data "aws_lb" "alb_test_with_tags" {
 `, rName))
 }
 
-func testAccLoadBalancerDataSourceConfig_outpost(rName string) string {
+func testAccLoadBalancerDataSourceConfig_albOutpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

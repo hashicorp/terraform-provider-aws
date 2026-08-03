@@ -92,7 +92,7 @@ resource "aws_config_configuration_recorder" "foo" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Optional) The name of the recorder. Defaults to `default`. Changing it recreates the resource.
+* `name` - (Optional) The name of the configuration recorder. Defaults to `default`. Changing it recreates the resource.
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role. Used to make read or write requests to the delivery channel and to describe the AWS resources associated with the account. See [AWS Docs](http://docs.aws.amazon.com/config/latest/developerguide/iamrole-permissions.html) for more details.
 * `recording_group` - (Optional) Recording group - see below.
 * `recording_mode` - (Optional) Recording mode - see below.
@@ -126,23 +126,47 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Name of the recorder
+This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Recorder using the name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_config_configuration_recorder.foo
+  to = aws_config_configuration_recorder.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_configuration_recorder" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the configuration recorder.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Recorders using the `name`. For example:
+
+```terraform
+import {
+  to = aws_config_configuration_recorder.example
   id = "example"
 }
 ```
 
-Using `terraform import`, import Configuration Recorder using the name. For example:
+Using `terraform import`, import Configuration Recorders using the `name`. For example:
 
 ```console
-% terraform import aws_config_configuration_recorder.foo example
+% terraform import aws_config_configuration_recorder.example example
 ```

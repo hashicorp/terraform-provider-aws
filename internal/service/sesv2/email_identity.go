@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,89 +41,91 @@ func resourceEmailIdentity() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configuration_set_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"dkim_signing_attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"current_signing_key_length": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"domain_signing_private_key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 20480),
-								verify.ValidBase64String,
-							),
-						},
-						"domain_signing_selector": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
-							ValidateFunc: validation.StringLenBetween(1, 63),
-						},
-						"last_key_generation_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"next_signing_key_length": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
-						},
-						"signing_attributes_origin": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tokens": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"configuration_set_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"dkim_signing_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"current_signing_key_length": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"domain_signing_private_key": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 20480),
+									verify.ValidBase64String,
+								),
+							},
+							"domain_signing_selector": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
+								ValidateFunc: validation.StringLenBetween(1, 63),
+							},
+							"last_key_generation_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"next_signing_key_length": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
+								ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
+							},
+							"signing_attributes_origin": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"tokens": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"identity_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"verification_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"verified_for_sending_status": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"email_identity": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"identity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"verification_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"verified_for_sending_status": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -168,7 +172,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := findEmailIdentityByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SESV2 EmailIdentity (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -271,8 +275,7 @@ func findEmailIdentity(ctx context.Context, conn *sesv2.Client, input *sesv2.Get
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -281,7 +284,7 @@ func findEmailIdentity(ctx context.Context, conn *sesv2.Client, input *sesv2.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

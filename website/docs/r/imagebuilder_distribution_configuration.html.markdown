@@ -142,6 +142,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the distribution configuration.
 * `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
 * `date_created` - Date the distribution configuration was created.
 * `date_updated` - Date the distribution configuration was updated.

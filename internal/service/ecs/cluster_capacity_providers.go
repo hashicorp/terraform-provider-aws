@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,47 +37,49 @@ func resourceClusterCapacityProviders() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"capacity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"capacity_providers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrClusterName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// The API accepts both an ARN and a name in a generic "cluster"
-				// parameter, but allowing that would force the resource to guess
-				// which one to return on read.
-				ValidateFunc: validateClusterName,
-			},
-			"default_capacity_provider_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base": {
-							Type:         schema.TypeInt,
-							Default:      0,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100000),
-						},
-						"capacity_provider": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrWeight: {
-							Type:         schema.TypeInt,
-							Default:      0,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 1000),
+				names.AttrClusterName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					// The API accepts both an ARN and a name in a generic "cluster"
+					// parameter, but allowing that would force the resource to guess
+					// which one to return on read.
+					ValidateFunc: validateClusterName,
+				},
+				"default_capacity_provider_strategy": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"base": {
+								Type:         schema.TypeInt,
+								Default:      0,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 100000),
+							},
+							"capacity_provider": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrWeight: {
+								Type:         schema.TypeInt,
+								Default:      0,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -114,7 +119,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 
 	cluster, err := findClusterByNameOrARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Cluster Capacity Providers (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

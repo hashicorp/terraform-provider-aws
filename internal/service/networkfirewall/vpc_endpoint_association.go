@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkfirewall
 
@@ -22,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -191,7 +193,7 @@ func (r *vpcEndpointAssociationResource) Read(ctx context.Context, request resou
 	arn := fwflex.StringValueFromFramework(ctx, data.VPCEndpointAssociationARN)
 	output, err := findVPCEndpointAssociationByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -271,7 +273,7 @@ func findVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Clien
 	}
 
 	if output == nil || output.VpcEndpointAssociation == nil || output.VpcEndpointAssociationStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -285,11 +287,11 @@ func findVPCEndpointAssociationByARN(ctx context.Context, conn *networkfirewall.
 	return findVPCEndpointAssociation(ctx, conn, &input)
 }
 
-func statusVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCEndpointAssociation(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCEndpointAssociationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -305,7 +307,7 @@ func waitVPCEndpointAssociationCreated(ctx context.Context, conn *networkfirewal
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:                    enum.Slice(awstypes.FirewallStatusValueReady),
-		Refresh:                   statusVPCEndpointAssociation(ctx, conn, arn),
+		Refresh:                   statusVPCEndpointAssociation(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -323,7 +325,7 @@ func waitVPCEndpointAssociationDeleted(ctx context.Context, conn *networkfirewal
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueReady, awstypes.FirewallStatusValueDeleting),
 		Target:  []string{},
-		Refresh: statusVPCEndpointAssociation(ctx, conn, arn),
+		Refresh: statusVPCEndpointAssociation(conn, arn),
 		Timeout: timeout,
 	}
 

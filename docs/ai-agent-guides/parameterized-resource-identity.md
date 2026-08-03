@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding Resource Identity to parameterized Resources
 
 You are working on the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws), specifically focused on adding [resource identity](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity) to Plugin SDKV2 resources whose identity is composed from multiple parameters (parameterized).
@@ -19,7 +22,7 @@ Use the following steps to add resource identity to an existing resource:
 - Determine which arguments the resource identity is composed from. This may be a single argument mapping to an AWS-generated identifier, or a combination of multiple arguments. Check for places where the resource ID is set (e.g. `d.SetId(<value>)`) and infer the relevant parameters.
 - Add an `@IdentityAttribute("<argument_name>")` annotation to the target resource. For resources where the ID is composed from multiple arguments, add one annotation for each argument.
 - If the `id` attribute is set to the same value as an identity attribute, add an `@Testing(idAttrDuplicates="<argument_name>")` annotation.
-- If the resource's test file uses a `CheckExists` helper function that accepts 3 parameters rather than 2 (you can check this in the resource's test file), add another annotation to the resource file in the format `// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TrustStore")`, but replacing the type with the correct one for the resource in question. The type should match the third parameter of the CheckExists function.
+- If the resource's test file uses a `CheckExists` helper function that accepts 4 parameters rather than 3 (you can check this in the resource's test file), add another annotation to the resource file in the format `// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TrustStore")`, but replacing the type with the correct one for the resource in question. The type should match the fourth parameter of the CheckExists function.
 - Since we are newly adding identity to this resource, add an annotation indicating the most recent pre-identity version, e.g. `@Testing(preIdentityVersion="v6.3.0")`. Use `CHANGELOG.md` at the project root to determine the most recently released version (which will be the last before identity is added).
 - Some resources will have an importer function defined.
     - If that function uses `schema.ImportStatePassthroughContext` as `StateContext` value then remove that importer function declaration as it is no longer necessary.
@@ -32,7 +35,7 @@ Use the following steps to add resource identity to an existing resource:
 				}
 ```
 
-- If the service does not use generated tag tests, you will need to create template files in the `testdata/tmpl` directory. For each resource, create a file named `<resource>_tags.gtpl` (e.g., `trust_store_tags.gtpl`).
+- If the service does not use generated tag tests, you will need to create template files in the `testdata/tmpl` directory. For each resource, create a file named `<resource>_basic.gtpl` (e.g., `trust_store_basic.gtpl`).
 - Populate each template file with the configuration from the resource's `_basic` test. If populating from the `_basic` configuration, be sure to replace any string format directives (e.g. `name = %[1]q`) with a corresponding reference to a variable (e.g. `name = var.rName`).
 - The generators will use the template files to generate the resource identity test configuration. These will be located in the `testdata` directory for the service. **Do not manually create test directories or files as they will be generated.**
 - The region template must be included inside each resource block in the template files. Add it as the first line after the resource declaration:
@@ -41,7 +44,7 @@ Use the following steps to add resource identity to an existing resource:
 resource "aws_service_thing" "test" {
 {{- template "region" }}
   name = var.rName
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 ```
 
@@ -134,7 +137,7 @@ Relates #42988
 ### Test Failures
 
 - Ensure `PKG` parameter is included in test commands
-- Verify template file names match exactly (`<resource>_tags.gtpl`)
+- Verify template file names match exactly (`<resource>_basic.gtpl`)
 - Check region template placement is inside resource blocks
 - Don't create test directories manually - let the generator create them
 - If a generated test panics because a `testAccCheck*Exists` helper function has incorrect arguments, add a `@Testing(existsType="")` annotation. NEVER modify the function signature of an existing "exists" helper function

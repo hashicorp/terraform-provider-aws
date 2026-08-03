@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWS Networking Example
 
 This example creates AWS VPC resources, making a VPC in each of two regions and

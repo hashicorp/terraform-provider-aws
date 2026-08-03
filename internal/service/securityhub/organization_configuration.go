@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -14,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -40,33 +42,35 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(180 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"auto_enable_standards": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
-			},
-			"organization_configuration": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"auto_enable_standards": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
+				},
+				"organization_configuration": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Computed:    true,
+					DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
+					MaxItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configuration_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -125,7 +129,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	output, err := findOrganizationConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -188,8 +192,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -198,17 +201,17 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	}
 
 	if output == nil || output.OrganizationConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOrganizationConfiguration(conn *securityhub.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOrganizationConfiguration(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -224,7 +227,7 @@ func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
 		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
-		Refresh:                   statusOrganizationConfiguration(ctx, conn),
+		Refresh:                   statusOrganizationConfiguration(conn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -232,7 +235,7 @@ func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*securityhub.DescribeOrganizationConfigurationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.OrganizationConfiguration.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.OrganizationConfiguration.StatusMessage)))
 
 		return output, err
 	}

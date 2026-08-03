@@ -16,15 +16,82 @@ Terraform resource for managing an AWS Lake Formation Data Cells Filter.
 ```terraform
 resource "aws_lakeformation_data_cells_filter" "example" {
   table_data {
-    database_name    = aws_glue_catalog_database.test.name
+    database_name    = aws_glue_catalog_database.example.name
     name             = "example"
     table_catalog_id = data.aws_caller_identity.current.account_id
-    table_name       = aws_glue_catalog_table.test.name
+    table_name       = aws_glue_catalog_table.example.name
 
     column_names = ["my_column"]
 
     row_filter {
       filter_expression = "my_column='example'"
+    }
+  }
+}
+```
+
+### Filter with Excluded Columns Only (No Row Filter)
+
+When excluding columns without a row filter, you must include `all_rows_wildcard {}`:
+
+```terraform
+resource "aws_lakeformation_data_cells_filter" "excluded_columns" {
+  table_data {
+    database_name    = aws_glue_catalog_database.example.name
+    name             = "exclude-pii"
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.example.name
+
+    column_wildcard {
+      excluded_column_names = ["ssn", "credit_card"]
+    }
+
+    row_filter {
+      all_rows_wildcard {}
+    }
+  }
+}
+```
+
+### Filter with Row Filter and Excluded Columns
+
+```terraform
+resource "aws_lakeformation_data_cells_filter" "row_and_column" {
+  table_data {
+    database_name    = aws_glue_catalog_database.example.name
+    name             = "marketing-filtered"
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.example.name
+
+    column_wildcard {
+      excluded_column_names = ["salary", "bonus"]
+    }
+
+    row_filter {
+      filter_expression = "department = 'Marketing'"
+    }
+  }
+}
+```
+
+### Filter with Row Filter Only (All Columns Included)
+
+To include all columns with a row filter, set `excluded_column_names` to an empty list:
+
+```terraform
+resource "aws_lakeformation_data_cells_filter" "row_only" {
+  table_data {
+    database_name    = aws_glue_catalog_database.example.name
+    name             = "regional-filter"
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.example.name
+
+    column_wildcard {
+      excluded_column_names = []
+    }
+
+    row_filter {
+      filter_expression = "region = 'US-WEST'"
     }
   }
 }
@@ -60,8 +127,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 #### Row Filter
 
-* `all_rows_wildcard` - (Optional) A wildcard that matches all rows.
-* `filter_expression` - (Optional) A filter expression.
+**Note:** Exactly one of `filter_expression` or `all_rows_wildcard` must be specified.
+
+* `all_rows_wildcard` - (Optional) A wildcard that matches all rows. Required when applying column-level filtering without row-level filtering. Use an empty block: `all_rows_wildcard {}`.
+* `filter_expression` - (Optional) A PartiQL predicate expression for row-level filtering.
 
 ## Timeouts
 

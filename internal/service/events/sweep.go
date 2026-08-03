@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events
@@ -169,7 +169,7 @@ func sweepBuses(region string) error {
 		for _, eventBus := range page.EventBuses {
 			name := aws.ToString(eventBus.Name)
 
-			if name == DefaultEventBusName {
+			if name == defaultEventBusName {
 				log.Printf("[INFO] Skipping EventBridge Event Bus %s", name)
 				continue
 			}

@@ -1,8 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
 
-const (
-	errCodeValidationException = "ValidationException"
+import (
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+)
+
+var (
+	errCodeResourceNotFoundException = (*awstypes.ResourceNotFoundException)(nil).ErrorCode()
+	errCodeValidationException       = (*awstypes.ValidationException)(nil).ErrorCode()
 )

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,9 +29,10 @@ import (
 
 // @SDKResource("aws_s3_bucket_website_configuration", name="Bucket Website Configuration")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 func resourceBucketWebsiteConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketWebsiteConfigurationCreate,
@@ -37,145 +40,165 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketWebsiteConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketWebsiteConfigurationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			"error_document": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
 				},
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"index_document": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"suffix": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"redirect_all_requests_to": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"error_document",
-					"index_document",
-					"routing_rule",
-					"routing_rules",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"host_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.Protocol](),
-						},
-					},
-				},
-			},
-			"routing_rule": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"routing_rules"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCondition: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"http_error_code_returned_equals": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"key_prefix_equals": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"redirect": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"http_redirect_code": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrProtocol: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.Protocol](),
-									},
-									"replace_key_prefix_with": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"replace_key_with": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+				"error_document": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"routing_rules": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"routing_rule"},
-				ValidateFunc:  validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 				},
-			},
-			"website_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"index_document": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"suffix": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"redirect_all_requests_to": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"error_document",
+						"index_document",
+						"routing_rule",
+						"routing_rules",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"host_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.Protocol](),
+							},
+						},
+					},
+				},
+				"routing_rule": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"routing_rules"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCondition: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"http_error_code_returned_equals": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"key_prefix_equals": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"redirect": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"host_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"http_redirect_code": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrProtocol: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Protocol](),
+										},
+										"replace_key_prefix_with": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"replace_key_with": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"routing_rules": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"routing_rule"},
+					ValidateFunc:  validation.StringIsJSON,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"website_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
+		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.Id() == "" {
+				return nil
+			}
+			if d.HasChange(names.AttrExpectedBucketOwner) {
+				o, n := d.GetChange(names.AttrExpectedBucketOwner)
+				os, ns := o.(string), n.(string)
+				if os == ns {
+					return nil
+				}
+				if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+					return nil
+				}
+				return d.ForceNew(names.AttrExpectedBucketOwner)
+			}
+			return nil
 		},
 	}
 }
@@ -215,7 +238,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketWebsiteInput{
+	input := s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
 		WebsiteConfiguration: websiteConfig,
 	}
@@ -224,7 +247,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketWebsite(ctx, input)
+		return conn.PutBucketWebsite(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "WebsiteConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -263,7 +286,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 
 	output, err := findBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Website Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -321,7 +344,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	websiteConfig := &types.WebsiteConfiguration{}
+	websiteConfig := types.WebsiteConfiguration{}
 
 	if v, ok := d.GetOk("error_document"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		websiteConfig.ErrorDocument = expandErrorDocument(v.([]any))
@@ -360,15 +383,15 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	input := &s3.PutBucketWebsiteInput{
+	input := s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
-		WebsiteConfiguration: websiteConfig,
+		WebsiteConfiguration: &websiteConfig,
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketWebsite(ctx, input)
+	_, err = conn.PutBucketWebsite(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Website Configuration (%s): %s", d.Id(), err)
@@ -390,14 +413,14 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.DeleteBucketWebsiteInput{
+	input := s3.DeleteBucketWebsiteInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.DeleteBucketWebsite(ctx, input)
+	_, err = conn.DeleteBucketWebsite(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchWebsiteConfiguration) {
 		return diags
@@ -419,19 +442,18 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 }
 
 func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketWebsiteOutput, error) {
-	input := &s3.GetBucketWebsiteInput{
+	input := s3.GetBucketWebsiteInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketWebsite(ctx, input)
+	output, err := conn.GetBucketWebsite(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchWebsiteConfiguration) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -440,7 +462,7 @@ func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBuc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -458,8 +480,7 @@ func findBucketLocation(ctx context.Context, conn *s3.Client, bucket, expectedBu
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -468,7 +489,7 @@ func findBucketLocation(ctx context.Context, conn *s3.Client, bucket, expectedBu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -16,7 +17,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/shopspring/decimal"
 )
 
@@ -310,18 +311,29 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 
 // BoolToStringValue converts a bool pointer to a Go string value.
 func BoolToStringValue(v *bool) string {
-	return strconv.FormatBool(aws.ToBool(v))
+	return BoolValueToStringValue(aws.ToBool(v))
 }
 
 // BoolValueToString converts a Go bool value to a string pointer.
 func BoolValueToString(v bool) *string {
-	return aws.String(strconv.FormatBool(v))
+	return aws.String(BoolValueToStringValue(v))
+}
+
+// BoolValueToStringValue converts a Go bool value to a string value.
+func BoolValueToStringValue(v bool) string {
+	return strconv.FormatBool(v)
 }
 
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
-	return aws.ToString(v) == strconv.FormatBool(true)
+	return StringValueToBoolValue(aws.ToString(v))
+}
+
+// StringValueToBoolValue converts a string value to a Go bool value.
+// Only the string "true" is converted to true, all other values return false.
+func StringValueToBoolValue(v string) bool {
+	return v == strconv.FormatBool(true)
 }
 
 // Float32ValueToFloat64Value converts a float32 value to a Go float64 value.
@@ -389,7 +401,7 @@ func StringToInt32Value(v *string) int32 {
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
-	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+	return aws.String(inttypes.Base64EncodeOnce([]byte(v)))
 }
 
 // StringValueToInt64 converts a string to a Go int32 pointer.
@@ -430,17 +442,16 @@ func ResourceIdPartCount(id string) int {
 	return len(idParts)
 }
 
-// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// DiffMaps returns the set of keys and values that must be created, the set of keys
 // and values that must be destroyed, and the set of keys and values that are unchanged.
-func DiffStringValueMaps(oldMap, newMap map[string]any) (map[string]string, map[string]string, map[string]string) {
+func DiffMaps[Map ~map[K]V, K, V comparable](old, new Map) (Map, Map, Map) {
 	// First, we're creating everything we have.
-	add := ExpandStringValueMap(newMap)
+	add := maps.Clone(new)
 
 	// Build the maps of what to remove and what is unchanged.
-	remove := make(map[string]string)
-	unchanged := make(map[string]string)
-	for k, v := range oldMap {
-		v := v.(string)
+	remove := make(Map)
+	unchanged := make(Map)
+	for k, v := range old {
 		if old, ok := add[k]; !ok || old != v {
 			// Delete it!
 			remove[k] = v
@@ -454,9 +465,20 @@ func DiffStringValueMaps(oldMap, newMap map[string]any) (map[string]string, map[
 	return add, remove, unchanged
 }
 
-func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringValueMaps(old, new map[string]any) (map[string]string, map[string]string, map[string]string) {
+	return DiffMaps(ExpandStringValueMap(old), ExpandStringValueMap(new))
+}
+
+// Equal can be used with `DiffSlices` to compare slice elements for equality.
+func Equal[T comparable](t1, t2 T) bool {
+	return t1 == t2
+}
+
+func DiffSlices[S ~[]E, E any](old, new S, eq func(E, E) bool) (S, S, S) {
 	// First, we're creating everything we have.
-	add := new
+	add := slices.Clone(new)
 
 	// Build the slices of what to remove and what is unchanged.
 	remove := make([]E, 0)
@@ -479,9 +501,9 @@ func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
 // DiffSlicesWithModify is a variant of DiffSlices which can account for
 // cases when a partially equal item should be modified, rather than
 // deleted and re-created
-func DiffSlicesWithModify[E any](old []E, new []E, eq func(E, E) bool, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
+func DiffSlicesWithModify[S ~[]E, E any](old, new S, eq, modifyEq func(E, E) bool) ([]E, []E, []E, []E) {
 	// First, we're creating everything we have.
-	add := new
+	add := slices.Clone(new)
 
 	// Build the slices of what to remove, modify, and what is unchanged.
 	remove := make([]E, 0)

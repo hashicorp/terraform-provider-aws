@@ -14,6 +14,8 @@ Provides an ECS cluster capacity provider. More information can be found on the 
 
 ~> **NOTE:** You must specify exactly one of `auto_scaling_group_provider` or `managed_instances_provider`. When using `managed_instances_provider`, the `cluster` parameter is required. When using `auto_scaling_group_provider`, the `cluster` parameter must not be set.
 
+~> **NOTE:** AWS cannot delete a capacity provider that is still associated with a cluster through [`aws_ecs_cluster_capacity_providers`](ecs_cluster_capacity_providers.html). When a change forces replacement, add a [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) lifecycle rule to the `aws_ecs_cluster_capacity_providers` resource so the association is recreated before the old capacity provider is deleted.
+
 ## Example Usage
 
 ### Auto Scaling Group Provider
@@ -55,11 +57,11 @@ resource "aws_ecs_capacity_provider" "example" {
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.ecs_infrastructure.arn
-    propagate_tags          = "TASK_DEFINITION"
+    propagate_tags          = "CAPACITY_PROVIDER"
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.ecs_instance.arn
-      monitoring               = "ENABLED"
+      monitoring               = "DETAILED"
 
       network_configuration {
         subnets         = [aws_subnet.example.id]
@@ -100,14 +102,14 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `auto_scaling_group_provider`
+### `auto_scaling_group_provider` Block
 
 * `auto_scaling_group_arn` - (Required) - ARN of the associated auto scaling group.
 * `managed_draining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managed_scaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
 * `managed_termination_protection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
-### `managed_scaling`
+### `managed_scaling` Block
 
 * `instance_warmup_period` - (Optional) Period of time, in seconds, after a newly launched Amazon EC2 instance can contribute to CloudWatch metrics for Auto Scaling group. If this parameter is omitted, the default value of 300 seconds is used.
 
@@ -117,55 +119,111 @@ This resource supports the following arguments:
 * `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
 * `target_capacity` - (Optional) Target utilization for the capacity provider. A number between 1 and 100.
 
-### `managed_instances_provider`
+### `managed_instances_provider` Block
 
-* `infrastructure_role_arn` - (Required) The Amazon Resource Name (ARN) of the infrastructure role that Amazon ECS uses to manage instances on your behalf. This role must have permissions to launch, terminate, and manage Amazon EC2 instances, as well as access to other AWS services required for Amazon ECS Managed Instances functionality. For more information, see [Amazon ECS infrastructure IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/infrastructure_IAM_role.html) in the Amazon ECS Developer Guide.
-* `instance_launch_template` - (Required) The launch template configuration that specifies how Amazon ECS should launch Amazon EC2 instances. This includes the instance profile, network configuration, storage settings, and instance requirements for attribute-based instance type selection. For more information, see [Store instance launch parameters in Amazon EC2 launch templates](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html) in the Amazon EC2 User Guide. Detailed below.
-* `propagate_tags` - (Optional) Specifies whether to propagate tags from the capacity provider to the Amazon ECS Managed Instances. When enabled, tags applied to the capacity provider are automatically applied to all instances launched by this provider. Valid values are `CAPACITY_PROVIDER` and `NONE`.
+* `infrastructure_optimization` - (Optional) Configuration block for how Amazon ECS Managed Instances optimizes the infrastructure in your capacity provider, including whether to turn optimization on or off and how long to delay optimizing idle EC2 instances. Detailed below.
+* `infrastructure_role_arn` - (Required) ARN of the infrastructure role that Amazon ECS uses to manage instances on your behalf. This role must have permissions to launch, terminate, and manage Amazon EC2 instances, as well as access to other AWS services required for Amazon ECS Managed Instances functionality. For more information, see [Amazon ECS infrastructure IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/infrastructure_IAM_role.html) in the Amazon ECS Developer Guide.
+* `instance_launch_template` - (Required) Launch template configuration that specifies how Amazon ECS should launch Amazon EC2 instances. This includes the instance profile, network configuration, storage settings, and instance requirements for attribute-based instance type selection. For more information, see [Store instance launch parameters in Amazon EC2 launch templates](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html) in the Amazon EC2 User Guide. Detailed below.
+* `propagate_tags` - (Optional) Whether to propagate tags from the capacity provider to the Amazon ECS Managed Instances. When enabled, tags applied to the capacity provider are automatically applied to all instances launched by this provider. Valid values are `CAPACITY_PROVIDER` and `NONE`.
 
-### `instance_launch_template`
+### `instance_launch_template` Block
 
-* `ec2_instance_profile_arn` - (Required) The Amazon Resource Name (ARN) of the instance profile that Amazon ECS applies to Amazon ECS Managed Instances. This instance profile must include the necessary permissions for your tasks to access AWS services and resources. For more information, see [Amazon ECS instance profile for Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html) in the Amazon ECS Developer Guide.
-* `instance_requirements` - (Optional) The instance requirements. You can specify the instance types and instance requirements such as vCPU count, memory, network performance, and accelerator specifications. Amazon ECS automatically selects the instances that match the specified criteria. Detailed below.
+* `capacity_option_type` - (Optional) Purchasing option for the EC2 instances used in the capacity provider. Determines whether to use On-Demand or Spot instances. Valid values are `ON_DEMAND` and `SPOT`. Defaults to `ON_DEMAND` when not specified. Changing this value will trigger replacement of the capacity provider. For more information, see [Amazon EC2 billing and purchasing options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-purchasing-options.html) in the Amazon EC2 User Guide.
+* `ec2_instance_profile_arn` - (Required) ARN of the instance profile that Amazon ECS applies to Amazon ECS Managed Instances. This instance profile must include the necessary permissions for your tasks to access AWS services and resources. For more information, see [Amazon ECS instance profile for Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html) in the Amazon ECS Developer Guide.
+* `instance_requirements` - (Optional) Instance requirements. You can specify the instance types and instance requirements such as vCPU count, memory, network performance, and accelerator specifications. Amazon ECS automatically selects the instances that match the specified criteria. Detailed below.
+* `local_storage_configuration` - (Optional) Configuration block for the local storage settings applied to Amazon ECS Managed Instances. Detailed below.
 * `monitoring` - (Optional) CloudWatch provides two categories of monitoring: basic monitoring and detailed monitoring. By default, your managed instance is configured for basic monitoring. You can optionally enable detailed monitoring to help you more quickly identify and act on operational issues. You can enable or turn off detailed monitoring at launch or when the managed instance is running or stopped. For more information, see [Detailed monitoring for Amazon ECS Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch-metrics.html) in the Amazon ECS Developer Guide. Valid values are `BASIC` and `DETAILED`.
-* `network_configuration` - (Required) The network configuration for Amazon ECS Managed Instances. This specifies the subnets and security groups that instances use for network connectivity. Detailed below.
-* `storage_configuration` - (Optional) The storage configuration for Amazon ECS Managed Instances. This defines the root volume size and type for the instances. Detailed below.
+* `network_configuration` - (Required) Network configuration for Amazon ECS Managed Instances. This specifies the subnets and security groups that instances use for network connectivity. Detailed below.
+* `storage_configuration` - (Optional) Storage configuration for Amazon ECS Managed Instances. This defines the root volume size and type for the instances. Detailed below.
 
-### `network_configuration`
+### `network_configuration` Block
 
-* `security_groups` - (Optional) The list of security group IDs to apply to Amazon ECS Managed Instances. These security groups control the network traffic allowed to and from the instances.
-* `subnets` - (Required) The list of subnet IDs where Amazon ECS can launch Amazon ECS Managed Instances. Instances are distributed across the specified subnets for high availability. All subnets must be in the same VPC.
+* `security_groups` - (Optional) List of security group IDs to apply to Amazon ECS Managed Instances. These security groups control the network traffic allowed to and from the instances.
+* `subnets` - (Required) List of subnet IDs where Amazon ECS can launch Amazon ECS Managed Instances. Instances are distributed across the specified subnets for high availability. All subnets must be in the same VPC.
 
-### `storage_configuration`
+### `storage_configuration` Block
 
-* `storage_size_gib` - (Required) The size of the tasks volume in GiB. Must be at least 1.
+* `storage_size_gib` - (Required) Size of the tasks volume in GiB. Must be at least 1.
 
-### `instance_requirements`
+### `local_storage_configuration` Block
 
-* `accelerator_count` - (Optional) The minimum and maximum number of accelerators for the instance types. This is used when you need instances with specific numbers of GPUs or other accelerators.
-* `accelerator_manufacturers` - (Optional) The accelerator manufacturers to include. You can specify `nvidia`, `amd`, `amazon-web-services`, `xilinx`, or `habana` depending on your accelerator requirements. Valid values are `amazon-web-services`, `amd`, `nvidia`, `xilinx`, `habana`.
-* `accelerator_names` - (Optional) The specific accelerator names to include. For example, you can specify `a100`, `v100`, `k80`, or other specific accelerator models. Valid values are `a100`, `inferentia`, `k520`, `k80`, `m60`, `radeon-pro-v520`, `t4`, `vu9p`, `v100`, `a10g`, `h100`, `t4g`.
-* `accelerator_total_memory_mib` - (Optional) The minimum and maximum total accelerator memory in mebibytes (MiB). This is important for GPU workloads that require specific amounts of video memory.
-* `accelerator_types` - (Optional) The accelerator types to include. You can specify `gpu` for graphics processing units, `fpga` for field programmable gate arrays, or `inference` for machine learning inference accelerators. Valid values are `gpu`, `fpga`, `inference`.
-* `allowed_instance_types` - (Optional) The instance types to include in the selection. When specified, Amazon ECS only considers these instance types, subject to the other requirements specified. Maximum of 400 instance types. You can specify instance type patterns using wildcards (e.g., `m5.*`).
-* `bare_metal` - (Optional) Indicates whether to include bare metal instance types. Set to `included` to allow bare metal instances, `excluded` to exclude them, or `required` to use only bare metal instances. Valid values are `included`, `excluded`, `required`.
-* `baseline_ebs_bandwidth_mbps` - (Optional) The minimum and maximum baseline Amazon EBS bandwidth in megabits per second (Mbps). This is important for workloads with high storage I/O requirements.
-* `burstable_performance` - (Optional) Indicates whether to include burstable performance instance types (T2, T3, T3a, T4g). Set to `included` to allow burstable instances, `excluded` to exclude them, or `required` to use only burstable instances. Valid values are `included`, `excluded`, `required`.
-* `cpu_manufacturers` - (Optional) The CPU manufacturers to include or exclude. You can specify `intel`, `amd`, or `amazon-web-services` to control which CPU types are used for your workloads. Valid values are `intel`, `amd`, `amazon-web-services`.
-* `excluded_instance_types` - (Optional) The instance types to exclude from selection. Use this to prevent Amazon ECS from selecting specific instance types that may not be suitable for your workloads. Maximum of 400 instance types.
-* `instance_generations` - (Optional) The instance generations to include. You can specify `current` to use the latest generation instances, or `previous` to include previous generation instances for cost optimization. Valid values are `current`, `previous`.
-* `local_storage` - (Optional) Indicates whether to include instance types with local storage. Set to `included` to allow local storage, `excluded` to exclude it, or `required` to use only instances with local storage. Valid values are `included`, `excluded`, `required`.
-* `local_storage_types` - (Optional) The local storage types to include. You can specify `hdd` for hard disk drives, `ssd` for solid state drives, or both. Valid values are `hdd`, `ssd`.
-* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The maximum price for Spot instances as a percentage of the optimal On-Demand price. This provides more precise cost control for Spot instance selection.
-* `memory_gib_per_vcpu` - (Optional) The minimum and maximum amount of memory per vCPU in gibibytes (GiB). This helps ensure that instance types have the appropriate memory-to-CPU ratio for your workloads.
-* `memory_mib` - (Required) The minimum and maximum amount of memory in mebibytes (MiB) for the instance types. Amazon ECS selects instance types that have memory within this range.
-* `network_bandwidth_gbps` - (Optional) The minimum and maximum network bandwidth in gigabits per second (Gbps). This is crucial for network-intensive workloads that require high throughput.
-* `network_interface_count` - (Optional) The minimum and maximum number of network interfaces for the instance types. This is useful for workloads that require multiple network interfaces.
-* `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances, as a percentage higher than an identified On-Demand price. The identified On-Demand price is the price of the lowest priced current generation C, M, or R instance type with your specified attributes. When Amazon ECS selects instance types with your attributes, it will exclude instance types whose price exceeds your specified threshold.
-* `require_hibernate_support` - (Optional) Indicates whether the instance types must support hibernation. When set to `true`, only instance types that support hibernation are selected.
-* `spot_max_price_percentage_over_lowest_price` - (Optional) The maximum price for Spot instances as a percentage over the lowest priced On-Demand instance. This helps control Spot instance costs while maintaining access to capacity.
-* `total_local_storage_gb` - (Optional) The minimum and maximum total local storage in gigabytes (GB) for instance types with local storage.
-* `vcpu_count` - (Required) The minimum and maximum number of vCPUs for the instance types. Amazon ECS selects instance types that have vCPU counts within this range.
+* `use_local_storage` - (Optional) Whether to use the local storage of the instance for Amazon ECS Managed Instances.
+
+### `instance_requirements` Block
+
+* `accelerator_count` - (Optional) Minimum and maximum number of accelerators for the instance types. This is used when you need instances with specific numbers of GPUs or other accelerators. Detailed below.
+* `accelerator_manufacturers` - (Optional) Accelerator manufacturers to include. You can specify `nvidia`, `amd`, `amazon-web-services`, `xilinx`, or `habana` depending on your accelerator requirements. Valid values are `amazon-web-services`, `amd`, `nvidia`, `xilinx`, `habana`.
+* `accelerator_names` - (Optional) Specific accelerator names to include. For example, you can specify `a100`, `v100`, `k80`, or other specific accelerator models. Valid values are `a100`, `inferentia`, `k520`, `k80`, `m60`, `radeon-pro-v520`, `t4`, `vu9p`, `v100`, `a10g`, `h100`, `t4g`.
+* `accelerator_total_memory_mib` - (Optional) Minimum and maximum total accelerator memory in mebibytes (MiB). This is important for GPU workloads that require specific amounts of video memory. Detailed below.
+* `accelerator_types` - (Optional) Accelerator types to include. You can specify `gpu` for graphics processing units, `fpga` for field programmable gate arrays, or `inference` for machine learning inference accelerators. Valid values are `gpu`, `fpga`, `inference`.
+* `allowed_instance_types` - (Optional) Instance types to include in the selection. When specified, Amazon ECS only considers these instance types, subject to the other requirements specified. Maximum of 400 instance types. You can specify instance type patterns using wildcards (e.g., `m5.*`).
+* `bare_metal` - (Optional) Whether to include bare metal instance types. Set to `included` to allow bare metal instances, `excluded` to exclude them, or `required` to use only bare metal instances. Valid values are `included`, `excluded`, `required`.
+* `baseline_ebs_bandwidth_mbps` - (Optional) Minimum and maximum baseline Amazon EBS bandwidth in megabits per second (Mbps). This is important for workloads with high storage I/O requirements. Detailed below.
+* `burstable_performance` - (Optional) Whether to include burstable performance instance types (T2, T3, T3a, T4g). Set to `included` to allow burstable instances, `excluded` to exclude them, or `required` to use only burstable instances. Valid values are `included`, `excluded`, `required`.
+* `cpu_manufacturers` - (Optional) CPU manufacturers to include or exclude. You can specify `intel`, `amd`, or `amazon-web-services` to control which CPU types are used for your workloads. Valid values are `intel`, `amd`, `amazon-web-services`.
+* `excluded_instance_types` - (Optional) Instance types to exclude from selection. Use this to prevent Amazon ECS from selecting specific instance types that may not be suitable for your workloads. Maximum of 400 instance types.
+* `instance_generations` - (Optional) Instance generations to include. You can specify `current` to use the latest generation instances, or `previous` to include previous generation instances for cost optimization. Valid values are `current`, `previous`.
+* `local_storage` - (Optional) Whether to include instance types with local storage. Set to `included` to allow local storage, `excluded` to exclude it, or `required` to use only instances with local storage. Valid values are `included`, `excluded`, `required`.
+* `local_storage_types` - (Optional) Local storage types to include. You can specify `hdd` for hard disk drives, `ssd` for solid state drives, or both. Valid values are `hdd`, `ssd`.
+* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) Maximum price for Spot instances as a percentage of the optimal On-Demand price. This provides more precise cost control for Spot instance selection.
+* `memory_gib_per_vcpu` - (Optional) Minimum and maximum amount of memory per vCPU in gibibytes (GiB). This helps ensure that instance types have the appropriate memory-to-CPU ratio for your workloads. Detailed below.
+* `memory_mib` - (Required) Minimum and maximum amount of memory in mebibytes (MiB) for the instance types. Amazon ECS selects instance types that have memory within this range. Detailed below.
+* `network_bandwidth_gbps` - (Optional) Minimum and maximum network bandwidth in gigabits per second (Gbps). This is crucial for network-intensive workloads that require high throughput. Detailed below.
+* `network_interface_count` - (Optional) Minimum and maximum number of network interfaces for the instance types. This is useful for workloads that require multiple network interfaces. Detailed below.
+* `on_demand_max_price_percentage_over_lowest_price` - (Optional) Price protection threshold for On-Demand Instances, as a percentage higher than an identified On-Demand price. The identified On-Demand price is the price of the lowest priced current generation C, M, or R instance type with your specified attributes. When Amazon ECS selects instance types with your attributes, it will exclude instance types whose price exceeds your specified threshold.
+* `require_hibernate_support` - (Optional) Whether the instance types must support hibernation. When set to `true`, only instance types that support hibernation are selected.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) Maximum price for Spot instances as a percentage over the lowest priced On-Demand instance. This helps control Spot instance costs while maintaining access to capacity.
+* `total_local_storage_gb` - (Optional) Minimum and maximum total local storage in gigabytes (GB) for instance types with local storage. Detailed below.
+* `vcpu_count` - (Required) Minimum and maximum number of vCPUs for the instance types. Amazon ECS selects instance types that have vCPU counts within this range. Detailed below.
+
+### `accelerator_count` Block
+
+* `max` - (Optional) Maximum number of accelerators.
+* `min` - (Optional) Minimum number of accelerators.
+
+### `accelerator_total_memory_mib` Block
+
+* `max` - (Optional) Maximum total accelerator memory, in MiB.
+* `min` - (Optional) Minimum total accelerator memory, in MiB.
+
+### `baseline_ebs_bandwidth_mbps` Block
+
+* `max` - (Optional) Maximum baseline Amazon EBS bandwidth, in Mbps.
+* `min` - (Optional) Minimum baseline Amazon EBS bandwidth, in Mbps.
+
+### `memory_gib_per_vcpu` Block
+
+* `max` - (Optional) Maximum amount of memory per vCPU, in GiB.
+* `min` - (Optional) Minimum amount of memory per vCPU, in GiB.
+
+### `memory_mib` Block
+
+* `max` - (Optional) Maximum amount of memory, in MiB.
+* `min` - (Required) Minimum amount of memory, in MiB.
+
+### `network_bandwidth_gbps` Block
+
+* `max` - (Optional) Maximum network bandwidth, in Gbps.
+* `min` - (Optional) Minimum network bandwidth, in Gbps.
+
+### `network_interface_count` Block
+
+* `max` - (Optional) Maximum number of network interfaces.
+* `min` - (Optional) Minimum number of network interfaces.
+
+### `total_local_storage_gb` Block
+
+* `max` - (Optional) Maximum total local storage, in GB.
+* `min` - (Optional) Minimum total local storage, in GB.
+
+### `vcpu_count` Block
+
+* `max` - (Optional) Maximum number of vCPUs.
+* `min` - (Required) Minimum number of vCPUs.
+
+### `infrastructure_optimization` Block
+
+* `scale_in_after` - (Optional) Number of seconds Amazon ECS Managed Instances waits before optimizing EC2 instances that have become idle or underutilized. A longer delay increases the likelihood of placing new tasks on idle instances, reducing startup time. A shorter delay helps reduce infrastructure costs by optimizing idle instances more quickly. Valid values are `-1` to disable automatic infrastructure optimization, `0` to `3600` (inclusive) to specify the number of seconds to wait before optimizing instances, or leave unset (null) to use the default optimization behavior.
 
 ## Attribute Reference
 

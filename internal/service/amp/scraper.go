@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package amp
 
@@ -26,14 +28,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -87,6 +90,12 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("amp"),
+							path.MatchRelative().AtName("cloudwatch"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"amp": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[ampConfigurationModel](ctx),
@@ -97,6 +106,21 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"workspace_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+						"cloudwatch": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"dataset_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -144,11 +168,16 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("eks"),
+							path.MatchRelative().AtName("vpc"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"eks": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[eksConfigurationModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
@@ -172,6 +201,42 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 										PlanModifiers: []planmodifier.Set{
 											setplanmodifier.RequiresReplace(),
 											setplanmodifier.UseStateForUnknown(),
+										},
+									},
+									names.AttrSubnetIDs: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
+										},
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"vpc": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
+										},
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
 										},
 									},
 									names.AttrSubnetIDs: schema.SetAttribute{
@@ -216,9 +281,9 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-		Value: []byte(data.ScrapeConfiguration.ValueString()),
+		Value: []byte(fwflex.StringValueFromFramework(ctx, data.ScrapeConfiguration)),
 	}
 	input.Tags = getTagsIn(ctx)
 
@@ -264,7 +329,7 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 
 	scraper, err := findScraperByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -285,7 +350,7 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 
 	// Additional fields.
 	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
-		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, string(v.Value))
+		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, v.Value)
 	}
 
 	setTagsOut(ctx, scraper.Tags)
@@ -317,9 +382,9 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-			Value: []byte(new.ScrapeConfiguration.ValueString()),
+			Value: []byte(fwflex.StringValueFromFramework(ctx, new.ScrapeConfiguration)),
 		}
 		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
 
@@ -351,7 +416,7 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().AMPClient(ctx)
 
 	input := amp.DeleteScraperInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)
@@ -389,7 +454,8 @@ type scraperResourceModel struct {
 }
 
 type destinationModel struct {
-	AMP fwtypes.ListNestedObjectValueOf[ampConfigurationModel] `tfsdk:"amp"`
+	AMP        fwtypes.ListNestedObjectValueOf[ampConfigurationModel]        `tfsdk:"amp"`
+	CloudWatch fwtypes.ListNestedObjectValueOf[cloudWatchConfigurationModel] `tfsdk:"cloudwatch"`
 }
 
 var (
@@ -414,6 +480,18 @@ func (m destinationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		v = &apiObject
+	case !m.CloudWatch.IsNull():
+		data, d := m.CloudWatch.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.DestinationMemberCloudWatchConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
 	}
 
 	return v, diags
@@ -430,6 +508,13 @@ func (m *destinationModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 			return diags
 		}
 		m.AMP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.DestinationMemberCloudWatchConfiguration:
+		var data cloudWatchConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.CloudWatch = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	}
 
 	return diags
@@ -439,8 +524,13 @@ type ampConfigurationModel struct {
 	WorkspaceARN fwtypes.ARN `tfsdk:"workspace_arn"`
 }
 
+type cloudWatchConfigurationModel struct {
+	DatasetARN fwtypes.ARN `tfsdk:"dataset_arn"`
+}
+
 type sourceModel struct {
 	EKS fwtypes.ListNestedObjectValueOf[eksConfigurationModel] `tfsdk:"eks"`
+	VPC fwtypes.ListNestedObjectValueOf[vpcConfigurationModel] `tfsdk:"vpc"`
 }
 
 var (
@@ -465,6 +555,18 @@ func (m sourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		v = &apiObject
+	case !m.VPC.IsNull():
+		data, d := m.VPC.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.SourceMemberVpcConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
 	}
 
 	return v, diags
@@ -481,6 +583,13 @@ func (m *sourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 			return diags
 		}
 		m.EKS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.SourceMemberVpcConfiguration:
+		var data vpcConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.VPC = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	}
 
 	return diags
@@ -488,6 +597,11 @@ func (m *sourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 
 type eksConfigurationModel struct {
 	ClusterARN       fwtypes.ARN         `tfsdk:"cluster_arn"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
+}
+
+type vpcConfigurationModel struct {
 	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
 	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
 }
@@ -510,8 +624,7 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -520,17 +633,17 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	}
 
 	if output == nil || output.Scraper == nil || output.Scraper.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Scraper, nil
 }
 
-func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusScraper(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findScraperByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -546,14 +659,14 @@ func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeou
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeCreating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
-		Refresh: statusScraper(ctx, conn, id),
+		Refresh: statusScraper(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -565,14 +678,14 @@ func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeou
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
-		Refresh: statusScraper(ctx, conn, id),
+		Refresh: statusScraper(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -584,7 +697,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeActive, awstypes.ScraperStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusScraper(ctx, conn, id),
+		Refresh: statusScraper(conn, id),
 		Timeout: timeout,
 		Delay:   8 * time.Minute,
 	}
@@ -592,7 +705,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

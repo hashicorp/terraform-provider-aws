@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appfabric
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
-	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -26,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -34,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,6 +47,8 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.IngestionDestination")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newIngestionDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionDestinationResource{}
 
@@ -221,14 +225,9 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 		return
 	}
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		response.Diagnostics.AddError("creating AppFabric Ingestion Destination", err.Error())
-	}
-
 	// Additional fields.
 	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
-	input.ClientToken = aws.String(uuid)
+	input.ClientToken = aws.String(create.UUID(ctx))
 	input.IngestionIdentifier = data.IngestionARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
@@ -276,7 +275,7 @@ func (r *ingestionDestinationResource) Read(ctx context.Context, request resourc
 
 	output, err := findIngestionDestinationByThreePartKey(ctx, conn, data.AppBundleARN.ValueString(), data.IngestionARN.ValueString(), data.ARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -394,8 +393,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -404,17 +402,17 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	}
 
 	if output == nil || output.IngestionDestination == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IngestionDestination, nil
 }
 
-func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIngestionDestination(conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -430,14 +428,14 @@ func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.IngestionDestinationStatusActive),
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.IngestionDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -449,14 +447,14 @@ func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IngestionDestinationStatusActive),
 		Target:  []string{},
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.IngestionDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

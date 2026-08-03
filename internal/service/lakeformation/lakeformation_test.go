@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -21,10 +21,12 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"parameters":         testAccDataLakeSettings_parameters,
 		},
 		"DataCellsFilter": {
-			acctest.CtBasic:      testAccDataCellsFilter_basic,
-			"columnWildcard":     testAccDataCellsFilter_columnWildcard,
-			acctest.CtDisappears: testAccDataCellsFilter_disappears,
-			"rowFilter":          testAccDataCellsFilter_rowFilter,
+			acctest.CtBasic:        testAccDataCellsFilter_basic,
+			"columnWildcard":       testAccDataCellsFilter_columnWildcard,
+			"columnWildcardUpdate": testAccDataCellsFilter_ColumnWildcard_update,
+			"columnWildcardEmpty":  testAccDataCellsFilter_ColumnWildcard_empty,
+			acctest.CtDisappears:   testAccDataCellsFilter_disappears,
+			"rowFilter":            testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
 			acctest.CtBasic:  testAccDataLakeSettingsDataSource_basic,
@@ -33,12 +35,12 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		"IdentityCenterConfiguration": {
 			acctest.CtBasic:      testAccLakeFormationIdentityCenterConfiguration_basic,
 			acctest.CtDisappears: testAccLakeFormationIdentityCenterConfiguration_disappears,
-			"Identity":           testAccLakeFormationIdentityCenterConfiguration_IdentitySerial,
+			"Identity":           testAccLakeFormationIdentityCenterConfiguration_identitySerial,
 		},
 		"OptIn": {
-			acctest.CtBasic:      testAccOptIn_basic,
-			acctest.CtDisappears: testAccOptIn_disappears,
-			"table":              testAccOptIn_table,
+			acctest.CtBasic:             testAccOptIn_basic,
+			"disappearsCatalogDatabase": testAccOptIn_Disappears_catalogDatabase,
+			"table":                     testAccOptIn_table,
 		},
 		"PermissionsBasic": {
 			acctest.CtBasic:         testAccPermissions_basic,

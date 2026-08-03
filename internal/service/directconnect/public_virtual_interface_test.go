@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,26 +24,26 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_public_virtual_interface.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
 	// DirectConnectClientException: Amazon Address is not allowed to contain a private IP
 	// DirectConnectClientException: Amazon Address and Customer Address must be in the same CIDR
 	// DirectConnectClientException: Amazon Address is address 0 on its subnet.
 	// DirectConnectClientException: Amazon Address is the broadcast address on its subnet.
 	amazonAddress := "175.45.176.1/28"
 	customerAddress := "175.45.176.2/28"
-	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	vlan := sdkacctest.RandIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx),
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicVirtualInterfaceConfig_basic(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -77,22 +76,22 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_public_virtual_interface.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
 	amazonAddress := "175.45.176.3/28"
 	customerAddress := "175.45.176.4/28"
-	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	vlan := sdkacctest.RandIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx),
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicVirtualInterfaceConfig_tags(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -116,7 +115,7 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 			{
 				Config: testAccPublicVirtualInterfaceConfig_tagsUpdated(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -146,14 +145,14 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckPublicVirtualInterfaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPublicVirtualInterfaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckVirtualInterfaceDestroy(ctx, s, "aws_dx_public_virtual_interface")
+		return testAccCheckVirtualInterfaceDestroy(ctx, t, s, "aws_dx_public_virtual_interface")
 	}
 }
 
-func testAccCheckPublicVirtualInterfaceExists(ctx context.Context, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckVirtualInterfaceExists(ctx, name, vif)
+func testAccCheckPublicVirtualInterfaceExists(ctx context.Context, t *testing.T, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckVirtualInterfaceExists(ctx, t, name, vif)
 }
 
 func testAccPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {

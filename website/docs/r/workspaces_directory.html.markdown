@@ -206,6 +206,7 @@ This resource supports the following arguments:
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
 * `ip_group_ids` - (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` - (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tenancy` - (Optional) Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`.
 * `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
 * `saml_properties` - (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`.. Defined below.

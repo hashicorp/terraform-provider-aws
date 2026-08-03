@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -17,7 +19,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +26,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,6 +40,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Account")
 // @Testing(serialize=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsEnabled")
+// @Testing(preIdentityVersion="v5.100.0")
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -55,76 +58,78 @@ func resourceAccount() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"close_on_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"create_govcloud": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(6, 64),
-					validation.StringMatch(regexache.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
-				),
-			},
-			"govcloud_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_user_access_to_billing": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IAMUserAccessToBilling](),
-			},
-			"joined_method": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"joined_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
-			},
-			"parent_id": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
-			},
-			"role_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
-			},
-			names.AttrStatus: {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "status is deprecated. Use state instead.",
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"close_on_deletion": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"create_govcloud": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(6, 64),
+						validation.StringMatch(regexache.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+					),
+				},
+				"govcloud_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_user_access_to_billing": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IAMUserAccessToBilling](),
+				},
+				"joined_method": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"joined_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 50),
+				},
+				"parent_id": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
+				},
+				"role_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
+				},
+				names.AttrStatus: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "status is deprecated. Use state instead.",
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -228,7 +233,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	account, err := findAccountByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AWS Organizations Account does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
@@ -326,7 +331,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 		})
 	}
 
-	if errs.IsA[*awstypes.AccountNotFoundException](err) {
+	if errs.IsA[*awstypes.AccountNotFoundException](err) || errs.IsA[*awstypes.AccountAlreadyClosedException](err) {
 		return diags
 	}
 
@@ -357,9 +362,7 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 			d.SetId(d.Id())
 		}
 	} else {
-		identitySpec := importer.IdentitySpec(ctx)
-
-		if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+		if err := importer.Import(ctx, d, meta); err != nil {
 			return nil, err
 		}
 	}
@@ -368,16 +371,30 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findAccountByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Account, error) {
-	input := &organizations.DescribeAccountInput{
+	input := organizations.DescribeAccountInput{
 		AccountId: aws.String(id),
 	}
+	output, err := findAccount(ctx, conn, &input)
 
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.AccountStateClosed {
+		return nil, &retry.NotFoundError{
+			Message: string(state),
+		}
+	}
+
+	return output, nil
+}
+
+func findAccount(ctx context.Context, conn *organizations.Client, input *organizations.DescribeAccountInput) (*awstypes.Account, error) {
 	output, err := conn.DescribeAccount(ctx, input)
 
 	if errs.IsA[*awstypes.AccountNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -386,27 +403,20 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 	}
 
 	if output == nil || output.Account == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if state := output.Account.State; state == awstypes.AccountStateClosed {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Account, nil
 }
 
 func findParentAccountID(ctx context.Context, conn *organizations.Client, id string) (*string, error) {
-	input := &organizations.ListParentsInput{
+	input := organizations.ListParentsInput{
 		ChildId: aws.String(id),
 	}
 
 	// assume there is only a single parent
 	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
-	output, err := findParent(ctx, conn, input)
+	output, err := findParent(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -443,16 +453,19 @@ func findParents(ctx context.Context, conn *organizations.Client, input *organiz
 }
 
 func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.CreateAccountStatus, error) {
-	input := &organizations.DescribeCreateAccountStatusInput{
+	input := organizations.DescribeCreateAccountStatusInput{
 		CreateAccountRequestId: aws.String(id),
 	}
 
+	return findCreateAccountStatus(ctx, conn, &input)
+}
+
+func findCreateAccountStatus(ctx context.Context, conn *organizations.Client, input *organizations.DescribeCreateAccountStatusInput) (*awstypes.CreateAccountStatus, error) {
 	output, err := conn.DescribeCreateAccountStatus(ctx, input)
 
 	if errs.IsA[*awstypes.CreateAccountStatusNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -461,17 +474,17 @@ func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client
 	}
 
 	if output == nil || output.CreateAccountStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CreateAccountStatus, nil
 }
 
-func statusCreateAccountState(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCreateAccountState(conn *organizations.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -487,7 +500,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.CreateAccountStateInProgress),
 		Target:       enum.Slice(awstypes.CreateAccountStateSucceeded),
-		Refresh:      statusCreateAccountState(ctx, conn, id),
+		Refresh:      statusCreateAccountState(conn, id),
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
 	}
@@ -496,7 +509,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.CreateAccountStatus); ok {
 		if state := output.State; state == awstypes.CreateAccountStateFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err
@@ -505,11 +518,11 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 	return nil, err
 }
 
-func statusAccountState(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccountState(conn *organizations.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -525,7 +538,7 @@ func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.AccountStatePendingClosure, awstypes.AccountStateActive),
 		Target:       []string{},
-		Refresh:      statusAccountState(ctx, conn, id),
+		Refresh:      statusAccountState(conn, id),
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
 	}

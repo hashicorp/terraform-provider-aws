@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudsearch
 
@@ -42,22 +44,24 @@ func resourceDomainServiceAccessPolicy() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_policy": {
+					Type:                  schema.TypeString,
+					Required:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          validation.StringIsJSON,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
 				},
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -159,7 +163,7 @@ func findAccessPolicyByName(ctx context.Context, conn *cloudsearch.Client, name 
 	accessPolicy := aws.ToString(output.Options)
 
 	if accessPolicy == "" {
-		return "", tfresource.NewEmptyResultError(name)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return accessPolicy, nil
@@ -183,7 +187,7 @@ func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Clien
 	}
 
 	if output == nil || output.AccessPolicies == nil || output.AccessPolicies.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccessPolicies, nil
@@ -193,7 +197,7 @@ func statusAccessPolicyState(conn *cloudsearch.Client, name string) retry.StateR
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPoliciesStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

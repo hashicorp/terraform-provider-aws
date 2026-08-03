@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest_test
@@ -65,8 +65,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 ephemeral "aws_secretsmanager_random_password" "test" {
   password_length     = 20
   exclude_punctuation = true
-  exclude_characters = "abcdef"
-  include_space = true
+  exclude_characters  = "abcdef"
+  include_space       = true
 }
 `,
 		},
@@ -77,8 +77,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 ephemeral "aws_secretsmanager_random_password" "test" {
   password_length     = 20
   exclude_punctuation = true
-  exclude_characters = "abcdef"
-  include_space = true
+  exclude_characters  = "abcdef"
+  include_space       = true
 }
 `,
 		},
@@ -89,8 +89,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 ephemeral "aws_secretsmanager_random_password" "test" {
   password_length     = 20
   exclude_punctuation = true
-  exclude_characters = "abc\"def"
-  include_space = true
+  exclude_characters  = "abc\"def"
+  include_space       = true
 }
 `,
 		},

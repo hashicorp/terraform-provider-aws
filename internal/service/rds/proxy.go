@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -47,102 +49,118 @@ func resourceProxy() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auth": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_scheme": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AuthScheme](),
-						},
-						"client_password_auth_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.ClientPasswordAuthType](),
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"iam_auth": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.IAMAuthMode](),
-						},
-						"secret_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auth": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_scheme": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.AuthScheme](),
+							},
+							"client_password_auth_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.ClientPasswordAuthType](),
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"iam_auth": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.IAMAuthMode](),
+							},
+							"secret_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
 				},
-				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
-			},
-			"debug_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"default_auth_scheme": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.DefaultAuthScheme](),
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"engine_family": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.EngineFamily](),
-			},
-			"idle_client_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"require_tls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_subnet_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"debug_logging": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"default_auth_scheme": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.DefaultAuthScheme](),
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.EndpointNetworkType](),
+				},
+				"engine_family": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.EngineFamily](),
+				},
+				"idle_client_timeout": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validIdentifier,
+				},
+				"require_tls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_connection_network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.TargetConnectionNetworkType](),
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"vpc_subnet_ids": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -174,12 +192,20 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.DefaultAuthScheme = types.DefaultAuthScheme(v.(string))
 	}
 
+	if v, ok := d.GetOk("endpoint_network_type"); ok {
+		input.EndpointNetworkType = types.EndpointNetworkType(v.(string))
+	}
+
 	if v, ok := d.GetOk("idle_client_timeout"); ok {
 		input.IdleClientTimeout = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("require_tls"); ok {
 		input.RequireTLS = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("target_connection_network_type"); ok {
+		input.TargetConnectionNetworkType = types.TargetConnectionNetworkType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -207,7 +233,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	dbProxy, err := findDBProxyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -222,10 +248,12 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrName, dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("default_auth_scheme", dbProxy.DefaultAuthScheme)
+	d.Set("endpoint_network_type", dbProxy.EndpointNetworkType)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
+	d.Set("target_connection_network_type", dbProxy.TargetConnectionNetworkType)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
 	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
@@ -319,9 +347,7 @@ func findDBProxyByName(ctx context.Context, conn *rds.Client, name string) (*typ
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBProxyName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -346,8 +372,7 @@ func findDBProxies(ctx context.Context, conn *rds.Client, input *rds.DescribeDBP
 
 		if errs.IsA[*types.DBProxyNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -365,11 +390,11 @@ func findDBProxies(ctx context.Context, conn *rds.Client, input *rds.DescribeDBP
 	return output, nil
 }
 
-func statusDBProxy(ctx context.Context, conn *rds.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBProxy(conn *rds.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBProxyByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -385,7 +410,7 @@ func waitDBProxyCreated(ctx context.Context, conn *rds.Client, name string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyStatusCreating),
 		Target:  enum.Slice(types.DBProxyStatusAvailable),
-		Refresh: statusDBProxy(ctx, conn, name),
+		Refresh: statusDBProxy(conn, name),
 		Timeout: timeout,
 	}
 
@@ -402,7 +427,7 @@ func waitDBProxyDeleted(ctx context.Context, conn *rds.Client, name string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDBProxy(ctx, conn, name),
+		Refresh: statusDBProxy(conn, name),
 		Timeout: timeout,
 	}
 
@@ -419,7 +444,7 @@ func waitDBProxyUpdated(ctx context.Context, conn *rds.Client, name string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyStatusModifying),
 		Target:  enum.Slice(types.DBProxyStatusAvailable),
-		Refresh: statusDBProxy(ctx, conn, name),
+		Refresh: statusDBProxy(conn, name),
 		Timeout: timeout,
 	}
 

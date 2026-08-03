@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -20,11 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_volume_attachment", name="EBS Volume Attachment")
+// @IdentityAttribute("device_name")
+// @IdentityAttribute("volume_id")
+// @IdentityAttribute("instance_id")
+// @ImportIDHandler("volumeAttachmentImportID")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(generator=false)
+// @Testing(importStateIdFunc="testAccVolumeAttachmentImportStateIDFunc")
 func resourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVolumeAttachmentCreate,
@@ -32,59 +42,41 @@ func resourceVolumeAttachment() *schema.Resource {
 		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceVolumeAttachmentDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), ":")
-
-				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DEVICE_NAME:VOLUME_ID:INSTANCE_ID", d.Id())
-				}
-
-				deviceName := idParts[0]
-				volumeID := idParts[1]
-				instanceID := idParts[2]
-				d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
-				d.Set(names.AttrDeviceName, deviceName)
-				d.Set(names.AttrInstanceID, instanceID)
-				d.Set("volume_id", volumeID)
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDeviceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"force_detach": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stop_instance_before_detaching": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDeviceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"force_detach": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"stop_instance_before_detaching": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -98,7 +90,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 
 	_, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet.
@@ -139,7 +131,7 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 
 	_, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -224,4 +216,32 @@ func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id stri
 	}
 
 	return nil
+}
+
+var _ inttypes.SDKv2ImportID = volumeAttachmentImportID{}
+
+type volumeAttachmentImportID struct{}
+
+func (volumeAttachmentImportID) Create(d *schema.ResourceData) string {
+	return volumeAttachmentID(d.Get(names.AttrDeviceName).(string), d.Get("volume_id").(string), d.Get(names.AttrInstanceID).(string))
+}
+
+func (volumeAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	idParts := strings.Split(id, ":")
+
+	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+		return "", nil, fmt.Errorf("Unexpected format of ID (%q), expected DEVICE_NAME:VOLUME_ID:INSTANCE_ID", id)
+	}
+
+	deviceName := idParts[0]
+	volumeID := idParts[1]
+	instanceID := idParts[2]
+
+	results := map[string]any{
+		names.AttrDeviceName: deviceName,
+		"volume_id":          volumeID,
+		names.AttrInstanceID: instanceID,
+	}
+
+	return volumeAttachmentID(deviceName, volumeID, instanceID), results, nil
 }

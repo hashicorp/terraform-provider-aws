@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -14,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -22,8 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +38,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(generator=false)
-// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 func resourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCreate,
@@ -53,164 +57,170 @@ func resourceOrganization() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "status is deprecated. Use state instead.",
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accounts": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:       schema.TypeString,
+								Computed:   true,
+								Deprecated: "status is deprecated. Use state instead.",
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_service_access_principals": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"enabled_policy_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_service_access_principals": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"enabled_policy_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+					},
+				},
+				"feature_set": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+					Optional:         true,
+					Default:          awstypes.OrganizationFeatureSetAll,
+					ValidateDiagFunc: enum.Validate[awstypes.OrganizationFeatureSet](),
 				},
-			},
-			"feature_set": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.OrganizationFeatureSetAll,
-				ValidateDiagFunc: enum.Validate[awstypes.OrganizationFeatureSet](),
-			},
-			"master_account_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_email": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"non_master_accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "status is deprecated. Use state instead.",
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"master_account_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_email": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_account_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"non_master_accounts": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:       schema.TypeString,
+								Computed:   true,
+								Deprecated: "status is deprecated. Use state instead.",
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"roots": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"policy_types": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+				"return_organization_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"roots": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"policy_types": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatus: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -264,7 +274,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	org, err := findOrganization(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
@@ -272,6 +282,16 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, org.Arn)
+	d.Set("feature_set", org.FeatureSet)
+	d.Set("master_account_arn", org.MasterAccountArn)
+	d.Set("master_account_email", org.MasterAccountEmail)
+	d.Set("master_account_id", org.MasterAccountId)
+
+	if _, ok := d.GetOk("return_organization_only"); ok {
+		return diags
 	}
 
 	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
@@ -300,11 +320,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set(names.AttrARN, org.Arn)
-	d.Set("feature_set", org.FeatureSet)
-	d.Set("master_account_arn", org.MasterAccountArn)
-	d.Set("master_account_email", org.MasterAccountEmail)
-	d.Set("master_account_id", org.MasterAccountId)
+
 	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
@@ -343,37 +359,35 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if d.HasChange("aws_service_access_principals") {
-		o, n := d.GetChange("aws_service_access_principals")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+	if d.HasChanges("aws_service_access_principals", "enabled_policy_types") {
+		oa, na := d.GetChange("aws_service_access_principals")
+		oas, nas := oa.(*schema.Set), na.(*schema.Set)
+		adda, dela := flex.ExpandStringValueSet(nas.Difference(oas)), flex.ExpandStringValueSet(oas.Difference(nas))
 
-		for _, v := range del {
-			if err := disableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		for _, v := range add {
-			if err := enableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-	}
-
-	if d.HasChange("enabled_policy_types") {
 		defaultRootID := d.Get("roots.0.id").(string)
-		o, n := d.GetChange("enabled_policy_types")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+		ot, nt := d.GetChange("enabled_policy_types")
+		ots, nts := ot.(*schema.Set), nt.(*schema.Set)
+		addt, delt := flex.ExpandStringValueSet(nts.Difference(ots)), flex.ExpandStringValueSet(ots.Difference(nts))
 
-		for _, v := range del {
+		for _, v := range delt {
 			if err := disablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
-		for _, v := range add {
+		for _, v := range dela {
+			if err := disableServicePrincipal(ctx, conn, v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		for _, v := range adda {
+			if err := enableServicePrincipal(ctx, conn, v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		for _, v := range addt {
 			if err := enablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -412,9 +426,7 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	identitySpec := importer.IdentitySpec(ctx)
-
-	if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
 
@@ -500,14 +512,12 @@ func enablePolicyType(ctx context.Context, conn *organizations.Client, policyTyp
 }
 
 func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
-	input := organizations.DescribeOrganizationInput{}
-
+	var input organizations.DescribeOrganizationInput
 	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -516,7 +526,7 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	}
 
 	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Organization, nil
@@ -540,9 +550,8 @@ func findAccounts(ctx context.Context, conn *organizations.Client, input *organi
 }
 
 func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Client) ([]string, error) {
-	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
-
-	output, err := findEnabledServicePrincipals(ctx, conn, input)
+	var input organizations.ListAWSServiceAccessForOrganizationInput
+	output, err := findEnabledServicePrincipals(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -554,20 +563,26 @@ func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.C
 }
 
 func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput) ([]awstypes.EnabledServicePrincipal, error) {
-	var output []awstypes.EnabledServicePrincipal
+	return tfslices.CollectWithError(listEnabledServicePrincipals(ctx, conn, input))
+}
 
-	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func listEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput, optFns ...func(*organizations.Options)) iter.Seq2[awstypes.EnabledServicePrincipal, error] {
+	return func(yield func(awstypes.EnabledServicePrincipal, error) bool) {
+		pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.EnabledServicePrincipal](), fmt.Errorf("listing Organizations Service Principals: %w", err))
+				return
+			}
 
-		if err != nil {
-			return nil, err
+			for _, v := range page.EnabledServicePrincipals {
+				if !yield(v, nil) {
+					return
+				}
+			}
 		}
-
-		output = append(output, page.EnabledServicePrincipals...)
 	}
-
-	return output, nil
 }
 
 func findRoots(ctx context.Context, conn *organizations.Client, input *organizations.ListRootsInput) ([]awstypes.Root, error) {
@@ -588,9 +603,8 @@ func findRoots(ctx context.Context, conn *organizations.Client, input *organizat
 }
 
 func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes.Root, error) {
-	input := &organizations.ListRootsInput{}
-
-	output, err := findRoots(ctx, conn, input)
+	var input organizations.ListRootsInput
+	output, err := findRoots(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -658,8 +672,8 @@ func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []a
 	return tfList
 }
 
-func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDefaultRootPolicyType(conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
 		if err != nil {
@@ -682,7 +696,7 @@ func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PolicyTypeStatusEnabled, awstypes.PolicyTypeStatusPendingDisable),
 		Target:  enum.Slice(policyTypeStatusDisabled),
-		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
+		Refresh: statusDefaultRootPolicyType(conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
 
@@ -699,7 +713,7 @@ func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.C
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(policyTypeStatusDisabled, awstypes.PolicyTypeStatusPendingEnable),
 		Target:  enum.Slice(awstypes.PolicyTypeStatusEnabled),
-		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
+		Refresh: statusDefaultRootPolicyType(conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
 

@@ -54,7 +54,7 @@ The following arguments are optional:
 
 #### `cloudwatch_logs`
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent.
+* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent. The ARN must end with `:*`
 
 #### `filters`
 
@@ -63,6 +63,14 @@ The following arguments are optional:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -74,11 +82,3 @@ import {
   id = "ws-12345678-90ab-cdef-1234-567890abcdef"
 }
 ```
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `5m`)
-- `update` - (Default `5m`)
-- `delete` - (Default `5m`)

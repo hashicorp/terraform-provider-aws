@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_events_put_events
 
-~> **Note:** `aws_events_put_events` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Sends custom events to Amazon EventBridge so that they can be matched to rules. This action provides an imperative way to emit events from Terraform plans (e.g., deployment notifications) while still allowing Terraform to manage when the emission occurs through `action_trigger` lifecycle events.
 
 ## Example Usage
@@ -138,9 +136,9 @@ This action supports the following arguments:
 
 Each `entry` block supports:
 
-* `source` - (Required) The source identifier for the event (e.g., `mycompany.myapp`).
-* `detail_type` - (Optional) Free-form string used to decide what fields to expect in the event detail.
 * `detail` - (Optional) JSON string (use `jsonencode()`) representing the event detail payload.
+* `detail_type` - (Optional) Free-form string used to decide what fields to expect in the event detail.
 * `event_bus_name` - (Optional) Name or ARN of the event bus. Defaults to the account's default bus.
 * `resources` - (Optional) List of ARNs the event primarily concerns.
+* `source` - (Required) Source identifier for the event (e.g., `mycompany.myapp`).
 * `time` - (Optional) RFC3339 timestamp for the event. If omitted, the receive time is used.

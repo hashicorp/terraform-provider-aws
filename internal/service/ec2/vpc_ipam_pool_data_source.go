@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -30,78 +32,104 @@ func dataSourceIPAMPool() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"allocation_default_netmask_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"allocation_max_netmask_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"allocation_min_netmask_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"allocation_resource_tags": tftags.TagsSchemaComputed(),
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_import": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"aws_service": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ipam_scope_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_scope_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"locale": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pool_depth": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"publicly_advertisable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"source_ipam_pool_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"allocation_default_netmask_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"allocation_max_netmask_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"allocation_min_netmask_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"allocation_resource_tags": tftags.TagsSchemaComputed(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_import": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"aws_service": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ipam_scope_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_scope_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"locale": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pool_depth": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"publicly_advertisable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"source_ipam_pool_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_resource": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrResourceOwner: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_region": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrResourceType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -110,7 +138,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeIpamPoolsInput{}
+	input := ec2.DescribeIpamPoolsInput{}
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		input.IpamPoolIds = []string{v.(string)}
@@ -124,7 +152,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 		input.Filters = nil
 	}
 
-	pool, err := findIPAMPool(ctx, conn, input)
+	pool, err := findIPAMPool(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IPAM Pool", err))
@@ -147,6 +175,17 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("pool_depth", pool.PoolDepth)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
+	if v := pool.SourceResource; v != nil {
+		tfMap := map[string]any{
+			names.AttrResourceID:    aws.ToString(v.ResourceId),
+			names.AttrResourceOwner: aws.ToString(v.ResourceOwner),
+			"resource_region":       aws.ToString(v.ResourceRegion),
+			names.AttrResourceType:  v.ResourceType,
+		}
+		d.Set("source_resource", []any{tfMap})
+	} else {
+		d.Set("source_resource", nil)
+	}
 	d.Set(names.AttrState, pool.State)
 
 	setTagsOut(ctx, pool.Tags)

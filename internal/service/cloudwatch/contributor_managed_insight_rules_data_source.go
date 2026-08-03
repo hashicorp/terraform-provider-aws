@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudwatch
 
@@ -57,9 +59,9 @@ func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req
 		ResourceARN: aws.String(resourceARN),
 	}
 
-	filter := tfslices.PredicateTrue[*awstypes.ManagedRuleDescription]()
+	filter := tfslices.PredicateTrue[awstypes.ManagedRuleDescription]()
 
-	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
+	output, err := findManagedRules(ctx, conn, input, filter)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ResourceARN.String())
 		return

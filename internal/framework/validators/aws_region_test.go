@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package validators_test
@@ -41,6 +41,9 @@ func TestAWSRegionValidator(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		},
 		"valid AWS Region": {
 			val: types.StringValue("us-west-2"),
+		},
+		"valid AWS ESC Region": {
+			val: types.StringValue("eusc-de-east-1"),
 		},
 	}
 

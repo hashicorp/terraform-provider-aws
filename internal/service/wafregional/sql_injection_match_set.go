@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package wafregional
 
@@ -15,12 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,46 +39,48 @@ func resourceSQLInjectionMatchSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sql_injection_match_tuple": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      resourceSQLInjectionMatchSetTupleHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_to_match": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data": {
-										Type:     schema.TypeString,
-										Optional: true,
-										StateFunc: func(v any) string {
-											value := v.(string)
-											return strings.ToLower(value)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"sql_injection_match_tuple": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Set:      resourceSQLInjectionMatchSetTupleHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_to_match": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data": {
+											Type:     schema.TypeString,
+											Optional: true,
+											StateFunc: func(v any) string {
+												value := v.(string)
+												return strings.ToLower(value)
+											},
 										},
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"text_transformation": {
-							Type:     schema.TypeString,
-							Required: true,
+							"text_transformation": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -111,7 +115,7 @@ func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceDat
 
 	sqlInjectionMatchSet, err := findSQLInjectionMatchSetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAF Regional SQL Injection Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,8 +190,7 @@ func findSQLInjectionMatchSetByID(ctx context.Context, conn *wafregional.Client,
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -196,7 +199,7 @@ func findSQLInjectionMatchSetByID(ctx context.Context, conn *wafregional.Client,
 	}
 
 	if output == nil || output.SqlInjectionMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SqlInjectionMatchSet, nil

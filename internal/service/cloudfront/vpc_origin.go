@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -13,18 +15,17 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +33,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.VpcOrigin")
+// @Testing(importIgnore="etag")
 func newVPCOriginResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcOriginResource{}
 
@@ -97,7 +100,7 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
 										Required:   true,
 									},
@@ -171,7 +174,7 @@ func (r *vpcOriginResource) Read(ctx context.Context, request resource.ReadReque
 
 	output, err := findVPCOriginByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -253,7 +256,7 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	id := data.ID.ValueString()
 	etag, err := vpcOriginETag(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -277,7 +280,7 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
 		etag, err = vpcOriginETag(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		}
 
@@ -332,8 +335,7 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -342,17 +344,17 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	}
 
 	if output == nil || output.VpcOrigin == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func vpcOriginStatus(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCOriginByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -368,7 +370,7 @@ func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{vpcOriginStatusDeploying},
 		Target:  []string{vpcOriginStatusDeployed},
-		Refresh: vpcOriginStatus(ctx, conn, id),
+		Refresh: vpcOriginStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -385,7 +387,7 @@ func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{vpcOriginStatusDeployed, vpcOriginStatusDeploying},
 		Target:  []string{},
-		Refresh: vpcOriginStatus(ctx, conn, id),
+		Refresh: vpcOriginStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -420,117 +422,4 @@ type vpcOriginEndpointConfigModel struct {
 type originSSLProtocolsModel struct {
 	Items    fwtypes.SetOfStringEnum[awstypes.SslProtocol] `tfsdk:"items"`
 	Quantity types.Int64                                   `tfsdk:"quantity"`
-}
-
-var (
-	_ fwflex.Expander  = vpcOriginEndpointConfigModel{}
-	_ fwflex.Flattener = &vpcOriginEndpointConfigModel{}
-)
-
-func (m vpcOriginEndpointConfigModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	config := &awstypes.VpcOriginEndpointConfig{
-		Arn:                  fwflex.StringFromFramework(ctx, m.ARN),
-		HTTPPort:             aws.Int32(int32(m.HTTPPort.ValueInt64())),
-		HTTPSPort:            aws.Int32(int32(m.HTTPSPort.ValueInt64())),
-		Name:                 fwflex.StringFromFramework(ctx, m.Name),
-		OriginProtocolPolicy: m.OriginProtocolPolicy.ValueEnum(),
-	}
-
-	if !m.OriginSSLProtocols.IsNull() {
-		sslList, d := m.OriginSSLProtocols.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		if len(sslList) > 0 {
-			expanded, d := sslList[0].Expand(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			if sslProto, ok := expanded.(*awstypes.OriginSslProtocols); ok {
-				config.OriginSslProtocols = sslProto
-			} else {
-				diags.AddError("error expanding Origin SSL Protocols", fmt.Sprintf("expected OriginSslProtocols, got: %T", expanded))
-			}
-		}
-	}
-
-	return config, diags
-}
-
-func (m *vpcOriginEndpointConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-	if t, ok := v.(awstypes.VpcOriginEndpointConfig); ok {
-		m.ARN = fwflex.StringToFramework(ctx, t.Arn)
-		m.HTTPPort = types.Int64Value(int64(aws.ToInt32(t.HTTPPort)))
-		m.HTTPSPort = types.Int64Value(int64(aws.ToInt32(t.HTTPSPort)))
-		m.Name = fwflex.StringToFramework(ctx, t.Name)
-		m.OriginProtocolPolicy = fwtypes.StringEnumValue(t.OriginProtocolPolicy)
-
-		if t.OriginSslProtocols != nil {
-			var sslModel originSSLProtocolsModel
-			diags.Append(fwflex.Flatten(ctx, t.OriginSslProtocols, &sslModel)...)
-			if diags.HasError() {
-				return diags
-			}
-			sslList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &sslModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.OriginSSLProtocols = sslList
-		}
-	} else {
-		diags.AddError("error flattening VPC Origin Endpoint Config", fmt.Sprintf("expected VpcOriginEndpointConfig, got: %T", v))
-	}
-	return diags
-}
-
-var (
-	_ fwflex.Expander  = originSSLProtocolsModel{}
-	_ fwflex.Flattener = &originSSLProtocolsModel{}
-)
-
-func (m originSSLProtocolsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	var protocols []awstypes.SslProtocol
-	diags.Append(fwflex.Expand(ctx, m.Items, &protocols)...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	result := awstypes.OriginSslProtocols{
-		Items:    protocols,
-		Quantity: aws.Int32(int32(m.Quantity.ValueInt64())),
-	}
-
-	return &result, diags
-}
-
-func (m *originSSLProtocolsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(awstypes.OriginSslProtocols); ok {
-		diags.Append(fwflex.Flatten(ctx, t.Items, &m.Items)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		m.Quantity = types.Int64Value(int64(aws.ToInt32(t.Quantity)))
-	} else {
-		diags.AddError("error flattening Origin SSL Protocols", fmt.Sprintf("expected OriginSslProtocols, got: %T", v))
-	}
-	return diags
 }

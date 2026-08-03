@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package notificationscontacts_test
@@ -28,7 +28,7 @@ func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var emailcontact awstypes.EmailContact
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -73,7 +73,7 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var emailcontact awstypes.EmailContact
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -90,7 +90,7 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 				Config: testAccEmailContactConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEmailContactExists(ctx, t, resourceName, &emailcontact),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotificationscontacts.ResourceEmailContact, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotificationscontacts.ResourceEmailContact, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -107,7 +107,7 @@ func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EmailContact
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

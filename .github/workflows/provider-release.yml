@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 # provider-release is a convenient way to request a promotion of artifacts to
 # the staging or production release channel via Common Release Tooling (CRT).
 #
@@ -38,6 +41,8 @@ env:
   product_name: "terraform-provider-aws"
   repo_name: "terraform-provider-aws"
   deployment_environment_name: "tf-provider-aws-oss"
+
+permissions: {} # explicit deny all scopes; workflow uses `BOB_GITHUB_TOKEN` for promotion actions
 
 jobs:
   release:

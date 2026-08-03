@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3tables
 
@@ -23,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -30,17 +33,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table", name="Table")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableOutput")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
+// @Testing(preCheck="testAccPreCheck")
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
@@ -127,6 +137,8 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TableType](),
 				Computed:   true,
@@ -156,6 +168,17 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 							Description: "Iceberg metadata configuration.",
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergMetadataModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrProperties: schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										ElementType: types.StringType,
+										Description: "A map of configuration properties for the Iceberg table, for example `write.distribution-mode` and `write.sort-order`.",
+										PlanModifiers: []planmodifier.Map{
+											mapplanmodifier.RequiresReplace(),
+										},
+									},
+								},
 								Blocks: map[string]schema.Block{
 									names.AttrSchema: schema.ListNestedBlock{
 										Description: "Schema configuration for the Iceberg table.",
@@ -246,6 +269,9 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	// Handle metadata separately since it's an interface type.
 	if !data.Metadata.IsNull() && !data.Metadata.IsUnknown() {
@@ -344,7 +370,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -361,7 +387,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
 
@@ -395,7 +421,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	outputGT, err := findTableByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -417,7 +443,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -434,7 +460,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
 
@@ -577,7 +603,7 @@ func (r *tableResource) Update(ctx context.Context, request resource.UpdateReque
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -660,7 +686,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -690,7 +716,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	}
 
 	if output == nil || output.EncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfiguration, nil
@@ -720,7 +746,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -742,6 +768,8 @@ type tableResourceModel struct {
 	Namespace                types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
 	OwnerAccountID           types.String                                              `tfsdk:"owner_account_id"`
 	TableBucketARN           fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
+	Tags                     tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
 	Type                     fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
 	VersionToken             types.String                                              `tfsdk:"version_token"`
 	WarehouseLocation        types.String                                              `tfsdk:"warehouse_location"`
@@ -988,9 +1016,9 @@ func (id tableIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, dia
 
 var tableNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type tableMetadataModel struct {
@@ -998,7 +1026,8 @@ type tableMetadataModel struct {
 }
 
 type icebergMetadataModel struct {
-	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+	Properties fwtypes.MapOfString                                 `tfsdk:"properties"`
+	Schema     fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
 }
 
 type icebergSchemaModel struct {

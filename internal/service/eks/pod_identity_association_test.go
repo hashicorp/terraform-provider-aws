@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -9,23 +9,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
@@ -33,14 +32,15 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -48,7 +48,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -59,11 +59,11 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetRoleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -72,12 +72,12 @@ func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_crossaccount(rName, targetRoleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
@@ -89,7 +89,7 @@ func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -100,10 +100,10 @@ func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
 func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
@@ -111,15 +111,23 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfeks.ResourcePodIdentityAssociation, resourceName),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfeks.ResourcePodIdentityAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -128,10 +136,10 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
@@ -139,26 +147,26 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccPodIdentityAssociationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -167,7 +175,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 			{
 				Config: testAccPodIdentityAssociationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -179,10 +187,10 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
@@ -190,27 +198,76 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccPodIdentityAssociationConfig_updatedRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEKSPodIdentityAssociation_policy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var podidentityassociation types.PodIdentityAssociation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_pod_identity_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPodIdentityAssociationConfig_policy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action|length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action[0]", "s3:GetObject"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPodIdentityAssociationConfig_policyUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action|length(@)", "2"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action[0]", "s3:GetObject"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrPolicy, "Statement[0].Action[1]", "s3:ListBucket"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -219,11 +276,11 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var podidentityassociation types.PodIdentityAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetRoleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
@@ -231,25 +288,25 @@ func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_crossaccount(rName, targetRoleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrPair(resourceName, "target_role_arn", "aws_iam_role.target_role", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccPodIdentityAssociationConfig_updateTargetRoleARN(rName, targetRoleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					testAccCheckPodIdentityAssociationExists(ctx, t, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrPair(resourceName, "target_role_arn", "aws_iam_role.target_role2", names.AttrARN),
 				),
 			},
@@ -257,9 +314,9 @@ func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
 	})
 }
 
-func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPodIdentityAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_pod_identity_association" {
@@ -268,7 +325,7 @@ func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes[names.AttrClusterName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -283,14 +340,14 @@ func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckPodIdentityAssociationExists(ctx context.Context, n string, v *types.PodIdentityAssociation) resource.TestCheckFunc {
+func testAccCheckPodIdentityAssociationExists(ctx context.Context, t *testing.T, n string, v *types.PodIdentityAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		output, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes[names.AttrClusterName])
 
@@ -304,15 +361,8 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes[names.AttrAssociationID]), nil
-	}
+func testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, names.AttrAssociationID)
 }
 
 func testAccPodIdentityAssociationConfig_clusterBase(rName string) string {
@@ -603,6 +653,54 @@ resource "aws_eks_pod_identity_association" "test" {
   disable_session_tags = true
   role_arn             = aws_iam_role.test.arn
   target_role_arn      = aws_iam_role.target_role.arn
+}
+`, rName))
+}
+
+func testAccPodIdentityAssociationConfig_policy(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test.arn
+
+  disable_session_tags = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject"]
+      Resource = "arn:${data.aws_partition.current.partition}:s3:::my-bucket/*"
+    }]
+  })
+}
+`, rName))
+}
+
+func testAccPodIdentityAssociationConfig_policyUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test.arn
+
+  disable_session_tags = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:ListBucket"]
+      Resource = "arn:${data.aws_partition.current.partition}:s3:::my-bucket/*"
+    }]
+  })
 }
 `, rName))
 }

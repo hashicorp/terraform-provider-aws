@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -803,7 +803,7 @@ func (d *mockChangesDiffer) GetRawPlan() cty.Value {
 	return cty.NilVal
 }
 
-func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+func (d *mockChangesDiffer) GetRawState() cty.Value {
 	return cty.NilVal
 }
 

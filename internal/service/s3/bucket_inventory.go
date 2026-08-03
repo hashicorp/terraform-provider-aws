@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -7,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,137 +41,139 @@ func resourceBucketInventory() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDestination: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									"bucket_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"encryption": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"sse_kms": {
-													Type:          schema.TypeList,
-													Optional:      true,
-													MaxItems:      1,
-													ConflictsWith: []string{"destination.0.bucket.0.encryption.0.sse_s3"},
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrKeyID: {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDestination: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										"bucket_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"encryption": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"sse_kms": {
+														Type:          schema.TypeList,
+														Optional:      true,
+														MaxItems:      1,
+														ConflictsWith: []string{"destination.0.bucket.0.encryption.0.sse_s3"},
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrKeyID: {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
 															},
 														},
 													},
-												},
-												"sse_s3": {
-													Type:          schema.TypeList,
-													Optional:      true,
-													MaxItems:      1,
-													ConflictsWith: []string{"destination.0.bucket.0.encryption.0.sse_kms"},
-													Elem: &schema.Resource{
-														// No options currently; just existence of "sse_s3".
-														Schema: map[string]*schema.Schema{},
+													"sse_s3": {
+														Type:          schema.TypeList,
+														Optional:      true,
+														MaxItems:      1,
+														ConflictsWith: []string{"destination.0.bucket.0.encryption.0.sse_kms"},
+														Elem: &schema.Resource{
+															// No options currently; just existence of "sse_s3".
+															Schema: map[string]*schema.Schema{},
+														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrFormat: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.InventoryFormat](),
-									},
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
+										names.AttrFormat: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.InventoryFormat](),
+										},
+										names.AttrPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Default:  true,
-				Optional: true,
-			},
-			names.AttrFilter: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
+				},
+				names.AttrFilter: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"included_object_versions": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.InventoryIncludedObjectVersions](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			"optional_fields": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"included_object_versions": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.InventoryOptionalField](),
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.InventoryIncludedObjectVersions](),
 				},
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"frequency": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.InventoryFrequency](),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				"optional_fields": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.InventoryOptionalField](),
+					},
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"frequency": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.InventoryFrequency](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -223,7 +228,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") || tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
 		err = errDirectoryBucket(err)
 	}
 
@@ -261,7 +266,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	ic, err := findInventoryConfiguration(ctx, conn, bucket, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Inventory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -468,8 +473,7 @@ func findInventoryConfiguration(ctx context.Context, conn *s3.Client, bucket, id
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -478,7 +482,7 @@ func findInventoryConfiguration(ctx context.Context, conn *s3.Client, bucket, id
 	}
 
 	if output == nil || output.InventoryConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InventoryConfiguration, nil

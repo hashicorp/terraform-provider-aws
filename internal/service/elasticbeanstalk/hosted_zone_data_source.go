@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticbeanstalk
 
@@ -63,7 +65,9 @@ func dataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
 
-		Schema: map[string]*schema.Schema{},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{}
+		},
 	}
 }
 

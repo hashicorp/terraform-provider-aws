@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudformation
 
@@ -17,15 +19,15 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,86 +54,88 @@ func resourceStack() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"capabilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"capabilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					},
+				},
+				"disable_rollback": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrIAMRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"notification_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"on_failure": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OnFailure](),
 				},
-			},
-			"disable_rollback": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrIAMRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"notification_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"on_failure": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OnFailure](),
-			},
-			"outputs": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"policy_body": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"outputs": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"policy_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_body": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidStringIsJSONOrYAML,
-				StateFunc: func(v any) string {
-					template, _ := verify.NormalizeJSONOrYAMLString(v)
-					return template
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"template_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"timeout_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
+				"policy_body": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringIsJSON,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"policy_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_body": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidStringIsJSONOrYAML,
+					StateFunc: func(v any) string {
+						template, _ := verify.NormalizeJSONOrYAMLString(v)
+						return template
+					},
+				},
+				"template_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"timeout_in_minutes": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -144,7 +148,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	requestToken := id.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
@@ -217,7 +221,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	stack, err := findStackByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Stack %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -278,7 +282,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	requestToken := id.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	input := &cloudformation.UpdateStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),
@@ -349,7 +353,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Stack: %s", d.Id())
-	requestToken := id.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	input := cloudformation.DeleteStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),
@@ -384,8 +388,7 @@ func findStackByName(ctx context.Context, conn *cloudformation.Client, name stri
 
 	if status := output.StackStatus; status == awstypes.StackStatusDeleteComplete {
 		return nil, &retry.NotFoundError{
-			LastRequest: input,
-			Message:     string(status),
+			Message: string(status),
 		}
 	}
 
@@ -411,8 +414,7 @@ func findStacks(ctx context.Context, conn *cloudformation.Client, input *cloudfo
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "does not exist") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -426,14 +428,14 @@ func findStacks(ctx context.Context, conn *cloudformation.Client, input *cloudfo
 	return output, nil
 }
 
-func statusStack(ctx context.Context, conn *cloudformation.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStack(conn *cloudformation.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		// Don't call FindStackByName as it maps useful status codes to NotFoundError.
 		output, err := findStack(ctx, conn, &cloudformation.DescribeStacksInput{
 			StackName: aws.String(name),
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -455,7 +457,7 @@ func waitStackCreated(ctx context.Context, conn *cloudformation.Client, name, re
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    statusStack(ctx, conn, name),
+		Refresh:    statusStack(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -513,7 +515,7 @@ func waitStackUpdated(ctx context.Context, conn *cloudformation.Client, name, re
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    statusStack(ctx, conn, name),
+		Refresh:    statusStack(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -554,13 +556,13 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 		Timeout:        timeout,
 		MinTimeout:     minTimeout,
 		Delay:          10 * time.Second,
-		Refresh:        statusStack(ctx, conn, name),
+		Refresh:        statusStack(conn, name),
 		NotFoundChecks: 1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		return nil, nil
 	case err != nil:
 		return nil, err
@@ -672,7 +674,7 @@ func stackHasActualChanges(ctx context.Context, d *schema.ResourceDiff, meta any
 		return false
 	}
 
-	for k, attr := range resourceStack().Schema {
+	for k, attr := range resourceStack().SchemaMap() {
 		if attr.ForceNew {
 			continue
 		}

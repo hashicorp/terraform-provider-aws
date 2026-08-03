@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ram
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -48,44 +50,46 @@ func resourceResourceShareAccepter() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"invitation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"receiver_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResources: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"invitation_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"share_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sender_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"share_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"receiver_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResources: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"share_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sender_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"share_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -114,12 +118,12 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 			shareARN)
 	}
 
-	input := &ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(id.UniqueId()),
+	input := ram.AcceptResourceShareInvitationInput{
+		ClientToken:                aws.String(create.UniqueId(ctx)),
 		ResourceShareInvitationArn: aws.String(invitationARN),
 	}
 
-	output, err := conn.AcceptResourceShareInvitation(ctx, input)
+	output, err := conn.AcceptResourceShareInvitation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting RAM Resource Share (%s) invitation (%s): %s", shareARN, invitationARN, err)
@@ -164,7 +168,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 
 	resourceShare, err := findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] No RAM Resource Share %s found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -180,12 +184,12 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("share_name", resourceShare.Name)
 	d.Set(names.AttrStatus, resourceShare.Status)
 
-	input := &ram.ListResourcesInput{
+	input := ram.ListResourcesInput{
 		MaxResults:        aws.Int32(500),
 		ResourceOwner:     awstypes.ResourceOwnerOtherAccounts,
 		ResourceShareArns: []string{d.Id()},
 	}
-	resources, err := findResources(ctx, conn, input)
+	resources, err := findResources(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", d.Id(), err)
@@ -208,13 +212,13 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "The receiver account ID is required to leave a resource share")
 	}
 
-	input := &ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(id.UniqueId()),
+	input := ram.DisassociateResourceShareInput{
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Principals:       []string{receiverAccountID},
 		ResourceShareArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DisassociateResourceShare(ctx, input)
+	_, err := conn.DisassociateResourceShare(ctx, &input)
 
 	switch {
 	case errs.IsA[*awstypes.UnknownResourceException](err):
@@ -335,8 +339,7 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 
 		if errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -354,11 +357,11 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 	return output, nil
 }
 
-func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceShareInvitation(conn *ram.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		maybeInvitation, err := findMaybeResourceShareInvitationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) || maybeInvitation.IsNone() {
+		if retry.NotFound(err) || maybeInvitation.IsNone() {
 			return nil, "", nil
 		}
 
@@ -376,7 +379,7 @@ func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareInvitationStatusPending),
 		Target:  enum.Slice(awstypes.ResourceShareInvitationStatusAccepted),
-		Refresh: statusResourceShareInvitation(ctx, conn, arn),
+		Refresh: statusResourceShareInvitation(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -393,14 +396,14 @@ func waitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
 		Target:  []string{},
-		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
+		Refresh: statusResourceShareOwnerSelf(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShare); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

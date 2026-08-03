@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticbeanstalk
 
@@ -18,43 +20,45 @@ func dataSourceApplication() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
-		Schema: map[string]*schema.Schema{
-			"appversion_lifecycle": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_source_from_s3": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"max_age_in_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"max_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrServiceRole: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appversion_lifecycle": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delete_source_from_s3": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"max_age_in_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"max_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrServiceRole: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

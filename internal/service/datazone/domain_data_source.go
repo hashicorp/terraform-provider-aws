@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -15,10 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -65,6 +67,9 @@ func (d *domainDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 			},
+			"root_domain_unit_id": schema.StringAttribute{
+				Computed: true,
+			},
 			"portal_url": schema.StringAttribute{
 				Computed: true,
 			},
@@ -79,7 +84,7 @@ func (d *domainDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data domainDataSourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -100,19 +105,20 @@ func (d *domainDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	output, err := findDomain(ctx, conn, filter)
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameDomain, data.Name.String(), err),
-			err.Error(),
-		)
+		idValue := data.ID.ValueString()
+		if idValue == "" {
+			idValue = data.Name.ValueString()
+		}
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, idValue)
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
@@ -124,13 +130,23 @@ func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.Conf
 	}
 }
 
-func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*awstypes.DomainSummary, error) {
+func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*datazone.GetDomainOutput, error) {
 	domain, err := findDomains(ctx, conn, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(domain)
+	domain1, err := tfresource.AssertSingleValueResult(domain)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := findDomainByID(ctx, conn, aws.ToString(domain1.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) ([]awstypes.DomainSummary, error) {
@@ -163,6 +179,7 @@ type domainDataSourceModel struct {
 	LastUpdatedAt    timetypes.RFC3339 `tfsdk:"last_updated_at"`
 	ManagedAccountID types.String      `tfsdk:"managed_account_id"`
 	Name             types.String      `tfsdk:"name"`
+	RootDomainUnitID types.String      `tfsdk:"root_domain_unit_id"`
 	PortalURL        types.String      `tfsdk:"portal_url"`
 	Status           types.String      `tfsdk:"status"`
 }

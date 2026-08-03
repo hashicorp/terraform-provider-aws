@@ -104,7 +104,7 @@ resource "aws_subnet" "example-secondary" {
 
 resource "aws_directory_service_region" "example" {
   directory_id = aws_directory_service_directory.example.id
-  region_name  = data.aws_region.example.name
+  region_name  = data.aws_region.example.region
 
   vpc_settings {
     vpc_id     = aws_vpc.example-secondary.id

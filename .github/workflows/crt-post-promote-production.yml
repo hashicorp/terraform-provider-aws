@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: crt-post-promote-production
 
 on:
@@ -7,7 +10,7 @@ on:
       - crt-post-promote-production::*
 
 permissions:
-  actions: write
+  actions: write # required to dispatch workflows
 
 jobs:
   start-registry-check:

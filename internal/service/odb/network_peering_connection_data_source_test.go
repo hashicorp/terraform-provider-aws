@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -11,16 +11,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,16 +41,16 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 	}
 	networkPeeringResource := "aws_odb_network_peering_connection.test"
 	networkPerringDataSource := "data.aws_odb_network_peering_connection.test"
-	odbNetPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNetPeeringDSTestEntity.odbNetworkPeeringDisplayNamePrefix)
-	odbNetDispName := sdkacctest.RandomWithPrefix(oracleDBNetPeeringDSTestEntity.odbNetDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNetPeeringDSTestEntity.vpcNamePrefix)
-	resource.Test(t, resource.TestCase{
+	odbNetPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNetPeeringDSTestEntity.odbNetworkPeeringDisplayNamePrefix)
+	odbNetDispName := acctest.RandomWithPrefix(t, oracleDBNetPeeringDSTestEntity.odbNetDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNetPeeringDSTestEntity.vpcNamePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetPeeringDSTestEntity.testAccCheckCloudOracleDBNetworkPeeringDestroy(ctx),
+		CheckDestroy:             oracleDBNetPeeringDSTestEntity.testAccCheckCloudOracleDBNetworkPeeringDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetPeeringDSTestEntity.basicPeeringConfig(vpcName, odbNetDispName, odbNetPeeringDisplayName),
@@ -65,9 +62,9 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func (oracleDBNetPeeringDataSourceTest) testAccCheckCloudOracleDBNetworkPeeringDestroy(ctx context.Context) resource.TestCheckFunc {
+func (oracleDBNetPeeringDataSourceTest) testAccCheckCloudOracleDBNetworkPeeringDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network_peering_connection" {
 				continue
@@ -75,7 +72,7 @@ func (oracleDBNetPeeringDataSourceTest) testAccCheckCloudOracleDBNetworkPeeringD
 			_, err := oracleDBNetPeeringDSTestEntity.findOracleDBNetworkPeering(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
-				if tfresource.NotFound(err) {
+				if retry.NotFound(err) {
 					return nil
 				}
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameNetworkPeeringConnection, rs.Primary.ID, err)
@@ -94,8 +91,7 @@ func (oracleDBNetPeeringDataSourceTest) findOracleDBNetworkPeering(ctx context.C
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+				LastError: err,
 			}
 		}
 

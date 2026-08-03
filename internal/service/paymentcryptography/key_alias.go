@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package paymentcryptography
 
@@ -18,11 +20,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,7 +56,7 @@ func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRe
 			"key_arn": schema.StringAttribute{
 				Optional: true,
 				// Validators: []validator.String{
-				// 	stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:payment-cryptography:[a-z]{2}-[a-z]{1,16}-[0-9]+:[0-9]{12}:key/[0-9a-zA-Z]{16,64}$`), "valid arn is required. Minimum length of 70. Maximum length of 150"),
+				// 	stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:payment-cryptography:`+inttypes.CanonicalRegionPatternNoAnchors+`:[0-9]{12}:key/[0-9a-zA-Z]{16,64}$`), "valid arn is required. Minimum length of 70. Maximum length of 150"),
 				// },
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -114,7 +116,7 @@ func (r *keyAliasResource) Read(ctx context.Context, request resource.ReadReques
 
 	output, err := findkeyAliasByName(ctx, conn, data.AliasName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -214,8 +216,7 @@ func findkeyAliasByName(ctx context.Context, conn *paymentcryptography.Client, n
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -224,7 +225,7 @@ func findkeyAliasByName(ctx context.Context, conn *paymentcryptography.Client, n
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssmcontacts
 
@@ -19,53 +21,55 @@ func DataSourcePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlanRead,
 
-		Schema: map[string]*schema.Schema{
-			"contact_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrStage: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"duration_in_minutes": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrTarget: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_target_info": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"contact_channel_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"retry_interval_in_minutes": {
-													Type:     schema.TypeInt,
-													Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"contact_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrStage: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"duration_in_minutes": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrTarget: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"channel_target_info": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"contact_channel_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"retry_interval_in_minutes": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									"contact_target_info": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"is_essential": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												"contact_id": {
-													Type:     schema.TypeString,
-													Computed: true,
+										"contact_target_info": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"is_essential": {
+														Type:     schema.TypeBool,
+														Computed: true,
+													},
+													"contact_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
@@ -75,7 +79,7 @@ func DataSourcePlan() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

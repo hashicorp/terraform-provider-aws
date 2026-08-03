@@ -34,12 +34,12 @@ The following arguments are required:
 
 * `invoice_receiver` - (Required) AWS account ID that receives invoices for this unit. Cannot be changed after creation.
 * `name` - (Required) Unique name of the invoice unit. Cannot be changed after creation.
-* `rule` - (Required) Configuration block for invoice unit rules. See below.
+* `rule` - (Required) Configuration block for invoice unit rules. See [`rule`](#rule) below.
 
 The following arguments are optional:
 
 * `description` - (Optional) Description of the invoice unit.
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tax_inheritance_disabled` - (Optional) Whether tax inheritance is disabled for this invoice unit.
 
@@ -64,6 +64,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_invoicing_invoice_unit.example
+  identity = {
+    "arn" = "arn:aws:invoicing::123456789012:invoice-unit/example-id"
+  }
+}
+
+resource "aws_invoicing_invoice_unit" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the invoice unit.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Invoice Units using the ARN. For example:
 

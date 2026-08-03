@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3control
 
@@ -20,28 +22,30 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

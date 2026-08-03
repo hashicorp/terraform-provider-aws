@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -13,14 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -53,18 +52,18 @@ func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 	dbNodesListsDataSourceName := "data.aws_odb_db_nodes.test"
 	vmClusterListsResourceName := "aws_odb_cloud_vm_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDBNodesDestroyed(ctx),
+		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDBNodesDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: dbNodesListDataSourceTestEntity.basicDBNodesListDataSource(publicKey),
+				Config: dbNodesListDataSourceTestEntity.basicDBNodesListDataSource(t, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbNodesListDataSourceTestEntity.testAccCheckDBNodesListExists(ctx, vmClusterListsResourceName, &dbNodesList),
+					dbNodesListDataSourceTestEntity.testAccCheckDBNodesListExists(ctx, t, vmClusterListsResourceName, &dbNodesList),
 					resource.TestCheckResourceAttr(dbNodesListsDataSourceName, "aws_odb_db_nodes.db_nodes.#", strconv.Itoa(len(dbNodesList.DbNodes))),
 				),
 			},
@@ -72,13 +71,13 @@ func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 	})
 }
 
-func (dbNodesListDataSourceTest) testAccCheckDBNodesListExists(ctx context.Context, name string, output *odb.ListDbNodesOutput) resource.TestCheckFunc {
+func (dbNodesListDataSourceTest) testAccCheckDBNodesListExists(ctx context.Context, t *testing.T, name string, output *odb.ListDbNodesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBNodesList, name, errors.New("not found"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		var vmClusterId = &rs.Primary.ID
 		input := odb.ListDbNodesInput{
 			CloudVmClusterId: vmClusterId,
@@ -97,15 +96,15 @@ func (dbNodesListDataSourceTest) testAccCheckDBNodesListExists(ctx context.Conte
 	}
 }
 
-func (dbNodesListDataSourceTest) testAccCheckDBNodesDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (dbNodesListDataSourceTest) testAccCheckDBNodesDestroyed(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
 			}
 			_, err := dbNodesListDataSourceTestEntity.findVmCluster(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -125,20 +124,19 @@ func (dbNodesListDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cl
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 	if output == nil || output.CloudVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return output.CloudVmCluster, nil
 }
 
-func (dbNodesListDataSourceTest) basicDBNodesListDataSource(publicKey string) string {
-	vmCluster := dbNodesListDataSourceTestEntity.vmClusterBasic(publicKey)
+func (dbNodesListDataSourceTest) basicDBNodesListDataSource(t *testing.T, publicKey string) string {
+	vmCluster := dbNodesListDataSourceTestEntity.vmClusterBasic(t, publicKey)
 	return fmt.Sprintf(`
 
 	%s
@@ -149,10 +147,10 @@ data "aws_odb_db_nodes" "test" {
 `, vmCluster)
 }
 
-func (dbNodesListDataSourceTest) vmClusterBasic(publicKey string) string {
-	odbNetRName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
-	exaInfraRName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.exadataInfraDisplayNamePrefix)
-	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.vmClusterDisplayNamePrefix)
+func (dbNodesListDataSourceTest) vmClusterBasic(t *testing.T, publicKey string) string {
+	odbNetRName := acctest.RandomWithPrefix(t, dbNodesListDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
+	exaInfraRName := acctest.RandomWithPrefix(t, dbNodesListDataSourceTestEntity.exadataInfraDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, dbNodesListDataSourceTestEntity.vmClusterDisplayNamePrefix)
 	return fmt.Sprintf(`
 
 resource "aws_odb_network" "test" {

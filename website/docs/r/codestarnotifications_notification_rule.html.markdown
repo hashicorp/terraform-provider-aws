@@ -68,8 +68,8 @@ This resource supports the following arguments:
 
 An `target` block supports the following arguments:
 
-* `address` - (Required) The ARN of notification rule target. For example, a SNS Topic ARN.
-* `type` - (Optional) The type of the notification target. Default value is `SNS`.
+* `address` - (Required) The ARN of the Amazon Q Developer in chat applications topic or Amazon Q Developer in chat applications client.
+* `type` - (Optional) The type of the notification target. Valid values are `SNS`, `AWSChatbotSlack`, and `AWSChatbotMicrosoftTeams`. Default value is `SNS`.
 
 ## Attribute Reference
 

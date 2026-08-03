@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Using Regular Expressions
 
 Regular expressions are a powerful tool. However, they are also very expensive in terms of memory. Ensuring correct and useful functionality is the priority but we have a few tips to minimize impact without affecting capabilities.

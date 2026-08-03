@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -13,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,107 +45,109 @@ func resourceEndpointGroup() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attachment_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"client_ip_preservation_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"endpoint_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						names.AttrWeight: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attachment_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"client_ip_preservation_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"endpoint_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							names.AttrWeight: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 255),
+							},
 						},
 					},
 				},
-			},
-			"endpoint_group_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidRegionName,
-			},
-			"health_check_interval_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(10, 30),
-			},
-			"health_check_path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"health_check_port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			"health_check_protocol": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.HealthCheckProtocolTcp,
-				ValidateDiagFunc: enum.Validate[awstypes.HealthCheckProtocol](),
-			},
-			"listener_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"port_override": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"endpoint_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						"listener_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumber,
+				"endpoint_group_region": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidRegionName,
+				},
+				"health_check_interval_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      30,
+					ValidateFunc: validation.IntBetween(10, 30),
+				},
+				"health_check_path": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"health_check_port": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				"health_check_protocol": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.HealthCheckProtocolTcp,
+					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckProtocol](),
+				},
+				"listener_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"port_override": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"endpoint_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							"listener_port": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
-			"threshold_count": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3,
-				ValidateFunc: validation.IntBetween(1, 10),
-			},
-			"traffic_dial_percentage": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				Default:      100.0,
-				ValidateFunc: validation.FloatBetween(0.0, 100.0),
-			},
+				"threshold_count": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      3,
+					ValidateFunc: validation.IntBetween(1, 10),
+				},
+				"traffic_dial_percentage": {
+					Type:         schema.TypeFloat,
+					Optional:     true,
+					Default:      100.0,
+					ValidateFunc: validation.FloatBetween(0.0, 100.0),
+				},
+			}
 		},
 	}
 }
@@ -154,7 +158,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
-		IdempotencyToken:    aws.String(id.UniqueId()),
+		IdempotencyToken:    aws.String(create.UniqueId(ctx)),
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 	}
 
@@ -220,7 +224,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	endpointGroup, err := findEndpointGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator endpoint group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -359,8 +363,7 @@ func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client,
 
 	if errs.IsA[*awstypes.EndpointGroupNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -369,7 +372,7 @@ func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client,
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -18,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,25 +32,27 @@ func resourceListenerPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceListenerPolicySet,
 		DeleteWithoutTimeout: resourceListenerPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"load_balancer_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"policy_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"load_balancer_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"policy_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -93,7 +97,7 @@ func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	policyNames, err := findLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Listener Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

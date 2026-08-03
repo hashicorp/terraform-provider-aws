@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package account
 
@@ -35,63 +37,65 @@ func resourcePrimaryContact() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"address_line_1": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"address_line_2": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"address_line_3": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"city": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"company_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"country_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"district_or_county": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"full_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"phone_number": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
-			},
-			"postal_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"state_or_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"website_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"address_line_1": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"address_line_2": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"address_line_3": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"city": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"company_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"country_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"district_or_county": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"full_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"phone_number": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
+				},
+				"postal_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"state_or_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"website_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -209,7 +213,7 @@ func findContactInformation(ctx context.Context, conn *account.Client, accountID
 	}
 
 	if output == nil || output.ContactInformation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactInformation, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sqs
 
@@ -30,13 +32,15 @@ func resourceQueueRedrivePolicy() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"queue_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"redrive_policy": sdkv2.JSONDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"queue_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"redrive_policy": sdkv2.JSONDocumentSchemaRequired(),
+			}
 		},
 
 		CreateWithoutTimeout: h.Upsert,

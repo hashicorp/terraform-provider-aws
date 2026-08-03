@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -12,14 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,31 +40,31 @@ func TestAccODBDBServerDataSource_basic(t *testing.T) {
 	var dbServer odb.GetDbServerOutput
 
 	dataSourceName := "data.aws_odb_db_server.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbServerDataSourceTestEntity.testAccCheckDBServersDestroyed(ctx),
+		CheckDestroy:             dbServerDataSourceTestEntity.testAccCheckDBServersDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: dbServerDataSourceTestEntity.basicDBServerDataSourceConfig(),
+				Config: dbServerDataSourceTestEntity.basicDBServerDataSourceConfig(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbServerDataSourceTestEntity.testAccCheckDBServerExists(ctx, dataSourceName, &dbServer),
+					dbServerDataSourceTestEntity.testAccCheckDBServerExists(ctx, t, dataSourceName, &dbServer),
 				),
 			},
 		},
 	})
 }
 
-func (testDbServerDataSourceTest) testAccCheckDBServerExists(ctx context.Context, name string, output *odb.GetDbServerOutput) resource.TestCheckFunc {
+func (testDbServerDataSourceTest) testAccCheckDBServerExists(ctx context.Context, t *testing.T, name string, output *odb.GetDbServerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBServer, name, errors.New("not found"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		var dbServerId = rs.Primary.ID
 		var attributes = rs.Primary.Attributes
 		exaId := attributes["exadata_infrastructure_id"]
@@ -79,15 +77,15 @@ func (testDbServerDataSourceTest) testAccCheckDBServerExists(ctx context.Context
 	}
 }
 
-func (testDbServerDataSourceTest) testAccCheckDBServersDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (testDbServerDataSourceTest) testAccCheckDBServersDestroyed(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
 			err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -107,14 +105,13 @@ func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Cl
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
 			return &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+				LastError: err,
 			}
 		}
 		return err
 	}
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return tfresource.NewEmptyResultError(&input)
+		return tfresource.NewEmptyResultError()
 	}
 	return nil
 }
@@ -131,8 +128,8 @@ func (testDbServerDataSourceTest) findDBServer(ctx context.Context, conn *odb.Cl
 	return output, nil
 }
 
-func (testDbServerDataSourceTest) basicDBServerDataSourceConfig() string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTestEntity.displayNamePrefix)
+func (testDbServerDataSourceTest) basicDBServerDataSourceConfig(t *testing.T) string {
+	exaInfraDisplayName := acctest.RandomWithPrefix(t, dbServersListDataSourceTestEntity.displayNamePrefix)
 	exaInfra := dbServerDataSourceTestEntity.exaInfra(exaInfraDisplayName)
 
 	return fmt.Sprintf(`

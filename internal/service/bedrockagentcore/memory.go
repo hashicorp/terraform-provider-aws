@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,15 +19,18 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -41,11 +47,12 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes.Memory")
-// @Testing(generator="randomMemoryName()")
+// @Testing(generator="randomMemoryName(t)")
 func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &memoryResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -98,8 +105,88 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"indexed_key": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[indexedKeyModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeBetween(1, 10),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrKey: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 128),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\s._:/=+@-]*$`), ""),
+							},
+						},
+						names.AttrType: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.MetadataValueType](),
+							Required:   true,
+						},
+					},
+				},
+			},
+			"stream_delivery_resources": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[streamDeliveryResourcesModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"resource": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[streamDeliveryResourceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"kinesis": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[kinesisResourceModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"data_stream_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"content_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[contentConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeBetween(1, 1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrType: schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ContentType](),
+																Required:   true,
+															},
+															"level": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ContentLevel](),
+																Optional:   true,
+																Computed:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -122,7 +209,7 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -137,6 +224,12 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 			return tfresource.RetryableError(err)
 		}
 		if tfawserr.ErrMessageContains(err, errCodeValidationException, "valid trust policy") {
+			return tfresource.RetryableError(err)
+		}
+		// IAM propagation - retry while the execution role's permissions to a
+		// referenced resource (e.g. a Kinesis stream in stream_delivery_resources)
+		// have not yet propagated.
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "does not have access to provided") {
 			return tfresource.RetryableError(err)
 		}
 
@@ -159,6 +252,8 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	if _, err := waitMemoryCreated(ctx, conn, memoryID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), memoryID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
@@ -220,11 +315,38 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
-		_, err := conn.UpdateMemory(ctx, &input)
+		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateMemory(ctx, &input)
+
+			// IAM propagation - retry if role validation fails
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+				return tfresource.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "valid trust policy") {
+				return tfresource.RetryableError(err)
+			}
+			// IAM propagation - retry while the execution role's permissions to a
+			// referenced resource (e.g. a Kinesis stream in stream_delivery_resources)
+			// have not yet propagated.
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "does not have access to provided") {
+				return tfresource.RetryableError(err)
+			}
+
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
+			return
+		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 			return
 		}
@@ -272,7 +394,25 @@ func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.MemoryStatusUpdating),
+		Target:                    enum.Slice(awstypes.MemoryStatusActive),
+		Refresh:                   statusMemory(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.Memory); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -289,7 +429,7 @@ func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -323,9 +463,8 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	out, err := conn.GetMemory(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -334,7 +473,7 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	}
 
 	if out == nil || out.Memory == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Memory, nil
@@ -342,14 +481,84 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 
 type memoryResourceModel struct {
 	framework.WithRegionModel
-	ARN                    types.String   `tfsdk:"arn"`
-	Description            types.String   `tfsdk:"description"`
-	EncryptionKeyARN       fwtypes.ARN    `tfsdk:"encryption_key_arn"`
-	EventExpiryDuration    types.Int32    `tfsdk:"event_expiry_duration"`
-	ID                     types.String   `tfsdk:"id"`
-	MemoryExecutionRoleARN fwtypes.ARN    `tfsdk:"memory_execution_role_arn"`
-	Name                   types.String   `tfsdk:"name"`
-	Tags                   tftags.Map     `tfsdk:"tags"`
-	TagsAll                tftags.Map     `tfsdk:"tags_all"`
-	Timeouts               timeouts.Value `tfsdk:"timeouts"`
+	ARN                     types.String                                                  `tfsdk:"arn"`
+	Description             types.String                                                  `tfsdk:"description"`
+	EncryptionKeyARN        fwtypes.ARN                                                   `tfsdk:"encryption_key_arn"`
+	EventExpiryDuration     types.Int32                                                   `tfsdk:"event_expiry_duration"`
+	ID                      types.String                                                  `tfsdk:"id"`
+	IndexedKeys             fwtypes.ListNestedObjectValueOf[indexedKeyModel]              `tfsdk:"indexed_key"`
+	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
+	Name                    types.String                                                  `tfsdk:"name"`
+	StreamDeliveryResources fwtypes.ListNestedObjectValueOf[streamDeliveryResourcesModel] `tfsdk:"stream_delivery_resources"`
+	Tags                    tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
+}
+
+type indexedKeyModel struct {
+	Key  types.String                                   `tfsdk:"key"`
+	Type fwtypes.StringEnum[awstypes.MetadataValueType] `tfsdk:"type"`
+}
+
+type streamDeliveryResourcesModel struct {
+	Resources fwtypes.ListNestedObjectValueOf[streamDeliveryResourceModel] `tfsdk:"resource"`
+}
+
+// streamDeliveryResourceModel maps to the awstypes.StreamDeliveryResource union.
+type streamDeliveryResourceModel struct {
+	Kinesis fwtypes.ListNestedObjectValueOf[kinesisResourceModel] `tfsdk:"kinesis"`
+}
+
+var (
+	_ fwflex.Expander  = streamDeliveryResourceModel{}
+	_ fwflex.Flattener = &streamDeliveryResourceModel{}
+)
+
+func (m *streamDeliveryResourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.StreamDeliveryResourceMemberKinesis:
+		var data kinesisResourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.Kinesis = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("stream delivery resource flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m streamDeliveryResourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.Kinesis.IsNull():
+		data, d := m.Kinesis.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.StreamDeliveryResourceMemberKinesis
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type kinesisResourceModel struct {
+	ContentConfigurations fwtypes.ListNestedObjectValueOf[contentConfigurationModel] `tfsdk:"content_configuration"`
+	DataStreamARN         fwtypes.ARN                                                `tfsdk:"data_stream_arn"`
+}
+
+type contentConfigurationModel struct {
+	Level fwtypes.StringEnum[awstypes.ContentLevel] `tfsdk:"level"`
+	Type  fwtypes.StringEnum[awstypes.ContentType]  `tfsdk:"type"`
 }

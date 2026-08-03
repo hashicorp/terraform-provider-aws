@@ -103,7 +103,7 @@ The `cloudwatch_config` configuration block supports the following arguments:
 
 * `large_data_delivery_s3_config` - (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
 * `log_group_name` - (Required) Log group name.
-* `role_arn` - (Optional) The role ARN.
+* `role_arn` - (Required) The role ARN.
 
 ### `large_data_delivery_s3_config` Block
 
@@ -126,6 +126,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - AWS Region in which logging is configured.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrock_model_invocation_logging_configuration.my_config
+  identity = {
+    region = "us-east-1"
+  }
+}
+
+resource "aws_bedrock_model_invocation_logging_configuration" "my_config" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Invocation Logging Configuration using the `id` set to the AWS Region. For example:
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -13,15 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -57,181 +59,183 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"active_directory_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"netbios_name": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-							ValidateFunc:     validation.StringLenBetween(1, 15),
-						},
-						"self_managed_active_directory_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dns_ips": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 3,
-										Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_directory_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"netbios_name": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+								ValidateFunc:     validation.StringLenBetween(1, 15),
+							},
+							"self_managed_active_directory_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dns_ips": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.IsIPAddress,
+											},
+										},
+										names.AttrDomainName: {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.IsIPAddress,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"file_system_administrators_group": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"organizational_unit_distinguished_name": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2000),
+										},
+										names.AttrPassword: {
+											Type:         schema.TypeString,
+											Sensitive:    true,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										names.AttrUsername: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
 										},
 									},
-									names.AttrDomainName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
+								},
+							},
+						},
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoints: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"iscsi": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									"file_system_administrators_group": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+								},
+							},
+							"management": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									"organizational_unit_distinguished_name": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2000),
+								},
+							},
+							"nfs": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									names.AttrPassword: {
-										Type:         schema.TypeString,
-										Sensitive:    true,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									names.AttrUsername: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+								},
+							},
+							"smb": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iscsi": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"management": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"nfs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"smb": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
+				names.AttrFileSystemID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(11, 21),
 				},
-			},
-			names.AttrFileSystemID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(11, 21),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 47),
-			},
-			"root_volume_security_style": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
-			},
-			"subtype": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"svm_admin_password": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 50),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uuid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 47),
+				},
+				"root_volume_security_style": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
+				},
+				"subtype": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"svm_admin_password": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 50),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"uuid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -280,7 +284,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 
 	storageVirtualMachine, err := findStorageVirtualMachineByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP Storage Virtual Machine (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -317,7 +321,7 @@ func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateStorageVirtualMachineInput{
-			ClientRequestToken:      aws.String(id.UniqueId()),
+			ClientRequestToken:      aws.String(create.UniqueId(ctx)),
 			StorageVirtualMachineId: aws.String(d.Id()),
 		}
 
@@ -394,8 +398,7 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fs
 
 		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -413,11 +416,11 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fs
 	return output, nil
 }
 
-func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStorageVirtualMachine(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStorageVirtualMachineByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -433,7 +436,7 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
 		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Refresh: statusStorageVirtualMachine(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -442,7 +445,7 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err
@@ -455,7 +458,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
 		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Refresh: statusStorageVirtualMachine(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -464,7 +467,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err
@@ -477,7 +480,7 @@ func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
 		Target:       []string{},
-		Refresh:      statusStorageVirtualMachine(ctx, conn, id),
+		Refresh:      statusStorageVirtualMachine(conn, id),
 		Timeout:      timeout,
 		Delay:        1 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -487,7 +490,7 @@ func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err

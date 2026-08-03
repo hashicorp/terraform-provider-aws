@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticbeanstalk
 
@@ -20,7 +22,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +29,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -38,24 +40,26 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 func settingSchema() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrNamespace: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "", // This default is required to work around an error seen is some situations with Unknown values
-			},
-			names.AttrValue: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrNamespace: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "", // This default is required to work around an error seen is some situations with Unknown values
+				},
+				names.AttrValue: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -317,7 +321,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -564,7 +568,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Environment must be Ready before it can be deleted.
 	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -604,16 +608,13 @@ func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 
 	if status := output.Status; status == awstypes.EnvironmentStatusTerminated {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.EnvironmentId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -697,11 +698,11 @@ func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elast
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -717,7 +718,7 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusLaunching, awstypes.EnvironmentStatusUpdating),
 		Target:       enum.Slice(awstypes.EnvironmentStatusReady),
-		Refresh:      statusEnvironment(ctx, conn, id),
+		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -737,7 +738,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusTerminating),
 		Target:       []string{},
-		Refresh:      statusEnvironment(ctx, conn, id),
+		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,

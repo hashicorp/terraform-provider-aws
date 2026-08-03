@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspacesweb
 
@@ -20,13 +22,10 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_user_access_logging_settings_association", name="User Access Logging Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserAccessLoggingSettings")
-// @Testing(importStateIdAttribute="user_access_logging_settings_arn,portal_arn")
 func newUserAccessLoggingSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userAccessLoggingSettingsAssociationResource{}, nil
 }
@@ -92,7 +91,7 @@ func (r *userAccessLoggingSettingsAssociationResource) Read(ctx context.Context,
 
 	// Check if the association exists by getting the user access logging settings and checking associated portals
 	output, err := findUserAccessLoggingSettingsByARN(ctx, conn, data.UserAccessLoggingSettingsARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

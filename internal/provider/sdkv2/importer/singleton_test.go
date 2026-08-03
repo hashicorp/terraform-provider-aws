@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -21,7 +21,7 @@ var regionalSingletonSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 type mockClient struct {
@@ -169,7 +169,7 @@ func TestRegionalSingleton(t *testing.T) {
 				d = schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, identitySchema, identityAttrs)
 			}
 
-			err := importer.RegionalSingleton(ctx, d, &identitySpec, client)
+			err := importer.RegionalSingleton(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -304,7 +304,7 @@ func TestGlobalSingleton(t *testing.T) {
 				d = schema.TestResourceDataWithIdentityRaw(t, globalSingletonSchema, identitySchema, identityAttrs)
 			}
 
-			err := importer.GlobalSingleton(ctx, d, &identitySpec, client)
+			err := importer.GlobalSingleton(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

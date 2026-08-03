@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package osis
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,13 +29,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,6 +43,12 @@ import (
 
 // @FrameworkResource("aws_osis_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="pipeline_arn")
+// @IdentityAttribute("name", resourceAttributeName="pipeline_name", identityDuplicateAttributes="id")
+// @ArnFormat("pipeline/{pipeline_name}", attribute="pipeline_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/osis/types;awstypes;awstypes.Pipeline")
+// @Testing(generator="randomPipelineName(t)")
+// @Testing(preIdentityVersion="v6.47.0")
+// @Testing(importStateIdAttribute="pipeline_name")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}
 
@@ -52,14 +61,14 @@ func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, err
 
 type pipelineResource struct {
 	framework.ResourceWithModel[pipelineResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
 func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("pipeline_name")),
 			"ingest_endpoint_urls": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
@@ -84,7 +93,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 			"pipeline_configuration_body": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 24000),
+					stringvalidator.LengthBetween(1, 2621440),
 				},
 			},
 			"pipeline_name": schema.StringAttribute{
@@ -94,6 +103,17 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 28),
+				},
+			},
+			"pipeline_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(20, 2048),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -252,6 +272,9 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	// Set values for unknowns.
 	data.IngestEndpointURLs.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, pipeline.IngestEndpointUrls)
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
+	data.PipelineRoleARN = fwflex.StringToFrameworkARN(ctx, pipeline.PipelineRoleArn)
+
+	setTagsOut(ctx, pipeline.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -265,11 +288,10 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	data.PipelineName = data.ID
 	name := data.PipelineName.ValueString()
 	pipeline, err := findPipelineByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -282,7 +304,7 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, pipeline, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, pipeline, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -310,7 +332,7 @@ func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if diff.HasChanges() {
-		input := osis.UpdatePipelineInput{}
+		var input osis.UpdatePipelineInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -368,6 +390,17 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
+func (r *pipelineResource) flatten(ctx context.Context, pipeline *awstypes.Pipeline, data *pipelineResourceModel) diag.Diagnostics {
+	diags := fwflex.Flatten(ctx, pipeline, data)
+	if diags.HasError() {
+		return diags
+	}
+
+	setTagsOut(ctx, pipeline.Tags)
+
+	return diags
+}
+
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {
 	input := &osis.GetPipelineInput{
 		PipelineName: aws.String(name),
@@ -377,8 +410,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -387,17 +419,17 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 	}
 
 	if output == nil || output.Pipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Pipeline, nil
 }
 
-func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPipeline(conn *osis.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPipelineByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -413,7 +445,7 @@ func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineStatusCreating, awstypes.PipelineStatusStarting),
 		Target:     enum.Slice(awstypes.PipelineStatusActive),
-		Refresh:    statusPipeline(ctx, conn, name),
+		Refresh:    statusPipeline(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -423,7 +455,7 @@ func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -436,7 +468,7 @@ func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineStatusUpdating),
 		Target:     enum.Slice(awstypes.PipelineStatusActive),
-		Refresh:    statusPipeline(ctx, conn, name),
+		Refresh:    statusPipeline(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -446,7 +478,7 @@ func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -459,7 +491,7 @@ func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusPipeline(ctx, conn, name),
+		Refresh:    statusPipeline(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -469,7 +501,7 @@ func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -490,6 +522,7 @@ type pipelineResourceModel struct {
 	PipelineARN               types.String                                                  `tfsdk:"pipeline_arn"`
 	PipelineConfigurationBody types.String                                                  `tfsdk:"pipeline_configuration_body"`
 	PipelineName              types.String                                                  `tfsdk:"pipeline_name"`
+	PipelineRoleARN           fwtypes.ARN                                                   `tfsdk:"pipeline_role_arn"`
 	Tags                      tftags.Map                                                    `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`

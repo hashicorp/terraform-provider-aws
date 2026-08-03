@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -24,8 +26,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -36,8 +37,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,6 +50,17 @@ const (
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
 	bucketPropagationTimeout = 2 * time.Minute
 )
+
+var (
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+	// e.g. example-123456789012-us-west-2-an.
+	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+)
+
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
@@ -63,9 +77,7 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -82,309 +94,318 @@ func resourceBucket() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acceleration_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "acceleration_status is deprecated. Use the aws_s3_bucket_accelerate_configuration resource instead.",
-				ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
-			},
-			"acl": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
-				Deprecated:    "acl is deprecated. Use the aws_s3_bucket_acl resource instead.",
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrBucketPrefix},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63),
-					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
-				),
-			},
-			"bucket_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucketPrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrBucket},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
-				),
-			},
-			"bucket_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_regional_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cors_rule": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "cors_rule is deprecated. Use the aws_s3_bucket_cors_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_methods": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allowed_origins": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"expose_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"max_age_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acceleration_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					Deprecated:       "acceleration_status is deprecated. Use the aws_s3_bucket_accelerate_configuration resource instead.",
+					ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
+				},
+				"acl": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"grant"},
+					ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
+					Deprecated:    "acl is deprecated. Use the aws_s3_bucket_acl resource instead.",
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrBucketPrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 63),
+						validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+					),
+				},
+				"bucket_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_namespace": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
+				},
+				names.AttrBucketPrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrBucket},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
+					),
+				},
+				"bucket_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_regional_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cors_rule": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					Deprecated: "cors_rule is deprecated. Use the aws_s3_bucket_cors_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_headers": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_methods": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allowed_origins": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"expose_headers": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"max_age_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"grant": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"acl"},
-				Deprecated:    "grant is deprecated. Use the aws_s3_bucket_acl resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Optional: true,
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"grant": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"acl"},
+					Deprecated:    "grant is deprecated. Use the aws_s3_bucket_acl resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrPermissions: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Set:      schema.HashString,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.Permission](),
+								},
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+								// TypeAmazonCustomerByEmail is not currently supported
+								ValidateFunc: validation.StringInSlice(enum.Slice(
+									types.TypeCanonicalUser,
+									types.TypeGroup,
+								), false),
+							},
+							names.AttrURI: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
-						names.AttrPermissions: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
+					},
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"lifecycle_rule": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					Deprecated: "lifecycle_rule is deprecated. Use the aws_s3_bucket_lifecycle_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"abort_incomplete_multipart_upload_days": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"expiration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validBucketLifecycleTimestamp,
+										},
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										"expired_object_delete_marker": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+									},
+								},
+							},
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"noncurrent_version_expiration": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(1),
+										},
+									},
+								},
+							},
+							"noncurrent_version_transition": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrStorageClass: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+										},
+									},
+								},
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrTags: tftags.TagsSchema(),
+							"transition": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"date": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validBucketLifecycleTimestamp,
+										},
+										"days": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtLeast(0),
+										},
+										names.AttrStorageClass: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"logging": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "logging is deprecated. Use the aws_s3_bucket_logging resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"target_bucket": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"target_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"object_lock_configuration": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "object_lock_configuration is deprecated. Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"object_lock_enabled": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.Permission](),
+								Optional:         true,
+								ForceNew:         true,
+								ConflictsWith:    []string{"object_lock_enabled"},
+								ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
+								Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-							// TypeAmazonCustomerByEmail is not currently supported
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								types.TypeCanonicalUser,
-								types.TypeGroup,
-							), false),
-						},
-						names.AttrURI: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"lifecycle_rule": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "lifecycle_rule is deprecated. Use the aws_s3_bucket_lifecycle_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"abort_incomplete_multipart_upload_days": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"expiration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validBucketLifecycleTimestamp,
-									},
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									"expired_object_delete_marker": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-								},
-							},
-						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"noncurrent_version_expiration": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-								},
-							},
-						},
-						"noncurrent_version_transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
-									},
-								},
-							},
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrTags: tftags.TagsSchema(),
-						"transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validBucketLifecycleTimestamp,
-									},
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"logging": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "logging is deprecated. Use the aws_s3_bucket_logging resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"target_bucket": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"target_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"object_lock_configuration": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "object_lock_configuration is deprecated. Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"object_lock_enabled": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ConflictsWith:    []string{"object_lock_enabled"},
-							ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
-							Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
-						},
-						names.AttrRule: {
-							Type:       schema.TypeList,
-							Optional:   true,
-							Deprecated: "rule is deprecated. Use the aws_s3_bucket_object_lock_configuration resource instead.",
-							MaxItems:   1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_retention": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"days": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												names.AttrMode: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
-												},
-												"years": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+							names.AttrRule: {
+								Type:       schema.TypeList,
+								Optional:   true,
+								Deprecated: "rule is deprecated. Use the aws_s3_bucket_object_lock_configuration resource instead.",
+								MaxItems:   1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_retention": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"days": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+													names.AttrMode: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
+													},
+													"years": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
 												},
 											},
 										},
@@ -394,326 +415,326 @@ func resourceBucket() *schema.Resource {
 						},
 					},
 				},
-			},
-			"object_lock_enabled": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
-				ForceNew:      true,
-				ConflictsWith: []string{"object_lock_configuration"},
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				Deprecated:            "policy is deprecated. Use the aws_s3_bucket_policy resource instead.",
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"object_lock_enabled": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
+					ForceNew:      true,
+					ConflictsWith: []string{"object_lock_configuration"},
 				},
-			},
-			"replication_configuration": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "replication_configuration is deprecated. Use the aws_s3_bucket_replication_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRole: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"rules": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"delete_marker_replication_status": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
-									},
-									names.AttrDestination: {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										MinItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_control_translation": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrOwner: {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					Computed:              true,
+					Deprecated:            "policy is deprecated. Use the aws_s3_bucket_policy resource instead.",
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"replication_configuration": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "replication_configuration is deprecated. Use the aws_s3_bucket_replication_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRole: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"rules": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"delete_marker_replication_status": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
+										},
+										names.AttrDestination: {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											MinItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"access_control_translation": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrOwner: {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
+																},
 															},
 														},
 													},
-												},
-												names.AttrAccountID: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidAccountID,
-												},
-												names.AttrBucket: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"metrics": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Default:      15,
-																ValidateFunc: validation.IntBetween(10, 15),
-															},
-															names.AttrStatus: {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Default:          types.MetricsStatusEnabled,
-																ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
+													names.AttrAccountID: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidAccountID,
+													},
+													names.AttrBucket: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"metrics": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	Default:      15,
+																	ValidateFunc: validation.IntBetween(10, 15),
+																},
+																names.AttrStatus: {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Default:          types.MetricsStatusEnabled,
+																	ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
+																},
 															},
 														},
 													},
-												},
-												"replica_kms_key_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"replication_time": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Optional:     true,
-																Default:      15,
-																ValidateFunc: validation.IntBetween(15, 15),
-															},
-															names.AttrStatus: {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Default:          types.ReplicationTimeStatusEnabled,
-																ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
+													"replica_kms_key_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"replication_time": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"minutes": {
+																	Type:         schema.TypeInt,
+																	Optional:     true,
+																	Default:      15,
+																	ValidateFunc: validation.IntBetween(15, 15),
+																},
+																names.AttrStatus: {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Default:          types.ReplicationTimeStatusEnabled,
+																	ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
+																},
 															},
 														},
 													},
-												},
-												names.AttrStorageClass: {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.StorageClass](),
+													names.AttrStorageClass: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.StorageClass](),
+													},
 												},
 											},
 										},
-									},
-									names.AttrFilter: {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrPrefix: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
+										names.AttrFilter: {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrPrefix: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(0, 1024),
+													},
+													names.AttrTags: tftags.TagsSchema(),
 												},
-												names.AttrTags: tftags.TagsSchema(),
 											},
 										},
-									},
-									names.AttrID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
-									},
-									names.AttrPrefix: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									names.AttrPriority: {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"source_selection_criteria": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"sse_kms_encrypted_objects": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrEnabled: {
-																Type:     schema.TypeBool,
-																Required: true,
+										names.AttrID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 255),
+										},
+										names.AttrPrefix: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										names.AttrPriority: {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"source_selection_criteria": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"sse_kms_encrypted_objects": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrEnabled: {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"request_payer": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "request_payer is deprecated. Use the aws_s3_bucket_request_payment_configuration resource instead.",
-				ValidateDiagFunc: enum.Validate[types.Payer](),
-			},
-			"server_side_encryption_configuration": {
-				Type:       schema.TypeList,
-				MaxItems:   1,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "server_side_encryption_configuration is deprecated. Use the aws_s3_bucket_server_side_encryption_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRule: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"apply_server_side_encryption_by_default": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"kms_master_key_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"sse_algorithm": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+				"request_payer": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					Deprecated:       "request_payer is deprecated. Use the aws_s3_bucket_request_payment_configuration resource instead.",
+					ValidateDiagFunc: enum.Validate[types.Payer](),
+				},
+				"server_side_encryption_configuration": {
+					Type:       schema.TypeList,
+					MaxItems:   1,
+					Optional:   true,
+					Computed:   true,
+					Deprecated: "server_side_encryption_configuration is deprecated. Use the aws_s3_bucket_server_side_encryption_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRule: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"apply_server_side_encryption_by_default": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"kms_master_key_id": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"sse_algorithm": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+													},
 												},
 											},
 										},
-									},
-									"bucket_key_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										"bucket_key_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"versioning": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "versioning is deprecated. Use the aws_s3_bucket_versioning resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"mfa_delete": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"website": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "website is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"error_document": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"index_document": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"website.0.index_document",
-								"website.0.redirect_all_requests_to",
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"versioning": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "versioning is deprecated. Use the aws_s3_bucket_versioning resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
-						},
-						"redirect_all_requests_to": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"website.0.index_document",
-								"website.0.redirect_all_requests_to",
-							},
-							ConflictsWith: []string{
-								"website.0.error_document",
-								"website.0.routing_rules",
-							},
-						},
-						"routing_rules": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsJSON,
-							StateFunc: func(v any) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+							"mfa_delete": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
 						},
 					},
 				},
-			},
-			"website_domain": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "website_domain is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
-			},
-			"website_endpoint": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
-			},
+				"website": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "website is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"error_document": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"index_document": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"website.0.index_document",
+									"website.0.redirect_all_requests_to",
+								},
+							},
+							"redirect_all_requests_to": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"website.0.index_document",
+									"website.0.redirect_all_requests_to",
+								},
+								ConflictsWith: []string{
+									"website.0.error_document",
+									"website.0.routing_rules",
+								},
+							},
+							"routing_rules": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringIsJSON,
+								StateFunc: func(v any) string {
+									json, _ := structure.NormalizeJsonString(v)
+									return json
+								},
+							},
+						},
+					},
+				},
+				"website_domain": {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "website_domain is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+				},
+				"website_endpoint": {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
+				},
+			}
 		},
 	}
 }
@@ -723,9 +744,15 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	ns := types.BucketNamespace(d.Get("bucket_namespace").(string))
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrBucket).(string)), create.WithConfiguredPrefix(d.Get(names.AttrBucketPrefix).(string))}
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		optFns = append(optFns, create.WithSuffix(fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
+	}
+	bucket := create.NewNameGenerator(optFns...).Generate(ctx)
 	region := c.Region(ctx)
-	if err := validBucketName(bucket, region); err != nil {
+	if err := validBucketName(bucket, region, ns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
 
@@ -751,6 +778,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ACL = types.BucketCannedACLPrivate
 	}
 
+	if v, ok := d.GetOk("bucket_namespace"); ok {
+		input.BucketNamespace = types.BucketNamespace(v.(string))
+	}
+
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
 	if region != endpoints.UsEast1RegionID {
 		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
@@ -768,9 +799,41 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
+	// Tag on create requires the s3:TagResource IAM permission
+	tagOnCreate := true
+	if input.CreateBucketConfiguration == nil {
+		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			Tags: getTagsIn(ctx),
+		}
+	} else {
+		input.CreateBucketConfiguration.Tags = getTagsIn(ctx)
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
+
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
+		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument, errCodeMalformedXML) {
+		// Remove tags and try again.
+		input.CreateBucketConfiguration.Tags = nil
+		tagOnCreate = false
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
+
+	// If still MalformedXML after removing tags, the S3-compatible API does not
+	// support the CreateBucketConfiguration body at all. Remove it entirely and retry.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/47061.
+	if tfawserr.ErrCodeEquals(err, errCodeMalformedXML) {
+		input.CreateBucketConfiguration = nil
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, err)
@@ -786,8 +849,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) create: %s", d.Id(), err)
 	}
 
-	if err := bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting S3 Bucket (%s) tags: %s", d.Id(), err)
+	if !tagOnCreate {
+		if err := bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting S3 Bucket (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
@@ -800,7 +865,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	_, err := findBucket(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -810,16 +875,13 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
-	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
-	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+	resourceBucketFlatten(ctx, c, d.Id(), d)
 
 	//
 	// Bucket Policy.
 	//
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource.
-	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (string, error) {
+	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (string, error) {
 		return findBucketPolicy(ctx, conn, d.Id())
 	})
 
@@ -840,7 +902,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 
 		d.Set(names.AttrPolicy, policyToSet)
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set(names.AttrPolicy, nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) policy: %s", d.Id(), err)
@@ -849,7 +911,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket ACL.
 	//
-	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketAclOutput, error) {
+	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 		return findBucketACL(ctx, conn, d.Id(), "")
 	})
 
@@ -864,7 +926,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("grant", flattenBucketGrants(bucketACL)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting grant: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("grant", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) ACL: %s", d.Id(), err)
@@ -873,7 +935,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket CORS Configuration.
 	//
-	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.CORSRule, error) {
+	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.CORSRule, error) {
 		return findCORSRules(ctx, conn, d.Id(), "")
 	})
 
@@ -888,7 +950,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("cors_rule", flattenBucketCORSRules(corsRules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_rule: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("cors_rule", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
@@ -897,7 +959,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Website Configuration.
 	//
-	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketWebsiteOutput, error) {
+	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketWebsiteOutput, error) {
 		return findBucketWebsite(ctx, conn, d.Id(), "")
 	})
 
@@ -916,7 +978,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("website", website); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting website: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("website", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) website configuration: %s", d.Id(), err)
@@ -925,7 +987,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Versioning.
 	//
-	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketVersioningOutput, error) {
+	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketVersioningOutput, error) {
 		return findBucketVersioning(ctx, conn, d.Id(), "")
 	})
 
@@ -940,7 +1002,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("versioning", flattenBucketVersioning(bucketVersioning)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting versioning: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("versioning", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) versioning: %s", d.Id(), err)
@@ -949,7 +1011,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Accelerate Configuration.
 	//
-	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketAccelerateConfigurationOutput, error) {
+	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAccelerateConfigurationOutput, error) {
 		return findBucketAccelerateConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -962,7 +1024,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	switch {
 	case err == nil:
 		d.Set("acceleration_status", bucketAccelerate.Status)
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument, errCodeUnsupportedOperation):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument, errCodeUnsupportedOperation):
 		d.Set("acceleration_status", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
@@ -971,7 +1033,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Request Payment Configuration.
 	//
-	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketRequestPaymentOutput, error) {
+	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketRequestPaymentOutput, error) {
 		return findBucketRequestPayment(ctx, conn, d.Id(), "")
 	})
 
@@ -984,7 +1046,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	switch {
 	case err == nil:
 		d.Set("request_payer", bucketRequestPayment.Payer)
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("request_payer", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) request payment configuration: %s", d.Id(), err)
@@ -993,7 +1055,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Logging.
 	//
-	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.LoggingEnabled, error) {
+	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.LoggingEnabled, error) {
 		return findLoggingEnabled(ctx, conn, d.Id(), "")
 	})
 
@@ -1008,7 +1070,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("logging", flattenBucketLoggingEnabled(loggingEnabled)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("logging", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) logging: %s", d.Id(), err)
@@ -1017,7 +1079,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Lifecycle Configuration.
 	//
-	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.LifecycleRule, error) {
+	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.LifecycleRule, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, d.Id(), "")
 
 		if err != nil {
@@ -1038,7 +1100,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("lifecycle_rule", flattenBucketLifecycleRules(ctx, lifecycleRules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting lifecycle_rule: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("lifecycle_rule", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) lifecycle configuration: %s", d.Id(), err)
@@ -1047,7 +1109,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Replication Configuration.
 	//
-	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ReplicationConfiguration, error) {
+	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ReplicationConfiguration, error) {
 		return findReplicationConfiguration(ctx, conn, d.Id())
 	})
 
@@ -1062,7 +1124,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("replication_configuration", flattenBucketReplicationConfiguration(ctx, replicationConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting replication_configuration: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("replication_configuration", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) replication configuration: %s", d.Id(), err)
@@ -1071,7 +1133,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Server-side Encryption Configuration.
 	//
-	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ServerSideEncryptionConfiguration, error) {
+	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ServerSideEncryptionConfiguration, error) {
 		return findServerSideEncryptionConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -1086,7 +1148,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("server_side_encryption_configuration", flattenBucketServerSideEncryptionConfiguration(encryptionConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_side_encryption_configuration: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation):
 		d.Set("server_side_encryption_configuration", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)
@@ -1095,7 +1157,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Object Lock Configuration.
 	//
-	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ObjectLockConfiguration, error) {
+	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ObjectLockConfiguration, error) {
 		return findObjectLockConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -1111,7 +1173,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			return sdkdiag.AppendErrorf(diags, "setting object_lock_configuration: %s", err)
 		}
 		d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled)
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case retry.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("object_lock_configuration", nil)
 		d.Set("object_lock_enabled", nil)
 	default:
@@ -1128,7 +1190,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	region, err := findBucketRegion(ctx, c, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1148,6 +1210,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
+	//
+	// Bucket Website
+	//
 	if _, ok := d.GetOk("website"); ok {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
@@ -1166,7 +1231,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Policy.
 	//
-	if d.HasChange(names.AttrPolicy) {
+	// Only act if the practitioner has explicitly configured `policy` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_policy` resource.
+	if d.HasChange(names.AttrPolicy) && deprecatedAttributeInRawConfig(d, names.AttrPolicy) {
 		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -1201,7 +1268,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket CORS Configuration.
 	//
-	if d.HasChange("cors_rule") {
+	// Only act if the practitioner has explicitly configured `cors_rule` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_cors_configuration` resource.
+	if d.HasChange("cors_rule") && deprecatedAttributeInRawConfig(d, "cors_rule") {
 		if v, ok := d.GetOk("cors_rule"); !ok || len(v.([]any)) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketCors(ctx, &s3.DeleteBucketCorsInput{
@@ -1233,7 +1302,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Website Configuration.
 	//
-	if d.HasChange("website") {
+	// Only act if the practitioner has explicitly configured `website` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_website_configuration` resource.
+	if d.HasChange("website") && deprecatedAttributeInRawConfig(d, "website") {
 		if v, ok := d.GetOk("website"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketWebsite(ctx, &s3.DeleteBucketWebsiteInput{
@@ -1268,7 +1339,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Versioning.
 	//
-	if d.HasChange("versioning") {
+	// Only act if the practitioner has explicitly configured `versioning` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_versioning` resource.
+	if d.HasChange("versioning") && deprecatedAttributeInRawConfig(d, "versioning") {
 		v := d.Get("versioning").([]any)
 		var versioningConfig *types.VersioningConfiguration
 
@@ -1297,7 +1370,11 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket ACL.
 	//
-	if (d.HasChange("acl") && !d.IsNewResource()) || (d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() == 0) {
+	// Only act if the practitioner has explicitly configured `acl` or `grant` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_acl` resource.
+	aclChanged := d.HasChange("acl") && !d.IsNewResource() && deprecatedAttributeInRawConfig(d, "acl")
+	grantEmptied := d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() == 0 && deprecatedAttributeInRawConfig(d, "grant")
+	if aclChanged || grantEmptied {
 		acl := types.BucketCannedACL(d.Get("acl").(string))
 		if acl == "" {
 			// Use default value previously available in v3.x of the provider.
@@ -1317,8 +1394,8 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 {
-		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func() (*s3.GetBucketAclOutput, error) {
+	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 && deprecatedAttributeInRawConfig(d, "grant") {
+		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 			return findBucketACL(ctx, conn, d.Id(), "")
 		})
 
@@ -1346,7 +1423,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Logging.
 	//
-	if d.HasChange("logging") {
+	// Only act if the practitioner has explicitly configured `logging` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_logging` resource.
+	if d.HasChange("logging") && deprecatedAttributeInRawConfig(d, "logging") {
 		input := &s3.PutBucketLoggingInput{
 			Bucket:              aws.String(d.Id()),
 			BucketLoggingStatus: &types.BucketLoggingStatus{},
@@ -1378,7 +1457,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Lifecycle Configuration.
 	//
-	if d.HasChange("lifecycle_rule") {
+	// Only act if the practitioner has explicitly configured `lifecycle_rule` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_lifecycle_configuration` resource.
+	if d.HasChange("lifecycle_rule") && deprecatedAttributeInRawConfig(d, "lifecycle_rule") {
 		if v, ok := d.GetOk("lifecycle_rule"); !ok || len(v.([]any)) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketLifecycle(ctx, &s3.DeleteBucketLifecycleInput{
@@ -1410,7 +1491,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Accelerate Configuration.
 	//
-	if d.HasChange("acceleration_status") {
+	// Only act if the practitioner has explicitly configured `acceleration_status` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_accelerate_configuration` resource.
+	if d.HasChange("acceleration_status") && deprecatedAttributeInRawConfig(d, "acceleration_status") {
 		input := &s3.PutBucketAccelerateConfigurationInput{
 			AccelerateConfiguration: &types.AccelerateConfiguration{
 				Status: types.BucketAccelerateStatus(d.Get("acceleration_status").(string)),
@@ -1430,7 +1513,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Request Payment Configuration.
 	//
-	if d.HasChange("request_payer") {
+	// Only act if the practitioner has explicitly configured `request_payer` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_request_payment_configuration` resource.
+	if d.HasChange("request_payer") && deprecatedAttributeInRawConfig(d, "request_payer") {
 		input := &s3.PutBucketRequestPaymentInput{
 			Bucket: aws.String(d.Id()),
 			RequestPaymentConfiguration: &types.RequestPaymentConfiguration{
@@ -1450,7 +1535,13 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Replication Configuration.
 	//
-	if d.HasChange("replication_configuration") {
+	// Only act if the practitioner has explicitly configured `replication_configuration` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_replication_configuration` resource. This
+	// avoids round-tripping fields not represented in this deprecated schema (e.g.
+	// `replica_modifications`) and writing back a corrupted configuration on unrelated bucket
+	// updates such as tags.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+	if d.HasChange("replication_configuration") && deprecatedAttributeInRawConfig(d, "replication_configuration") {
 		if v, ok := d.GetOk("replication_configuration"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketReplication(ctx, &s3.DeleteBucketReplicationInput{
@@ -1504,7 +1595,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Server-side Encryption Configuration.
 	//
-	if d.HasChange("server_side_encryption_configuration") {
+	// Only act if the practitioner has explicitly configured `server_side_encryption_configuration` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_server_side_encryption_configuration` resource.
+	if d.HasChange("server_side_encryption_configuration") && deprecatedAttributeInRawConfig(d, "server_side_encryption_configuration") {
 		if v, ok := d.GetOk("server_side_encryption_configuration"); !ok || len(v.([]any)) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketEncryption(ctx, &s3.DeleteBucketEncryptionInput{
@@ -1536,7 +1629,9 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Object Lock Configuration.
 	//
-	if d.HasChange("object_lock_configuration") {
+	// Only act if the practitioner has explicitly configured `object_lock_configuration` in HCL.
+	// When unset, defer to the dedicated `aws_s3_bucket_object_lock_configuration` resource.
+	if d.HasChange("object_lock_configuration") && deprecatedAttributeInRawConfig(d, "object_lock_configuration") {
 		// S3 Object Lock configuration cannot be deleted, only updated.
 		input := &s3.PutObjectLockConfigurationInput{
 			Bucket:                  aws.String(d.Id()),
@@ -1553,6 +1648,37 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
+}
+
+// deprecatedAttributeInRawConfig reports whether the practitioner has the
+// named top-level attribute (a deprecated bucket nested attribute) in their
+// HCL configuration. When the value in state was populated solely by Read
+// (i.e. the attribute is Computed-only at runtime), this returns false, and
+// callers should skip the corresponding API update. This avoids the
+// deprecated attribute fighting with its dedicated standalone resource over
+// fields not represented in the deprecated schema, which can write back
+// corrupted configuration on unrelated bucket updates such as tags.
+//
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+func deprecatedAttributeInRawConfig(d *schema.ResourceData, name string) bool {
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsKnown() || rawConfig.IsNull() {
+		return false
+	}
+
+	v := rawConfig.GetAttr(name)
+	if !v.IsKnown() || v.IsNull() {
+		return false
+	}
+
+	// For collection types (most commonly nested block lists/sets), an
+	// unconfigured attribute reports as a non-null empty collection rather
+	// than null, so check the length explicitly.
+	if t := v.Type(); t.IsListType() || t.IsSetType() || t.IsMapType() || t.IsTupleType() || t.IsObjectType() {
+		return v.LengthInt() > 0
+	}
+
+	return true
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1603,6 +1729,26 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) {
+	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set(names.AttrBucket, bucketName)
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
+
+	bucketNamespace := bucketNamespace(bucketName)
+	d.Set("bucket_namespace", bucketNamespace)
+	if bucketNamespace == types.BucketNamespaceAccountRegional {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(bucketName, fmt.Sprintf("-%s-%s-an", awsClient.AccountID(ctx), awsClient.Region(ctx))))
+	} else {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(bucketName))
+	}
+
+	region := awsClient.Region(ctx)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+}
+
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
 	input := s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
@@ -1614,13 +1760,12 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1647,8 +1792,7 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 
 	if errs.IsA[manager.BucketNotFound](err) {
 		return "", &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: bucket,
+			LastError: err,
 		}
 	}
 
@@ -1659,17 +1803,8 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	return region, nil
 }
 
-func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
-		return f()
-	}, errCodeNoSuchBucket)
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return outputRaw.(T), nil
+func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, f, errCodeNoSuchBucket)
 }
 
 func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
@@ -1715,6 +1850,13 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	}
 
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
+}
+
+func bucketNamespace(bucket string) types.BucketNamespace {
+	if accountRegionalBucketNameRegex.MatchString(bucket) {
+		return types.BucketNamespaceAccountRegional
+	}
+	return types.BucketNamespaceGlobal
 }
 
 //
@@ -2155,7 +2297,7 @@ func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.Lifec
 		if v, ok := tfMap[names.AttrID].(string); ok {
 			apiObject.ID = aws.String(v)
 		} else {
-			apiObject.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
+			apiObject.ID = aws.String(sdkid.PrefixedUniqueId("tf-s3-lifecycle-"))
 		}
 
 		if v, ok := tfMap["noncurrent_version_expiration"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -2975,34 +3117,46 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 // validBucketName validates any S3 bucket name that is not inside the us-east-1 region.
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
-func validBucketName(value string, region string) error {
+func validBucketName(bucket, region string, ns types.BucketNamespace) error {
 	if region != endpoints.UsEast1RegionID {
-		if (len(value) < 3) || (len(value) > 63) {
-			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
+		if (len(bucket) < 3) || (len(bucket) > 63) {
+			return fmt.Errorf("%q must contain from 3 to 63 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
-			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(bucket) {
+			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", bucket)
 		}
-		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
-			return fmt.Errorf("%q must not be formatted as an IP address", value)
+		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(bucket) {
+			return fmt.Errorf("%q must not be formatted as an IP address", bucket)
 		}
-		if strings.HasPrefix(value, `.`) {
-			return fmt.Errorf("%q cannot start with a period", value)
+		if strings.HasPrefix(bucket, `.`) {
+			return fmt.Errorf("%q cannot start with a period", bucket)
 		}
-		if strings.HasSuffix(value, `.`) {
-			return fmt.Errorf("%q cannot end with a period", value)
+		if strings.HasSuffix(bucket, `.`) {
+			return fmt.Errorf("%q cannot end with a period", bucket)
 		}
-		if strings.Contains(value, `..`) {
-			return fmt.Errorf("%q can be only one period between labels", value)
+		if strings.Contains(bucket, `..`) {
+			return fmt.Errorf("%q can be only one period between labels", bucket)
 		}
 	} else {
-		if len(value) > 255 {
-			return fmt.Errorf("%q must contain less than 256 characters", value)
+		if len(bucket) > 255 {
+			return fmt.Errorf("%q must contain less than 256 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(value) {
-			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(bucket) {
+			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", bucket)
 		}
 	}
+
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
+		}
+	default:
+		if accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
+		}
+	}
+
 	return nil
 }
 

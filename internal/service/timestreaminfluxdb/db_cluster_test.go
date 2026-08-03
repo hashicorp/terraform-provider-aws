@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreaminfluxdb_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -13,10 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,16 +47,24 @@ func TestAccTimestreamInfluxDBDBCluster_basic(t *testing.T) {
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
-					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
-					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8086"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("timestream-influxdb", regexache.MustCompile(`db-cluster/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("db_storage_type"), tfknownvalue.StringExact(awstypes.DbStorageTypeInfluxIoIncludedT1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deployment_type"), tfknownvalue.StringExact(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("engine_type"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("failover_mode"), tfknownvalue.StringExact(awstypes.FailoverModeAutomatic)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("influx_auth_parameters_secret_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), tfknownvalue.StringExact(awstypes.NetworkTypeIpv4)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.Int32Exact(8086)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reader_endpoint"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -89,7 +99,7 @@ func TestAccTimestreamInfluxDBDBCluster_disappears(t *testing.T) {
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -108,7 +118,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -124,7 +134,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxMedium)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxMedium)),
 				),
 			},
@@ -137,7 +147,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -162,7 +172,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -178,7 +188,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtTrue),
@@ -193,7 +203,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtFalse),
@@ -256,7 +266,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	port1 := "8086"
 	port2 := "8087"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -274,7 +284,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_port(rName, port1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port1),
 				),
 			},
@@ -287,7 +297,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_port(rName, port2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -459,7 +469,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
@@ -475,7 +485,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeAutomatic)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
 				),
 			},
@@ -488,7 +498,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeNoFailover)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeNoFailover)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -502,6 +512,204 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8181"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
+				),
+			},
+			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3WithVariable(rName), // var reference
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3WithConditional(rName), // conditional
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization", names.AttrAllocatedStorage},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBCluster_maintenanceSchedule(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+	preferredMaintenanceWindow1 := "Sun:02:00-Sun:06:00"
+	preferredMaintenanceWindow2 := "Mon:01:00-Mon:05:00"
+	timezone1 := "UTC"
+	timezone2 := "America/New_York"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_maintenanceScheduleV3(rName, preferredMaintenanceWindow1, timezone1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", preferredMaintenanceWindow1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", timezone1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization", names.AttrAllocatedStorage},
+			},
+			{
+				Config: testAccDBClusterConfig_maintenanceScheduleV3(rName, preferredMaintenanceWindow2, timezone2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", preferredMaintenanceWindow2),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", timezone2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization", names.AttrAllocatedStorage},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDBClusterConfig_v2MissingAllocatedStorage(rName),
+				ExpectError: regexache.MustCompile("allocated_storage is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingBucket(rName),
+				ExpectError: regexache.MustCompile("bucket is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingOrganization(rName),
+				ExpectError: regexache.MustCompile("organization is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingPassword(rName),
+				ExpectError: regexache.MustCompile("password is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingUsername(rName),
+				ExpectError: regexache.MustCompile("username is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithV2Fields(rName),
+				ExpectError: regexache.MustCompile(`(?s)allocated_storage must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2WithV3ParameterGroup(rName),
+				ExpectError: regexache.MustCompile(`(?s)allocated_storage must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithAllocatedStorage(rName),
+				ExpectError: regexache.MustCompile(`(?s)allocated_storage must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithBucket(rName),
+				ExpectError: regexache.MustCompile(`(?s)bucket must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithDeploymentType(rName),
+				ExpectError: regexache.MustCompile(`(?s)deployment_type must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithOrganization(rName),
+				ExpectError: regexache.MustCompile(`(?s)organization must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithPassword(rName),
+				ExpectError: regexache.MustCompile(`(?s)password must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithUsername(rName),
+				ExpectError: regexache.MustCompile(`(?s)username must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_maintenanceScheduleV2(rName, "Sun:02:00-Sun:06:00", "UTC"),
+				ExpectError: regexache.MustCompile(`(?s)maintenance_schedule is only supported for InfluxDB V3 clusters`),
 			},
 		},
 	})
@@ -522,36 +730,29 @@ func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			if err != nil {
-				return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Timestream InfluxDB DB Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, name string, dbCluster *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
+func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, n string, v *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
+
 		resp, err := tftimestreaminfluxdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, rs.Primary.ID, err)
+			return err
 		}
 
-		*dbCluster = *resp
+		*v = *resp
 
 		return nil
 	}
@@ -572,27 +773,75 @@ func testAccPreCheckDBClusters(ctx context.Context, t *testing.T) {
 }
 
 func testAccDBClusterConfig_base(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), `
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
+}
+
+func testAccDBClusterConfig_v3Base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+`, rName)
 }
 
 // Minimal configuration.
 func testAccDBClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+# InfluxDB V2.
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
-  name                   = %[1]q
   allocated_storage      = 20
+  bucket                 = "initial"
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
+  organization           = "organization"
   username               = "admin"
   password               = "testpassword"
   vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
-  db_instance_type       = "db.influx.medium"
-  port                   = 8086
-  bucket                 = "initial"
-  organization           = "organization"
 }
 `, rName))
 }
@@ -810,4 +1059,378 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   failover_mode = %[2]q
 }
 `, rName, failoverMode))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_maintenanceScheduleV2(rName, preferredMaintenanceWindow, timezone string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+
+  maintenance_schedule {
+    preferred_maintenance_window = %[2]q
+    timezone                     = %[3]q
+  }
+}
+`, rName, preferredMaintenanceWindow, timezone))
+}
+
+func testAccDBClusterConfig_maintenanceScheduleV3(rName, preferredMaintenanceWindow, timezone string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  maintenance_schedule {
+    preferred_maintenance_window = %[2]q
+    timezone                     = %[3]q
+  }
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName, preferredMaintenanceWindow, timezone))
+}
+
+func testAccDBClusterConfig_v2MissingAllocatedStorage(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingOrganization(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingPassword(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingUsername(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2WithV3ParameterGroup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  allocated_storage             = 20
+  username                      = "admin"
+  password                      = "testpassword"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+  bucket                        = "initial"
+  organization                  = "organization"
+  deployment_type               = "MULTI_NODE_READ_REPLICAS"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithV2Fields(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  allocated_storage             = 20
+  username                      = "admin"
+  password                      = "testpassword"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+  bucket                        = "initial"
+  organization                  = "organization"
+  deployment_type               = "MULTI_NODE_READ_REPLICAS"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithAllocatedStorage(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  allocated_storage             = 20
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithBucket(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  bucket                        = "initial"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithDeploymentType(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  deployment_type               = "MULTI_NODE_READ_REPLICAS"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithOrganization(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  organization                  = "organization"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithPassword(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  password                      = "testpassword"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithUsername(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  username                      = "admin"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3WithVariable(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+variable "db_parameter_group_identifier" {
+  type    = string
+  default = "InfluxDBV3Core"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = var.db_parameter_group_identifier
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_dbParameterGroupV3WithConditional(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+variable "environment" {
+  type    = string
+  default = "test"
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = var.environment == "test" ? "InfluxDBV3Core" : "InfluxDBV3Enterprise"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
 }

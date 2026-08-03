@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspacesweb
 
@@ -20,13 +22,10 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_ip_access_settings_association", name="IP Access Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
-// @Testing(importStateIdAttribute="ip_access_settings_arn,portal_arn")
 func newIPAccessSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ipAccessSettingsAssociationResource{}, nil
 }
@@ -92,7 +91,7 @@ func (r *ipAccessSettingsAssociationResource) Read(ctx context.Context, request 
 
 	// Check if the association exists by getting the IP access settings and checking associated portals
 	output, err := findIPAccessSettingsByARN(ctx, conn, data.IPAccessSettingsARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

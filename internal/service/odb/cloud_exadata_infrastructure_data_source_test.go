@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -9,14 +9,12 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,18 +34,18 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	}
 	exaInfraResource := "aws_odb_cloud_exadata_infrastructure.test"
 	exaInfraDataSource := "data.aws_odb_cloud_exadata_infrastructure.test"
-	displayNameSuffix := sdkacctest.RandomWithPrefix(exaInfraDataSourceTestEntity.displayNamePrefix)
-	domain := acctest.RandomDomainName()
+	displayNameSuffix := acctest.RandomWithPrefix(t, exaInfraDataSourceTestEntity.displayNamePrefix)
+	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraDataSourceTestEntity.testAccCheckCloudExadataInfrastructureDestroy(ctx),
+		CheckDestroy:             exaInfraDataSourceTestEntity.testAccCheckCloudExadataInfrastructureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraDataSourceTestEntity.basicExaInfraDataSource(displayNameSuffix, emailAddress1, emailAddress2),
@@ -63,16 +61,16 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	})
 }
 
-func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDestroy(ctx context.Context) resource.TestCheckFunc {
+func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
 			_, err := tfodb.FindExaDataInfraForDataSourceByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore_test
@@ -11,7 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,19 +20,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccRandomBrowserName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+}
+
 func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -40,12 +43,12 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -55,6 +58,10 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-custom/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"network_mode":      tfknownvalue.StringExact(awstypes.BrowserNetworkModePublic),
+						names.AttrVPCConfig: knownvalue.ListSizeExact(0),
+					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -72,10 +79,10 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -83,12 +90,12 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrowserConfig_role_recording(rName, sdkacctest.RandomWithPrefix("tf-test-bucket")),
+				Config: testAccBrowserConfig_role_recording(rName, acctest.RandomWithPrefix(t, "tf-test-bucket")),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -107,13 +114,13 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
+func TestAccBedrockAgentCoreBrowser_browserSigning(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -121,13 +128,154 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrowserConfig_browserSigning(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_signing"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(true),
+					})})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
+				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreBrowser_enterprisePolicies(t *testing.T) {
+	acctest.Skip(t, "ValidationException: Access denied to S3 object")
+	ctx := acctest.Context(t)
+	var browser bedrockagentcorecontrol.GetBrowserOutput
+	rName := testAccRandomBrowserName(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_bedrockagentcore_browser.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrowserConfig_enterprisePolicies(rName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enterprise_policy"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrType: tfknownvalue.StringExact(awstypes.BrowserEnterprisePolicyTypeManaged),
+						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"s3": knownvalue.ListSizeExact(1),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
+				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreBrowser_certificates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var browser bedrockagentcorecontrol.GetBrowserOutput
+	rName := testAccRandomBrowserName(t)
+	resourceName := "aws_bedrockagentcore_browser.test"
+
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrowserConfig_certificates(rName, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCertificate), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrLocation: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secrets_manager": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+							})}),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
+				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var browser bedrockagentcorecontrol.GetBrowserOutput
+	rName := testAccRandomBrowserName(t)
+	resourceName := "aws_bedrockagentcore_browser.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckBrowser(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceBrowser, resourceName),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceBrowser, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -146,10 +294,10 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -157,12 +305,12 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -185,7 +333,7 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 			{
 				Config: testAccBrowserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -202,7 +350,7 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 			{
 				Config: testAccBrowserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -223,10 +371,10 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 	acctest.Skip(t, "ENIs of type \"agentic_ai\" remain")
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := testAccRandomBrowserName(t)
 	resourceName := "aws_bedrockagentcore_browser.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -234,17 +382,26 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserConfig_networkConfiguration_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, resourceName, &browser),
+					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"network_mode": tfknownvalue.StringExact(awstypes.BrowserNetworkModeVpc),
+						names.AttrVPCConfig: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroups: knownvalue.SetSizeExact(1),
+							names.AttrSubnets:        knownvalue.SetSizeExact(2),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -258,9 +415,9 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 	})
 }
 
-func testAccCheckBrowserDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBrowserDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_browser" {
@@ -283,14 +440,14 @@ func testAccCheckBrowserDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBrowserExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetBrowserOutput) resource.TestCheckFunc {
+func testAccCheckBrowserExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetBrowserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindBrowserByID(ctx, conn, rs.Primary.Attributes["browser_id"])
 		if err != nil {
@@ -304,7 +461,7 @@ func testAccCheckBrowserExists(ctx context.Context, n string, v *bedrockagentcor
 }
 
 func testAccPreCheckBrowser(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListBrowsersInput{}
 
@@ -455,11 +612,143 @@ resource "aws_bedrockagentcore_browser" "test" {
   network_configuration {
     network_mode = "VPC"
 
-    network_mode_config {
+    vpc_config {
       security_groups = [aws_security_group.test.id]
       subnets         = aws_subnet.test[*].id
     }
   }
 }
 `, rName))
+}
+
+func testAccBrowserConfig_assumeRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+}
+
+data "aws_iam_policy_document" "test_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBrowserConfig_enterprisePolicies(rName, bucketName string) string {
+	return acctest.ConfigCompose(testAccBrowserConfig_assumeRole(rName), fmt.Sprintf(`
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = ["${aws_s3_bucket.test.arn}/policies/*"]
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "policies/managed-policies.json"
+  content = jsonencode({
+    AutofillAddressEnabled    = false
+    AutofillCreditCardEnabled = false
+    PasswordManagerEnabled    = false
+  })
+}
+
+resource "aws_bedrockagentcore_browser" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  enterprise_policy {
+    type = "MANAGED"
+    location {
+      s3 {
+        bucket = aws_s3_bucket.test.bucket
+        prefix = aws_s3_object.test.key
+      }
+    }
+  }
+}
+`, rName, bucketName))
+}
+
+func testAccBrowserConfig_certificates(rName, certificate string) string {
+	return acctest.ConfigCompose(testAccBrowserConfig_assumeRole(rName), fmt.Sprintf(`
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = aws_secretsmanager_secret.test.arn
+    }]
+  })
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = %[2]q
+}
+
+resource "aws_bedrockagentcore_browser" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  certificate {
+    location {
+      secrets_manager {
+        secret_arn = aws_secretsmanager_secret_version.test.arn
+      }
+    }
+  }
+}
+`, rName, certificate))
+}
+
+func testAccBrowserConfig_browserSigning(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccBrowserConfig_assumeRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_browser" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  browser_signing {
+    enabled = %[2]t
+  }
+}
+`, rName, enabled))
 }

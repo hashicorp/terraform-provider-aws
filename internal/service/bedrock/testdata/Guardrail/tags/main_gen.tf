@@ -1,11 +1,10 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrock_guardrail" "test" {
   name                      = var.rName
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
-  description               = "test"
 
   content_policy_config {
     filters_config {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ram
 
@@ -23,63 +25,66 @@ import (
 
 // @SDKDataSource("aws_ram_resource_share", name="Resource Share")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn", tagsResourceType="ResourceShare")
 func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"owning_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
-			},
-			names.AttrResourceOwner: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ResourceOwner](),
-			},
-			"resource_share_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ResourceShareStatus](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"owning_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrResourceOwner: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResourceOwner](),
+				},
+				"resource_share_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResourceShareStatus](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -89,7 +94,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	resourceOwner := d.Get(names.AttrResourceOwner).(string)
-	inputG := &ram.GetResourceSharesInput{
+	inputG := ram.GetResourceSharesInput{
 		ResourceOwner: awstypes.ResourceOwner(resourceOwner),
 	}
 
@@ -105,7 +110,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 		inputG.ResourceShareStatus = awstypes.ResourceShareStatus(v.(string))
 	}
 
-	share, err := findResourceShare(ctx, conn, inputG)
+	share, err := findResourceShare(ctx, conn, &inputG)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RAM Resource Share", err))
@@ -120,11 +125,11 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 
 	setTagsOut(ctx, share.Tags)
 
-	inputL := &ram.ListResourcesInput{
+	inputL := ram.ListResourcesInput{
 		ResourceOwner:     awstypes.ResourceOwner(resourceOwner),
 		ResourceShareArns: []string{arn},
 	}
-	resources, err := findResources(ctx, conn, inputL)
+	resources, err := findResources(ctx, conn, &inputL)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", arn, err)

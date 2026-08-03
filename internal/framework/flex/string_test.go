@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex_test
@@ -385,6 +385,45 @@ func TestEmptyStringAsNull(t *testing.T) {
 			t.Parallel()
 
 			got := flex.EmptyStringAsNull(test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestNullAsEmptyString(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    types.StringValue("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    types.StringValue(""),
+			expected: types.StringValue(""),
+		},
+		"null": {
+			input:    types.StringNull(),
+			expected: types.StringValue(""),
+		},
+		"unknown": {
+			input:    types.StringUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.NullAsEmptyString(test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

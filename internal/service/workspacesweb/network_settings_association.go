@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspacesweb
 
@@ -20,13 +22,10 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_network_settings_association", name="Network Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.NetworkSettings")
-// @Testing(importStateIdAttribute="network_settings_arn,portal_arn")
 func newNetworkSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &networkSettingsAssociationResource{}, nil
 }
@@ -92,7 +91,7 @@ func (r *networkSettingsAssociationResource) Read(ctx context.Context, request r
 
 	// Check if the association exists by getting the network settings and checking associated portals
 	output, err := findNetworkSettingsByARN(ctx, conn, data.NetworkSettingsARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

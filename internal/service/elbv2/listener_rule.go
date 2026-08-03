@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,11 +48,11 @@ const (
 
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
 // @Testing(plannableImportAction="NoOp")
-// @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
 func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
@@ -59,467 +61,516 @@ func resourceListenerRule() *schema.Resource {
 		UpdateWithoutTimeout: resourceListenerRuleUpdate,
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAction: {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authenticate_cognito": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_request_extra_params": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"on_unauthenticated_request": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "openid",
-									},
-									"session_cookie_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "AWSELBAuthSessionCookie",
-									},
-									"session_timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  604800,
-									},
-									"user_pool_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"user_pool_client_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"user_pool_domain": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"authenticate_oidc": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authentication_request_extra_params": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"authorization_endpoint": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrClientID: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrClientSecret: {
-										Type:      schema.TypeString,
-										Required:  true,
-										Sensitive: true,
-									},
-									names.AttrIssuer: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"on_unauthenticated_request": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
-									},
-									names.AttrScope: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "openid",
-									},
-									"session_cookie_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "AWSELBAuthSessionCookie",
-									},
-									"session_timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  604800,
-									},
-									"token_endpoint": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"user_info_endpoint": {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAction: {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authenticate_cognito": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_request_extra_params": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"on_unauthenticated_request": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
+										},
+										names.AttrScope: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "openid",
+										},
+										"session_cookie_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "AWSELBAuthSessionCookie",
+										},
+										"session_timeout": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Default:  604800,
+										},
+										"user_pool_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"user_pool_client_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"user_pool_domain": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"fixed_response": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrContentType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"text/plain",
-											"text/css",
-											"text/html",
-											"application/javascript",
-											"application/json",
-										}, false),
-									},
-									"message_body": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									names.AttrStatusCode: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
+							"authenticate_oidc": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authentication_request_extra_params": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"authorization_endpoint": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrClientID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrClientSecret: {
+											Type:      schema.TypeString,
+											Required:  true,
+											Sensitive: true,
+										},
+										names.AttrIssuer: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"on_unauthenticated_request": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
+										},
+										names.AttrScope: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "openid",
+										},
+										"session_cookie_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "AWSELBAuthSessionCookie",
+										},
+										"session_timeout": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Default:  604800,
+										},
+										"token_endpoint": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"user_info_endpoint": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"forward": {
-							Type:                  schema.TypeList,
-							Optional:              true,
-							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
-							MaxItems:              1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"stickiness": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrDuration: {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 604800),
+							"fixed_response": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrContentType: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"text/plain",
+												"text/css",
+												"text/html",
+												"application/javascript",
+												"application/json",
+											}, false),
+										},
+										"message_body": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										names.AttrStatusCode: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
+										},
+									},
+								},
+							},
+							"forward": {
+								Type:                  schema.TypeList,
+								Optional:              true,
+								DiffSuppressOnRefresh: true,
+								DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
+								MaxItems:              1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"stickiness": {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MaxItems:         1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrDuration: {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(1, 604800),
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Default:  false,
+													},
 												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
+											},
+										},
+										"target_group": {
+											Type:     schema.TypeSet,
+											MinItems: 1,
+											MaxItems: 5,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrARN: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													names.AttrWeight: {
+														Type:         schema.TypeInt,
+														ValidateFunc: validation.IntBetween(0, 999),
+														Default:      1,
+														Optional:     true,
+													},
 												},
 											},
 										},
 									},
-									"target_group": {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 5,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												names.AttrWeight: {
-													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
-													Default:      1,
-													Optional:     true,
+								},
+							},
+							"jwt_validation": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIssuer: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"jwks_endpoint": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"additional_claim": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFormat: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeSet,
+														Required: true,
+														MaxItems: 10,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(1, 256),
+														},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"order": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
-						},
-						"redirect": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "#{host}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									names.AttrPath: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/#{path}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									names.AttrPort: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{port}",
-									},
-									names.AttrProtocol: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{protocol}",
-										ValidateFunc: validation.StringInSlice([]string{
-											"#{protocol}",
-											"HTTP",
-											"HTTPS",
-										}, false),
-									},
-									"query": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "#{query}",
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-									names.AttrStatusCode: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
-									},
-								},
+							"order": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
 							},
-						},
-						"target_group_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
-							ValidateFunc:     verify.ValidARN,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
-						},
-					},
-				},
-			},
-			names.AttrCondition: {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"host_header": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"regex_values": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
+							"redirect": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
+								MaxItems:         1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"host": {
 											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "#{host}",
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
-									},
-									names.AttrValues: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
+										names.AttrPath: {
 											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "/#{path}",
 											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrPort: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "#{port}",
+										},
+										names.AttrProtocol: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "#{protocol}",
+											ValidateFunc: validation.StringInSlice([]string{
+												"#{protocol}",
+												"HTTP",
+												"HTTPS",
+											}, false),
+										},
+										"query": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "#{query}",
+											ValidateFunc: validation.StringLenBetween(0, 128),
+										},
+										names.AttrStatusCode: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
 										},
 									},
 								},
 							},
-						},
-						"http_header": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"http_header_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
-									},
-									"regex_values": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-									},
-									names.AttrValues: {
-										Type: schema.TypeSet,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-										Optional: true,
-									},
-								},
+							"target_group_arn": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
+								ValidateFunc:     verify.ValidARN,
 							},
-						},
-						"http_request_method": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValues: {
-										Type: schema.TypeSet,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
-										},
-										Required: true,
-									},
-								},
-							},
-						},
-						"path_pattern": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"regex_values": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-									},
-									names.AttrValues: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-									},
-								},
-							},
-						},
-						"query_string": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"source_ip": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrValues: {
-										Type: schema.TypeSet,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: verify.ValidCIDRNetworkAddress,
-										},
-										Required: true,
-									},
-								},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
 							},
 						},
 					},
 				},
-			},
-			"listener_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     false,
-				ValidateFunc: validListenerRulePriority,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transform": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TransformTypeEnum](),
-						},
-						"host_header_rewrite_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"rewrite": transformRewriteConfigSchema(),
+				names.AttrCondition: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"host_header": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"regex_values": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+										names.AttrValues: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+									},
 								},
 							},
-						},
-						"url_rewrite_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"rewrite": transformRewriteConfigSchema(),
+							"http_header": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"http_header_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
+										},
+										"regex_values": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+										names.AttrValues: {
+											Type: schema.TypeSet,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+											Optional: true,
+										},
+									},
+								},
+							},
+							"http_request_method": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValues: {
+											Type: schema.TypeSet,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
+											},
+											Required: true,
+										},
+									},
+								},
+							},
+							"path_pattern": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"regex_values": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+										names.AttrValues: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+									},
+								},
+							},
+							"query_string": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"source_ip": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrValues: {
+											Type: schema.TypeSet,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidCIDRNetworkAddress,
+											},
+											Required: true,
+										},
+									},
 								},
 							},
 						},
 					},
 				},
-			},
+				"listener_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrPriority: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     false,
+					ValidateFunc: validListenerRulePriority,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transform": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TransformTypeEnum](),
+							},
+							"host_header_rewrite_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rewrite": transformRewriteConfigSchema(),
+									},
+								},
+							},
+							"url_rewrite_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rewrite": transformRewriteConfigSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -631,7 +682,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return findListenerRuleByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -641,17 +692,25 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.RuleArn)
-
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", listenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
+
+	if err := resourceListenerRuleFlatten(ctx, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceListenerRuleFlatten(_ context.Context, rule *awstypes.Rule, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, rule.RuleArn)
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if v := aws.ToString(rule.Priority); v == "default" {
 		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if v, err := strconv.Atoi(v); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return err
 		} else {
 			d.Set(names.AttrPriority, v)
 		}
@@ -660,7 +719,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sortListenerActions(rule.Actions)
 
 	if err := d.Set(names.AttrAction, flattenListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
+		return fmt.Errorf("setting action: %w", err)
 	}
 
 	conditions := make([]any, len(rule.Conditions))
@@ -705,14 +764,14 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		conditions[i] = conditionMap
 	}
 	if err := d.Set(names.AttrCondition, conditions); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
+		return fmt.Errorf("setting condition: %w", err)
 	}
 
 	if err := d.Set("transform", flattenRuleTransforms(rule.Transforms)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting transform: %s", err)
+		return fmt.Errorf("setting transform: %w", err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -848,8 +907,7 @@ func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client,
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*awstypes.RuleNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 		if err != nil {

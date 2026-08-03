@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lakeformation
 
@@ -32,12 +34,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -388,7 +391,7 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	out, err := findResourceLFTagByID(ctx, conn, state.CatalogID.ValueString(), res)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -403,6 +406,11 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 
 	outputTag := lftagger.findTag(ctx, out, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if outputTag.IsNull() {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -512,8 +520,7 @@ func findResourceLFTagByID(ctx context.Context, conn *lakeformation.Client, cata
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -581,6 +588,9 @@ func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagOnDatabase {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -629,6 +639,9 @@ func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagsOnTable {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -674,6 +687,9 @@ func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourc
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
+	if tag == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
 
