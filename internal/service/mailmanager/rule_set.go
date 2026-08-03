@@ -254,15 +254,25 @@ func ruleNumberExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "dmarc_expression", "ip_expression", "string_expression", "verdict_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator":      schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleNumberOperator](), Required: true},
-				names.AttrValue: schema.Float64Attribute{Required: true},
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RuleNumberOperator](),
+					Required:   true,
+				},
+				names.AttrValue: schema.Float64Attribute{
+					Required: true,
+				},
 			},
 			Blocks: map[string]schema.Block{
 				"evaluate": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ruleNumberEvaluateModel](ctx),
-					Validators: []validator.List{listvalidator.SizeBetween(1, 1)},
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"attribute": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleNumberEmailAttribute](), Required: true},
+						"attribute": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.RuleNumberEmailAttribute](),
+							Required:   true,
+						},
 					}},
 				},
 			},
