@@ -170,20 +170,22 @@ func ruleBooleanEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 				"is_in_address_list": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[ruleIsInAddressListModel](ctx),
 					Validators: conditionUnionValidators("analysis", "attribute"),
-					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"address_lists": schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"address_lists": schema.ListAttribute{
+								CustomType:  fwtypes.ListOfStringType,
+								ElementType: types.StringType,
+								Required:    true,
+								Validators: []validator.List{
+									listvalidator.SizeBetween(1, 1),
+								},
+							},
+							"attribute": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.RuleAddressListEmailAttribute](),
+								Required:   true,
 							},
 						},
-						"attribute": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.RuleAddressListEmailAttribute](),
-							Required:   true,
-						},
-					}},
+					},
 				},
 			},
 		},
@@ -194,19 +196,21 @@ func ruleDMARCExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleDMARCExpressionModel](ctx),
 		Validators: conditionUnionValidators("boolean_expression", "ip_expression", "number_expression", "string_expression", "verdict_expression"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"operator": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.RuleDmarcOperator](),
-				Required:   true,
-			},
-			names.AttrValues: schema.ListAttribute{
-				CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleDmarcPolicy](),
-				Required:   true,
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 10),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RuleDmarcOperator](),
+					Required:   true,
+				},
+				names.AttrValues: schema.ListAttribute{
+					CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleDmarcPolicy](),
+					Required:   true,
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 10),
+					},
 				},
 			},
-		}},
+		},
 	}
 }
 
