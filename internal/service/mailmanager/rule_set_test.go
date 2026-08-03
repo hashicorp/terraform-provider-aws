@@ -126,34 +126,34 @@ func TestAccMailManagerRuleSet_conditionTypes(t *testing.T) {
 							"operator": knownvalue.StringExact("IS_TRUE"),
 						}),
 						testAccRuleSetUnionValue("dmarc_expression", map[string]knownvalue.Check{
-							"operator": knownvalue.StringExact("NOT_EQUALS"),
+							"operator":       knownvalue.StringExact("NOT_EQUALS"),
 							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("REJECT")}),
 						}),
 						testAccRuleSetUnionValue("ip_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("SOURCE_IP")}),
-							"operator": knownvalue.StringExact("CIDR_MATCHES"),
+							"evaluate":       testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("SOURCE_IP")}),
+							"operator":       knownvalue.StringExact("CIDR_MATCHES"),
 							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("192.0.2.0/24")}),
 						}),
 						testAccRuleSetUnionValue("number_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("MESSAGE_SIZE")}),
-							"operator": knownvalue.StringExact("GREATER_THAN"),
+							"evaluate":      testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("MESSAGE_SIZE")}),
+							"operator":      knownvalue.StringExact("GREATER_THAN"),
 							names.AttrValue: knownvalue.Float64Exact(1024),
 						}),
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"mime_header_attribute": knownvalue.StringExact("X-Example")}),
-							"operator": knownvalue.StringExact("CONTAINS"),
+							"evaluate":       testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"mime_header_attribute": knownvalue.StringExact("X-Example")}),
+							"operator":       knownvalue.StringExact("CONTAINS"),
 							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example")}),
 						}),
 						testAccRuleSetUnionValue("verdict_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("DKIM")}),
-							"operator": knownvalue.StringExact("EQUALS"),
+							"evaluate":       testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("DKIM")}),
+							"operator":       knownvalue.StringExact("EQUALS"),
 							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("PASS")}),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("unless"), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("MAIL_FROM")}),
-							"operator": knownvalue.StringExact("ENDS_WITH"),
+							"evaluate":       testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("MAIL_FROM")}),
+							"operator":       knownvalue.StringExact("ENDS_WITH"),
 							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("@example.com")}),
 						}),
 					})),
@@ -219,8 +219,8 @@ func TestAccMailManagerRuleSet_evaluateTypes(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrCondition), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"client_certificate_attribute": knownvalue.StringExact("CN")}),
-							"operator": knownvalue.StringExact("STARTS_WITH"),
+							"evaluate":       testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"client_certificate_attribute": knownvalue.StringExact("CN")}),
+							"operator":       knownvalue.StringExact("STARTS_WITH"),
 							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example")}),
 						}),
 					})),
@@ -314,88 +314,88 @@ resource "aws_mailmanager_rule_set" "test" {
 func testAccRuleSetConfigConditionTypes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mailmanager_rule_set" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	rule {
-		condition {
-			boolean_expression {
-				operator = "IS_TRUE"
+  rule {
+    condition {
+      boolean_expression {
+        operator = "IS_TRUE"
 
-				evaluate {
-					attribute = "TLS"
-				}
-			}
-		}
+        evaluate {
+          attribute = "TLS"
+        }
+      }
+    }
 
-		condition {
-			dmarc_expression {
-				operator = "NOT_EQUALS"
-				values   = ["REJECT"]
-			}
-		}
+    condition {
+      dmarc_expression {
+        operator = "NOT_EQUALS"
+        values   = ["REJECT"]
+      }
+    }
 
-		condition {
-			ip_expression {
-				operator = "CIDR_MATCHES"
-				values   = ["192.0.2.0/24"]
+    condition {
+      ip_expression {
+        operator = "CIDR_MATCHES"
+        values   = ["192.0.2.0/24"]
 
-				evaluate {
-					attribute = "SOURCE_IP"
-				}
-			}
-		}
+        evaluate {
+          attribute = "SOURCE_IP"
+        }
+      }
+    }
 
-		condition {
-			number_expression {
-				operator = "GREATER_THAN"
-				value    = 1024
+    condition {
+      number_expression {
+        operator = "GREATER_THAN"
+        value    = 1024
 
-				evaluate {
-					attribute = "MESSAGE_SIZE"
-				}
-			}
-		}
+        evaluate {
+          attribute = "MESSAGE_SIZE"
+        }
+      }
+    }
 
-		condition {
-			string_expression {
-				operator = "CONTAINS"
-				values   = ["example"]
+    condition {
+      string_expression {
+        operator = "CONTAINS"
+        values   = ["example"]
 
-				evaluate {
-					mime_header_attribute = "X-Example"
-				}
-			}
-		}
+        evaluate {
+          mime_header_attribute = "X-Example"
+        }
+      }
+    }
 
-		condition {
-			verdict_expression {
-				operator = "EQUALS"
-				values   = ["PASS"]
+    condition {
+      verdict_expression {
+        operator = "EQUALS"
+        values   = ["PASS"]
 
-				evaluate {
-					attribute = "DKIM"
-				}
-			}
-		}
+        evaluate {
+          attribute = "DKIM"
+        }
+      }
+    }
 
-		unless {
-			string_expression {
-				operator = "ENDS_WITH"
-				values   = ["@example.com"]
+    unless {
+      string_expression {
+        operator = "ENDS_WITH"
+        values   = ["@example.com"]
 
-				evaluate {
-					attribute = "MAIL_FROM"
-				}
-			}
-		}
+        evaluate {
+          attribute = "MAIL_FROM"
+        }
+      }
+    }
 
-		action {
-			add_header {
-				header_name  = "X-Example"
-				header_value = "example"
-			}
-		}
-	}
+    action {
+      add_header {
+        header_name  = "X-Example"
+        header_value = "example"
+      }
+    }
+  }
 }
 `, rName)
 }
@@ -403,28 +403,28 @@ resource "aws_mailmanager_rule_set" "test" {
 func testAccRuleSetConfigActionTypes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mailmanager_rule_set" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	rule {
-		name = "primary"
+  rule {
+    name = "primary"
 
-		action {
-			add_header {
-				header_name  = "X-Example"
-				header_value = "example"
-			}
-		}
+    action {
+      add_header {
+        header_name  = "X-Example"
+        header_value = "example"
+      }
+    }
 
-		action {
-			drop {}
-		}
+    action {
+      drop {}
+    }
 
-		action {
-			replace_recipient {
-				replace_with = [%[2]q, %[2]q]
-			}
-		}
-	}
+    action {
+      replace_recipient {
+        replace_with = [%[2]q, %[2]q]
+      }
+    }
+  }
 }
 `, rName, acctest.DefaultEmailAddress)
 }
@@ -432,27 +432,27 @@ resource "aws_mailmanager_rule_set" "test" {
 func testAccRuleSetConfigEvaluateTypes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mailmanager_rule_set" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	rule {
-		condition {
-			string_expression {
-				operator = "STARTS_WITH"
-				values   = ["example"]
+  rule {
+    condition {
+      string_expression {
+        operator = "STARTS_WITH"
+        values   = ["example"]
 
-				evaluate {
-					client_certificate_attribute = "CN"
-				}
-			}
-		}
+        evaluate {
+          client_certificate_attribute = "CN"
+        }
+      }
+    }
 
-		action {
-			add_header {
-				header_name  = "X-Example"
-				header_value = "example"
-			}
-		}
-	}
+    action {
+      add_header {
+        header_name  = "X-Example"
+        header_value = "example"
+      }
+    }
+  }
 }
 `, rName)
 }
