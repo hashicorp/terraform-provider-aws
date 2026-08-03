@@ -23,6 +23,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -86,7 +87,11 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"health_check_path": schema.StringAttribute{
 				Optional: true,
@@ -123,9 +128,25 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"task_definition_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
+						path.MatchRoot("cpu"),
+						path.MatchRoot("memory"),
+						path.MatchRoot(names.AttrExecutionRoleARN),
+						path.MatchRoot("task_role_arn"),
+					),
+				},
+			},
 			"task_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"wait_for_steady_state": schema.BoolAttribute{
 				Optional: true,
@@ -139,7 +160,10 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
-					listvalidator.IsRequired(),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("primary_container"),
+						path.MatchRoot("task_definition_arn"),
+					),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -291,6 +315,11 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
 	}
+	// A caller-managed task definition resolves to a derived primary_container in the
+	// API response; keep it null so state matches the configuration.
+	if !plan.TaskDefinitionARN.IsNull() {
+		plan.PrimaryContainer = fwtypes.NewListNestedObjectValueOfNull[expressGatewayContainerModel](ctx)
+	}
 	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
 	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
@@ -345,6 +374,12 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 
 		// Restore state ordering if env vars are unchanged (no-op during import).
 		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
+
+		// A caller-managed task definition resolves to a derived primary_container in
+		// the API response; keep it null so state matches the configuration.
+		if !state.TaskDefinitionARN.IsNull() {
+			state.PrimaryContainer = fwtypes.NewListNestedObjectValueOfNull[expressGatewayContainerModel](ctx)
+		}
 	}
 	normalizeIngressPathEndpoints(ctx, &state.IngressPaths)
 
@@ -460,6 +495,11 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
+	}
+	// A caller-managed task definition resolves to a derived primary_container in the
+	// API response; keep it null so state matches the configuration.
+	if !plan.TaskDefinitionARN.IsNull() {
+		plan.PrimaryContainer = fwtypes.NewListNestedObjectValueOfNull[expressGatewayContainerModel](ctx)
 	}
 	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
@@ -754,6 +794,7 @@ type expressGatewayServiceResourceModel struct {
 	ServiceRevisionARN    types.String                                                                    `tfsdk:"service_revision_arn"`
 	Tags                  tftags.Map                                                                      `tfsdk:"tags"`
 	TagsAll               tftags.Map                                                                      `tfsdk:"tags_all"`
+	TaskDefinitionARN     fwtypes.ARN                                                                     `tfsdk:"task_definition_arn"`
 	TaskRoleARN           fwtypes.ARN                                                                     `tfsdk:"task_role_arn"`
 	Timeouts              timeouts.Value                                                                  `tfsdk:"timeouts"`
 	WaitForSteadyState    types.Bool                                                                      `tfsdk:"wait_for_steady_state"`
