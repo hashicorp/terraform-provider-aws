@@ -286,7 +286,10 @@ func ruleStringExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "dmarc_expression", "ip_expression", "number_expression", "verdict_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleStringOperator](), Required: true},
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RuleStringOperator](),
+					Required:   true,
+				},
 				names.AttrValues: schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
@@ -307,31 +310,53 @@ func ruleStringExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 func ruleStringEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleStringEvaluateModel](ctx),
-		Validators: []validator.List{listvalidator.SizeBetween(1, 1)},
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"attribute": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.RuleStringEmailAttribute](), Optional: true,
-					Validators: []validator.String{stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis"), path.MatchRelative().AtParent().AtName("client_certificate_attribute"), path.MatchRelative().AtParent().AtName("mime_header_attribute"))},
+					CustomType: fwtypes.StringEnumType[awstypes.RuleStringEmailAttribute](),
+					Optional:   true,
+					Validators: []validator.String{
+						stringvalidator.ExactlyOneOf(
+							path.MatchRelative().AtParent().AtName("analysis"),
+							path.MatchRelative().AtParent().AtName("client_certificate_attribute"),
+							path.MatchRelative().AtParent().AtName("mime_header_attribute"),
+						),
+					},
 				},
 				"client_certificate_attribute": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.RuleClientCertificateAttribute](), Optional: true,
-					Validators: []validator.String{stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis"), path.MatchRelative().AtParent().AtName("attribute"), path.MatchRelative().AtParent().AtName("mime_header_attribute"))},
+					CustomType: fwtypes.StringEnumType[awstypes.RuleClientCertificateAttribute](),
+					Optional:   true,
+					Validators: []validator.String{
+						stringvalidator.ExactlyOneOf(
+							path.MatchRelative().AtParent().AtName("analysis"),
+							path.MatchRelative().AtParent().AtName("attribute"),
+							path.MatchRelative().AtParent().AtName("mime_header_attribute"),
+						),
+					},
 				},
 				"mime_header_attribute": schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 256),
 						stringvalidator.RegexMatches(regexache.MustCompile(`^[Xx]-.+`), "must begin with X- or x-"),
-						stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis"), path.MatchRelative().AtParent().AtName("attribute"), path.MatchRelative().AtParent().AtName("client_certificate_attribute")),
+						stringvalidator.ExactlyOneOf(
+							path.MatchRelative().AtParent().AtName("analysis"),
+							path.MatchRelative().AtParent().AtName("attribute"),
+							path.MatchRelative().AtParent().AtName("client_certificate_attribute"),
+						),
 					},
 				},
 			},
 			Blocks: map[string]schema.Block{
 				"analysis": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
-					Validators:   conditionUnionValidators("attribute", "client_certificate_attribute", "mime_header_attribute"),
-					NestedObject: schema.NestedBlockObject{Attributes: analysisAttributes()},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
+					Validators: conditionUnionValidators("attribute", "client_certificate_attribute", "mime_header_attribute"),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: analysisAttributes(),
+					},
 				},
 			},
 		},
