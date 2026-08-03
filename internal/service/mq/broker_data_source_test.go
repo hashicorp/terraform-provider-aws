@@ -87,7 +87,7 @@ func TestAccMQBrokerDataSource_resourceShareARNs(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerDataSourceConfig_resourceShareARNs(rName, testAccRabbitVersionNormalized4_2),
+				Config: testAccBrokerDataSourceConfig_resourceShareARNs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "resource_share_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_share_arns.#", resourceName, "resource_share_arns.#"),
@@ -98,8 +98,8 @@ func TestAccMQBrokerDataSource_resourceShareARNs(t *testing.T) {
 	})
 }
 
-func testAccBrokerDataSourceConfig_resourceShareARNs(rName, version string) string {
-	return acctest.ConfigCompose(testAccBrokerConfig_rabbitResourceShareARNs(rName, version), `
+func testAccBrokerDataSourceConfig_resourceShareARNs(rName string) string {
+	return acctest.ConfigCompose(testAccBrokerConfig_rabbitResourceShareARNs(rName), `
 data "aws_mq_broker" "test" {
   broker_id = aws_mq_broker.test.id
 }
@@ -111,7 +111,7 @@ func testAccBrokerDataSourceConfig_base(rName string) string {
 resource "aws_mq_configuration" "test" {
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.17.6"
+  engine_version = %[2]q
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -131,9 +131,9 @@ resource "aws_mq_broker" "test" {
   }
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
-  engine_type        = "ActiveMQ"
-  engine_version     = "5.17.6"
-  host_instance_type = "mq.t3.micro"
+  engine_type        = aws_mq_configuration.test.engine_type
+  engine_version     = aws_mq_configuration.test.engine_version
+  host_instance_type = %[3]q
 
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
@@ -157,9 +157,13 @@ resource "aws_mq_broker" "test" {
     groups         = ["dragon", "salamander", "leopard"]
   }
 
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_internet_gateway.test]
 }
-`, rName))
+`, rName, testAccActiveMQVersionNormalized5_19, testAccActiveMQHostInstanceType1))
 }
 
 func testAccBrokerDataSourceConfig_byID(rName string) string {

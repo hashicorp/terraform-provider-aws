@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_servicecatalog_provisioned_product: Allow empty values in provisioning parameters
-```

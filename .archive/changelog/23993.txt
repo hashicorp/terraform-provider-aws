@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_iot_authorizer: Add `enable_caching_for_http` argument
-```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_instance: Properly cancel spot instance requests on destroy when `instance_lifecycle` is `spot`
-```

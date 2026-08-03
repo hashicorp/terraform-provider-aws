@@ -94,6 +94,34 @@ EOT
 }
 ```
 
+### CloudWatch Destination
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    eks {
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+
+  destination {
+    cloudwatch {
+      dataset_arn = "arn:aws:cloudwatch:us-west-2:123456789012:dataset/default"
+    }
+  }
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: pod_exporter
+    kubernetes_sd_configs:
+      - role: pod
+EOT
+}
+```
+
 ### VPC Configuration
 
 ```terraform
@@ -250,11 +278,18 @@ The following arguments are optional:
 
 ### `destination`
 
-* `amp` - (Required) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp`](#amp).
+* `amp` - (Optional) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp`](#amp).
+* `cloudwatch` - (Optional) Configuration block for a CloudWatch Metrics destination. See [`cloudwatch`](#cloudwatch).
+
+~> **NOTE:** Either `amp` or `cloudwatch` must be specified, but not both.
 
 ### `amp`
 
 * `workspace_arn` - (Required) The Amazon Resource Name (ARN) of the prometheus workspace.
+
+### `cloudwatch`
+
+* `dataset_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch dataset. Use `arn:aws:cloudwatch:{region}:{account}:dataset/default` for the default dataset.
 
 ### `source`
 

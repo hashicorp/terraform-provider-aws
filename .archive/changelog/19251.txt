@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Prevent `Provider produced inconsistent final plan` errors when lifecycle arguments apply to resource `tags` not known until apply
-```
