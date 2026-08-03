@@ -17,8 +17,8 @@ Manages an EC2 Transit Gateway Policy Table Entry. Each entry defines a traffic 
 ```terraform
 resource "aws_ec2_transit_gateway_policy_table_entry" "example" {
   transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.example.id
-  policy_rule_number               = 100
-  target_route_table_id            = aws_ec2_transit_gateway_route_table.example.id
+  policy_rule_number              = 100
+  target_route_table_id           = aws_ec2_transit_gateway_route_table.example.id
 }
 ```
 
@@ -27,15 +27,15 @@ resource "aws_ec2_transit_gateway_policy_table_entry" "example" {
 ```terraform
 resource "aws_ec2_transit_gateway_policy_table_entry" "example" {
   transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.example.id
-  policy_rule_number               = 200
-  target_route_table_id            = aws_ec2_transit_gateway_route_table.example.id
+  policy_rule_number              = 200
+  target_route_table_id           = aws_ec2_transit_gateway_route_table.example.id
 
   policy_rule {
-    source_cidr_block       = "10.0.1.0/24"
-    source_port_range       = "*"
-    destination_cidr_block  = "10.0.2.0/24"
-    destination_port_range  = "443"
-    protocol                = "6"
+    source_cidr_block      = "10.0.1.0/24"
+    source_port_range      = "*"
+    destination_cidr_block = "10.0.2.0/24"
+    destination_port_range = "443"
+    protocol               = "6"
 
     metadata {
       key   = "test"

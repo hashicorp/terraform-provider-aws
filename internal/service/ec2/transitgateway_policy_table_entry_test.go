@@ -361,11 +361,11 @@ resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
   target_route_table_id           = aws_ec2_transit_gateway_route_table.test.id
 
   policy_rule {
-    source_cidr_block       = "10.0.1.0/24"
-    source_port_range       = "1024-65535"
-    destination_cidr_block  = "10.0.2.0/24"
-    destination_port_range  = "443"
-    protocol                = "6"
+    source_cidr_block      = "10.0.1.0/24"
+    source_port_range      = "1024-65535"
+    destination_cidr_block = "10.0.2.0/24"
+    destination_port_range = "443"
+    protocol               = "6"
 
     metadata {
       key   = "test"
@@ -404,7 +404,7 @@ resource "aws_ec2_transit_gateway_policy_table_entry" "test" {
   policy_rule {
     source_cidr_block      = "10.0.1.0/24"
     destination_cidr_block = "10.0.2.0/24"
-    protocol                = %[3]q
+    protocol               = %[3]q
   }
 }
 `, rName, targetRouteTableID, protocol),
