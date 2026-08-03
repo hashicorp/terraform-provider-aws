@@ -92,7 +92,9 @@ func ruleSetRuleBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: []validator.List{listvalidator.SizeBetween(1, 40)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrName: schema.StringAttribute{Optional: true},
+				names.AttrName: schema.StringAttribute{
+					Optional: true,
+				},
 			},
 			Blocks: map[string]schema.Block{
 				names.AttrAction:    ruleSetActionBlock(ctx),
