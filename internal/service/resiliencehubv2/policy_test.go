@@ -33,7 +33,7 @@ var (
 func TestAccResilienceHubV2Policy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehubv2_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -90,7 +90,7 @@ func TestAccResilienceHubV2Policy_basic(t *testing.T) {
 func TestAccResilienceHubV2Policy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehubv2_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -125,10 +125,57 @@ func TestAccResilienceHubV2Policy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccResilienceHubV2Policy_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/kms_key_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.NotNull()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/kms_key_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
 func TestAccResilienceHubV2Policy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehubv2_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
