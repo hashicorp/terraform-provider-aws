@@ -775,27 +775,32 @@ func (r *ruleSetResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *ruleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
 	var state ruleSetResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	id := state.ID.ValueString()
-	out, err := findRuleSetByID(ctx, conn, id)
+
+	conn := r.Meta().MailManagerClient(ctx)
+
+	ruleSetID := state.ID.ValueString()
+	out, err := findRuleSetByID(ctx, conn, ruleSetID)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleSetID)
 		return
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("RuleSet")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
