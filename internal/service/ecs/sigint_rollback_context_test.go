@@ -63,9 +63,7 @@ func TestRollbackRoutine_parentWaitContextSurvivesRefreshCancel(t *testing.T) {
 	_, child2Cancel := context.WithCancel(parent)
 	waitCtx := parent
 	var fixedWG sync.WaitGroup
-	fixedWG.Add(1)
-	go func() {
-		defer fixedWG.Done()
+	fixedWG.Go(func() {
 		select {
 		case <-waitCtx.Done():
 			mu.Lock()
@@ -74,7 +72,7 @@ func TestRollbackRoutine_parentWaitContextSurvivesRefreshCancel(t *testing.T) {
 			close(parentDoneSeen)
 		case <-stop:
 		}
-	}()
+	})
 
 	child2Cancel()
 
