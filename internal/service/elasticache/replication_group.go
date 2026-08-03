@@ -971,6 +971,12 @@ func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awst
 			d.Set("cluster_mode", rgp.PendingModifiedValues.ClusterMode)
 		}
 
+		// transit_encryption_enabled and transit_encryption_mode are written up to
+		// three times, and this ordering is intentional: first from the live cache
+		// cluster values in the Read function, then from the cache cluster's pending
+		// values above, and finally from the replication group's pending values here.
+		// The replication group-level pending values are authoritative, so they are
+		// applied last (last write wins). Do not reorder these writes.
 		if rgp.PendingModifiedValues.TransitEncryptionEnabled != nil {
 			transitEncryptionEnabled := aws.ToBool(rgp.PendingModifiedValues.TransitEncryptionEnabled)
 			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
@@ -978,6 +984,27 @@ func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awst
 
 		if rgp.PendingModifiedValues.TransitEncryptionMode != "" {
 			d.Set("transit_encryption_mode", rgp.PendingModifiedValues.TransitEncryptionMode)
+		}
+
+		// user_group_ids pending changes are expressed as add/remove deltas against
+		// the live UserGroupIds (see UserGroupsUpdateStatus), not as a full target
+		// set. Reconstruct the resulting set so state matches configuration while the
+		// change is applied during the next maintenance window.
+		if ug := rgp.PendingModifiedValues.UserGroups; ug != nil {
+			remove := make(map[string]struct{}, len(ug.UserGroupIdsToRemove))
+			for _, id := range ug.UserGroupIdsToRemove {
+				remove[id] = struct{}{}
+			}
+
+			userGroupIDs := make([]string, 0, len(rgp.UserGroupIds)+len(ug.UserGroupIdsToAdd))
+			for _, id := range rgp.UserGroupIds {
+				if _, ok := remove[id]; !ok {
+					userGroupIDs = append(userGroupIDs, id)
+				}
+			}
+			userGroupIDs = append(userGroupIDs, ug.UserGroupIdsToAdd...)
+
+			d.Set("user_group_ids", userGroupIDs)
 		}
 	}
 
