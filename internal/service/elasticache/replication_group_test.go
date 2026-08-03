@@ -660,6 +660,53 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_PendingUserGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	userGroup := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingUserGroup(rName, userGroup, 0, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 0)),
+				),
+			},
+			{
+				// Swap to the second user group with apply_immediately = false. The
+				// change is deferred to the maintenance window, so the live value
+				// still reports the first user group. This asserts that the pending
+				// add/remove delta is reconstructed into state as the second group,
+				// and the post-apply, post-refresh plan check confirms this produces
+				// no perpetual diff.
+				Config: testAccReplicationGroupConfig_pendingUserGroup(rName, userGroup, 1, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "user_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 1)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_authToRBACMigration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4294,11 +4341,12 @@ func TestAccElastiCacheReplicationGroup_PendingNodeType_Redis(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.medium"),
 				),
-			},
-			{
-				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "redis"),
+				// The modification is deferred to the maintenance window
+				// (apply_immediately = false), so the pending node type must be
+				// reflected in state. The framework's post-apply, post-refresh plan
+				// check confirms this produces no perpetual diff.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
@@ -4383,11 +4431,12 @@ func TestAccElastiCacheReplicationGroup_PendingNodeType_Valkey(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.medium"),
 				),
-			},
-			{
-				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "valkey"),
+				// The modification is deferred to the maintenance window
+				// (apply_immediately = false), so the pending node type must be
+				// reflected in state. The framework's post-apply, post-refresh plan
+				// check confirms this produces no perpetual diff.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
@@ -5330,6 +5379,40 @@ resource "aws_elasticache_replication_group" "test" {
   user_group_ids             = [aws_elasticache_user_group.test[%[3]d].id]
 }
 `, rName, userGroup, flag)
+}
+
+func testAccReplicationGroupConfig_pendingUserGroup(rName, userGroup string, groupIndex int, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  count = 2
+
+  user_id       = "%[2]s-${count.index}"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  count = 2
+
+  user_group_id = "%[2]s-${count.index}"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test[count.index].user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test pending user group"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = %[4]t
+  maintenance_window         = "tue:06:30-tue:07:30"
+  snapshot_window            = "01:00-02:00"
+  transit_encryption_enabled = true
+  user_group_ids             = [aws_elasticache_user_group.test[%[3]d].id]
+}
+`, rName, userGroup, groupIndex, applyImmediately)
 }
 
 func testAccReplicationGroupConfig_inVPC(rName string) string {
