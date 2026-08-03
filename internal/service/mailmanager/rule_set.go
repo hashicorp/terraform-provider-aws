@@ -110,7 +110,9 @@ func ruleSetRuleBlock(ctx context.Context) schema.ListNestedBlock {
 func ruleSetConditionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleSetConditionModel](ctx),
-		Validators: []validator.List{listvalidator.SizeBetween(1, 10)},
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 10),
+		},
 		NestedObject: schema.NestedBlockObject{Blocks: map[string]schema.Block{
 			"boolean_expression": ruleBooleanExpressionBlock(ctx),
 			"dmarc_expression":   ruleDMARCExpressionBlock(ctx),
