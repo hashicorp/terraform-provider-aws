@@ -137,8 +137,8 @@ If no content is provided through `source`, `content` or `content_base64`, then 
 
 The following arguments are required:
 
-* `bucket` - (Required, **Deprecated**) Name of the bucket to put the file in. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified.
-* `key` - (Required, **Deprecated**) Name of the object once it is in the bucket.
+* `bucket` - (Required, **Deprecated**) Name of the bucket to put the file in. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified. Use the `aws_s3_object` resource instead.
+* `key` - (Required, **Deprecated**) Name of the object once it is in the bucket. Use the `aws_s3_object` resource instead.
 
 The following arguments are optional:
 

@@ -34,7 +34,7 @@ data "aws_s3_object" "object_info" {
 
 This data source supports the following arguments:
 
-* `bucket` - (Required, **Deprecated**) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
+* `bucket` - (Required, **Deprecated**) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified. Use the `aws_s3_objects` data source instead.
 * `delimiter` - (Optional) Character used to group keys (Default: none)
 * `encoding_type` - (Optional) Encodes keys using this method (Default: none; besides none, only "url" can be used)
 * `fetch_owner` - (Optional) Boolean specifying whether to populate the owner list (Default: false)
