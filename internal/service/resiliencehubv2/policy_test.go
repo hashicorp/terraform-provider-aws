@@ -172,7 +172,7 @@ func TestAccResilienceHubV2Policy_kmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubV2Policy_update(t *testing.T) {
+func TestAccResilienceHubV2Policy_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -188,24 +188,179 @@ func TestAccResilienceHubV2Policy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_full(rName, "initial description", 99.9, 5, 10),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("desc1"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
-					resource.TestCheckResourceAttr(resourceName, "availability_slo.0.target", "99.9"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rpo_in_minutes", "5"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rto_in_minutes", "10"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
+				},
 			},
 			{
-				Config: testAccPolicyConfig_full(rName, "updated description", 99.99, 1, 5),
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("desc2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
-					resource.TestCheckResourceAttr(resourceName, "availability_slo.0.target", "99.99"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rpo_in_minutes", "1"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az.0.rto_in_minutes", "5"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Policy_dataRecovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/data_recovery/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                   config.StringVariable(rName),
+					"time_between_backups_in_minutes": config.IntegerVariable(30),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_recovery"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"time_between_backups_in_minutes": knownvalue.Int32Exact(30),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/data_recovery/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                   config.StringVariable(rName),
+					"time_between_backups_in_minutes": config.IntegerVariable(45),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_recovery"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"time_between_backups_in_minutes": knownvalue.Int32Exact(45),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Policy_multiAZ(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/multi_az/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("multi_az"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"disaster_recovery_approach": tfknownvalue.StringExact(awstypes.MultiAzDisasterRecoveryApproachActiveActive),
+						"rpo_in_minutes":             knownvalue.Null(),
+						"rto_in_minutes":             knownvalue.Null(),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Policy_multiRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/multi_region/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("multi_region"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"disaster_recovery_approach": tfknownvalue.StringExact(awstypes.MultiRegionDisasterRecoveryApproachHotStandby),
+						"rpo_in_minutes":             knownvalue.Null(),
+						"rto_in_minutes":             knownvalue.Null(),
+					})})),
+				},
 			},
 		},
 	})
@@ -268,41 +423,4 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccPolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehubv2_policy" "test" {
-  name = %[1]q
-
-  availability_slo {
-    target = 99.9
-  }
-
-  multi_az {
-    disaster_recovery_approach = "ACTIVE_ACTIVE"
-    rpo_in_minutes             = 5
-    rto_in_minutes             = 10
-  }
-}
-`, rName)
-}
-
-func testAccPolicyConfig_full(rName, description string, availTarget float64, rpo, rto int) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehubv2_policy" "test" {
-  name        = %[1]q
-  description = %[2]q
-
-  availability_slo {
-    target = %[3]g
-  }
-
-  multi_az {
-    disaster_recovery_approach = "ACTIVE_ACTIVE"
-    rpo_in_minutes             = %[4]d
-    rto_in_minutes             = %[5]d
-  }
-}
-`, rName, description, availTarget, rpo, rto)
 }
