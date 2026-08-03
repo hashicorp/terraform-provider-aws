@@ -620,11 +620,24 @@ func publishToSNSActionBlock(ctx context.Context) schema.ListNestedBlock {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[publishToSNSActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "relay", "replace_recipient", "send", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"encoding":              schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.SnsNotificationEncoding](), Optional: true},
-			"payload_type":          schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.SnsNotificationPayloadType](), Optional: true},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
-			names.AttrTopicARN:      schema.StringAttribute{Required: true},
+			"action_failure_policy": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+				Optional:   true,
+			},
+			"encoding": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SnsNotificationEncoding](),
+				Optional:   true,
+			},
+			"payload_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SnsNotificationPayloadType](),
+				Optional:   true,
+			},
+			names.AttrRoleARN: schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrTopicARN: schema.StringAttribute{
+				Required: true,
+			},
 		}},
 	}
 }
@@ -633,11 +646,21 @@ func relayActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[relayActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "replace_recipient", "send", "write_to_s3"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"mail_from":             schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.MailFrom](), Optional: true},
-			"relay":                 schema.StringAttribute{Required: true},
-		}},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"action_failure_policy": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+					Optional:   true,
+				},
+				"mail_from": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.MailFrom](),
+					Optional:   true,
+				},
+				"relay": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
 	}
 }
 
@@ -645,18 +668,20 @@ func replaceRecipientActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[replaceRecipientActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "send", "write_to_s3"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"replace_with": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 100),
-					listvalidator.UniqueValues(),
-					listvalidator.ValueStringsAre(stringvalidator.LengthAtMost(254)),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"replace_with": schema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 100),
+						listvalidator.UniqueValues(),
+						listvalidator.ValueStringsAre(stringvalidator.LengthAtMost(254)),
+					},
 				},
 			},
-		}},
+		},
 	}
 }
 
@@ -664,10 +689,17 @@ func sendActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[sendActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "write_to_s3"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
-		}},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"action_failure_policy": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+					Optional:   true,
+				},
+				names.AttrRoleARN: schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
 	}
 }
 
@@ -675,13 +707,30 @@ func writeToS3ActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[writeToS3ActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
-			names.AttrS3Bucket:      schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 62)}},
-			"s3_prefix":             schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 62)}},
-			"s3_sse_kms_key_id":     schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(20, 2048)}},
-		}},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"action_failure_policy": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+					Optional:   true,
+				},
+				names.AttrRoleARN: schema.StringAttribute{
+					Required: true,
+				},
+				names.AttrS3Bucket: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 62)},
+				},
+				"s3_prefix": schema.StringAttribute{
+					Optional:   true,
+					Validators: []validator.String{stringvalidator.LengthBetween(1, 62)},
+				},
+				"s3_sse_kms_key_id": schema.StringAttribute{
+					Optional:   true,
+					Validators: []validator.String{stringvalidator.LengthBetween(20, 2048)},
+				},
+			},
+		},
 	}
 }
 
