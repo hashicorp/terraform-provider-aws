@@ -41,8 +41,7 @@ const (
 	spaceInServiceTimeout             = 10 * time.Minute
 	mlflowTrackingServerTimeout       = 45 * time.Minute
 	hubTimeout                        = 10 * time.Minute
-
-	notebookInstanceStatusNotFound = "NotFound"
+	notebookInstanceStatusNotFound    = "NotFound"
 )
 
 func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
@@ -672,6 +671,48 @@ func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
 		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubContentReferenceAvailable(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, timeout time.Duration) (*sagemaker.DescribeHubContentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubContentStatusImporting, awstypes.HubContentStatusPendingImport),
+		Target:  enum.Slice(awstypes.HubContentStatusAvailable),
+		Refresh: statusHubContentReference(conn, hubName, hubContentName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubContentOutput); ok {
+		if status, reason := output.HubContentStatus, aws.ToString(output.FailureReason); status == awstypes.HubContentStatusImportFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubContentReferenceDeleted(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, timeout time.Duration) (*sagemaker.DescribeHubContentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubContentStatusDeleting, awstypes.HubContentStatusPendingDelete),
+		Target:  []string{},
+		Refresh: statusHubContentReference(conn, hubName, hubContentName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubContentOutput); ok {
+		if status, reason := output.HubContentStatus, aws.ToString(output.FailureReason); status == awstypes.HubContentStatusDeleteFailed && reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}
 

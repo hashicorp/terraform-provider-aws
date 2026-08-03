@@ -67,7 +67,44 @@ This resource exports the following attributes in addition to the arguments abov
 * `instance_id` - ID of the Instance
 * `volume_id` - ID of the Volume
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_volume_attachment.example
+  identity = {
+    device_name = "/dev/sdh"
+    volume_id   = "vol-049df61146c4d7901"
+    instance_id = "i-12345678"
+  }
+}
+
+resource "aws_volume_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `device_name` (String) Device name exposed to the instance.
+* `instance_id` (String) ID of the Instance.
+* `volume_id` (String) ID of the Volume.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
 

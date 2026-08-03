@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -45,7 +46,13 @@ const (
 
 // @SDKResource("aws_rds_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("cluster_identifier")
+// @CustomImport
 // @Testing(tagsTest=false)
+// @Testing(idAttrDuplicates="cluster_identifier")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBCluster")
+// @Testing(preIdentityVersion="v6.54.0")
+// @Testing(importIgnore="allow_major_version_upgrade;apply_immediately;cluster_members;db_instance_parameter_group_name;enable_global_write_forwarding;enable_local_write_forwarding;manage_master_user_password;master_password;master_password_wo;master_user_secret_kms_key_id;skip_final_snapshot")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -72,626 +79,633 @@ func resourceCluster() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrAllowMajorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			// apply_immediately is used to determine when the update modifications take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"backup_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-			"backtrack_window": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 259200),
-			},
-			"ca_certificate_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ca_certificate_valid_till": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validIdentifier,
-				ConflictsWith: []string{"cluster_identifier_prefix"},
-			},
-			"cluster_identifier_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validIdentifierPrefix,
-				ConflictsWith: []string{names.AttrClusterIdentifier},
-			},
-			"cluster_members": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_scalability_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ClusterScalabilityType](),
-			},
-			"copy_tags_to_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"database_insights_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"db_cluster_instance_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"db_instance_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"db_system_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"delete_automated_backups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"domain_iam_role_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable_global_write_forwarding": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_http_endpoint": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_local_write_forwarding": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrAllowMajorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				// apply_immediately is used to determine when the update modifications take place.
+				// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"backup_retention_period": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtMost(35),
+				},
+				"backtrack_window": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 259200),
+				},
+				"ca_certificate_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ca_certificate_valid_till": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validIdentifier,
+					ConflictsWith: []string{"cluster_identifier_prefix"},
+				},
+				"cluster_identifier_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validIdentifierPrefix,
+					ConflictsWith: []string{names.AttrClusterIdentifier},
+				},
+				"cluster_members": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"cluster_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_scalability_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ClusterScalabilityType](),
+				},
+				"copy_tags_to_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"database_insights_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"db_cluster_instance_class": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_cluster_parameter_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"db_instance_parameter_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"db_system_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"delete_automated_backups": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"domain_iam_role_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"enable_global_write_forwarding": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_http_endpoint": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_local_write_forwarding": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enabled_cloudwatch_logs_exports": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(clusterExportableLogType_Values(), false),
+					},
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						validation.StringInSlice(clusterEngine_Values(), false),
+					),
+				},
+				"engine_lifecycle_support": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(clusterExportableLogType_Values(), false),
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
 				},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
-					validation.StringInSlice(clusterEngine_Values(), false),
-				),
-			},
-			"engine_lifecycle_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
-			},
-			"engine_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      engineModeProvisioned,
-				ValidateFunc: validation.StringInSlice(append(engineMode_Values(), ""), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == engineModeProvisioned && new == "" {
-						return true
-					}
-					return new == old
-				},
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFinalSnapshotIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v any, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only alphanumeric characters and hyphens allowed in %q", k))
-					}
-					if regexache.MustCompile(`--`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
-					}
-					if regexache.MustCompile(`-$`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
-					}
-					return
-				},
-			},
-			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_database_authentication_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrIOPS: {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"manage_master_user_password": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"master_password", "master_password_wo"},
-			},
-			"master_user_secret": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secret_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secret_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+				"engine_mode": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      engineModeProvisioned,
+					ValidateFunc: validation.StringInSlice(append(engineMode_Values(), ""), false),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == engineModeProvisioned && new == "" {
+							return true
+						}
+						return new == old
 					},
 				},
-			},
-			"master_user_secret_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidKMSKeyID,
-			},
-			"master_password": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password", "master_password_wo"},
-			},
-			"master_password_wo": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				WriteOnly:     true,
-				ConflictsWith: []string{"manage_master_user_password", "master_password"},
-				RequiredWith:  []string{"master_password_wo_version"},
-			},
-			"master_password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"master_password_wo"},
-			},
-			"master_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-			},
-			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"monitoring_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
-			},
-			"performance_insights_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"performance_insights_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"performance_insights_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"preferred_backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"reader_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_source_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"restore_to_point_in_time": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"restore_to_time": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-							ExactlyOneOf: []string{
-								"restore_to_point_in_time.0.restore_to_time",
-								"restore_to_point_in_time.0.use_latest_restorable_time",
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFinalSnapshotIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: func(v any, k string) (ws []string, es []error) {
+						value := v.(string)
+						if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+							es = append(es, fmt.Errorf(
+								"only alphanumeric characters and hyphens allowed in %q", k))
+						}
+						if regexache.MustCompile(`--`).MatchString(value) {
+							es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
+						}
+						if regexache.MustCompile(`-$`).MatchString(value) {
+							es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
+						}
+						return
+					},
+				},
+				"global_cluster_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_database_authentication_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"iam_roles": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrIOPS: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"manage_master_user_password": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"master_password", "master_password_wo"},
+				},
+				"master_user_secret": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"restore_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(restoreType_Values(), false),
-						},
-						"source_cluster_identifier": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.Any(
-								verify.ValidARN,
-								validIdentifier,
-							),
-							ExactlyOneOf: []string{
-								"restore_to_point_in_time.0.source_cluster_identifier",
-								"restore_to_point_in_time.0.source_cluster_resource_id",
+							"secret_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
-						},
-						"source_cluster_resource_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ExactlyOneOf: []string{
-								"restore_to_point_in_time.0.source_cluster_identifier",
-								"restore_to_point_in_time.0.source_cluster_resource_id",
-							},
-						},
-						"use_latest_restorable_time": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							ExactlyOneOf: []string{
-								"restore_to_point_in_time.0.restore_to_time",
-								"restore_to_point_in_time.0.use_latest_restorable_time",
+							"secret_status": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
 				},
-				ConflictsWith: []string{
-					"s3_import",
-					"snapshot_identifier",
+				"master_user_secret_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidKMSKeyID,
 				},
-			},
-			"s3_import": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+				"master_password": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ConflictsWith: []string{"manage_master_user_password", "master_password_wo"},
+				},
+				"master_password_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					WriteOnly:     true,
+					ConflictsWith: []string{"manage_master_user_password", "master_password"},
+					RequiredWith:  []string{"master_password_wo_version"},
+				},
+				"master_password_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"master_password_wo"},
+				},
+				"master_username": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+					ForceNew: true,
+				},
+				"monitoring_interval": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"monitoring_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"network_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(networkType_Values(), false),
+				},
+				"performance_insights_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"performance_insights_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"performance_insights_retention_period": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"preferred_backup_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						if val == nil {
+							return ""
+						}
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"reader_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_source_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"restore_to_point_in_time": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"restore_to_time": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+								ExactlyOneOf: []string{
+									"restore_to_point_in_time.0.restore_to_time",
+									"restore_to_point_in_time.0.use_latest_restorable_time",
+								},
+							},
+							"restore_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice(restoreType_Values(), false),
+							},
+							"source_cluster_identifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.Any(
+									verify.ValidARN,
+									validIdentifier,
+								),
+								ExactlyOneOf: []string{
+									"restore_to_point_in_time.0.source_cluster_identifier",
+									"restore_to_point_in_time.0.source_cluster_resource_id",
+								},
+							},
+							"source_cluster_resource_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"restore_to_point_in_time.0.source_cluster_identifier",
+									"restore_to_point_in_time.0.source_cluster_resource_id",
+								},
+							},
+							"use_latest_restorable_time": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"restore_to_point_in_time.0.restore_to_time",
+									"restore_to_point_in_time.0.use_latest_restorable_time",
+								},
+							},
 						},
-						names.AttrBucketPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+					},
+					ConflictsWith: []string{
+						"s3_import",
+						"snapshot_identifier",
+					},
+				},
+				"s3_import": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrBucketPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"ingestion_role": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"source_engine": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"source_engine_version": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
-						"ingestion_role": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"source_engine": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"source_engine_version": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+					},
+					ConflictsWith: []string{
+						"snapshot_identifier",
+						"restore_to_point_in_time",
+					},
+				},
+				"scaling_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_pause": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							names.AttrMaxCapacity: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  clusterScalingConfiguration_DefaultMaxCapacity,
+							},
+							"min_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  clusterScalingConfiguration_DefaultMinCapacity,
+							},
+							"seconds_before_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(60, 600),
+							},
+							"seconds_until_auto_pause": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(300, 86400),
+							},
+							"timeout_action": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      timeoutActionRollbackCapacityChange,
+								ValidateFunc: validation.StringInSlice(timeoutAction_Values(), false),
+							},
 						},
 					},
 				},
-				ConflictsWith: []string{
-					"snapshot_identifier",
-					"restore_to_point_in_time",
-				},
-			},
-			"scaling_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_pause": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						names.AttrMaxCapacity: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
-						},
-						"min_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  clusterScalingConfiguration_DefaultMinCapacity,
-						},
-						"seconds_before_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(60, 600),
-						},
-						"seconds_until_auto_pause": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(300, 86400),
-						},
-						"timeout_action": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      timeoutActionRollbackCapacityChange,
-							ValidateFunc: validation.StringInSlice(timeoutAction_Values(), false),
-						},
-					},
-				},
-			},
-			"serverlessv2_scaling_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMaxCapacity: {
-							Type:         schema.TypeFloat,
-							Required:     true,
-							ValidateFunc: validation.FloatBetween(1, 256),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// Handles a breaking regression. On v5.79.0 and earlier,
-								// serverlessv2_scaling_configuration block could be removed from
-								// configuration. Although doing so doesn't actually remove the scaling
-								// configuration from AWS this dsf does allow the user to remove the block
-								// from their configuration without perpetual diffs.
-								// https://github.com/hashicorp/terraform-provider-aws/issues/40473
+				"serverlessv2_scaling_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMaxCapacity: {
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(1, 256),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// Handles a breaking regression. On v5.79.0 and earlier,
+									// serverlessv2_scaling_configuration block could be removed from
+									// configuration. Although doing so doesn't actually remove the scaling
+									// configuration from AWS this dsf does allow the user to remove the block
+									// from their configuration without perpetual diffs.
+									// https://github.com/hashicorp/terraform-provider-aws/issues/40473
 
-								// NOTE: This is a poor pattern and should not be followed.
-								//  - The basic declarative contract is: config & state = infrastructure
-								//  - The API supports adding and updating SSC but not removing it.
-								//  - Add, update -> no ForceNew (supported by API)
-								//  - Remove -> ForceNew (standard Terraform solution for unsupported mutations)
-								//
-								// This suppress was added to avoid breaking existing users who had already
-								// removed the block from their config, rather than following the standard pattern.
-								config := d.GetRawConfig()
+									// NOTE: This is a poor pattern and should not be followed.
+									//  - The basic declarative contract is: config & state = infrastructure
+									//  - The API supports adding and updating SSC but not removing it.
+									//  - Add, update -> no ForceNew (supported by API)
+									//  - Remove -> ForceNew (standard Terraform solution for unsupported mutations)
+									//
+									// This suppress was added to avoid breaking existing users who had already
+									// removed the block from their config, rather than following the standard pattern.
+									config := d.GetRawConfig()
 
-								if config.IsNull() || !config.IsKnown() {
+									if config.IsNull() || !config.IsKnown() {
+										return false
+									}
+
+									raw := config.GetAttr("serverlessv2_scaling_configuration")
+
+									if raw.IsNull() || !raw.IsKnown() {
+										return false
+									}
+
+									if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
+										return true
+									}
 									return false
-								}
-
-								raw := config.GetAttr("serverlessv2_scaling_configuration")
-
-								if raw.IsNull() || !raw.IsKnown() {
-									return false
-								}
-
-								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
-									return true
-								}
-								return false
+								},
 							},
-						},
-						"min_capacity": {
-							Type:         schema.TypeFloat,
-							Required:     true,
-							ValidateFunc: validation.FloatBetween(0, 256),
-						},
-						"seconds_until_auto_pause": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(300, 86400),
+							"min_capacity": {
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatBetween(0, 256),
+							},
+							"seconds_until_auto_pause": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(300, 86400),
+							},
 						},
 					},
 				},
-			},
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ConflictsWith: []string{
-					// Clusters cannot be joined to an existing global cluster as part of
-					// the "restore from snapshot" operation. Trigger an error during plan
-					// to prevent an apply with unexpected results (ie. a regional
-					// cluster which is not joined to the provided global cluster).
-					"global_cluster_identifier",
+				"skip_final_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// allow snapshot_idenfitier to be removed without forcing re-creation
-					return new == ""
+				"snapshot_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ConflictsWith: []string{
+						// Clusters cannot be joined to an existing global cluster as part of
+						// the "restore from snapshot" operation. Trigger an error during plan
+						// to prevent an apply with unexpected results (ie. a regional
+						// cluster which is not joined to the provided global cluster).
+						"global_cluster_identifier",
+					},
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// allow snapshot_idenfitier to be removed without forcing re-creation
+						return new == ""
+					},
 				},
-			},
-			"source_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"upgrade_rollout_order": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"source_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"upgrade_rollout_order": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -1395,6 +1409,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOkExists(names.AttrAutoMinorVersionUpgrade); ok {
+			input.AutoMinorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func(ctx context.Context) (any, error) {
 				return conn.CreateDBCluster(ctx, input)
@@ -1452,127 +1470,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAllocatedStorage, dbc.AllocatedStorage)
-	clusterARN := aws.ToString(dbc.DBClusterArn)
-	d.Set(names.AttrARN, clusterARN)
-	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
-	d.Set("backtrack_window", dbc.BacktrackWindow)
-	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	if dbc.CertificateDetails != nil {
-		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
-		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
+	if err := resourceClusterFlatten(ctx, conn, dbc, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
-	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
-	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
-	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
-		return aws.ToString(v.DBInstanceIdentifier)
-	}))
-	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
-	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
-	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
-	// Only set the DatabaseName if it is not nil. There is a known API bug where
-	// RDS accepts a DatabaseName but does not return it, causing a perpetual
-	// diff.
-	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
-	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
-	}
-	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
-	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
-	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
-	d.Set("db_system_id", dbc.DBSystemId)
-	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
-	if len(dbc.DomainMemberships) > 0 {
-		domainMembership := dbc.DomainMemberships[0]
-		d.Set(names.AttrDomain, domainMembership.Domain)
-		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
-	} else {
-		d.Set(names.AttrDomain, nil)
-		d.Set("domain_iam_role_name", nil)
-	}
-	d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
-	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
-	d.Set(names.AttrEndpoint, dbc.Endpoint)
-	d.Set(names.AttrEngine, dbc.Engine)
-	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
-	d.Set("engine_mode", dbc.EngineMode)
-	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
-	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
-	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
-	d.Set("iam_roles", tfslices.ApplyToAll(dbc.AssociatedRoles, func(v types.DBClusterRole) string {
-		return aws.ToString(v.RoleArn)
-	}))
-	d.Set(names.AttrIOPS, dbc.Iops)
-	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
-	// Note: the following attributes are not returned by the API
-	// when conducting a read after a create, so we rely on Terraform's
-	// implicit state passthrough, and they are treated as virtual attributes.
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
-	//
-	// manage_master_user_password
-	// master_password
-	//
-	// Expose the MasterUserSecret structure as a computed attribute
-	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
-	if dbc.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
-		}
-	} else {
-		d.Set("master_user_secret", nil)
-	}
-	d.Set("master_username", dbc.MasterUsername)
-	d.Set("monitoring_interval", dbc.MonitoringInterval)
-	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
-	d.Set("network_type", dbc.NetworkType)
-	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
-	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
-	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
-	d.Set(names.AttrPort, dbc.Port)
-	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
-	d.Set("reader_endpoint", dbc.ReaderEndpoint)
-	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
-	if dbc.ScalingConfigurationInfo != nil {
-		if err := d.Set("scaling_configuration", []any{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting scaling_configuration: %s", err)
-		}
-	} else {
-		d.Set("scaling_configuration", nil)
-	}
-	if dbc.ServerlessV2ScalingConfiguration != nil {
-		if err := d.Set("serverlessv2_scaling_configuration", []any{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
-		}
-	} else {
-		d.Set("serverlessv2_scaling_configuration", nil)
-	}
-	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
-	d.Set(names.AttrStorageType, dbc.StorageType)
-	d.Set("upgrade_rollout_order", dbc.UpgradeRolloutOrder)
-	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
-		return aws.ToString(v.VpcSecurityGroupId)
-	}))
-
-	// Fetch and save Global Cluster if engine mode global
-	d.Set("global_cluster_identifier", "")
-
-	if engineMode := aws.ToString(dbc.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
-		globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, clusterARN)
-
-		if err == nil {
-			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if retry.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
-			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
-			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-		} else {
-			return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster for RDS Cluster (%s): %s", d.Id(), err)
-		}
-	}
-
-	setTagsOut(ctx, dbc.TagList)
 
 	return diags
 }
@@ -1635,6 +1535,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			input.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+		}
+
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange("backtrack_window") {
@@ -2016,7 +1920,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
+	}
+
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
@@ -2416,6 +2324,133 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 	}
 
 	return tfMap
+}
+
+func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DBCluster, d *schema.ResourceData) error {
+	d.Set(names.AttrAllocatedStorage, dbc.AllocatedStorage)
+	clusterARN := aws.ToString(dbc.DBClusterArn)
+	d.Set(names.AttrARN, clusterARN)
+	d.Set(names.AttrAvailabilityZones, dbc.AvailabilityZones)
+	d.Set(names.AttrAutoMinorVersionUpgrade, dbc.AutoMinorVersionUpgrade)
+	d.Set("backtrack_window", dbc.BacktrackWindow)
+	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	if dbc.CertificateDetails != nil {
+		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
+		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
+	}
+	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
+	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
+	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.ToString(dbc.DBClusterIdentifier)))
+	d.Set("cluster_members", tfslices.ApplyToAll(dbc.DBClusterMembers, func(v types.DBClusterMember) string {
+		return aws.ToString(v.DBInstanceIdentifier)
+	}))
+	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
+	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
+	// Only set the DatabaseName if it is not nil. There is a known API bug where
+	// RDS accepts a DatabaseName but does not return it, causing a perpetual
+	// diff.
+	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
+	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
+	}
+	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
+	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
+	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("db_system_id", dbc.DBSystemId)
+	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
+	if len(dbc.DomainMemberships) > 0 {
+		domainMembership := dbc.DomainMemberships[0]
+		d.Set(names.AttrDomain, domainMembership.Domain)
+		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
+	} else {
+		d.Set(names.AttrDomain, nil)
+		d.Set("domain_iam_role_name", nil)
+	}
+	d.Set("enabled_cloudwatch_logs_exports", dbc.EnabledCloudwatchLogsExports)
+	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
+	d.Set(names.AttrEngine, dbc.Engine)
+	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
+	d.Set("engine_mode", dbc.EngineMode)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
+	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+	d.Set("iam_roles", tfslices.ApplyToAll(dbc.AssociatedRoles, func(v types.DBClusterRole) string {
+		return aws.ToString(v.RoleArn)
+	}))
+	d.Set(names.AttrIOPS, dbc.Iops)
+	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// Expose the MasterUserSecret structure as a computed attribute
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
+	if dbc.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return fmt.Errorf("setting master_user_secret: %w", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
+	d.Set("master_username", dbc.MasterUsername)
+	d.Set("monitoring_interval", dbc.MonitoringInterval)
+	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
+	d.Set("network_type", dbc.NetworkType)
+	d.Set("performance_insights_enabled", dbc.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", dbc.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
+	d.Set(names.AttrPort, dbc.Port)
+	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
+	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
+	if dbc.ScalingConfigurationInfo != nil {
+		if err := d.Set("scaling_configuration", []any{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
+			return fmt.Errorf("setting scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("scaling_configuration", nil)
+	}
+	if dbc.ServerlessV2ScalingConfiguration != nil {
+		if err := d.Set("serverlessv2_scaling_configuration", []any{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
+			return fmt.Errorf("setting serverlessv2_scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("serverlessv2_scaling_configuration", nil)
+	}
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
+	d.Set(names.AttrStorageType, dbc.StorageType)
+	d.Set("upgrade_rollout_order", dbc.UpgradeRolloutOrder)
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
+
+	// Fetch and save Global Cluster if engine mode global
+	d.Set("global_cluster_identifier", "")
+
+	if engineMode := aws.ToString(dbc.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
+		globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, clusterARN)
+
+		if err == nil {
+			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+		} else if retry.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
+			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
+			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+		} else {
+			return fmt.Errorf("reading RDS Global Cluster for RDS Cluster (%s): %w", d.Id(), err)
+		}
+	}
+
+	setTagsOut(ctx, dbc.TagList)
+
+	return nil
 }
 
 func isProvisionedIOPSStorageType(storageType string) bool {

@@ -40,10 +40,12 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -554,6 +556,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
+			"private_endpoint": privateEndpointSchema(ctx),
 			"target_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[targetConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -561,15 +564,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("http"),
+							path.MatchRelative().AtName("mcp"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"http": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[httpTargetConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("http"),
-									path.MatchRelative().AtParent().AtName("mcp"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
@@ -900,6 +905,9 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 
 	target, err := waitGatewayTargetCreated(ctx, conn, gatewayIdentifier, targetID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("gateway_identifier"), gatewayIdentifier)
+		response.State.SetAttribute(ctx, path.Root("target_id"), targetID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 		return
 	}
@@ -1184,6 +1192,7 @@ type gatewayTargetResourceModel struct {
 	GatewayIdentifier               types.String                                                          `tfsdk:"gateway_identifier"`
 	MetadataConfiguration           fwtypes.ListNestedObjectValueOf[metadataConfigurationModel]           `tfsdk:"metadata_configuration"`
 	Name                            types.String                                                          `tfsdk:"name"`
+	PrivateEndpoint                 fwtypes.ListNestedObjectValueOf[privateEndpointModel]                 `tfsdk:"private_endpoint"`
 	TargetConfiguration             fwtypes.ListNestedObjectValueOf[targetConfigurationModel]             `tfsdk:"target_configuration"`
 	TargetID                        types.String                                                          `tfsdk:"target_id"`
 	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
@@ -1193,6 +1202,134 @@ type metadataConfigurationModel struct {
 	AllowedQueryParameters fwtypes.SetOfString `tfsdk:"allowed_query_parameters"`
 	AllowedRequestHeaders  fwtypes.SetOfString `tfsdk:"allowed_request_headers"`
 	AllowedResponseHeaders fwtypes.SetOfString `tfsdk:"allowed_response_headers"`
+}
+
+type privateEndpointModel struct {
+	ManagedVPCResource         fwtypes.ListNestedObjectValueOf[managedVPCResourceModel]         `tfsdk:"managed_vpc_resource"`
+	SelfManagedLatticeResource fwtypes.ListNestedObjectValueOf[selfManagedLatticeResourceModel] `tfsdk:"self_managed_lattice_resource"`
+}
+
+var (
+	_ fwflex.Expander  = privateEndpointModel{}
+	_ fwflex.Flattener = &privateEndpointModel{}
+)
+
+func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.PrivateEndpointMemberManagedVpcResource:
+		var model managedVPCResourceModel
+		model.Tags = tftags.NewMapValueNull() // Tags are not handled by AutoFlex.
+
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+
+		// Tags are not handled by AutoFlex.
+		model.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, t.Value.Tags))
+
+		m.ManagedVPCResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
+		var model selfManagedLatticeResourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.SelfManagedLatticeResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	default:
+		diags.AddError(
+			"Unsupported PrivateEndpoint Type",
+			fmt.Sprintf("private endpoint flatten: unexpected type %T", v),
+		)
+	}
+	return diags
+}
+
+func (m privateEndpointModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.ManagedVPCResource.IsNull():
+		data, d := m.ManagedVPCResource.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PrivateEndpointMemberManagedVpcResource
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		// Tags are not handled by AutoFlex.
+		r.Value.Tags = fwflex.ExpandFrameworkStringValueMap(ctx, data.Tags)
+
+		return &r, diags
+
+	case !m.SelfManagedLatticeResource.IsNull():
+		data, d := m.SelfManagedLatticeResource.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.PrivateEndpointMemberSelfManagedLatticeResource
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type managedVPCResourceModel struct {
+	EndpointIPAddressType fwtypes.StringEnum[awstypes.EndpointIpAddressType] `tfsdk:"endpoint_ip_address_type"`
+	RoutingDomain         types.String                                       `tfsdk:"routing_domain"`
+	SecurityGroupIDs      fwtypes.SetOfString                                `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetOfString                                `tfsdk:"subnet_ids"`
+	Tags                  tftags.Map                                         `tfsdk:"tags"`
+	VPCIdentifier         types.String                                       `tfsdk:"vpc_identifier"`
+}
+type selfManagedLatticeResourceModel struct {
+	ResourceConfigurationIdentifier types.String `tfsdk:"resource_configuration_identifier"`
+}
+
+var (
+	_ fwflex.Expander  = selfManagedLatticeResourceModel{}
+	_ fwflex.Flattener = &selfManagedLatticeResourceModel{}
+)
+
+func (m *selfManagedLatticeResourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier:
+		m.ResourceConfigurationIdentifier = fwflex.StringValueToFramework(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported SelfManagedLatticeResource Type",
+			fmt.Sprintf("self managed lattice resource flatten: unexpected type %T", v),
+		)
+	}
+	return diags
+}
+
+func (m selfManagedLatticeResourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.ResourceConfigurationIdentifier.IsNull():
+		var r awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier
+		r.Value = fwflex.StringValueFromFramework(ctx, m.ResourceConfigurationIdentifier)
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
 type credentialProviderConfigurationModel struct {

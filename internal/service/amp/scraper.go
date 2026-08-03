@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,6 +90,12 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("amp"),
+							path.MatchRelative().AtName("cloudwatch"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"amp": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[ampConfigurationModel](ctx),
@@ -99,6 +106,21 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"workspace_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+						"cloudwatch": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"dataset_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -146,6 +168,12 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("eks"),
+							path.MatchRelative().AtName("vpc"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"eks": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[eksConfigurationModel](ctx),
@@ -255,7 +283,7 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-		Value: []byte(data.ScrapeConfiguration.ValueString()),
+		Value: []byte(fwflex.StringValueFromFramework(ctx, data.ScrapeConfiguration)),
 	}
 	input.Tags = getTagsIn(ctx)
 
@@ -322,7 +350,7 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 
 	// Additional fields.
 	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
-		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, string(v.Value))
+		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, v.Value)
 	}
 
 	setTagsOut(ctx, scraper.Tags)
@@ -356,7 +384,7 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
-			Value: []byte(new.ScrapeConfiguration.ValueString()),
+			Value: []byte(fwflex.StringValueFromFramework(ctx, new.ScrapeConfiguration)),
 		}
 		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
 
@@ -426,7 +454,8 @@ type scraperResourceModel struct {
 }
 
 type destinationModel struct {
-	AMP fwtypes.ListNestedObjectValueOf[ampConfigurationModel] `tfsdk:"amp"`
+	AMP        fwtypes.ListNestedObjectValueOf[ampConfigurationModel]        `tfsdk:"amp"`
+	CloudWatch fwtypes.ListNestedObjectValueOf[cloudWatchConfigurationModel] `tfsdk:"cloudwatch"`
 }
 
 var (
@@ -451,6 +480,18 @@ func (m destinationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 			return nil, diags
 		}
 		v = &apiObject
+	case !m.CloudWatch.IsNull():
+		data, d := m.CloudWatch.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.DestinationMemberCloudWatchConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
 	}
 
 	return v, diags
@@ -467,6 +508,13 @@ func (m *destinationModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 			return diags
 		}
 		m.AMP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.DestinationMemberCloudWatchConfiguration:
+		var data cloudWatchConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.CloudWatch = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	}
 
 	return diags
@@ -474,6 +522,10 @@ func (m *destinationModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 
 type ampConfigurationModel struct {
 	WorkspaceARN fwtypes.ARN `tfsdk:"workspace_arn"`
+}
+
+type cloudWatchConfigurationModel struct {
+	DatasetARN fwtypes.ARN `tfsdk:"dataset_arn"`
 }
 
 type sourceModel struct {

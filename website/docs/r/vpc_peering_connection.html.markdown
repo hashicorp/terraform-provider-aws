@@ -135,11 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `accept_status` - The status of the VPC Peering Connection request.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Notes
-
-If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
-The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
-or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
+~> **Note:** If both VPCs are not in the same AWS account and region, do not enable the `auto_accept` attribute. The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource or accept manually via the AWS Management Console, CLI, or SDKs.
 
 ## Timeouts
 

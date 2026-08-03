@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_fsx_windows_file_system: Fix plan-time validation of `throughput_capacity` validation to allow values up to `12228`
-```

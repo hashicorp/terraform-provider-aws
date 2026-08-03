@@ -40,7 +40,7 @@ resource "aws_launch_configuration" "as_conf" {
 }
 ```
 
-## Using with AutoScaling Groups
+### Using with AutoScaling Groups
 
 Launch Configurations cannot be updated after creation with the Amazon
 Web Service API. In order to update a Launch Configuration, Terraform will
@@ -93,7 +93,7 @@ With this setup Terraform generates a unique name for your Launch
 Configuration and can then update the AutoScaling Group without conflict before
 destroying the previous Launch Configuration.
 
-## Using with Spot Instances
+### Using with Spot Instances
 
 Launch configurations can set the spot instance pricing to be used for the
 Auto Scaling Group to reserve instances. Simply specifying the `spot_price`
@@ -165,7 +165,7 @@ The following arguments are optional:
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
 * `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 
-## Block devices
+### Block devices
 
 Each of the `*_block_device` attributes controls a portion of the AWS
 Launch Configuration's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device

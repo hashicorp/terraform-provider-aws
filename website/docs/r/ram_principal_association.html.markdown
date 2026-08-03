@@ -49,15 +49,15 @@ resource "aws_ram_principal_association" "example" {
 
 This resource supports the following arguments:
 
+* `principal` - (Required) Principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ARN, or an AWS Organizations Organization Unit ARN.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `principal` - (Required) The principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ARN, or an AWS Organizations Organization Unit ARN.
-* `resource_share_arn` - (Required) The Amazon Resource Name (ARN) of the resource share.
+* `resource_share_arn` - (Required) Amazon Resource Name (ARN) of the resource share.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the Resource Share and the principal, separated by a comma.
+* `id` - Amazon Resource Name (ARN) of the Resource Share and the principal, separated by a comma.
 
 ## Import
 

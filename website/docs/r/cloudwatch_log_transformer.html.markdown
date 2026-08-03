@@ -305,6 +305,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_transformer.example
+  identity = {
+    "log_group_arn" = "arn:aws:logs:us-west-2:123456789012:log-group:example"
+  }
+}
+
+resource "aws_cloudwatch_log_transformer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `log_group_arn` (String) Amazon Resource Name (ARN) of the CloudWatch Logs log group.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Transformer using the `log_group_arn`. For example:
 
 ```terraform

@@ -5,8 +5,10 @@ package glue
 
 // Exports for use in tests only.
 var (
+	FlattenViewRepresentation  = flattenViewRepresentation
+	FlattenViewRepresentations = flattenViewRepresentations
+
 	ResourceCatalog                       = newCatalogResource
-	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
 	ResourceClassifier                    = resourceClassifier

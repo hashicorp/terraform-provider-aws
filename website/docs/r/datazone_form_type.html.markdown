@@ -125,6 +125,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `owning_project_id` - Owning project id of the Form Type.
 * `revision` - Revision of the Form Type.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30s`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

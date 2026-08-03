@@ -46,21 +46,23 @@ func resourceHostedZoneDNSSEC() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"signing_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  serveSignatureSigning,
-				ValidateFunc: validation.StringInSlice([]string{
-					serveSignatureSigning,
-					serveSignatureNotSigning,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"signing_status": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  serveSignatureSigning,
+					ValidateFunc: validation.StringInSlice([]string{
+						serveSignatureSigning,
+						serveSignatureNotSigning,
+					}, false),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

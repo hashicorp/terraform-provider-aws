@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -38,7 +39,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_policy_engine", name="Policy Engine")
 // @Tags(identifierAttribute="policy_engine_arn")
 // @Testing(hasNoPreExistingResource=true)
@@ -54,10 +54,6 @@ func newPolicyEngineResource(_ context.Context) (resource.ResourceWithConfigure,
 
 	return r, nil
 }
-
-const (
-	ResNamePolicyEngine = "Policy Engine"
-)
 
 type policyEngineResource struct {
 	framework.ResourceWithModel[policyEngineResourceModel]
@@ -120,13 +116,13 @@ func (r *policyEngineResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 func (r *policyEngineResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
 	var plan policyEngineResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var input bedrockagentcorecontrol.CreatePolicyEngineInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
@@ -145,13 +141,10 @@ func (r *policyEngineResource) Create(ctx context.Context, req resource.CreateRe
 
 	policyEngineID := aws.ToString(out.PolicyEngineId)
 
-	if _, err := waitPolicyEngineCreated(ctx, conn, policyEngineID, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
-		return
-	}
-
-	policyEngine, err := findPolicyEngineByID(ctx, conn, policyEngineID)
+	policyEngine, err := waitPolicyEngineCreated(ctx, conn, policyEngineID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("policy_engine_id"), policyEngineID)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 		return
 	}
@@ -166,22 +159,23 @@ func (r *policyEngineResource) Create(ctx context.Context, req resource.CreateRe
 }
 
 func (r *policyEngineResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
 	var state policyEngineResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPolicyEngineByID(ctx, conn, state.PolicyEngineID.ValueString())
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	policyEngineID := fwflex.StringValueFromFramework(ctx, state.PolicyEngineID)
+	out, err := findPolicyEngineByID(ctx, conn, policyEngineID)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PolicyEngineID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 		return
 	}
 
@@ -203,27 +197,35 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// Only description can be updated in place.
-	// Description removal is sent to AWS and any API error is surfaced to the user.
-	if !plan.Description.Equal(state.Description) {
-		descriptionValue := plan.Description.ValueString()
-		description := &awstypes.UpdatedDescription{
-			OptionalValue: &descriptionValue,
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		policyEngineID := fwflex.StringValueFromFramework(ctx, plan.PolicyEngineID)
+		var input bedrockagentcorecontrol.UpdatePolicyEngineInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNamesAppend("Description")))
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		input := bedrockagentcorecontrol.UpdatePolicyEngineInput{
-			PolicyEngineId: plan.PolicyEngineID.ValueStringPointer(),
-			Description:    description,
+		if !plan.Description.Equal(state.Description) {
+			input.Description = &awstypes.UpdatedDescription{}
+			if !plan.Description.IsNull() {
+				input.Description.OptionalValue = plan.Description.ValueStringPointer()
+			}
 		}
 
 		_, err := conn.UpdatePolicyEngine(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 			return
 		}
 
-		if _, err := waitPolicyEngineUpdated(ctx, conn, plan.PolicyEngineID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PolicyEngineID.String())
+		if _, err := waitPolicyEngineUpdated(ctx, conn, policyEngineID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, policyEngineID)
 			return
 		}
 	}
@@ -232,16 +234,15 @@ func (r *policyEngineResource) Update(ctx context.Context, req resource.UpdateRe
 }
 
 func (r *policyEngineResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
 	var state policyEngineResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policyEngineID := state.PolicyEngineID.ValueString()
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	policyEngineID := fwflex.StringValueFromFramework(ctx, state.PolicyEngineID)
 	input := bedrockagentcorecontrol.DeletePolicyEngineInput{
 		PolicyEngineId: aws.String(policyEngineID),
 	}
@@ -334,7 +335,11 @@ func findPolicyEngineByID(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 		PolicyEngineId: aws.String(id),
 	}
 
-	out, err := conn.GetPolicyEngine(ctx, &input)
+	return findPolicyEngine(ctx, conn, &input)
+}
+
+func findPolicyEngine(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetPolicyEngineInput) (*bedrockagentcorecontrol.GetPolicyEngineOutput, error) {
+	out, err := conn.GetPolicyEngine(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{

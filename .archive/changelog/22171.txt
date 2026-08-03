@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_networkfirewall_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
-```

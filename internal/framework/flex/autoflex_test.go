@@ -76,15 +76,6 @@ func diagAFEmpty() diag.Diagnostics {
 	return diag.Diagnostics{}
 }
 
-// setFieldValue sets a field value in a struct using reflection
-func setFieldValue(structPtr any, fieldName string, value any) {
-	v := reflect.ValueOf(structPtr).Elem()
-	field := v.FieldByName(fieldName)
-	if field.IsValid() && field.CanSet() {
-		field.Set(reflect.ValueOf(value))
-	}
-}
-
 func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks, opts ...cmp.Option) {
 	t.Helper()
 	for testName, tc := range testCases {
