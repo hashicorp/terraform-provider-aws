@@ -848,22 +848,24 @@ func (r *ruleSetResource) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *ruleSetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
 	var state ruleSetResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	id := state.ID.ValueString()
+
+	conn := r.Meta().MailManagerClient(ctx)
+
+	ruleSetID := state.ID.ValueString()
 	input := mailmanager.DeleteRuleSetInput{
-		RuleSetId: aws.String(id),
+		RuleSetId: aws.String(ruleSetID),
 	}
 	_, err := conn.DeleteRuleSet(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleSetID)
 	}
 }
 
