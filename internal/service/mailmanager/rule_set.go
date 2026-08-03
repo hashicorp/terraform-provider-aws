@@ -735,34 +735,43 @@ func writeToS3ActionBlock(ctx context.Context) schema.ListNestedBlock {
 }
 
 func (r *ruleSetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data ruleSetResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().MailManagerClient(ctx)
-	var plan ruleSetResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+
 	var input mailmanager.CreateRuleSetInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("RuleSet")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input, flex.WithFieldNamePrefix("RuleSet")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
+
 	out, err := conn.CreateRuleSet(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
-	created, err := findRuleSetByID(ctx, conn, aws.ToString(out.RuleSetId))
+
+	ruleSetID := aws.ToString(out.RuleSetId)
+	ruleSetOut, err := findRuleSetByID(ctx, conn, ruleSetID)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, aws.ToString(out.RuleSetId))
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ruleSetID)
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, created, &plan, flex.WithFieldNamePrefix("RuleSet")))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ruleSetOut, &data, flex.WithFieldNamePrefix("RuleSet")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *ruleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
