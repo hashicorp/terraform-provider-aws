@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -17,8 +18,15 @@ func TestRuntimeTargetConfigurationModel_schemaRoundTrip(t *testing.T) {
 	ctx := context.Background()
 	const payload = `{"openapi":"3.0.0","info":{"title":"Test API","version":"1.0.0"},"paths":{}}`
 
+	runtimeARN := arn.ARN{
+		Partition: "aws",
+		Service:   "bedrock-agentcore",
+		Region:    "us-east-1",
+		AccountID: "123456789012",
+		Resource:  "runtime/test",
+	}.String()
 	runtimeModel := runtimeTargetConfigurationModel{
-		ARN:       fwtypes.ARNValue("arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/test"),
+		ARN:       fwtypes.ARNValue(runtimeARN),
 		Qualifier: types.StringValue("DEFAULT"),
 		Schema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &apiSchemaConfigurationModel{
 			InlinePayload: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &inlinePayloadModel{

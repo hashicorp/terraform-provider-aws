@@ -2307,7 +2307,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     http {
       agentcore_runtime {
-        arn = "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/test"
+        arn = "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.name}:123456789012:runtime/test"
 
         schema {
 %[2]s
