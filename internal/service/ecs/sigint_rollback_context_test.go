@@ -30,9 +30,7 @@ func TestRollbackRoutine_parentWaitContextSurvivesRefreshCancel(t *testing.T) {
 
 	// Buggy attach: watch per-refresh child.
 	var buggyWG sync.WaitGroup
-	buggyWG.Add(1)
-	go func() {
-		defer buggyWG.Done()
+	buggyWG.Go(func() {
 		select {
 		case <-child.Done():
 			mu.Lock()
@@ -41,7 +39,7 @@ func TestRollbackRoutine_parentWaitContextSurvivesRefreshCancel(t *testing.T) {
 			close(childDoneSeen)
 		case <-stop:
 		}
-	}()
+	})
 
 	childCancel()
 	select {
