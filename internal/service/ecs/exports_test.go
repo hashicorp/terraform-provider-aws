@@ -29,6 +29,7 @@ var (
 	FindTag                                 = findTag
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
 	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
+	FlattenServiceVolumeConfigurations      = flattenServiceVolumeConfigurations
 	RoleNameFromARN                         = roleNameFromARN
 	ServiceNameFromARN                      = serviceNameFromARN
 	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
