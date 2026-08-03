@@ -492,19 +492,43 @@ func bounceActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[bounceActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "deliver_to_mailbox", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"diagnostic_message":    schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 256)}},
-			names.AttrMessage:       schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.LengthBetween(1, 500)}},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
-			"sender":                schema.StringAttribute{Required: true},
-			"smtp_reply_code": schema.StringAttribute{Required: true, Validators: []validator.String{
-				stringvalidator.RegexMatches(regexache.MustCompile(`^[45][0-9]{2}$`), "must be a 4xx or 5xx SMTP reply code"),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"action_failure_policy": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+					Optional:   true,
+				},
+				"diagnostic_message": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+				},
+				names.AttrMessage: schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 500),
+					},
+				},
+				names.AttrRoleARN: schema.StringAttribute{
+					Required: true,
+				},
+				"sender": schema.StringAttribute{
+					Required: true,
+				},
+				"smtp_reply_code": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[45][0-9]{2}$`), "must be a 4xx or 5xx SMTP reply code"),
+					},
+				},
+				names.AttrStatusCode: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[45]\.[0-9]{1,3}\.[0-9]{1,3}$`), "must be an enhanced SMTP status code beginning with 4 or 5"),
+					},
+				},
 			}},
-			names.AttrStatusCode: schema.StringAttribute{Required: true, Validators: []validator.String{
-				stringvalidator.RegexMatches(regexache.MustCompile(`^[45]\.[0-9]{1,3}\.[0-9]{1,3}$`), "must be an enhanced SMTP status code beginning with 4 or 5"),
-			}},
-		}},
 	}
 }
 
@@ -513,9 +537,16 @@ func deliverToMailboxActionBlock(ctx context.Context) schema.ListNestedBlock {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[deliverToMailboxActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_q_business", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			"mailbox_arn":           schema.StringAttribute{Required: true},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
+			"action_failure_policy": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+				Optional:   true,
+			},
+			"mailbox_arn": schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrRoleARN: schema.StringAttribute{
+				Required: true,
+			},
 		}},
 	}
 }
@@ -525,10 +556,25 @@ func deliverToQBusinessActionBlock(ctx context.Context) schema.ListNestedBlock {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[deliverToQBusinessActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "drop", "invoke_lambda", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
 		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			names.AttrApplicationID: schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(36, 36)}},
-			"index_id":              schema.StringAttribute{Required: true, Validators: []validator.String{stringvalidator.LengthBetween(36, 36)}},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
+			"action_failure_policy": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+				Optional:   true,
+			},
+			names.AttrApplicationID: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(36, 36),
+				},
+			},
+			"index_id": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(36, 36),
+				},
+			},
+			names.AttrRoleARN: schema.StringAttribute{
+				Required: true,
+			},
 		}},
 	}
 }
@@ -545,13 +591,27 @@ func invokeLambdaActionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[invokeLambdaActionModel](ctx),
 		Validators: actionUnionValidators("add_header", "archive", "bounce", "deliver_to_mailbox", "deliver_to_q_business", "drop", "publish_to_sns", "relay", "replace_recipient", "send", "write_to_s3"),
-		NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-			"action_failure_policy": schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](), Optional: true},
-			names.AttrFunctionARN:   schema.StringAttribute{Required: true},
-			"invocation_type":       schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.LambdaInvocationType](), Required: true},
-			"retry_time_minutes":    schema.Int32Attribute{Optional: true, Validators: []validator.Int32{int32validator.Between(0, 2160)}},
-			names.AttrRoleARN:       schema.StringAttribute{Required: true},
-		}},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"action_failure_policy": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ActionFailurePolicy](),
+					Optional:   true,
+				},
+				names.AttrFunctionARN: schema.StringAttribute{
+					Required: true,
+				},
+				"invocation_type": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.LambdaInvocationType](),
+					Required:   true,
+				},
+				"retry_time_minutes": schema.Int32Attribute{
+					Optional:   true,
+					Validators: []validator.Int32{int32validator.Between(0, 2160)},
+				},
+				names.AttrRoleARN: schema.StringAttribute{
+					Required: true,
+				},
+			}},
 	}
 }
 
