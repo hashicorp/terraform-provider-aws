@@ -875,14 +875,19 @@ func findRuleSetByID(ctx context.Context, conn *mailmanager.Client, id string) (
 	}
 	out, err := conn.GetRuleSet(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
+
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
+
 	if out == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
+
 	return out, nil
 }
 
@@ -908,27 +913,45 @@ func (m ruleSetConditionModel) Expand(ctx context.Context) (any, diag.Diagnostic
 	switch {
 	case !m.BooleanExpression.IsNull():
 		var x awstypes.RuleConditionMemberBooleanExpression
-		diags.Append(flex.Expand(ctx, m.BooleanExpression, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.BooleanExpression, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.DMARCExpression.IsNull():
 		var x awstypes.RuleConditionMemberDmarcExpression
-		diags.Append(flex.Expand(ctx, m.DMARCExpression, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.DMARCExpression, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.IPExpression.IsNull():
 		var x awstypes.RuleConditionMemberIpExpression
-		diags.Append(flex.Expand(ctx, m.IPExpression, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IPExpression, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.NumberExpression.IsNull():
 		var x awstypes.RuleConditionMemberNumberExpression
-		diags.Append(flex.Expand(ctx, m.NumberExpression, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.NumberExpression, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.StringExpression.IsNull():
 		var x awstypes.RuleConditionMemberStringExpression
-		diags.Append(flex.Expand(ctx, m.StringExpression, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.StringExpression, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.VerdictExpression.IsNull():
 		var x awstypes.RuleConditionMemberVerdictExpression
-		diags.Append(flex.Expand(ctx, m.VerdictExpression, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.VerdictExpression, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	}
 	return nil, diags
@@ -939,27 +962,45 @@ func (m *ruleSetConditionModel) Flatten(ctx context.Context, value any) diag.Dia
 	switch x := value.(type) {
 	case awstypes.RuleConditionMemberBooleanExpression:
 		var model ruleBooleanExpressionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.BooleanExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleConditionMemberDmarcExpression:
 		var model ruleDMARCExpressionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.DMARCExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleConditionMemberIpExpression:
 		var model ruleIPExpressionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.IPExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleConditionMemberNumberExpression:
 		var model ruleNumberExpressionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.NumberExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleConditionMemberStringExpression:
 		var model ruleStringExpressionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.StringExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleConditionMemberVerdictExpression:
 		var model ruleVerdictExpressionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.VerdictExpression = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	default:
 		diags.AddError("Unexpected Type", fmt.Sprintf("rule condition flatten: %T", value))
@@ -972,13 +1013,19 @@ func (m ruleBooleanEvaluateModel) Expand(ctx context.Context) (any, diag.Diagnos
 	switch {
 	case !m.Analysis.IsNull():
 		var x awstypes.RuleBooleanToEvaluateMemberAnalysis
-		diags.Append(flex.Expand(ctx, m.Analysis, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Analysis, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Attribute.IsNull():
 		return &awstypes.RuleBooleanToEvaluateMemberAttribute{Value: m.Attribute.ValueEnum()}, diags
 	case !m.IsInAddressList.IsNull():
 		var x awstypes.RuleBooleanToEvaluateMemberIsInAddressList
-		diags.Append(flex.Expand(ctx, m.IsInAddressList, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IsInAddressList, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	}
 	return nil, diags
@@ -989,13 +1036,19 @@ func (m *ruleBooleanEvaluateModel) Flatten(ctx context.Context, value any) diag.
 	switch x := value.(type) {
 	case awstypes.RuleBooleanToEvaluateMemberAnalysis:
 		var model analysisModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Analysis = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleBooleanToEvaluateMemberAttribute:
 		m.Attribute = fwtypes.StringEnumValue(x.Value)
 	case awstypes.RuleBooleanToEvaluateMemberIsInAddressList:
 		var model ruleIsInAddressListModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.IsInAddressList = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	default:
 		diags.AddError("Unexpected Type", fmt.Sprintf("rule boolean evaluate flatten: %T", value))
@@ -1038,7 +1091,10 @@ func (m ruleStringEvaluateModel) Expand(ctx context.Context) (any, diag.Diagnost
 	switch {
 	case !m.Analysis.IsNull():
 		var x awstypes.RuleStringToEvaluateMemberAnalysis
-		diags.Append(flex.Expand(ctx, m.Analysis, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Analysis, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Attribute.IsNull():
 		return &awstypes.RuleStringToEvaluateMemberAttribute{Value: m.Attribute.ValueEnum()}, diags
@@ -1055,7 +1111,10 @@ func (m *ruleStringEvaluateModel) Flatten(ctx context.Context, value any) diag.D
 	switch x := value.(type) {
 	case awstypes.RuleStringToEvaluateMemberAnalysis:
 		var model analysisModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Analysis = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleStringToEvaluateMemberAttribute:
 		m.Attribute = fwtypes.StringEnumValue(x.Value)
@@ -1074,7 +1133,10 @@ func (m ruleVerdictEvaluateModel) Expand(ctx context.Context) (any, diag.Diagnos
 	switch {
 	case !m.Analysis.IsNull():
 		var x awstypes.RuleVerdictToEvaluateMemberAnalysis
-		diags.Append(flex.Expand(ctx, m.Analysis, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Analysis, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Attribute.IsNull():
 		return &awstypes.RuleVerdictToEvaluateMemberAttribute{Value: m.Attribute.ValueEnum()}, diags
@@ -1087,7 +1149,10 @@ func (m *ruleVerdictEvaluateModel) Flatten(ctx context.Context, value any) diag.
 	switch x := value.(type) {
 	case awstypes.RuleVerdictToEvaluateMemberAnalysis:
 		var model analysisModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Analysis = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleVerdictToEvaluateMemberAttribute:
 		m.Attribute = fwtypes.StringEnumValue(x.Value)
@@ -1102,49 +1167,82 @@ func (m ruleSetActionModel) Expand(ctx context.Context) (any, diag.Diagnostics) 
 	switch {
 	case !m.AddHeader.IsNull():
 		var x awstypes.RuleActionMemberAddHeader
-		diags.Append(flex.Expand(ctx, m.AddHeader, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.AddHeader, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Archive.IsNull():
 		var x awstypes.RuleActionMemberArchive
-		diags.Append(flex.Expand(ctx, m.Archive, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Archive, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Bounce.IsNull():
 		var x awstypes.RuleActionMemberBounce
-		diags.Append(flex.Expand(ctx, m.Bounce, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Bounce, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.DeliverToMailbox.IsNull():
 		var x awstypes.RuleActionMemberDeliverToMailbox
-		diags.Append(flex.Expand(ctx, m.DeliverToMailbox, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.DeliverToMailbox, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.DeliverToQBusiness.IsNull():
 		var x awstypes.RuleActionMemberDeliverToQBusiness
-		diags.Append(flex.Expand(ctx, m.DeliverToQBusiness, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.DeliverToQBusiness, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Drop.IsNull():
 		return &awstypes.RuleActionMemberDrop{Value: awstypes.DropAction{}}, diags
 	case !m.InvokeLambda.IsNull():
 		var x awstypes.RuleActionMemberInvokeLambda
-		diags.Append(flex.Expand(ctx, m.InvokeLambda, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.InvokeLambda, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.PublishToSNS.IsNull():
 		var x awstypes.RuleActionMemberPublishToSns
-		diags.Append(flex.Expand(ctx, m.PublishToSNS, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.PublishToSNS, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Relay.IsNull():
 		var x awstypes.RuleActionMemberRelay
-		diags.Append(flex.Expand(ctx, m.Relay, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Relay, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.ReplaceRecipient.IsNull():
 		var x awstypes.RuleActionMemberReplaceRecipient
-		diags.Append(flex.Expand(ctx, m.ReplaceRecipient, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.ReplaceRecipient, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.Send.IsNull():
 		var x awstypes.RuleActionMemberSend
-		diags.Append(flex.Expand(ctx, m.Send, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.Send, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	case !m.WriteToS3.IsNull():
 		var x awstypes.RuleActionMemberWriteToS3
-		diags.Append(flex.Expand(ctx, m.WriteToS3, &x.Value)...)
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.WriteToS3, &x.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
 		return &x, diags
 	}
 	return nil, diags
@@ -1155,49 +1253,82 @@ func (m *ruleSetActionModel) Flatten(ctx context.Context, value any) diag.Diagno
 	switch x := value.(type) {
 	case awstypes.RuleActionMemberAddHeader:
 		var model addHeaderActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.AddHeader = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberArchive:
 		var model archiveActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Archive = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberBounce:
 		var model bounceActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Bounce = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberDeliverToMailbox:
 		var model deliverToMailboxActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.DeliverToMailbox = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberDeliverToQBusiness:
 		var model deliverToQBusinessActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.DeliverToQBusiness = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberDrop:
 		m.Drop = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dropActionModel{})
 	case awstypes.RuleActionMemberInvokeLambda:
 		var model invokeLambdaActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.InvokeLambda = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberPublishToSns:
 		var model publishToSNSActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.PublishToSNS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberRelay:
 		var model relayActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Relay = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberReplaceRecipient:
 		var model replaceRecipientActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.ReplaceRecipient = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberSend:
 		var model sendActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.Send = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	case awstypes.RuleActionMemberWriteToS3:
 		var model writeToS3ActionModel
-		diags.Append(flex.Flatten(ctx, x.Value, &model)...)
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, x.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
 		m.WriteToS3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	default:
 		diags.AddError("Unexpected Type", fmt.Sprintf("rule action flatten: %T", value))
