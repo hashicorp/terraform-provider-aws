@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_instance: Fix perpetual diff when `instance_market_options.market_type` is set to `capacity-block`
-```

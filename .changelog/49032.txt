@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: No longer replace resource when decreasing `warm_throughput` values
-```

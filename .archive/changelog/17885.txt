@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_maintenance_window_task: Prevent `ValidationException` error on update when priority is not set or 0
-```

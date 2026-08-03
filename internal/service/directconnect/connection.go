@@ -228,6 +228,10 @@ func resourceConnection() *schema.Resource {
 					Default:  false,
 					Optional: true,
 				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"vlan_id": {
@@ -306,6 +310,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	if !d.IsNewResource() && !d.Get("request_macsec").(bool) {
 		d.Set("request_macsec", aws.Bool(false))
 	}
+	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan_id", connection.Vlan)
 
 	return diags

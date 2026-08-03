@@ -371,9 +371,9 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		}
 
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
-		found, err := tfresource.AssertSingleValueResult(out.Memory.Strategies, func(v *awstypes.MemoryStrategy) bool {
+		found, err := tfresource.AssertSingleValueResult(tfslices.Filter(out.Memory.Strategies, func(v awstypes.MemoryStrategy) bool {
 			return aws.ToString(v.Name) == name
-		})
+		}))
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
@@ -495,9 +495,9 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				return
 			}
 
-			found, err := tfresource.AssertSingleValueResult(out.Memory.Strategies, func(v *awstypes.MemoryStrategy) bool {
+			found, err := tfresource.AssertSingleValueResult(tfslices.Filter(out.Memory.Strategies, func(v awstypes.MemoryStrategy) bool {
 				return aws.ToString(v.StrategyId) == memoryStrategyID
-			})
+			}))
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
