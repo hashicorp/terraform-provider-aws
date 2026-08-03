@@ -42,15 +42,15 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types;awstypes;awstypes.Policy")
 // @Testing(hasNoPreExistingResource=true)
 func newPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
-	return &policyResoource{}, nil
+	return &policyResource{}, nil
 }
 
-type policyResoource struct {
+type policyResource struct {
 	framework.ResourceWithModel[resourcePolicyModel]
 	framework.WithImportByIdentity
 }
 
-func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -177,7 +177,7 @@ func (r *policyResoource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *policyResoource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan resourcePolicyModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
@@ -208,7 +208,7 @@ func (r *policyResoource) Create(ctx context.Context, req resource.CreateRequest
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *policyResoource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state resourcePolicyModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -237,7 +237,7 @@ func (r *policyResoource) Read(ctx context.Context, req resource.ReadRequest, re
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
-func (r *policyResoource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state resourcePolicyModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -276,7 +276,7 @@ func (r *policyResoource) Update(ctx context.Context, req resource.UpdateRequest
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *policyResoource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourcePolicyModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -298,7 +298,7 @@ func (r *policyResoource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *policyResoource) flatten(ctx context.Context, policy *awstypes.Policy, data *resourcePolicyModel) diag.Diagnostics {
+func (r *policyResource) flatten(ctx context.Context, policy *awstypes.Policy, data *resourcePolicyModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, policy, data)...)

@@ -47,7 +47,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  newResourcePolicyAsListResource,
+			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_policy",
 			Name:     "Policy",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
