@@ -1175,16 +1175,23 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 	}
 }
 
-func gatewayTargetCreatedWaiterStates() (pending, target []string) {
-	return enum.Slice(awstypes.TargetStatusCreating),
-		enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth)
+type gatewayTargetWaiterStates struct {
+	pending []string
+	target  []string
+}
+
+func gatewayTargetCreatedWaiterStates() gatewayTargetWaiterStates {
+	return gatewayTargetWaiterStates{
+		pending: enum.Slice(awstypes.TargetStatusCreating),
+		target:  enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
+	}
 }
 
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
-	pending, target := gatewayTargetCreatedWaiterStates()
+	states := gatewayTargetCreatedWaiterStates()
 	stateConf := &retry.StateChangeConf{
-		Pending:                   pending,
-		Target:                    target,
+		Pending:                   states.pending,
+		Target:                    states.target,
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -1199,16 +1206,18 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 	return nil, smarterr.NewError(err)
 }
 
-func gatewayTargetUpdatedWaiterStates() (pending, target []string) {
-	return enum.Slice(awstypes.TargetStatusUpdating),
-		enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth)
+func gatewayTargetUpdatedWaiterStates() gatewayTargetWaiterStates {
+	return gatewayTargetWaiterStates{
+		pending: enum.Slice(awstypes.TargetStatusUpdating),
+		target:  enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
+	}
 }
 
 func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
-	pending, target := gatewayTargetUpdatedWaiterStates()
+	states := gatewayTargetUpdatedWaiterStates()
 	stateConf := &retry.StateChangeConf{
-		Pending:                   pending,
-		Target:                    target,
+		Pending:                   states.pending,
+		Target:                    states.target,
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,

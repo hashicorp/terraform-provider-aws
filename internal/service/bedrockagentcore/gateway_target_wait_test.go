@@ -15,19 +15,22 @@ func TestGatewayTargetWaiterStates(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		states      func() (pending, target []string)
-		wantPending []string
-		wantTarget  []string
+		states func() gatewayTargetWaiterStates
+		want   gatewayTargetWaiterStates
 	}{
 		"create": {
-			states:      gatewayTargetCreatedWaiterStates,
-			wantPending: enum.Slice(awstypes.TargetStatusCreating),
-			wantTarget:  enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
+			states: gatewayTargetCreatedWaiterStates,
+			want: gatewayTargetWaiterStates{
+				pending: enum.Slice(awstypes.TargetStatusCreating),
+				target:  enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
+			},
 		},
 		"update": {
-			states:      gatewayTargetUpdatedWaiterStates,
-			wantPending: enum.Slice(awstypes.TargetStatusUpdating),
-			wantTarget:  enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
+			states: gatewayTargetUpdatedWaiterStates,
+			want: gatewayTargetWaiterStates{
+				pending: enum.Slice(awstypes.TargetStatusUpdating),
+				target:  enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
+			},
 		},
 	}
 
@@ -35,12 +38,8 @@ func TestGatewayTargetWaiterStates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			gotPending, gotTarget := test.states()
-			if diff := cmp.Diff(test.wantPending, gotPending); diff != "" {
-				t.Errorf("unexpected pending states (-want, +got):\n%s", diff)
-			}
-			if diff := cmp.Diff(test.wantTarget, gotTarget); diff != "" {
-				t.Errorf("unexpected target states (-want, +got):\n%s", diff)
+			if diff := cmp.Diff(test.want, test.states(), cmp.AllowUnexported(gatewayTargetWaiterStates{})); diff != "" {
+				t.Errorf("unexpected waiter states (-want, +got):\n%s", diff)
 			}
 		})
 	}
