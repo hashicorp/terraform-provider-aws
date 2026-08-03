@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,6 +47,19 @@ func (l *ruleSetListResource) List(ctx context.Context, request list.ListRequest
 
 			id := aws.ToString(item.RuleSetId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
+
+			var out *mailmanager.GetRuleSetOutput
+			if request.IncludeResource {
+				out, err = findRuleSetByID(ctx, conn, id)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 			var data ruleSetResourceModel
 
@@ -54,12 +68,7 @@ func (l *ruleSetListResource) List(ctx context.Context, request list.ListRequest
 				data.Name = types.StringPointerValue(item.RuleSetName)
 
 				if request.IncludeResource {
-					output, err := findRuleSetByID(ctx, conn, id)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewListResultErrorDiagnostic(err).Diagnostics...)
-						return
-					}
-					result.Diagnostics.Append(flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("RuleSet"))...)
+					result.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("RuleSet"))...)
 					if result.Diagnostics.HasError() {
 						return
 					}
