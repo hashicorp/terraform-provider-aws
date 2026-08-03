@@ -45,6 +45,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "scraper/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "0"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(scraper.ScraperId))(s)
 					},
@@ -52,6 +53,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -255,6 +257,43 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "role_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_cloudWatchDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_cloudWatchDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination.0.cloudwatch.0.dataset_arn"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "1"),
 				),
 			},
 			{
@@ -706,6 +745,61 @@ resource "aws_prometheus_workspace" "test" {
 
   tags = {
     AMPAgentlessScraper = ""
+  }
+}
+`, rName))
+}
+
+func testAccScraperConfig_cloudWatchDestination(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "%[1]s.local"
+  vpc  = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+  }
+}
+
+resource "aws_prometheus_scraper" "test" {
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+
+scrape_configs:
+  - job_name: 'test-service'
+    dns_sd_configs:
+      - names: ['${aws_service_discovery_service.test.name}.${aws_service_discovery_private_dns_namespace.test.name}']
+        type: A
+        port: 80
+    metrics_path: '/metrics'
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    cloudwatch {
+      dataset_arn = "arn:${data.aws_partition.current.partition}:cloudwatch:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dataset/default"
+    }
   }
 }
 `, rName))

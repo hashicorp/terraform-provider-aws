@@ -54,9 +54,9 @@ resource "aws_finspace_kx_user" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) A unique identifier for the user.
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `iam_role` - (Required) IAM role ARN to be associated with the user.
+* `name` - (Required) Unique identifier for the user.
 
 The following arguments are optional:
 
@@ -68,7 +68,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifier of the KX user.
-* `id` - A comma-delimited string joining environment ID and user name.
+* `id` - Comma-delimited string joining environment ID and user name.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
