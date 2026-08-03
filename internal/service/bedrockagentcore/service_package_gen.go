@@ -167,6 +167,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newPaymentConnectorResource,
+			TypeName: "aws_bedrockagentcore_payment_connector",
+			Name:     "Payment Connector",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("payment_manager_id", true),
+				inttypes.StringIdentityAttribute("payment_connector_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      paymentConnectorImportID{},
+			},
+		},
+		{
 			Factory:  newPaymentCredentialProviderResource,
 			TypeName: "aws_bedrockagentcore_payment_credential_provider",
 			Name:     "Payment Credential Provider",
