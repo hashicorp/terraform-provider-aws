@@ -246,7 +246,7 @@ func testHarnessAPIKeyARN() string {
 		Partition: "aws",
 		Service:   "bedrock-agentcore",
 		Region:    "us-east-1",
-		AccountID: "123456789012",
+		AccountID: "123456789012", // nosemgrep:ci.literal-12Digit-string-test-constant
 		Resource:  "api-key/test",
 	}.String()
 }
