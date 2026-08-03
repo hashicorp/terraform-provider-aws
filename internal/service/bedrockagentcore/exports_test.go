@@ -54,6 +54,7 @@ type (
 	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
 	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
 	ManagedVPCResourceModel                = managedVPCResourceModel
+	MemoryRecordSchemaModel                = memoryRecordSchemaModel
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel
