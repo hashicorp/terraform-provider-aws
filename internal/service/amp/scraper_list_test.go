@@ -130,7 +130,8 @@ func TestAccAMPScraper_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAlias), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkScraperARN),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDestination), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"amp": knownvalue.ListSizeExact(1),
+							"amp":        knownvalue.ListSizeExact(1),
+							"cloudwatch": knownvalue.ListSizeExact(0),
 						})})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
