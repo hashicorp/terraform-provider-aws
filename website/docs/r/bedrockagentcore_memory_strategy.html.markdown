@@ -229,10 +229,10 @@ The `memory_record_schema` block supports the following:
 
 The `metadata_schema` block supports the following:
 
+* `extraction_config` - (Optional) Configuration for extracting this metadata value from conversational content. Applicable only when `extraction_type` is `LLM_INFERRED`. See [`extraction_config` Block](#extraction_config-block) below.
 * `extraction_type` - (Optional) Whether the metadata value is extracted by the LLM or passed through deterministically from the event. Valid values: `LLM_INFERRED`, `STRICTLY_CONSISTENT`.
 * `key` - (Required) Metadata field name. Must match an indexed key to be queryable via metadata filters.
 * `type` - (Optional) Metadata value type. Valid values: `STRING`, `STRINGLIST`, `NUMBER`.
-* `extraction_config` - (Optional) Configuration for extracting this metadata value from conversational content. Applicable only when `extraction_type` is `LLM_INFERRED`. See [`extraction_config` Block](#extraction_config-block) below.
 
 ### `extraction_config` Block
 
