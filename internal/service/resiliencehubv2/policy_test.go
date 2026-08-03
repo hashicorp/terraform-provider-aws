@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresiliencehubv2 "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehubv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -138,9 +139,16 @@ func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestC
 			}
 
 			_, err := tfresiliencehubv2.FindPolicyByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-			if err == nil {
-				return fmt.Errorf("Resilience Hub V2 Policy %s still exists", rs.Primary.Attributes[names.AttrARN])
+
+			if retry.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Resilience Hub V2 Policy %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
@@ -152,10 +160,6 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *aw
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Policy not found: %s", n)
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] == "" {
-			return fmt.Errorf("No Resilience Hub V2 Policy ARN is set")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)

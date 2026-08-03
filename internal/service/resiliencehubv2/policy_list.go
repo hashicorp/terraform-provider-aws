@@ -28,7 +28,7 @@ func newResourcePolicyAsListResource() list.ListResourceWithConfigure {
 var _ list.ListResource = &policyListResource{}
 
 type policyListResource struct {
-	resourcePolicy
+	policyResoource
 	framework.WithList
 }
 
