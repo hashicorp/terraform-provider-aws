@@ -21,7 +21,7 @@ func TestRuntimeTargetConfigurationModel_schemaRoundTrip(t *testing.T) {
 	runtimeARN := arn.ARN{
 		Partition: "aws",
 		Service:   "bedrock-agentcore",
-		Region:    "us-east-1",
+		Region:    "us-east-1", //lintignore:AWSAT003
 		AccountID: "123456789012", // nosemgrep:ci.literal-12Digit-string-test-constant
 		Resource:  "runtime/test",
 	}.String()
