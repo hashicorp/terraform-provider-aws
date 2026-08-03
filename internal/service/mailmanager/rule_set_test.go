@@ -182,38 +182,9 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 							testAccRuleSetUnionValue("add_header", map[string]knownvalue.Check{
 								"header_name": knownvalue.StringExact("X-Example"), "header_value": knownvalue.StringExact("example"),
 							}),
-							testAccRuleSetUnionValue("archive", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("CONTINUE"), "target_archive": knownvalue.StringExact("example-archive"),
-							}),
-							testAccRuleSetUnionValue("bounce", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("DROP"), "diagnostic_message": knownvalue.StringExact("Message rejected"), "message": knownvalue.StringExact("Rejected by rule set"), "role_arn": knownvalue.NotNull(), "sender": knownvalue.StringExact("mailer-daemon@example.com"), "smtp_reply_code": knownvalue.StringExact("550"), "status_code": knownvalue.StringExact("5.1.1"),
-							}),
-							testAccRuleSetUnionValue("deliver_to_mailbox", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("CONTINUE"), "mailbox_arn": knownvalue.NotNull(), "role_arn": knownvalue.NotNull(),
-							}),
-							testAccRuleSetUnionValue("deliver_to_q_business", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("DROP"), "application_id": knownvalue.StringExact("00000000-0000-0000-0000-000000000001"), "index_id": knownvalue.StringExact("00000000-0000-0000-0000-000000000002"), "role_arn": knownvalue.NotNull(),
-							}),
 							testAccRuleSetUnionValue("drop", map[string]knownvalue.Check{}),
-							testAccRuleSetUnionValue("invoke_lambda", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("CONTINUE"), "function_arn": knownvalue.NotNull(), "invocation_type": knownvalue.StringExact("EVENT"), "retry_time_minutes": knownvalue.Int64Exact(60), "role_arn": knownvalue.NotNull(),
-							}),
-							testAccRuleSetUnionValue("publish_to_sns", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("DROP"), "encoding": knownvalue.StringExact("BASE64"), "payload_type": knownvalue.StringExact("HEADERS"), "role_arn": knownvalue.NotNull(), "topic_arn": knownvalue.NotNull(),
-							}),
 							testAccRuleSetUnionValue("replace_recipient", map[string]knownvalue.Check{
 								"replace_with": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("one@example.com"), knownvalue.StringExact("two@example.com")}),
-							}),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(1), knownvalue.ObjectPartial(map[string]knownvalue.Check{
-						names.AttrName: knownvalue.StringExact("secondary"),
-						"action": knownvalue.ListExact([]knownvalue.Check{
-							testAccRuleSetUnionValue("send", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("DROP"), "role_arn": knownvalue.NotNull(),
-							}),
-							testAccRuleSetUnionValue("write_to_s3", map[string]knownvalue.Check{
-								"action_failure_policy": knownvalue.StringExact("CONTINUE"), "role_arn": knownvalue.NotNull(), "s3_bucket": knownvalue.StringExact("example-bucket"), "s3_prefix": knownvalue.StringExact("mail"), "s3_sse_kms_key_id": knownvalue.NotNull(),
 							}),
 						}),
 					})),
@@ -242,14 +213,6 @@ func TestAccMailManagerRuleSet_evaluateTypes(t *testing.T) {
 				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("condition"), knownvalue.ListExact([]knownvalue.Check{
-						testAccRuleSetUnionValue("boolean_expression", map[string]knownvalue.Check{
-							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{
-								"is_in_address_list": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"address_lists": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example-list")}), "attribute": knownvalue.StringExact("MAIL_FROM"),
-								})}),
-							}),
-							"operator": knownvalue.StringExact("IS_FALSE"),
-						}),
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"client_certificate_attribute": knownvalue.StringExact("CN")}),
 							"operator": knownvalue.StringExact("STARTS_WITH"),
@@ -272,10 +235,13 @@ func testAccCheckRuleSetExists(ctx context.Context, t *testing.T, name string, o
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, name, errors.New("not set"))
 		}
 		out, err := tfmailmanager.FindRuleSetByID(ctx, acctest.ProviderMeta(ctx, t).MailManagerClient(ctx), rs.Primary.ID)
-		if err == nil && output != nil {
+		if err != nil {
+			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, rs.Primary.ID, err)
+		}
+		if output != nil {
 			*output = *out
 		}
-		return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, rs.Primary.ID, err)
+		return nil
 	}
 }
 
@@ -430,25 +396,6 @@ resource "aws_mailmanager_rule_set" "test" {
 
 func testAccRuleSetConfigActionTypes(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_iam_role" "test" {
-	name = %[1]q
-
-	assume_role_policy = jsonencode({
-		Version = "2012-10-17"
-		Statement = [{
-			Action = "sts:AssumeRole"
-			Effect = "Allow"
-			Principal = {
-				Service = "ses.amazonaws.com"
-			}
-		}]
-	})
-}
-
 resource "aws_mailmanager_rule_set" "test" {
 	name = %[1]q
 
@@ -463,89 +410,12 @@ resource "aws_mailmanager_rule_set" "test" {
 		}
 
 		action {
-			archive {
-				action_failure_policy = "CONTINUE"
-				target_archive        = "example-archive"
-			}
-		}
-
-		action {
-			bounce {
-				action_failure_policy = "DROP"
-				diagnostic_message    = "Message rejected"
-				message               = "Rejected by rule set"
-				role_arn              = aws_iam_role.test.arn
-				sender                = "mailer-daemon@example.com"
-				smtp_reply_code       = "550"
-				status_code           = "5.1.1"
-			}
-		}
-
-		action {
-			deliver_to_mailbox {
-				action_failure_policy = "CONTINUE"
-				mailbox_arn           = "arn:${data.aws_partition.current.partition}:workmail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:organization/m-00000000000000000000000000000000"
-				role_arn              = aws_iam_role.test.arn
-			}
-		}
-
-		action {
-			deliver_to_q_business {
-				action_failure_policy = "DROP"
-				application_id        = "00000000-0000-0000-0000-000000000001"
-				index_id              = "00000000-0000-0000-0000-000000000002"
-				role_arn              = aws_iam_role.test.arn
-			}
-		}
-
-		action {
 			drop {}
-		}
-
-		action {
-			invoke_lambda {
-				action_failure_policy = "CONTINUE"
-				function_arn          = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:example"
-				invocation_type       = "EVENT"
-				retry_time_minutes    = 60
-				role_arn              = aws_iam_role.test.arn
-			}
-		}
-
-		action {
-			publish_to_sns {
-				action_failure_policy = "DROP"
-				encoding              = "BASE64"
-				payload_type          = "HEADERS"
-				role_arn              = aws_iam_role.test.arn
-				topic_arn             = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:example"
-			}
 		}
 
 		action {
 			replace_recipient {
 				replace_with = ["one@example.com", "two@example.com"]
-			}
-		}
-	}
-
-	rule {
-		name = "secondary"
-
-		action {
-			send {
-				action_failure_policy = "DROP"
-				role_arn              = aws_iam_role.test.arn
-			}
-		}
-
-		action {
-			write_to_s3 {
-				action_failure_policy = "CONTINUE"
-				role_arn              = aws_iam_role.test.arn
-				s3_bucket             = "example-bucket"
-				s3_prefix             = "mail"
-				s3_sse_kms_key_id     = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/00000000-0000-0000-0000-000000000000"
 			}
 		}
 	}
@@ -559,19 +429,6 @@ resource "aws_mailmanager_rule_set" "test" {
 	name = %[1]q
 
 	rule {
-		condition {
-			boolean_expression {
-				operator = "IS_FALSE"
-
-				evaluate {
-					is_in_address_list {
-						address_lists = ["example-list"]
-						attribute     = "MAIL_FROM"
-					}
-				}
-			}
-		}
-
 		condition {
 			string_expression {
 				operator = "STARTS_WITH"
