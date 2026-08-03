@@ -245,6 +245,63 @@ func TestAccOpenSearchApplication_appConfigMultiple(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchApplication_appConfigAddGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var application opensearch.GetApplicationOutput
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")[:30]
+	resourceName := "aws_opensearch_application.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Start with only "users" configured.
+				Config: testAccApplicationConfig_appConfig1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Add "groups" alongside the existing "users" via update -- the
+				// literal scenario reported in #49240. Must converge like any
+				// other update: no perpetual diff on the next plan.
+				Config: testAccApplicationConfig_appConfigMultiple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "app_config.*", map[string]string{
+						names.AttrKey:   "opensearchDashboards.dashboardAdmin.users",
+						names.AttrValue: "admin-user",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "app_config.*", map[string]string{
+						names.AttrKey:   "opensearchDashboards.dashboardAdmin.groups",
+						names.AttrValue: "admin-group",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
