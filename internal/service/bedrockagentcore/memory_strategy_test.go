@@ -1777,14 +1777,14 @@ func TestAccBedrockAgentCoreMemoryStrategy_memoryRecordSchema(t *testing.T) {
 			},
 			// Step 1: Create SEMANTIC strategy with a memory_record_schema entry
 			{
-				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, "priority", "LLM_INFERRED", "STRING", "The priority of the record"),
+				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, names.AttrPriority, "LLM_INFERRED", "STRING", "The priority of the record"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
 					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.key", "priority"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.key", names.AttrPriority),
 					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_type", "LLM_INFERRED"),
 					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.type", "STRING"),
 					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.#", "1"),
@@ -1803,7 +1803,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_memoryRecordSchema(t *testing.T) {
 			},
 			// Step 2: Update the metadata entry definition (in-place)
 			{
-				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, "priority", "LLM_INFERRED", "STRING", "Updated priority definition"),
+				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, names.AttrPriority, "LLM_INFERRED", "STRING", "Updated priority definition"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.definition", "Updated priority definition"),
@@ -2503,14 +2503,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_typeSwitchNonCustomToCustom(t *testin
 				),
 			},
 			{
-				// Plan-only: the bug was a crash during plan generation (the
-				// errorIfSingleBlockRemoved modifier read a null configuration type from
-				// the non-CUSTOM prior state). A successful non-empty plan proves the
-				// modifier no longer panics; applying is unnecessary (and avoids relying
-				// on a specific Bedrock model being enabled in the test region).
-				Config:             testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "consolidate", "anthropic.claude-3-sonnet-20240229-v1:0", "extract", "anthropic.claude-3-haiku-20240307-v1:0"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "consolidate", "anthropic.claude-3-sonnet-20240229-v1:0", "extract", "anthropic.claude-3-haiku-20240307-v1:0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -2625,7 +2623,8 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   memory_id                 = aws_bedrockagentcore_memory.test.id
   memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
   type                      = "SEMANTIC"
-  namespaces                = ["default"]%[2]s
+  namespaces                = ["default"]
+%[2]s
 }
 `, rName, descriptionLine))
 }
