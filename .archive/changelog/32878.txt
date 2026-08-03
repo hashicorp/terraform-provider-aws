@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Support `il-central-1` as a valid AWS Region
-```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_record: Fix the `type` attribute to no longer force resource replacement on change
-```

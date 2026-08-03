@@ -155,6 +155,40 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontRealtimeLogConfig_functionLogData(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RealtimeLogConfig
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	samplingRate := acctest.RandIntRange(t, 1, 100)
+	resourceName := "aws_cloudfront_realtime_log_config.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRealtimeLogConfigConfig_functionLogData(rName, samplingRate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "fields.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "viewer-request-log-data"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "viewer-response-log-data"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "sampling_rate", strconv.Itoa(samplingRate)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRealtimeLogConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
@@ -263,6 +297,29 @@ resource "aws_cloudfront_realtime_log_config" "test" {
   name          = %[1]q
   sampling_rate = %[2]d
   fields        = ["timestamp", "c-ip"]
+
+  endpoint {
+    stream_type = "Kinesis"
+
+    kinesis_stream_config {
+      role_arn   = aws_iam_role.test[0].arn
+      stream_arn = aws_kinesis_stream.test[0].arn
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test[0]]
+}
+`, rName, samplingRate))
+}
+
+func testAccRealtimeLogConfigConfig_functionLogData(rName string, samplingRate int) string {
+	return acctest.ConfigCompose(
+		testAccRealtimeLogBaseConfig(rName, 1),
+		fmt.Sprintf(`
+resource "aws_cloudfront_realtime_log_config" "test" {
+  name          = %[1]q
+  sampling_rate = %[2]d
+  fields        = ["timestamp", "viewer-request-log-data", "viewer-response-log-data"]
 
   endpoint {
     stream_type = "Kinesis"

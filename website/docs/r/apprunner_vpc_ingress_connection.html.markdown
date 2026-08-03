@@ -33,26 +33,26 @@ resource "aws_apprunner_vpc_ingress_connection" "example" {
 
 This resource supports the following arguments:
 
+* `ingress_vpc_configuration` - (Required) Specifications for the customer’s Amazon VPC and the related AWS PrivateLink VPC endpoint that are used to create the VPC Ingress Connection resource. See [`ingress_vpc_configuration` Block](#ingress_vpc_configuration-block) below for more details.
+* `name` - (Required) Name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) A name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
-* `service_arn` - (Required) The Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.
-* `ingress_vpc_configuration` - (Required) Specifications for the customer’s Amazon VPC and the related AWS PrivateLink VPC endpoint that are used to create the VPC Ingress Connection resource. See [Ingress VPC Configuration](#ingress-vpc-configuration) below for more details.
+* `service_arn` - (Required) Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Ingress VPC Configuration
+### `ingress_vpc_configuration` Block
 
 The `ingress_vpc_configuration` block supports the following argument:
 
-* `vpc_id` - (Required) The ID of the VPC that is used for the VPC endpoint.
-* `vpc_endpoint_id` - (Required) The ID of the VPC endpoint that your App Runner service connects to.
+* `vpc_endpoint_id` - (Required) ID of the VPC endpoint that your App Runner service connects to.
+* `vpc_id` - (Required) ID of the VPC that is used for the VPC endpoint.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the VPC Ingress Connection.
-* `domain_name` - The domain name associated with the VPC Ingress Connection resource.
-* `status` - The current status of the VPC Ingress Connection.
+* `arn` - Amazon Resource Name (ARN) of the VPC Ingress Connection.
+* `domain_name` - Domain name associated with the VPC Ingress Connection resource.
+* `status` - Current status of the VPC Ingress Connection.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

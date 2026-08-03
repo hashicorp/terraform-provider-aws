@@ -80,6 +80,7 @@ The value of `<resource_name>` must match the name of the associated resource ty
 When adding a List Resource for an existing resource type,
 extract the portion of the existing resource type's Read operation that flattens the API response into the resource data model into a new method `flatten`.
 For many resource types, this will simply call `flex.Flatten(...)`.
+The flattening behavior can be modified using AutoFlex options such as `flex.WithFieldNamePrefix(...)`.
 
 Both the List Resource and the resource type's Read operation should call the `flatten` function.
 
