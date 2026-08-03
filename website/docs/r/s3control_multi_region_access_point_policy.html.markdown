@@ -57,16 +57,16 @@ resource "aws_s3control_multi_region_access_point_policy" "example" {
 
 This resource supports the following arguments:
 
+* `account_id` - (Optional) AWS account ID for the owner of the Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `details` - (Required) Configuration block containing details about the policy for the Multi-Region Access Point. See [`details` Block](#details) below for more details
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `account_id` - (Optional) The AWS account ID for the owner of the Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `details` - (Required) A configuration block containing details about the policy for the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 
-### Details Configuration
+### `details` Block
 
-The `details` block supports the following:
+The `details` configuration block supports the following arguments:
 
-* `name` - (Required) The name of the Multi-Region Access Point.
-* `policy` - (Required) A valid JSON document that specifies the policy that you want to associate with this Multi-Region Access Point. Once applied, the policy can be edited, but not deleted. For more information, see the documentation on [Multi-Region Access Point Permissions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointPermissions.html).
+* `name` - (Required) Name of the Multi-Region Access Point.
+* `policy` - (Required) Valid JSON document that specifies the policy that you want to associate with this Multi-Region Access Point. Once applied, the policy can be edited, but not deleted. For more information, see the documentation on [Multi-Region Access Point Permissions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointPermissions.html).
 
 -> **NOTE:** When you update the `policy`, the update is first listed as the proposed policy. After the update is finished and all Regions have been updated, the proposed policy is listed as the established policy. If both policies have the same version number, the proposed policy is the established policy.
 
@@ -74,9 +74,9 @@ The `details` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `established` - The last established policy for the Multi-Region Access Point.
-* `id` - The AWS account ID and access point name separated by a colon (`:`).
-* `proposed` - The proposed policy for the Multi-Region Access Point.
+* `established` - Last established policy for the Multi-Region Access Point.
+* `id` - AWS account ID and access point name separated by a colon (`:`).
+* `proposed` - Proposed policy for the Multi-Region Access Point.
 
 ## Timeouts
 
