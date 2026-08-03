@@ -1175,13 +1175,16 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 	}
 }
 
+func gatewayTargetCreatedWaiterStates() (pending, target []string) {
+	return enum.Slice(awstypes.TargetStatusCreating),
+		enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth)
+}
+
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+	pending, target := gatewayTargetCreatedWaiterStates()
 	stateConf := &retry.StateChangeConf{
-		// CREATE_PENDING_AUTH is a transitional state for OAuth 3LO targets awaiting
-		// user consent; treat it as pending so the waiter keeps polling instead of
-		// failing with "unexpected state CREATE_PENDING_AUTH".
-		Pending:                   enum.Slice(awstypes.TargetStatusCreating, awstypes.TargetStatusCreatePendingAuth),
-		Target:                    enum.Slice(awstypes.TargetStatusReady),
+		Pending:                   pending,
+		Target:                    target,
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -1196,12 +1199,16 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 	return nil, smarterr.NewError(err)
 }
 
+func gatewayTargetUpdatedWaiterStates() (pending, target []string) {
+	return enum.Slice(awstypes.TargetStatusUpdating),
+		enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth)
+}
+
 func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+	pending, target := gatewayTargetUpdatedWaiterStates()
 	stateConf := &retry.StateChangeConf{
-		// UPDATE_PENDING_AUTH is a transitional state for OAuth 3LO targets awaiting
-		// user consent; treat it as pending rather than an unexpected state.
-		Pending:                   enum.Slice(awstypes.TargetStatusUpdating, awstypes.TargetStatusUpdatePendingAuth),
-		Target:                    enum.Slice(awstypes.TargetStatusReady),
+		Pending:                   pending,
+		Target:                    target,
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,

@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_bedrockagentcore_gateway_target: Add `mcp_tool_schema` configuration block and `resource_priority` argument to the `mcp_server` target configuration
 ```
+
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Treat OAuth `CREATE_PENDING_AUTH` and `UPDATE_PENDING_AUTH` statuses as successful terminal states
+```
