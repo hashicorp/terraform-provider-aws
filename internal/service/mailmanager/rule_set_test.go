@@ -43,12 +43,12 @@ func TestAccMailManagerRuleSet_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleSetExists(ctx, t, resourceName, nil),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`.+`)),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modification_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.0.header_name", "X-Example"),
@@ -120,41 +120,41 @@ func TestAccMailManagerRuleSet_conditionTypes(t *testing.T) {
 				Config: testAccRuleSetConfigConditionTypes(rName),
 				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("condition"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrCondition), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("boolean_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("TLS")}),
 							"operator": knownvalue.StringExact("IS_TRUE"),
 						}),
 						testAccRuleSetUnionValue("dmarc_expression", map[string]knownvalue.Check{
 							"operator": knownvalue.StringExact("NOT_EQUALS"),
-							"values":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("REJECT")}),
+							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("REJECT")}),
 						}),
 						testAccRuleSetUnionValue("ip_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("SOURCE_IP")}),
 							"operator": knownvalue.StringExact("CIDR_MATCHES"),
-							"values":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("192.0.2.0/24")}),
+							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("192.0.2.0/24")}),
 						}),
 						testAccRuleSetUnionValue("number_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("MESSAGE_SIZE")}),
 							"operator": knownvalue.StringExact("GREATER_THAN"),
-							"value":    knownvalue.Float64Exact(1024),
+							names.AttrValue: knownvalue.Float64Exact(1024),
 						}),
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"mime_header_attribute": knownvalue.StringExact("X-Example")}),
 							"operator": knownvalue.StringExact("CONTAINS"),
-							"values":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example")}),
+							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example")}),
 						}),
 						testAccRuleSetUnionValue("verdict_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("DKIM")}),
 							"operator": knownvalue.StringExact("EQUALS"),
-							"values":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("PASS")}),
+							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("PASS")}),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("unless"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey("unless"), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"attribute": knownvalue.StringExact("MAIL_FROM")}),
 							"operator": knownvalue.StringExact("ENDS_WITH"),
-							"values":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("@example.com")}),
+							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("@example.com")}),
 						}),
 					})),
 				},
@@ -181,9 +181,9 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 				Config: testAccRuleSetConfigActionTypes(rName),
 				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						names.AttrName: knownvalue.StringExact("primary"),
-						"action": knownvalue.ListExact([]knownvalue.Check{
+						names.AttrAction: knownvalue.ListExact([]knownvalue.Check{
 							testAccRuleSetUnionValue("add_header", map[string]knownvalue.Check{
 								"header_name": knownvalue.StringExact("X-Example"), "header_value": knownvalue.StringExact("example"),
 							}),
@@ -217,11 +217,11 @@ func TestAccMailManagerRuleSet_evaluateTypes(t *testing.T) {
 				Config: testAccRuleSetConfigEvaluateTypes(rName),
 				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule").AtSliceIndex(0).AtMapKey("condition"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrCondition), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
 							"evaluate": testAccRuleSetEvaluateValue(map[string]knownvalue.Check{"client_certificate_attribute": knownvalue.StringExact("CN")}),
 							"operator": knownvalue.StringExact("STARTS_WITH"),
-							"values":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example")}),
+							names.AttrValues: knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("example")}),
 						}),
 					})),
 				},
