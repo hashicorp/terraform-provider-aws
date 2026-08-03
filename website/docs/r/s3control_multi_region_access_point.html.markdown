@@ -88,16 +88,13 @@ The `region` configuration block supports the following arguments:
 * `bucket` - (Required) Name of the associated bucket for the Region.
 * `bucket_account_id` - (Optional) AWS account ID that owns the Amazon S3 bucket that's associated with this Multi-Region Access Point.
 
-In addition to the arguments above, the following attribute is exported:
-
-* `region` - Name of the Region.
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `alias` - Alias for the Multi-Region Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
+* `details.region.region` - Name of the Region.
 * `domain_name` - DNS domain name of the S3 Multi-Region Access Point in the format _`alias`_.accesspoint.s3-global.amazonaws.com. For more information, see the documentation on [Multi-Region Access Point Requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointRequests.html).
 * `id` - AWS account ID and access point name separated by a colon (`:`).
 * `name` - Name of the Multi-Region Access Point.
