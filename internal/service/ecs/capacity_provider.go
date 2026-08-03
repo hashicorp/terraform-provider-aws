@@ -480,6 +480,19 @@ func resourceCapacityProvider() *schema.Resource {
 												},
 											},
 										},
+										"local_storage_configuration": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"use_local_storage": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
 										"monitoring": {
 											Type:             schema.TypeString,
 											Optional:         true,
@@ -519,19 +532,6 @@ func resourceCapacityProvider() *schema.Resource {
 														Required:     true,
 														ValidateFunc: validation.IntAtLeast(1),
 													},
-												},
-											},
-										},
-									},
-									"local_storage_configuration": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"use_local_storage": {
-													Type:     schema.TypeBool,
-													Optional: true,
 												},
 											},
 										},
