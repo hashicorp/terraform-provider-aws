@@ -191,7 +191,7 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 							}),
 							testAccRuleSetUnionValue("drop", map[string]knownvalue.Check{}),
 							testAccRuleSetUnionValue("replace_recipient", map[string]knownvalue.Check{
-								"replace_with": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact(acctest.DefaultEmailAddress), knownvalue.StringExact(acctest.DefaultEmailAddress)}),
+								"replace_with": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact(acctest.DefaultEmailAddress)}),
 							}),
 						}),
 					})),
@@ -423,7 +423,7 @@ resource "aws_mailmanager_rule_set" "test" {
 
     action {
       replace_recipient {
-        replace_with = [%[2]q, %[2]q]
+        replace_with = [%[2]q]
       }
     }
   }
