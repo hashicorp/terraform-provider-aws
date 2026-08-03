@@ -1,0 +1,57 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+data "aws_region" "current" {}
+
+resource "aws_resiliencehubv2_policy" "test" {
+  name = "${var.rName}-policy"
+
+  availability_slo {
+    target = 99.9
+  }
+}
+
+resource "aws_resiliencehubv2_service" "test" {
+  name       = "${var.rName}-service"
+  regions    = [data.aws_region.current.name]
+  policy_arn = aws_resiliencehubv2_policy.test.arn
+
+  permission_model {
+    invoker_role_name = "AWSResilienceHubAssessmentRole"
+  }
+}
+
+resource "aws_cloudformation_stack" "test" {
+  count = var.resource_count
+
+  name = "${var.rName}-${count.index}"
+
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+    Description              = "Test stack for NGRH input source"
+    Resources = {
+      WaitHandle = {
+        Type = "AWS::CloudFormation::WaitConditionHandle"
+      }
+    }
+  })
+}
+
+resource "aws_resiliencehubv2_input_source" "test" {
+  count = var.resource_count
+
+  service_arn   = aws_resiliencehubv2_service.test.arn
+  cfn_stack_arn = aws_cloudformation_stack.test[count.index].id
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}

@@ -7,6 +7,9 @@ package resiliencehubv2
 
 import (
 	"context"
+	"iter"
+	"slices"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
@@ -20,11 +23,189 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newPolicyDataSource,
+			TypeName: "aws_resiliencehubv2_policy",
+			Name:     "Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newServiceDataSource,
+			TypeName: "aws_resiliencehubv2_service",
+			Name:     "Service",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newSystemDataSource,
+			TypeName: "aws_resiliencehubv2_system",
+			Name:     "System",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceAssertion,
+			TypeName: "aws_resiliencehubv2_assertion",
+			Name:     "Assertion",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("assertion_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assertionImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
+			Factory:  newResourceInputSource,
+			TypeName: "aws_resiliencehubv2_input_source",
+			Name:     "Input Source",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("input_source_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      inputSourceImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
+			Factory:  newResourcePolicy,
+			TypeName: "aws_resiliencehubv2_policy",
+			Name:     "Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourceService,
+			TypeName: "aws_resiliencehubv2_service",
+			Name:     "Service",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourceServiceFunction,
+			TypeName: "aws_resiliencehubv2_service_function",
+			Name:     "Service Function",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("service_function_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      serviceFunctionImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
+			Factory:  newResourceSystem,
+			TypeName: "aws_resiliencehubv2_system",
+			Name:     "System",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newResourceAssertionAsListResource,
+			TypeName: "aws_resiliencehubv2_assertion",
+			Name:     "Assertion",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("assertion_id", true),
+			}),
+		},
+		{
+			Factory:  newResourceInputSourceAsListResource,
+			TypeName: "aws_resiliencehubv2_input_source",
+			Name:     "Input Source",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("input_source_id", true),
+			}),
+		},
+		{
+			Factory:  newResourcePolicyAsListResource,
+			TypeName: "aws_resiliencehubv2_policy",
+			Name:     "Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newResourceServiceAsListResource,
+			TypeName: "aws_resiliencehubv2_service",
+			Name:     "Service",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newResourceServiceFunctionAsListResource,
+			TypeName: "aws_resiliencehubv2_service_function",
+			Name:     "Service Function",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("service_function_id", true),
+			}),
+		},
+		{
+			Factory:  newResourceSystemAsListResource,
+			TypeName: "aws_resiliencehubv2_system",
+			Name:     "System",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
