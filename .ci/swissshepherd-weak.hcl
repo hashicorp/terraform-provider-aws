@@ -1629,7 +1629,6 @@ check "schema_docs" {
     "resource/aws_prometheus_query_logging_configuration",
     "resource/aws_prometheus_resource_policy",
     "resource/aws_prometheus_rule_group_namespace",
-    "resource/aws_prometheus_scraper",
     "resource/aws_prometheus_workspace_configuration",
     "resource/aws_prometheus_workspace",
     "resource/aws_proxy_protocol_policy",
