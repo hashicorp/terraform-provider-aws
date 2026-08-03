@@ -1989,6 +1989,8 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 }
 
 // Verifies wait_for_steady_state with sigint_rollback enabled without sending SIGINT.
+// Step 2 must create a new ECS service deployment (task-def change), because
+// rollbackRoutine only starts on that path — a desired_count-only update does not.
 // Pre-fix providers treated per-refresh context cancel as SIGINT and rolled back
 // healthy deployments (AWS reason: "Service deployment rolled back by user").
 func TestAccECSService_LaunchTypeFargate_waitForSteadyState_sigintRollbackNoSignal(t *testing.T) {
@@ -2004,7 +2006,7 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState_sigintRollbackNoSign
 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, 1),
+				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, "one"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
@@ -2013,10 +2015,10 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState_sigintRollbackNoSign
 				),
 			},
 			{
-				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, 2),
+				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, "two"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "sigint_rollback", acctest.CtTrue),
 				),
@@ -3699,14 +3701,42 @@ resource "aws_ecs_service" "test" {
 `, rName, desiredCount, waitForSteadyState))
 }
 
-func testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName string, desiredCount int) string {
+func testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, deploymentTrigger string) string {
 	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "service" {
+  family                   = "%[1]s-service"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc",
+    "environment": [
+      {
+        "name": "DEPLOYMENT_TRIGGER",
+        "value": "%[2]s"
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
 resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = %[2]d
-  launch_type     = "FARGATE"
+  name                 = %[1]q
+  cluster              = aws_ecs_cluster.test.id
+  task_definition      = aws_ecs_task_definition.service.arn
+  desired_count        = 1
+  launch_type          = "FARGATE"
+  force_new_deployment = true
 
   network_configuration {
     security_groups  = [aws_security_group.test[0].id]
@@ -3717,7 +3747,7 @@ resource "aws_ecs_service" "test" {
   wait_for_steady_state = true
   sigint_rollback       = true
 }
-`, rName, desiredCount))
+`, rName, deploymentTrigger))
 }
 
 func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {

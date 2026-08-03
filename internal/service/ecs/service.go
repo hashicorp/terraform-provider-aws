@@ -2368,8 +2368,11 @@ func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeployment
 	if err != nil {
 		return err
 	}
-	if slices.Contains(deploymentTerminalStates, status) {
-		log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
+	// Empty status means Describe returned no deployment; nothing to roll back.
+	if status == "" || slices.Contains(deploymentTerminalStates, status) {
+		if status != "" {
+			log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
+		}
 		return nil
 	}
 
@@ -2398,6 +2401,7 @@ func findRawServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, deplo
 		return "", err
 	}
 	if len(output) == 0 {
+		// Callers treat empty as "no deployment to act on".
 		return "", nil
 	}
 

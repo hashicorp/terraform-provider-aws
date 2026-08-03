@@ -5,82 +5,91 @@ package ecs
 
 import (
 	"context"
-	"sync/atomic"
+	"sync"
 	"testing"
 	"time"
 )
 
-// Demonstrates the bug: attaching rollbackRoutine to a per-refresh child
-// context (cancelled when the refresh returns) falsely triggers rollback.
-// The fix watches the parent wait context instead (closed over, not stored
-// on rollbackState — golangci containedctx forbids context.Context fields).
-func TestRollbackRoutine_ignoresRefreshContextCancel(t *testing.T) {
+// Documents the refresh-vs-wait context failure mode. This does not call
+// production wait/refresh code (no fake ECS client); the acceptance test
+// TestAccECSService_LaunchTypeFargate_waitForSteadyState_sigintRollbackNoSignal
+// is the regression guard for the service.go call site.
+func TestRollbackRoutine_parentWaitContextSurvivesRefreshCancel(t *testing.T) {
 	t.Parallel()
 
 	parent := t.Context()
-
-	var rollbacks atomic.Int32
-	stopped := make(chan struct{})
-	state := &rollbackState{
-		rollbackRoutineStopped: stopped,
-	}
-	state.waitGroup.Add(1)
-
-	// Simulate the buggy path: child context cancelled at end of refresh.
 	child, childCancel := context.WithCancel(parent)
 
-	done := make(chan struct{})
+	var (
+		mu        sync.Mutex
+		rollbacks int
+	)
+	childDoneSeen := make(chan struct{})
+	parentDoneSeen := make(chan struct{})
+	stop := make(chan struct{})
+
+	// Buggy attach: watch per-refresh child.
+	var buggyWG sync.WaitGroup
+	buggyWG.Add(1)
 	go func() {
-		defer close(done)
-		defer state.waitGroup.Done()
+		defer buggyWG.Done()
 		select {
 		case <-child.Done():
-			rollbacks.Add(1)
-		case <-stopped:
-			return
+			mu.Lock()
+			rollbacks++
+			mu.Unlock()
+			close(childDoneSeen)
+		case <-stop:
 		}
 	}()
 
-	childCancel() // end of refreshWithTimeout
-	time.Sleep(50 * time.Millisecond)
-	close(stopped)
-	state.waitGroup.Wait()
-	<-done
-
-	if rollbacks.Load() != 1 {
-		t.Fatalf("expected buggy child-context cancel to trigger rollback path, got %d", rollbacks.Load())
+	childCancel()
+	select {
+	case <-childDoneSeen:
+	case <-t.Context().Done():
+		t.Fatal("timed out waiting for buggy child-context cancel path")
 	}
+	buggyWG.Wait()
 
-	// Fixed path: watch parent wait context (closed over).
-	rollbacks.Store(0)
-	stopped2 := make(chan struct{})
-	state2 := &rollbackState{
-		rollbackRoutineStopped: stopped2,
+	mu.Lock()
+	if rollbacks != 1 {
+		mu.Unlock()
+		t.Fatalf("expected buggy child-context cancel to trigger rollback path, got %d", rollbacks)
 	}
-	state2.waitGroup.Add(1)
+	rollbacks = 0
+	mu.Unlock()
 
-	child2, child2Cancel := context.WithCancel(parent)
-	_ = child2
+	// Fixed attach: watch parent wait context (closed over).
+	_, child2Cancel := context.WithCancel(parent)
 	waitCtx := parent
-	done2 := make(chan struct{})
+	var fixedWG sync.WaitGroup
+	fixedWG.Add(1)
 	go func() {
-		defer close(done2)
-		defer state2.waitGroup.Done()
+		defer fixedWG.Done()
 		select {
 		case <-waitCtx.Done():
-			rollbacks.Add(1)
-		case <-stopped2:
-			return
+			mu.Lock()
+			rollbacks++
+			mu.Unlock()
+			close(parentDoneSeen)
+		case <-stop:
 		}
 	}()
 
-	child2Cancel() // refresh ends; parent still live
-	time.Sleep(50 * time.Millisecond)
-	close(stopped2)
-	state2.waitGroup.Wait()
-	<-done2
+	child2Cancel()
 
-	if rollbacks.Load() != 0 {
-		t.Fatalf("parent wait context should not roll back when only refresh child cancels, got %d", rollbacks.Load())
+	select {
+	case <-parentDoneSeen:
+		t.Fatal("parent wait context should not cancel when only refresh child cancels")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	close(stop)
+	fixedWG.Wait()
+
+	mu.Lock()
+	defer mu.Unlock()
+	if rollbacks != 0 {
+		t.Fatalf("parent wait context should not roll back when only refresh child cancels, got %d", rollbacks)
 	}
 }
