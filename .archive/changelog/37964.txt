@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_vpclattice_listener: Support `TLS_PASSTHROUGH` as a valid value for `protocol`
-```

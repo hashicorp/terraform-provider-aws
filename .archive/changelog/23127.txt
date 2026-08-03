@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpn_connection: Add support for `ipsec.1-aes256` connection type
-```

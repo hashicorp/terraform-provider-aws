@@ -19,8 +19,6 @@ files:
     - "**/when_string_test.go" # standard library generated files
     - "CHANGELOG.md"
     - ".changes/**"
-    - ".github/workflows/agentics-maintenance.yml" # Maintained by GitHub Agentic Workflows
-    - ".github/workflows/*.lock.yml" # Maintained by GitHub Agentic Workflows
   extensions:
     - ".css"
     - ".go"

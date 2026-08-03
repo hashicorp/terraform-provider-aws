@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -26,12 +27,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,7 +84,7 @@ func (r *securityConfigResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrType: schema.StringAttribute{
-				Description: "Type of configuration. Must be `saml`.",
+				Description: "Type of configuration. Valid values: `saml`, `iamidentitycenter` or `iamfederation`.",
 				CustomType:  fwtypes.StringEnumType[awstypes.SecurityConfigType](),
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -90,10 +93,95 @@ func (r *securityConfigResource) Schema(ctx context.Context, req resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"iam_federation_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamFederationConfigOptionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("iam_federation_options"),
+						path.MatchRoot("iam_identity_center_options"),
+						path.MatchRoot("saml_options"),
+					),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Description: "Group attribute.",
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`), "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
+								stringvalidator.AtLeastOneOf(
+									path.MatchRelative().AtParent().AtName("group_attribute"),
+									path.MatchRelative().AtParent().AtName("user_attribute"),
+								),
+							},
+						},
+						"user_attribute": schema.StringAttribute{
+							Description: "User attribute.",
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`), "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
+								stringvalidator.AtLeastOneOf(
+									path.MatchRelative().AtParent().AtName("group_attribute"),
+									path.MatchRelative().AtParent().AtName("user_attribute"),
+								),
+							},
+						},
+					},
+				},
+			},
+			"iam_identity_center_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[iamIdentityCenterConfigOptionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("iam_federation_options"),
+						path.MatchRoot("iam_identity_center_options"),
+						path.MatchRoot("saml_options"),
+					),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"instance_arn": schema.StringAttribute{
+							CustomType:  fwtypes.ARNType,
+							Description: "Instance ARN.",
+							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"group_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterGroupAttribute](),
+							Description: "Group attribute.",
+							Optional:    true,
+							Computed:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"user_attribute": schema.StringAttribute{
+							CustomType:  fwtypes.StringEnumType[awstypes.IamIdentityCenterUserAttribute](),
+							Description: "User attribute.",
+							Optional:    true,
+							Computed:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+					},
+				},
+			},
 			"saml_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("iam_federation_options"),
+						path.MatchRoot("iam_identity_center_options"),
+						path.MatchRoot("saml_options"),
+					),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -148,13 +236,13 @@ func (r *securityConfigResource) Create(ctx context.Context, req resource.Create
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 	var plan securityConfigResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := opensearchserverless.CreateSecurityConfigInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -162,34 +250,28 @@ func (r *securityConfigResource) Create(ctx context.Context, req resource.Create
 
 	out, err := conn.CreateSecurityConfig(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	if out == nil || out.SecurityConfigDetail == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			"Empty response.",
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty response"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *securityConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state securityConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -202,40 +284,37 @@ func (r *securityConfigResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityConfig, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *securityConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var plan, state securityConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	diff, diags := fwflex.Diff(ctx, plan, state)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		input := opensearchserverless.UpdateSecurityConfigInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNameSuffix("Updates")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -244,24 +323,24 @@ func (r *securityConfigResource) Update(ctx context.Context, req resource.Update
 
 		out, err := conn.UpdateSecurityConfig(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.SecurityConfigDetail, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *securityConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state securityConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -270,26 +349,27 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          state.ID.ValueStringPointer(),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameSecurityConfig, state.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
+		return
 	}
 }
 
 type securityConfigResourceModel struct {
 	framework.WithRegionModel
-	ID            types.String                                     `tfsdk:"id"`
-	ConfigVersion types.String                                     `tfsdk:"config_version"`
-	Description   types.String                                     `tfsdk:"description"`
-	Name          types.String                                     `tfsdk:"name"`
-	SamlOptions   fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
-	Type          fwtypes.StringEnum[awstypes.SecurityConfigType]  `tfsdk:"type"`
+	ID                       types.String                                                         `tfsdk:"id"`
+	ConfigVersion            types.String                                                         `tfsdk:"config_version"`
+	Description              types.String                                                         `tfsdk:"description"`
+	IamFederationOptions     fwtypes.ListNestedObjectValueOf[iamFederationConfigOptionsModel]     `tfsdk:"iam_federation_options"`
+	IamIdentityCenterOptions fwtypes.ListNestedObjectValueOf[iamIdentityCenterConfigOptionsModel] `tfsdk:"iam_identity_center_options"`
+	Name                     types.String                                                         `tfsdk:"name"`
+	SamlOptions              fwtypes.ListNestedObjectValueOf[samlOptionsData]                     `tfsdk:"saml_options"`
+	Type                     fwtypes.StringEnum[awstypes.SecurityConfigType]                      `tfsdk:"type"`
 }
 
 type samlOptionsData struct {
@@ -297,6 +377,17 @@ type samlOptionsData struct {
 	Metadata       types.String `tfsdk:"metadata"`
 	SessionTimeout types.Int64  `tfsdk:"session_timeout"`
 	UserAttribute  types.String `tfsdk:"user_attribute"`
+}
+
+type iamFederationConfigOptionsModel struct {
+	GroupAttribute types.String `tfsdk:"group_attribute"`
+	UserAttribute  types.String `tfsdk:"user_attribute"`
+}
+
+type iamIdentityCenterConfigOptionsModel struct {
+	InstanceArn    fwtypes.ARN                                                  `tfsdk:"instance_arn"`
+	GroupAttribute fwtypes.StringEnum[awstypes.IamIdentityCenterGroupAttribute] `tfsdk:"group_attribute"`
+	UserAttribute  fwtypes.StringEnum[awstypes.IamIdentityCenterUserAttribute]  `tfsdk:"user_attribute"`
 }
 
 type securityConfigImportID struct{}

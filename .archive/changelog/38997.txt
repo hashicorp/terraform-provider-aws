@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_cluster: Allow Web Service Data API (`enabled_http_endpoint`) to be enabled and disabled for `provisioned` engine mode and serverlessv2
-```
