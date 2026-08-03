@@ -369,8 +369,17 @@ func ruleVerdictExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: conditionUnionValidators("boolean_expression", "dmarc_expression", "ip_expression", "number_expression", "string_expression"),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"operator":       schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RuleVerdictOperator](), Required: true},
-				names.AttrValues: schema.ListAttribute{CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleVerdict](), Required: true, Validators: []validator.List{listvalidator.SizeBetween(1, 10)}},
+				"operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RuleVerdictOperator](),
+					Required:   true,
+				},
+				names.AttrValues: schema.ListAttribute{
+					CustomType: fwtypes.ListOfStringEnumType[awstypes.RuleVerdict](),
+					Required:   true,
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 10),
+					},
+				},
 			},
 			Blocks: map[string]schema.Block{
 				"evaluate": ruleVerdictEvaluateBlock(ctx),
@@ -382,19 +391,26 @@ func ruleVerdictExpressionBlock(ctx context.Context) schema.ListNestedBlock {
 func ruleVerdictEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleVerdictEvaluateModel](ctx),
-		Validators: []validator.List{listvalidator.SizeBetween(1, 1)},
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"attribute": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.RuleVerdictAttribute](), Optional: true,
-					Validators: []validator.String{stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis"))},
+					CustomType: fwtypes.StringEnumType[awstypes.RuleVerdictAttribute](),
+					Optional:   true,
+					Validators: []validator.String{
+						stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("analysis")),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
 				"analysis": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
-					Validators:   conditionUnionValidators("attribute"),
-					NestedObject: schema.NestedBlockObject{Attributes: analysisAttributes()},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[analysisModel](ctx),
+					Validators: conditionUnionValidators("attribute"),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: analysisAttributes(),
+					},
 				},
 			},
 		},
