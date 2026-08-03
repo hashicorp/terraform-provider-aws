@@ -458,7 +458,7 @@ type configurationData struct {
 	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
 	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
 	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
-	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"  autoflex:",noflatten"`
 }
 
 type retentionConfigurationData struct {
