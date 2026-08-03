@@ -805,41 +805,45 @@ func (r *ruleSetResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *ruleSetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().MailManagerClient(ctx)
 	var plan, state ruleSetResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().MailManagerClient(ctx)
+
 	diff, d := flex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	if diff.HasChanges() {
 		var input mailmanager.UpdateRuleSetInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("RuleSet")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if _, err := conn.UpdateRuleSet(ctx, &input); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		out, err := findRuleSetByID(ctx, conn, plan.ID.ValueString())
+		_, err := conn.UpdateRuleSet(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("RuleSet")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	} else {
-		// Tag updates are handled by the provider's tagging interceptor.
-		plan.ARN, plan.CreatedDate, plan.LastModificationDate = state.ARN, state.CreatedDate, state.LastModificationDate
 	}
+
+	out, err := findRuleSetByID(ctx, conn, plan.ID.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("RuleSet")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
