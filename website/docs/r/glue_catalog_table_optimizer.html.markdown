@@ -26,8 +26,8 @@ resource "aws_glue_catalog_table_optimizer" "example" {
 
     compaction_configuration {
       iceberg_configuration {
-        strategy = "binpack"
-        min_input_files = 5
+        strategy              = "binpack"
+        min_input_files       = 5
         delete_file_threshold = 1
       }
     }
