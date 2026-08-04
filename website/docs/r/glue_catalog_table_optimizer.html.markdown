@@ -122,7 +122,6 @@ This resource supports the following arguments:
     * `run_rate_in_hours` (Optional) - Interval in hours between retention job runs. Defaults to `24`.
     * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
 
- 
 ### Compaction Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg compaction optimizer.
