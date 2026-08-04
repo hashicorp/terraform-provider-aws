@@ -1,5 +1,27 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_prometheus_scraper_logging_configuration" "test" {
+  count = var.resource_count
+
+  scraper_id = aws_prometheus_scraper.test[count.index].id
+
+  logging_destination {
+    cloudwatch_logs {
+      log_group_arn = "${aws_cloudwatch_log_group.test[count.index].arn}:*"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  count = var.resource_count
+
+  name = "/aws/prometheus/scraper-logs/${var.rName}-${count.index}"
+}
+
 resource "aws_prometheus_scraper" "test" {
-{{- template "region" }}
+  count = var.resource_count
+
   scrape_configuration = <<CONFIG
 global:
   scrape_interval: 30s
@@ -69,7 +91,6 @@ CONFIG
       workspace_arn = aws_prometheus_workspace.test.arn
     }
   }
-{{- template "tags" . }}
 }
 
 data "aws_partition" "current" {}
@@ -99,7 +120,6 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
 }
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
   cidr_block = "10.0.0.0/16"
 
   assign_generated_ipv6_cidr_block = true
@@ -111,7 +131,6 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-{{- template "region" }}
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -128,7 +147,6 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_eks_cluster" "test" {
-{{- template "region" }}
   name     = var.rName
   role_arn = aws_iam_role.test.arn
 
@@ -140,7 +158,6 @@ resource "aws_eks_cluster" "test" {
 }
 
 resource "aws_prometheus_workspace" "test" {
-{{- template "region" }}
   alias = var.rName
 
   tags = {
@@ -149,11 +166,22 @@ resource "aws_prometheus_workspace" "test" {
 }
 
 data "aws_availability_zones" "available" {
-{{- template "region" }}
   state = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
   }
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }

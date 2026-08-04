@@ -1,3 +1,19 @@
+resource "aws_prometheus_scraper_logging_configuration" "test" {
+{{- template "region" }}
+  scraper_id = aws_prometheus_scraper.test.id
+
+  logging_destination {
+    cloudwatch_logs {
+      log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+{{- template "region" }}
+  name = "/aws/prometheus/scraper-logs/${var.rName}"
+}
+
 resource "aws_prometheus_scraper" "test" {
 {{- template "region" }}
   scrape_configuration = <<CONFIG
