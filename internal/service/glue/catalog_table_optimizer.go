@@ -453,6 +453,8 @@ func (c *catalogTableOptimizerResourceModel) flatten(ctx context.Context, data *
 		return
 	}
 
+	// CompactionConfiguration causes persistent drift since the AWS API returns defaults.
+	// suppress it being flattened if it is not in plan or state
 	if configuration != nil && !configuration.CompactionConfiguration.IsNull() {
 		diags.Append(fwflex.Flatten(ctx, data, c)...)
 		if diags.HasError() {
