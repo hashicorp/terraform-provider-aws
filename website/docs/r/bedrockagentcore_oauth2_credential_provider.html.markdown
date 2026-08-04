@@ -102,6 +102,7 @@ The `oauth2_provider_config` block must contain exactly one of the following pro
 * `included_oauth2_provider_config` - (Optional) Configuration for an included (vendor-supported) OAuth2 provider, used for the additional supported vendors. See [`predefined providers`](#predefined-providers) below.
 
 -> **Note:** `included_oauth2_provider_config` currently supports only vendors that have fixed, AWS-known OAuth2 endpoints (for example `XOauth2`, `FacebookOauth2`, `SpotifyOauth2`), which require nothing beyond `client_id` and `client_secret`. Isolated-tenant vendors such as `OktaOauth2`, `PingOneOauth2`, and `OneLoginOauth2` require provider-specific endpoints (`issuer`, `authorization_endpoint`, `token_endpoint`) that are not yet exposed by this resource, and will fail at create time with a `Missing TokenEndpoint` error. Support for those fields is planned in a follow-up.
+
 * `linkedin_oauth2_provider_config` - (Optional) LinkedIn OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
 * `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`predefined providers`](#predefined-providers) below.
