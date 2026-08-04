@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.66.2
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.58.2
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.17.2
@@ -138,7 +138,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.85.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/iam v1.56.2
+	github.com/aws/aws-sdk-go-v2/service/iam v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.58.2
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.33.2
@@ -149,7 +149,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.77.2
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.56.2
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.63.2
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.28.2
@@ -159,7 +159,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.50.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.100.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.101.0
 	github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.38.2
@@ -185,7 +185,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.64.2
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.16.2
@@ -219,6 +219,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.54.2
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/resiliencehubv2 v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.35.2
@@ -236,7 +237,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.10.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.262.2
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.263.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.37.2
@@ -274,7 +275,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.75.2
 	github.com/aws/aws-sdk-go-v2/service/uxc v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.36.2
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/waf v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.0
@@ -292,7 +293,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.24.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.73
 	github.com/hashicorp/awspolicyequivalence v1.7.0
 	github.com/hashicorp/cli v1.1.7
