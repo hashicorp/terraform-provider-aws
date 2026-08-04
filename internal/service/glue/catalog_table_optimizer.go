@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -182,6 +183,10 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 											Attributes: map[string]schema.Attribute{
 												"strategy": schema.StringAttribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
 												},
 												"min_input_files": schema.Int32Attribute{
 													Optional: true,
@@ -271,8 +276,7 @@ func (r *catalogTableOptimizerResource) Create(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &plan)...)
-
+	plan.flatten(ctx, output.TableOptimizer, response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -313,8 +317,7 @@ func (r *catalogTableOptimizerResource) Read(ctx context.Context, request resour
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &data)...)
-
+	data.flatten(ctx, output.TableOptimizer, response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -373,8 +376,7 @@ func (r *catalogTableOptimizerResource) Update(ctx context.Context, request reso
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &plan)...)
-
+		plan.flatten(ctx, output.TableOptimizer, response.Diagnostics)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -444,6 +446,26 @@ func (r *catalogTableOptimizerResource) ImportState(ctx context.Context, request
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[3])...)
 }
 
+func (c *catalogTableOptimizerResourceModel) flatten(ctx context.Context, data *awstypes.TableOptimizer, diags diag.Diagnostics) {
+	configuration, d := c.Configuration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	if configuration != nil && !configuration.CompactionConfiguration.IsNull() {
+		diags.Append(fwflex.Flatten(ctx, data, c)...)
+		if diags.HasError() {
+			return
+		}
+	} else {
+		diags.Append(fwflex.Flatten(ctx, data, c, fwflex.WithIgnoredFieldNamesAppend("CompactionConfiguration"))...)
+		if diags.HasError() {
+			return
+		}
+	}
+}
+
 type catalogTableOptimizerResourceModel struct {
 	framework.WithRegionModel
 	CatalogID     types.String                                       `tfsdk:"catalog_id"`
@@ -458,7 +480,7 @@ type configurationData struct {
 	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
 	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
 	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
-	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"  autoflex:",noflatten"`
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
 }
 
 type retentionConfigurationData struct {

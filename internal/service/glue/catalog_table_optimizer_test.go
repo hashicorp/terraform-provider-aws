@@ -43,9 +43,6 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
-					//resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "startegy"),
-					//resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "10"),
-					//resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "50"),
 				),
 			},
 			{
@@ -349,6 +346,46 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHour
 	})
 }
 
+func testAccCatalogTableOptimizer_compactionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var catalogTableOptimizer glue.GetTableOptimizerOutput
+
+	resourceName := "aws_glue_catalog_table_optimizer.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableOptimizerConfig_compactionConfiguration(rName, "binpack", 10, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "binpack"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "10"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "50"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    testAccCatalogTableOptimizerStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrTableName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore:              []string{"configuration.0.compaction_configuration"},
+			},
+		},
+	})
+}
+
 func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -568,6 +605,7 @@ resource "aws_glue_catalog_table_optimizer" "test" {
     role_arn = aws_iam_role.test.arn
     enabled  = %[1]t
   }
+  depends_on = [aws_iam_role_policy.test]
 }
 `, enabled))
 }
@@ -693,14 +731,15 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = true
-	compaction_configuration {
-     iceberg_configuration {
-       strategy              = %[1]s
-		min_input_files       = %[2]d
-		delete_file_threshold = %[3]d
-     }
+    compaction_configuration {
+      iceberg_configuration {
+        strategy              = %[1]q
+        min_input_files       = %[2]d
+        delete_file_threshold = %[3]d
+      }
     }
   }
+  depends_on = [aws_iam_role_policy.test]
 }
 `, strategy, minInputFiles, deleteFileThreshold))
 }
