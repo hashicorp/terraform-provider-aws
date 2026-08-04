@@ -1442,6 +1442,7 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 			selfManaged := selfManagedConfigurationModel{
 				HistoricalContextWindowSize: types.Int32PointerValue(t.SelfManagedConfiguration.HistoricalContextWindowSize),
 			}
+			var d diag.Diagnostics
 			if t.SelfManagedConfiguration.InvocationConfiguration != nil {
 				invocation := invocationConfigurationModel{
 					PayloadDeliveryBucketName: types.StringPointerValue(t.SelfManagedConfiguration.InvocationConfiguration.PayloadDeliveryBucketName),
