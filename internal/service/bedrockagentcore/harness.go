@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -225,9 +226,11 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									},
 									"event_expiry_duration": schema.Int32Attribute{
 										Optional: true,
+										Computed: true,
 									},
 									"strategies": schema.SetAttribute{
 										Optional:    true,
+										Computed:    true,
 										CustomType:  fwtypes.SetOfStringEnumType[awstypes.HarnessManagedMemoryStrategyType](),
 										ElementType: types.StringType,
 									},
@@ -741,8 +744,33 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 	}
 
 	if populateMemory {
-		diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
+		conn := r.Meta().BedrockAgentCoreClient(ctx)
+		diags.Append(r.flattenMemory(ctx, conn, harness, data)...)
 	}
+
+	return diags
+}
+
+func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	memoryBlock, d := data.Memory.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || memoryBlock == nil {
+		return diags
+	}
+
+	diags.Append(memoryBlock.flattenEnriched(ctx, conn)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.Memory = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, memoryBlock)
 
 	return diags
 }
@@ -1543,6 +1571,27 @@ func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfigurati
 	return &awstypes.UpdatedHarnessMemoryConfiguration{}, diags
 }
 
+func (m *harnessMemoryConfigurationModel) flattenEnriched(ctx context.Context, conn *bedrockagentcorecontrol.Client) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if !m.ManagedMemoryConfiguration.IsNull() {
+		managedMemory, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() || managedMemory == nil {
+			return diags
+		}
+
+		diags.Append(managedMemory.flattenEnriched(ctx, conn)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, managedMemory)
+	}
+
+	return diags
+}
+
 type harnessAgentCoreMemoryConfigurationModel struct {
 	ARN             fwtypes.ARN                                                                 `tfsdk:"arn"`
 	ActorID         types.String                                                                `tfsdk:"actor_id"`
@@ -1564,4 +1613,33 @@ type harnessManagedMemoryConfigurationModel struct {
 	Strategies          fwtypes.SetOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
 }
 
-// HarnessMemoryConfigurationMemberManagedMemoryConfiguration
+func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Context, conn *bedrockagentcorecontrol.Client) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if m.ARN.IsNull() || m.ARN.IsUnknown() {
+		return diags
+	}
+
+	memory, err := findMemoryByARN(ctx, conn, m.ARN.ValueString())
+	if err != nil {
+		diags.AddError("reading managed memory", err.Error())
+		return diags
+	}
+
+	// Populate fields from the memory resource.
+	if memory.EncryptionKeyArn != nil {
+		m.EncryptionKeyARN = fwtypes.ARNValue(aws.ToString(memory.EncryptionKeyArn))
+	}
+	if memory.EventExpiryDuration != nil {
+		m.EventExpiryDuration = fwflex.Int32ToFramework(ctx, memory.EventExpiryDuration)
+	}
+	if len(memory.Strategies) > 0 {
+		elements := make([]attr.Value, 0, len(memory.Strategies))
+		for _, s := range memory.Strategies {
+			elements = append(elements, fwtypes.StringEnumValue(awstypes.HarnessManagedMemoryStrategyType(s.Type)))
+		}
+		m.Strategies = fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.HarnessManagedMemoryStrategyType]](ctx, elements)
+	}
+
+	return diags
+}

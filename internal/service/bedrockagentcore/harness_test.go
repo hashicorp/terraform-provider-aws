@@ -627,8 +627,11 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_empty(t *t
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
 						"encryption_key_arn":    knownvalue.Null(),
-						"event_expiry_duration": knownvalue.Null(),
-						"strategies":            knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(30),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+							knownvalue.StringExact("SUMMARIZATION"),
+						}),
 					})),
 				},
 			},
@@ -743,8 +746,11 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_encryption
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
 						"encryption_key_arn":    knownvalue.NotNull(),
-						"event_expiry_duration": knownvalue.Null(),
-						"strategies":            knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(30),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+							knownvalue.StringExact("SUMMARIZATION"),
+						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0).AtMapKey("encryption_key_arn"), "aws_kms_key.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
