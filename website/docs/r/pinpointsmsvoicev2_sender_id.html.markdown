@@ -37,25 +37,26 @@ resource "aws_pinpointsmsvoicev2_sender_id" "example" {
 
 The following arguments are required:
 
-* `sender_id` - (Required, Forces new resource) The alphanumeric sender ID to request. Must be between 3 and 11 characters long, contain only letters, numbers, and dashes, and cannot be numeric-only.
-* `iso_country_code` - (Required, Forces new resource) The two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
+* `iso_country_code` - (Required, Forces new resource) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
+* `sender_id` - (Required, Forces new resource) Alphanumeric sender ID to request. Must be between 3 and 11 characters long, contain only letters, numbers, and dashes, and cannot be numeric-only.
 
 The following arguments are optional:
 
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When set to `true`, the sender ID cannot be deleted. Defaults to `false`.
-* `message_types` - (Optional, Forces new resource) The type of message. Valid values are `TRANSACTIONAL` and `PROMOTIONAL`. Defaults to `["TRANSACTIONAL"]` if not specified.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `message_types` - (Optional, Forces new resource) Type of message. Valid values are `TRANSACTIONAL` and `PROMOTIONAL`. Defaults to `["TRANSACTIONAL"]` if not specified.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the sender ID.
-* `id` - The sender ID and ISO country code separated by a comma (`,`).
-* `monthly_leasing_price` - The monthly leasing price, in US dollars.
+* `id` - Sender ID and ISO country code separated by a comma (`,`).
+* `monthly_leasing_price` - Monthly leasing price, in US dollars.
 * `registered` - Whether the sender ID is registered.
-* `registration_id` - The unique identifier for the registration.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `registration_id` - Unique identifier for the registration.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
