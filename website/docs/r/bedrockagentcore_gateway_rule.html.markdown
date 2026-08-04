@@ -190,14 +190,6 @@ Exactly one of `match_paths` or `match_principals` must be set.
 * `arn` - (Required) IAM principal ARN. Wildcards are allowed with the `StringLike` operator.
 * `operator` - (Optional) Match operator, one of `StringEquals` or `StringLike`. Defaults to `StringEquals`.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `delete` - (Default `5m`)
-* `update` - (Default `5m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -208,6 +200,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Current status of the rule. One of `CREATING`, `ACTIVE`, `UPDATING`, or `DELETING`.
 * `system` - Present when the rule is system-managed. A single-element list with a `managed_by` string.
 * `updated_at` - Last-updated timestamp (RFC3339).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
