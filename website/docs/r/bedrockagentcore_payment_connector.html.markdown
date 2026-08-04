@@ -32,7 +32,7 @@ resource "aws_bedrockagentcore_payment_connector" "example" {
 
 The following arguments are required:
 
-* `credential_provider_configuration` - (Required) One or more credential provider configurations. See [`credential_provider_configuration`](#credential_provider_configuration) below.
+* `credential_provider_configuration` - (Required) One or more credential provider configurations. See [`credential_provider_configuration`](#credential_provider_configuration-block) below.
 * `name` - (Required, Forces new resource) Name of the payment connector. Must start with a letter and contain only letters, numbers, and underscores.
 * `payment_manager_id` - (Required, Forces new resource) Identifier of the Payment Manager that owns this connector.
 * `type` - (Required, Forces new resource) Payment connector type. Valid values: `CoinbaseCDP`, `StripePrivy`.
@@ -42,18 +42,24 @@ The following arguments are optional:
 * `description` - (Optional) Description of the payment connector.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `credential_provider_configuration`
+### `credential_provider_configuration` Block
 
 The `credential_provider_configuration` block must contain exactly one of the following:
 
-* `coinbase_cdp` - (Optional) Coinbase CDP credential provider reference. See [`credential provider reference`](#credential-provider-reference) below.
-* `stripe_privy` - (Optional) Stripe Privy credential provider reference. See [`credential provider reference`](#credential-provider-reference) below.
+* `coinbase_cdp` - (Optional) Coinbase CDP credential provider reference. See [`coinbase_cdp`](#coinbase_cdp-block) below.
+* `stripe_privy` - (Optional) Stripe Privy credential provider reference. See [`stripe_privy`](#stripe_privy-block) below.
 
-### Credential Provider Reference
+### `coinbase_cdp` Block
 
-The `coinbase_cdp` and `stripe_privy` blocks support the following:
+The `coinbase_cdp` block supports the following:
 
-* `credential_provider_arn` - (Required) ARN of the payment credential provider that stores the authentication credentials for this payment provider.
+* `credential_provider_arn` - (Required) ARN of the Coinbase CDP payment credential provider.
+
+### `stripe_privy` Block
+
+The `stripe_privy` block supports the following:
+
+* `credential_provider_arn` - (Required) ARN of the Stripe Privy payment credential provider.
 
 ## Attribute Reference
 
