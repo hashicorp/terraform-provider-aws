@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -1058,15 +1058,15 @@ var (
 
 func (m *matchPrincipalsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var mp awstypes.MatchPrincipals
+	var mp *awstypes.MatchPrincipals
 	switch t := v.(type) {
 	case awstypes.MatchPrincipals:
-		mp = t
+		mp = &t
 	case *awstypes.MatchPrincipals:
 		if t == nil {
 			return diags
 		}
-		mp = *t
+		mp = t
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("match_principals flatten: %T", v))
 		return diags

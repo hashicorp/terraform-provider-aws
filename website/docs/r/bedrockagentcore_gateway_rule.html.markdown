@@ -105,62 +105,98 @@ The following arguments are optional:
 
 * `condition` - (Optional) Up to two [`condition`](#condition) blocks that must all be satisfied for the rule's actions to apply. See [Condition](#condition) below.
 * `description` - (Optional) Description of the rule. Between 1 and 256 characters.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### action
+### `action` Block
 
 Exactly one of `configuration_bundle` or `route_to_target` must be set on each `action` block.
 
 * `configuration_bundle` - (Optional) Apply a configuration bundle when the rule's conditions match. See [configuration_bundle](#configuration_bundle) below.
 * `route_to_target` - (Optional) Route requests to a gateway target when the rule's conditions match. See [route_to_target](#route_to_target) below.
 
-### configuration_bundle
+### `action.configuration_bundle` Block
 
 Exactly one of `static_override` or `weighted_override` must be set.
 
 * `static_override` - (Optional) Statically override the configuration bundle used for the matched request.
-    * `bundle_arn` - (Required) ARN of the configuration bundle to apply.
-    * `bundle_version` - (Required) Version (UUID) of the configuration bundle to apply.
 * `weighted_override` - (Optional) Distribute the request across two configuration bundle versions by weight.
-    * `traffic_split` - (Required) Exactly two `traffic_split` blocks describing the two variants.
-        * `configuration_bundle` - (Required) Reference to the configuration bundle for this variant, with `bundle_arn` and `bundle_version` (UUID) arguments.
-        * `name` - (Required) Name of this variant. Between 1 and 64 characters; alphanumeric with internal hyphens.
-        * `weight` - (Required) Percentage of traffic sent to this variant, between 1 and 99. Weights across the two entries must sum to 100.
-        * `description` - (Optional) Description of the variant. Between 1 and 200 characters.
-        * `metadata` - (Optional) Up to 25 key/value metadata pairs describing this variant.
 
-### route_to_target
+### `action.configuration_bundle.static_override` Block
+
+* `bundle_arn` - (Required) ARN of the configuration bundle to apply.
+* `bundle_version` - (Required) Version (UUID) of the configuration bundle to apply.
+
+### `action.configuration_bundle.weighted_override` Block
+
+* `traffic_split` - (Required) Exactly two `traffic_split` blocks describing the two variants.
+
+### `action.configuration_bundle.weighted_override.traffic_split` Block
+
+* `configuration_bundle` - (Required) Reference to the configuration bundle for this variant.
+* `description` - (Optional) Description of the variant. Between 1 and 200 characters.
+* `metadata` - (Optional) Up to 25 key/value metadata pairs describing this variant.
+* `name` - (Required) Name of this variant. Between 1 and 64 characters; alphanumeric with internal hyphens.
+* `weight` - (Required) Percentage of traffic sent to this variant, between 1 and 99. Weights across the two entries must sum to 100.
+
+### `action.configuration_bundle.weighted_override.traffic_split.configuration_bundle` Block
+
+* `bundle_arn` - (Required) ARN of the configuration bundle to apply.
+* `bundle_version` - (Required) Version (UUID) of the configuration bundle to apply.
+
+### `action.route_to_target` Block
 
 Exactly one of `static_route` or `weighted_route` must be set.
 
 * `static_route` - (Optional) Route all matching requests to a single named gateway target.
-    * `target_name` - (Required) Name of the gateway target.
 * `weighted_route` - (Optional) Distribute requests across two named targets by weight.
-    * `traffic_split` - (Required) Exactly two `traffic_split` blocks describing the two variants.
-        * `name` - (Required) Name of this variant. Between 1 and 64 characters; alphanumeric with internal hyphens.
-        * `target_name` - (Required) Name of the gateway target this variant points to.
-        * `weight` - (Required) Percentage of traffic routed to this variant, between 1 and 99.
-        * `description` - (Optional) Description of the variant. Between 1 and 200 characters.
-        * `metadata` - (Optional) Up to 25 key/value metadata pairs describing this variant.
 
-### condition
+### `action.route_to_target.static_route` Block
+
+* `target_name` - (Required) Name of the gateway target.
+
+### `action.route_to_target.weighted_route` Block
+
+* `traffic_split` - (Required) Exactly two `traffic_split` blocks describing the two variants.
+
+### `action.route_to_target.weighted_route.traffic_split` Block
+
+* `description` - (Optional) Description of the variant. Between 1 and 200 characters.
+* `metadata` - (Optional) Up to 25 key/value metadata pairs describing this variant.
+* `name` - (Required) Name of this variant. Between 1 and 64 characters; alphanumeric with internal hyphens.
+* `target_name` - (Required) Name of the gateway target this variant points to.
+* `weight` - (Required) Percentage of traffic routed to this variant, between 1 and 99.
+
+### `condition` Block
 
 Exactly one of `match_paths` or `match_principals` must be set.
 
 * `match_paths` - (Optional) Match when the request path matches any of the supplied glob patterns (e.g. `/api/*`).
-    * `any_of` - (Required) Between 1 and 10 path patterns. A pattern must be of the form `/<segment>/*` and at most 512 characters.
 * `match_principals` - (Optional) Match when the caller's IAM identity matches any of the supplied principal entries.
-    * `any_of` - (Required) Between 1 and 100 principal entry blocks. See below.
-        * `iam_principal` - (Required) Match an IAM user, role, or assumed-role ARN. Exactly one `iam_principal` block is required per entry.
-            * `arn` - (Required) IAM principal ARN. Wildcards are allowed with the `StringLike` operator.
-            * `operator` - (Optional) Match operator, one of `StringEquals` or `StringLike`. Defaults to `StringEquals`.
 
-### timeouts
+### `condition.match_paths` Block
+
+* `any_of` - (Required) Between 1 and 10 path patterns. A pattern must be of the form `/<segment>/*` and at most 512 characters.
+
+### `condition.match_principals` Block
+
+* `any_of` - (Required) Between 1 and 100 principal entry blocks.
+
+### `condition.match_principals.any_of` Block
+
+* `iam_principal` - (Required) Match an IAM user, role, or assumed-role ARN. Exactly one `iam_principal` block is required per entry.
+
+### `condition.match_principals.any_of.iam_principal` Block
+
+* `arn` - (Required) IAM principal ARN. Wildcards are allowed with the `StringLike` operator.
+* `operator` - (Optional) Match operator, one of `StringEquals` or `StringLike`. Defaults to `StringEquals`.
+
+## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
-* `update` - (Default `5m`)
 * `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Attribute Reference
 
