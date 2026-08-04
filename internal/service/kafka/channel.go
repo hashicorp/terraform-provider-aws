@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -47,12 +48,13 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeChannelOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(tagsTest=false)
 // @Testing(identityRegionOverrideTest=false)
+// @Testing(importStateIdAttributes="arn;cluster_arn")
 func newChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -83,18 +85,30 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"cluster_operation_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"creation_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"destination_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ChannelDestinationType](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ChannelStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -102,6 +116,7 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 			"topic_configuration": schema.ListNestedBlock{
@@ -156,22 +171,28 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"append_only": schema.BoolAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
 						},
 						"compression_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.IcebergCompressionType](),
 							Optional:   true,
 							Computed:   true,
+							// Optional+Computed: force replacement only when the user changes
+							// a configured value, not when the server-computed default is
+							// refreshed to unknown while another field is updated in place.
 							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplaceIfConfigured(),
 								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
+						// data_freshness_in_seconds is the only destination field that can
+						// be updated in place (via UpdateChannel); all others force replacement.
 						"data_freshness_in_seconds": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
@@ -182,6 +203,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"service_execution_role_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -189,6 +213,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							CustomType: fwtypes.NewListNestedObjectTypeOf[catalogModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -208,12 +235,18 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: deadLetterQueueS3NestedObject(),
 						},
 						"destination_table": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[destinationTableModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -259,6 +292,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"enable_schema_evolution": schema.BoolAttribute{
@@ -271,6 +307,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							CustomType: fwtypes.NewListNestedObjectTypeOf[tableCreationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -288,11 +327,10 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						// data_freshness_in_seconds is the only destination field that can
+						// be updated in place (via UpdateChannel); all others force replacement.
 						"data_freshness_in_seconds": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
@@ -303,6 +341,9 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"service_execution_role_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -311,12 +352,18 @@ func (r *channelResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: deadLetterQueueS3NestedObject(),
 						},
 						"storage": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3StorageModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -521,6 +568,8 @@ func (r *channelResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	setTagsOut(ctx, out.Tags)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -530,12 +579,81 @@ func (r *channelResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *channelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// All non-tag attributes force replacement; tag changes are handled by the
-	// transparent tagging interceptor. Persist the plan to state.
-	var plan channelResourceModel
+	conn := r.Meta().KafkaClient(ctx)
+
+	var plan, state channelResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// data_freshness_in_seconds is the only configurable attribute that can be
+	// updated in place (via UpdateChannel). Tag-only changes are handled by the
+	// transparent tagging interceptor; every other attribute forces replacement.
+	channelARN := fwflex.StringValueFromFramework(ctx, plan.ChannelARN)
+	clusterARN := fwflex.StringValueFromFramework(ctx, plan.ClusterARN)
+	input := kafka.UpdateChannelInput{
+		ChannelArn: aws.String(channelARN),
+		ClusterArn: aws.String(clusterARN),
+	}
+
+	update := false
+	switch {
+	case !plan.S3DestinationConfiguration.IsNull():
+		planDst, d := plan.S3DestinationConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		stateDst, d := state.S3DestinationConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if !planDst.DataFreshnessInSeconds.Equal(stateDst.DataFreshnessInSeconds) {
+			input.S3DestinationUpdate = &awstypes.S3DestinationUpdate{
+				DataFreshnessInSeconds: fwflex.Int32FromFramework(ctx, planDst.DataFreshnessInSeconds),
+			}
+			update = true
+		}
+	case !plan.IcebergDestinationConfiguration.IsNull():
+		planDst, d := plan.IcebergDestinationConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		stateDst, d := state.IcebergDestinationConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if !planDst.DataFreshnessInSeconds.Equal(stateDst.DataFreshnessInSeconds) {
+			input.IcebergDestinationUpdate = &awstypes.IcebergDestinationUpdate{
+				DataFreshnessInSeconds: fwflex.Int32FromFramework(ctx, planDst.DataFreshnessInSeconds),
+			}
+			update = true
+		}
+	}
+
+	if update {
+		_, err := conn.UpdateChannel(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelARN)
+			return
+		}
+
+		out, err := waitChannelUpdated(ctx, conn, channelARN, clusterARN, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, channelARN)
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		setTagsOut(ctx, out.Tags)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -573,6 +691,23 @@ func (r *channelResource) Delete(ctx context.Context, req resource.DeleteRequest
 func waitChannelCreated(ctx context.Context, conn *kafka.Client, channelARN, clusterARN string, timeout time.Duration) (*kafka.DescribeChannelOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ChannelStatusCreating),
+		Target:                    enum.Slice(awstypes.ChannelStatusActive),
+		Refresh:                   statusChannel(conn, channelARN, clusterARN),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*kafka.DescribeChannelOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitChannelUpdated(ctx context.Context, conn *kafka.Client, channelARN, clusterARN string, timeout time.Duration) (*kafka.DescribeChannelOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.ChannelStatusUpdating),
 		Target:                    enum.Slice(awstypes.ChannelStatusActive),
 		Refresh:                   statusChannel(conn, channelARN, clusterARN),
 		Timeout:                   timeout,

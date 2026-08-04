@@ -255,6 +255,10 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
+// channelDisassociationTimeout bounds the retry on DeleteTopic while a just-deleted
+// channel is still disassociating from the topic.
+const channelDisassociationTimeout = 2 * time.Minute
+
 func (r *topicResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().KafkaClient(ctx)
 
@@ -270,9 +274,11 @@ func (r *topicResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		TopicName:  aws.String(topicName),
 	}
 	// A channel's deletion can take a short while to fully disassociate from its
-	// topic. Retry while the API still reports the topic has associated channels.
+	// topic. Retry for a bounded window while the API still reports the topic has
+	// associated channels. A genuinely attached channel then fails fast with the
+	// underlying error rather than blocking for the full delete timeout.
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*kafka.DeleteTopicOutput, *awstypes.BadRequestException](
-		ctx, r.DeleteTimeout(ctx, state.Timeouts),
+		ctx, channelDisassociationTimeout,
 		func(ctx context.Context) (*kafka.DeleteTopicOutput, error) {
 			return conn.DeleteTopic(ctx, &input)
 		},

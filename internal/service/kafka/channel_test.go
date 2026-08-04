@@ -87,6 +87,47 @@ func TestAccKafkaChannel_iceberg(t *testing.T) {
 	})
 }
 
+func TestAccKafkaChannel_s3DataFreshness(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.SkipIfEnvVarNotSet(t, "MSK_EXPRESS_BROKER_ENABLED")
+
+	var v kafka.DescribeChannelOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_s3DataFreshness(rName, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.data_freshness_in_seconds", "300"),
+				),
+			},
+			{
+				// Changing data_freshness_in_seconds must update in place, not replace.
+				Config: testAccChannelConfig_s3DataFreshness(rName, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.data_freshness_in_seconds", "600"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccKafkaChannel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	acctest.SkipIfEnvVarNotSet(t, "MSK_EXPRESS_BROKER_ENABLED")
@@ -111,54 +152,6 @@ func TestAccKafkaChannel_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkafka.ResourceChannel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccKafkaChannel_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	acctest.SkipIfEnvVarNotSet(t, "MSK_EXPRESS_BROKER_ENABLED")
-
-	var v kafka.DescribeChannelOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_msk_channel.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccChannelConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccChannelConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccChannelConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -417,21 +410,38 @@ func testAccChannelConfig_s3(rName string) string {
 	return testAccChannelConfig_s3Channel(rName, "")
 }
 
-func testAccChannelConfig_tags1(rName, key1, value1 string) string {
-	return testAccChannelConfig_s3Channel(rName, fmt.Sprintf(`
-  tags = {
-    %[1]q = %[2]q
-  }
-`, key1, value1))
-}
+func testAccChannelConfig_s3DataFreshness(rName string, dataFreshnessInSeconds int) string {
+	return acctest.ConfigCompose(testAccChannelConfig_s3Base(rName), fmt.Sprintf(`
+resource "aws_msk_channel" "test" {
+  channel_name = %[1]q
+  cluster_arn  = aws_msk_cluster.test.arn
 
-func testAccChannelConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return testAccChannelConfig_s3Channel(rName, fmt.Sprintf(`
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+  topic_configuration {
+    topic_arn = aws_msk_topic.test.arn
+
+    record_converter {
+      value_converter = "BYTE_ARRAY"
+    }
   }
-`, key1, value1, key2, value2))
+
+  s3_destination {
+    service_execution_role_arn = aws_iam_role.test.arn
+    data_freshness_in_seconds  = %[2]d
+
+    dead_letter_queue_s3 {
+      bucket_arn = aws_s3_bucket.dlq.arn
+    }
+
+    storage {
+      bucket_arn       = aws_s3_bucket.test.arn
+      compression_type = "NONE"
+      storage_class    = "STANDARD"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, dataFreshnessInSeconds))
 }
 
 func testAccChannelConfig_iceberg(rName string) string {
