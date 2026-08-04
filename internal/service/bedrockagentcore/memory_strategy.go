@@ -339,6 +339,15 @@ func (v triggerConditionsValidator) MarkdownDescription(ctx context.Context) str
 }
 
 func (triggerConditionsValidator) ValidateList(ctx context.Context, request validator.ListRequest, response *validator.ListResponse) {
+	const (
+		minimumMessageCount       int32 = 1
+		maximumMessageCount       int32 = 50
+		minimumTokenCount         int32 = 100
+		maximumTokenCount         int32 = 500_000
+		minimumIdleSessionTimeout int32 = 10
+		maximumIdleSessionTimeout int32 = 3_000
+	)
+
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
@@ -371,8 +380,8 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 			validateTriggerThreshold(
 				rootPath.AtName("message_based_trigger").AtListIndex(0).AtName("message_count"),
 				message.MessageCount,
-				1,
-				50,
+				minimumMessageCount,
+				maximumMessageCount,
 				response,
 			)
 		} else {
@@ -389,8 +398,8 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 			validateTriggerThreshold(
 				rootPath.AtName("token_based_trigger").AtListIndex(0).AtName("token_count"),
 				token.TokenCount,
-				100,
-				500000,
+				minimumTokenCount,
+				maximumTokenCount,
 				response,
 			)
 		} else {
@@ -407,8 +416,8 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 			validateTriggerThreshold(
 				rootPath.AtName("time_based_trigger").AtListIndex(0).AtName("idle_session_timeout"),
 				timeBased.IdleSessionTimeout,
-				10,
-				3000,
+				minimumIdleSessionTimeout,
+				maximumIdleSessionTimeout,
 				response,
 			)
 		} else {
