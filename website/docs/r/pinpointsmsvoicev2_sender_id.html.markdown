@@ -59,8 +59,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-End User Messaging SMS Sender IDs can be imported using the sender ID and ISO country code separated by a comma (`,`):
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_pinpointsmsvoicev2_sender_id.example
+  identity = {
+    sender_id        = "MySenderId"
+    iso_country_code = "US"
+  }
+}
+
+resource "aws_pinpointsmsvoicev2_sender_id" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_pinpointsmsvoicev2_sender_id.example MySenderId,US
+
+### Identity Schema
+
+#### Required
+
+* `sender_id` (String) Sender ID.
+* `iso_country_code` (String) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an End User Messaging SMS Sender ID using the `sender_id` and `iso_country_code`, separated by a comma. For example:
+
+```terraform
+import {
+  to = aws_pinpointsmsvoicev2_sender_id.example
+  id = "MySenderId,US"
+}
+```
+
+Using `terraform import`, import an End User Messaging SMS Sender ID using the `sender_id` and `iso_country_code`, separated by a comma. For example:
+
+```console
+% terraform import aws_pinpointsmsvoicev2_sender_id.example "MySenderId,US"
 ```
