@@ -22,6 +22,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// testAccRandomSenderID returns a random sender ID.
+//
+// Sender IDs must be 3-11 characters of letters, numbers, and dashes, and must
+// contain at least one letter, so the standard `rName` generators cannot be used.
+func testAccRandomSenderID(t *testing.T) string {
+	t.Helper()
+
+	return "Tf" + acctest.RandStringFromCharSet(t, 9, acctest.CharSetAlphaNum)
+}
+
 func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
@@ -52,10 +62,9 @@ func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"sender_id"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -123,10 +132,9 @@ func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"sender_id"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSenderIDConfig_deletionProtection(senderIDName, isoCountryCode, false),
@@ -135,66 +143,6 @@ func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
-				},
-			},
-		},
-	})
-}
-
-func TestAccPinpointSMSVoiceV2SenderID_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var senderID awstypes.SenderIdInformation
-	senderIDName := "TfTags"
-	isoCountryCode := "GB"
-	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckSenderID(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSenderIDDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSenderIDConfig_tags1(senderIDName, isoCountryCode, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSenderIDExists(ctx, t, resourceName, &senderID),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"sender_id"},
-			},
-			{
-				Config: testAccSenderIDConfig_tags2(senderIDName, isoCountryCode, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSenderIDExists(ctx, t, resourceName, &senderID),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccSenderIDConfig_tags1(senderIDName, isoCountryCode, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSenderIDExists(ctx, t, resourceName, &senderID),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
 				},
 			},
 		},
@@ -343,31 +291,4 @@ resource "aws_pinpointsmsvoicev2_sender_id" "test" {
   deletion_protection_enabled = %[3]t
 }
 `, senderID, isoCountryCode, deletionProtection)
-}
-
-func testAccSenderIDConfig_tags1(senderID, isoCountryCode, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_sender_id" "test" {
-  sender_id        = %[1]q
-  iso_country_code = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, senderID, isoCountryCode, tagKey1, tagValue1)
-}
-
-func testAccSenderIDConfig_tags2(senderID, isoCountryCode, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_sender_id" "test" {
-  sender_id        = %[1]q
-  iso_country_code = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, senderID, isoCountryCode, tagKey1, tagValue1, tagKey2, tagValue2)
 }

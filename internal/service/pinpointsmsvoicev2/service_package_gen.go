@@ -90,6 +90,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("sender_id", true),
+				inttypes.StringIdentityAttribute("iso_country_code", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      senderIDImportID{},
+				SetIDAttr:     true,
+			},
 		},
 	}
 }

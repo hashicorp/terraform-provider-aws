@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -33,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,6 +51,13 @@ const (
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_sender_id", name="Sender ID")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("sender_id")
+// @IdentityAttribute("iso_country_code")
+// @ImportIDHandler("senderIDImportID", setIDAttribute=true)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheckSenderID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.SenderIdInformation")
+// @Testing(generator="testAccRandomSenderID(t)")
 func newSenderIDResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &senderIDResource{}
 
@@ -56,7 +66,7 @@ func newSenderIDResource(context.Context) (resource.ResourceWithConfigure, error
 
 type senderIDResource struct {
 	framework.ResourceWithModel[senderIDResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -169,8 +179,11 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 
 	output := outputRaw.(*pinpointsmsvoicev2.RequestSenderIdOutput)
 
-	// Use API-returned values (AWS may uppercase sender_id).
-	data.SenderID = fwtypes.CaseInsensitiveStringValue(aws.ToString(output.SenderId))
+	// `sender_id` is deliberately left as configured. AWS may return it uppercased,
+	// but `fwtypes.CaseInsensitiveString` treats the two as semantically equal, so the
+	// framework reverts state to the configured value regardless. Assigning the
+	// API-returned value here would have no effect on state while still being captured
+	// by the resource identity, leaving identity and state permanently mismatched.
 	data.ISOCountryCode = fwflex.StringToFramework(ctx, output.IsoCountryCode)
 	data.SenderIDARN = fwflex.StringToFramework(ctx, output.SenderIdArn)
 	data.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, output.MonthlyLeasingPrice)
@@ -311,9 +324,38 @@ func (model *senderIDResourceModel) setID() {
 	model.ID = types.StringValue(model.SenderID.ValueString() + senderIDResourceIDSeparator + model.ISOCountryCode.ValueString())
 }
 
+var (
+	_ inttypes.ImportIDParser           = senderIDImportID{}
+	_ inttypes.FrameworkImportIDCreator = senderIDImportID{}
+)
+
+type senderIDImportID struct{}
+
+func (senderIDImportID) Parse(id string) (string, map[string]any, error) {
+	senderID, isoCountryCode, found := strings.Cut(id, senderIDResourceIDSeparator)
+	if !found || senderID == "" || isoCountryCode == "" {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", id, senderIDResourceIDSeparator)
+	}
+
+	return id, map[string]any{
+		"sender_id":        senderID,
+		"iso_country_code": isoCountryCode,
+	}, nil
+}
+
+func (senderIDImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var senderID fwtypes.CaseInsensitiveString
+	state.GetAttribute(ctx, path.Root("sender_id"), &senderID)
+
+	var isoCountryCode types.String
+	state.GetAttribute(ctx, path.Root("iso_country_code"), &isoCountryCode)
+
+	return senderID.ValueString() + senderIDResourceIDSeparator + isoCountryCode.ValueString()
+}
+
 func (model *senderIDResourceModel) flattenSenderIdInformation(ctx context.Context, out *awstypes.SenderIdInformation) {
+	// `sender_id` is intentionally not set from the API response. See the comment in Create.
 	model.SenderIDARN = fwflex.StringToFramework(ctx, out.SenderIdArn)
-	model.SenderID = fwtypes.CaseInsensitiveStringValue(aws.ToString(out.SenderId))
 	model.ISOCountryCode = fwflex.StringToFramework(ctx, out.IsoCountryCode)
 	model.DeletionProtectionEnabled = types.BoolValue(out.DeletionProtectionEnabled)
 	model.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, out.MonthlyLeasingPrice)
