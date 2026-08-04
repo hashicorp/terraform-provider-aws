@@ -136,13 +136,16 @@ func TestAccMailManagerRuleSet_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								names.AttrAction: knownvalue.ListExact([]knownvalue.Check{
 									testAccRuleSetUnionValue("add_header", map[string]knownvalue.Check{
 										"header_name":  knownvalue.StringExact("X-Example"),
 										"header_value": knownvalue.StringExact("example"),
 									}),
 								}),
+								names.AttrCondition: knownvalue.ListExact([]knownvalue.Check{}),
+								names.AttrName:      knownvalue.Null(),
+								"unless":            knownvalue.ListExact([]knownvalue.Check{}),
 							}),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -178,7 +181,7 @@ func TestAccMailManagerRuleSet_List_regionOverride(t *testing.T) {
 			testAccRuleSetPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckRuleSetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
