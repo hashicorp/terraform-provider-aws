@@ -2,10 +2,12 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_mailmanager_rule_set` ([#49257](https://github.com/hashicorp/terraform-provider-aws/issues/49257))
 * **New List Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
 * **New List Resource:** `aws_prometheus_scraper` ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
 * **New List Resource:** `aws_prometheus_scraper_logging_configuration` ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
 * **New List Resource:** `aws_resiliencehubv2_policy` ([#48321](https://github.com/hashicorp/terraform-provider-aws/issues/48321))
+* **New Resource:** `aws_mailmanager_rule_set` ([#49257](https://github.com/hashicorp/terraform-provider-aws/issues/49257))
 * **New Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
 * **New Resource:** `aws_prometheus_scraper_logging_configuration` ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
 * **New Resource:** `aws_resiliencehubv2_policy` ([#48321](https://github.com/hashicorp/terraform-provider-aws/issues/48321))
