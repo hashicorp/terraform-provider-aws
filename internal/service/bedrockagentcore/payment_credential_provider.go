@@ -316,7 +316,7 @@ func (r *paymentCredentialProviderResource) Create(ctx context.Context, request 
 	}
 
 	data.CredentialProviderARN = fwflex.StringToFramework(ctx, out.CredentialProviderArn)
-	smerr.AddEnrich(ctx, &response.Diagnostics, flattenPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, overlayPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -352,7 +352,7 @@ func (r *paymentCredentialProviderResource) Read(ctx context.Context, request re
 	data.CredentialProviderVendor = fwtypes.StringEnumValue(out.CredentialProviderVendor)
 	data.Name = fwflex.StringToFramework(ctx, out.Name)
 	data.ProviderConfiguration = providerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, flattenPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, overlayPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -395,7 +395,7 @@ func (r *paymentCredentialProviderResource) Update(ctx context.Context, request 
 			return
 		}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, flattenPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &new))
+		smerr.AddEnrich(ctx, &response.Diagnostics, overlayPaymentProviderConfigurationSecretARNs(ctx, out.ProviderConfigurationOutput, &new))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -404,11 +404,11 @@ func (r *paymentCredentialProviderResource) Update(ctx context.Context, request 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
-// flattenPaymentProviderConfigurationSecretARNs overlays the server-returned
+// overlayPaymentProviderConfigurationSecretARNs overlays the server-returned
 // secret ARNs onto the (write-only) provider configuration block, which is
 // otherwise preserved from prior state. The ARN attributes are Computed, so they
 // are populated from the Create/Read/Update response rather than from config.
-func flattenPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObject awstypes.PaymentProviderConfigurationOutput, data *paymentCredentialProviderResourceModel) diag.Diagnostics {
+func overlayPaymentProviderConfigurationSecretARNs(ctx context.Context, apiObject awstypes.PaymentProviderConfigurationOutput, data *paymentCredentialProviderResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if apiObject == nil {
 		return diags

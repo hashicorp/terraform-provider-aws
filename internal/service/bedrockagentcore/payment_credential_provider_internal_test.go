@@ -12,17 +12,17 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// TestFlattenImportedProviderConfigurationSecretARNs proves that on import — when
+// TestOverlayImportedProviderConfigurationSecretARNs proves that on import — when
 // the write-only provider_configuration block is absent from state — the computed
 // managed secret ARNs returned by the API are hydrated into a reconstructed block.
 // Without this the ARNs plan as null on the documented reconcile apply and it
 // fails with "inconsistent result after apply".
-func TestFlattenImportedProviderConfigurationSecretARNs(t *testing.T) {
+func TestOverlayImportedProviderConfigurationSecretARNs(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	const appSecretARN = "arn:aws:secretsmanager:us-west-2:123456789012:secret:appsecret-abc"
-	const authKeyARN = "arn:aws:secretsmanager:us-west-2:123456789012:secret:authprivkey-def"
+	const appSecretARN = "arn:aws:secretsmanager:us-west-2:123456789012:secret:appsecret-abc" //lintignore:AWSAT003,AWSAT005
+	const authKeyARN = "arn:aws:secretsmanager:us-west-2:123456789012:secret:authprivkey-def" //lintignore:AWSAT003,AWSAT005
 
 	// Import scenario: provider_configuration is null in state.
 	data := &paymentCredentialProviderResourceModel{
@@ -36,8 +36,8 @@ func TestFlattenImportedProviderConfigurationSecretARNs(t *testing.T) {
 		},
 	}
 
-	if diags := flattenPaymentProviderConfigurationSecretARNs(ctx, apiObject, data); diags.HasError() {
-		t.Fatalf("flatten: %v", diags)
+	if diags := overlayPaymentProviderConfigurationSecretARNs(ctx, apiObject, data); diags.HasError() {
+		t.Fatalf("overlay: %v", diags)
 	}
 
 	if data.ProviderConfiguration.IsNull() {

@@ -53,62 +53,82 @@ The following arguments are required:
 
 * `credential_provider_vendor` - (Required, Forces new resource) Vendor of the payment credential provider. Valid values: `CoinbaseCDP`, `StripePrivy`.
 * `name` - (Required, Forces new resource) Name of the payment credential provider.
-* `provider_configuration` - (Required) Provider configuration. Must contain exactly one of `coinbase_cdp_configuration` or `stripe_privy_configuration`. See [`provider_configuration`](#provider_configuration) below.
+* `provider_configuration` - (Required) Provider configuration. Must contain exactly one of `coinbase_cdp_configuration` or `stripe_privy_configuration`. See [`provider_configuration`](#provider_configuration-block) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `provider_configuration`
+### `provider_configuration` Block
 
 The `provider_configuration` block must contain exactly one of the following:
 
-* `coinbase_cdp_configuration` - (Optional) Coinbase CDP configuration. See [`coinbase_cdp_configuration`](#coinbase_cdp_configuration) below.
-* `stripe_privy_configuration` - (Optional) Stripe Privy configuration. See [`stripe_privy_configuration`](#stripe_privy_configuration) below.
+* `coinbase_cdp_configuration` - (Optional) Coinbase CDP configuration. See [`coinbase_cdp_configuration`](#coinbase_cdp_configuration-block) below.
+* `stripe_privy_configuration` - (Optional) Stripe Privy configuration. See [`stripe_privy_configuration`](#stripe_privy_configuration-block) below.
 
-### `coinbase_cdp_configuration`
+### `coinbase_cdp_configuration` Block
 
 The `coinbase_cdp_configuration` block supports the following:
 
 * `api_key_id` - (Required) Coinbase CDP API key ID.
 * `api_key_secret` - (Optional) Coinbase CDP API key secret. Write-only; not returned on read.
-* `api_key_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the API key secret. See [`secret_config`](#secret_config) below.
+* `api_key_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the API key secret. See [`api_key_secret_config`](#api_key_secret_config-block) below.
 * `api_key_secret_source` - (Optional) Source of the API key secret. Valid values: `MANAGED`, `EXTERNAL`.
 * `wallet_secret` - (Optional) Coinbase CDP wallet secret. Write-only; not returned on read.
-* `wallet_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the wallet secret. See [`secret_config`](#secret_config) below.
+* `wallet_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the wallet secret. See [`wallet_secret_config`](#wallet_secret_config-block) below.
 * `wallet_secret_source` - (Optional) Source of the wallet secret. Valid values: `MANAGED`, `EXTERNAL`.
 
-### `stripe_privy_configuration`
+### `stripe_privy_configuration` Block
 
 The `stripe_privy_configuration` block supports the following:
 
 * `app_id` - (Required) Stripe Privy application ID.
-* `authorization_id` - (Required) Stripe Privy authorization ID.
 * `app_secret` - (Optional) Stripe Privy application secret. Write-only; not returned on read.
-* `app_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the app secret. See [`secret_config`](#secret_config) below.
+* `app_secret_config` - (Optional) Reference to an AWS Secrets Manager secret holding the app secret. See [`app_secret_config`](#app_secret_config-block) below.
 * `app_secret_source` - (Optional) Source of the app secret. Valid values: `MANAGED`, `EXTERNAL`.
+* `authorization_id` - (Required) Stripe Privy authorization ID.
 * `authorization_private_key` - (Optional) Base64-encoded EC P-256 private key. Write-only; not returned on read.
-* `authorization_private_key_config` - (Optional) Reference to an AWS Secrets Manager secret holding the authorization private key. See [`secret_config`](#secret_config) below.
+* `authorization_private_key_config` - (Optional) Reference to an AWS Secrets Manager secret holding the authorization private key. See [`authorization_private_key_config`](#authorization_private_key_config-block) below.
 * `authorization_private_key_source` - (Optional) Source of the authorization private key. Valid values: `MANAGED`, `EXTERNAL`.
 
-### `secret_config`
+### `api_key_secret_config` Block
 
-The `*_secret_config` blocks support the following:
+The `api_key_secret_config` block supports the following:
 
-* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the value.
 * `json_key` - (Required) JSON key used to extract the value from the Secrets Manager secret.
+* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the value.
+
+### `wallet_secret_config` Block
+
+The `wallet_secret_config` block supports the following:
+
+* `json_key` - (Required) JSON key used to extract the value from the Secrets Manager secret.
+* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the value.
+
+### `app_secret_config` Block
+
+The `app_secret_config` block supports the following:
+
+* `json_key` - (Required) JSON key used to extract the value from the Secrets Manager secret.
+* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the value.
+
+### `authorization_private_key_config` Block
+
+The `authorization_private_key_config` block supports the following:
+
+* `json_key` - (Required) JSON key used to extract the value from the Secrets Manager secret.
+* `secret_id` - (Required) ID of the AWS Secrets Manager secret that stores the value.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `credential_provider_arn` - ARN of the Payment Credential Provider.
-* `provider_configuration` - In addition to the configured arguments, exports the ARNs of the AWS Secrets Manager secrets holding the credentials (the service creates managed secrets when a raw secret is supplied):
-    * `coinbase_cdp_configuration.api_key_secret_arn.secret_arn` - ARN of the secret containing the API key secret.
-    * `coinbase_cdp_configuration.wallet_secret_arn.secret_arn` - ARN of the secret containing the wallet secret.
-    * `stripe_privy_configuration.app_secret_arn.secret_arn` - ARN of the secret containing the app secret.
-    * `stripe_privy_configuration.authorization_private_key_arn.secret_arn` - ARN of the secret containing the authorization private key.
+* `provider_configuration.coinbase_cdp_configuration.api_key_secret_arn` - List containing the ARN of the secret that stores the API key secret.
+* `provider_configuration.coinbase_cdp_configuration.wallet_secret_arn` - List containing the ARN of the secret that stores the wallet secret.
+* `provider_configuration.stripe_privy_configuration.app_secret_arn` - List containing the ARN of the secret that stores the app secret.
+* `provider_configuration.stripe_privy_configuration.authorization_private_key_arn` - List containing the ARN of the secret that stores the authorization private key.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
