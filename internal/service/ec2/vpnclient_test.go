@@ -58,6 +58,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			acctest.CtBasic:      testAccClientVPNRoute_basic,
 			"description":        testAccClientVPNRoute_description,
 			acctest.CtDisappears: testAccClientVPNRoute_disappears,
+			"transitGateway":     testAccClientVPNRoute_transitGateway,
 		},
 	}
 

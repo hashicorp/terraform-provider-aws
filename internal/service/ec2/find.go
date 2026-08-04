@@ -3782,12 +3782,16 @@ func findClientVPNRoutes(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 }
 
 func findClientVPNRouteByThreePartKey(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) (*awstypes.ClientVpnRoute, error) {
+	filters := map[string]string{
+		"destination-cidr": destinationCIDR,
+	}
+	if targetSubnetID != "" {
+		filters["target-subnet"] = targetSubnetID
+	}
+
 	input := ec2.DescribeClientVpnRoutesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		Filters: newAttributeFilterList(map[string]string{
-			"destination-cidr": destinationCIDR,
-			"target-subnet":    targetSubnetID,
-		}),
+		Filters:             newAttributeFilterList(filters),
 	}
 
 	return findClientVPNRoute(ctx, conn, &input)

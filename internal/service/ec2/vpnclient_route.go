@@ -66,8 +66,12 @@ func resourceClientVPNRoute() *schema.Resource {
 				},
 				"target_vpc_subnet_id": {
 					Type:     schema.TypeString,
-					Required: true,
+					Optional: true,
 					ForceNew: true,
+				},
+				"transit_gateway_attachment_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				names.AttrType: {
 					Type:     schema.TypeString,
@@ -90,7 +94,10 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 		ClientToken:          aws.String(create.UniqueId(ctx)),
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
-		TargetVpcSubnetId:    aws.String(targetSubnetID),
+	}
+
+	if targetSubnetID != "" {
+		input.TargetVpcSubnetId = aws.String(targetSubnetID)
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -140,6 +147,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("origin", route.Origin)
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
+	d.Set("transit_gateway_attachment_id", route.TransitGatewayAttachmentId)
 	d.Set(names.AttrType, route.Type)
 
 	return diags
@@ -158,7 +166,9 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 	input := ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
-		TargetVpcSubnetId:    aws.String(targetSubnetID),
+	}
+	if targetSubnetID != "" {
+		input.TargetVpcSubnetId = aws.String(targetSubnetID)
 	}
 	_, err = conn.DeleteClientVpnRoute(ctx, &input)
 
@@ -189,7 +199,8 @@ func clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR 
 func clientVPNRouteParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, clientVPNRouteIDSeparator)
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+	// TargetSubnetID is empty for routes on Transit Gateway-based Client VPN endpoints.
+	if len(parts) == 3 && parts[0] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil
 	}
 

@@ -92,6 +92,40 @@ func testAccClientVPNRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 	})
 }
 
+func testAccClientVPNRoute_transitGateway(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.ClientVpnRoute
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ec2_client_vpn_route.test"
+	tgwId := acctest.SkipIfEnvVarNotSet(t, "CLIENT_VPN_TGW_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNRouteDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClientVPNRouteConfig_transitGateway(t, rName, tgwId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNRouteExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.2.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "target_vpc_subnet_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccClientVPNRoute_description(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnRoute
@@ -222,6 +256,15 @@ resource "aws_ec2_client_vpn_route" "test" {
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test[0].id
+}
+`)
+}
+
+func testAccClientVPNRouteConfig_transitGateway(t *testing.T, rName, tgwId string) string {
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_transitGatewayConfigurationWithNoAvailabilityZones(t, rName, tgwId), `
+resource "aws_ec2_client_vpn_route" "test" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  destination_cidr_block = "10.2.0.0/24"
 }
 `)
 }
