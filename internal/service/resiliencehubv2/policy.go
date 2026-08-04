@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -261,6 +262,19 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
+		if emptied, _ := fwplanmodifiers.ListEmptied(ctx, state.AvailabilitySLO, plan.AvailabilitySLO); emptied {
+			input.AvailabilitySlo = &awstypes.AvailabilitySlo{}
+		}
+		if emptied, _ := fwplanmodifiers.ListEmptied(ctx, state.DataRecovery, plan.DataRecovery); emptied {
+			input.DataRecovery = &awstypes.DataRecoveryTargets{}
+		}
+		if emptied, _ := fwplanmodifiers.ListEmptied(ctx, state.MultiAZ, plan.MultiAZ); emptied {
+			input.MultiAz = &awstypes.MultiAzTargets{}
+		}
+		if emptied, _ := fwplanmodifiers.ListEmptied(ctx, state.MultiRegion, plan.MultiRegion); emptied {
+			input.MultiRegion = &awstypes.MultiRegionTargets{}
+		}
+
 		output, err := conn.UpdatePolicy(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
@@ -336,11 +350,11 @@ func findPolicy(ctx context.Context, conn *resiliencehubv2.Client, input *resili
 
 type resourcePolicyModel struct {
 	framework.WithRegionModel
-	AvailabilitySlo fwtypes.ListNestedObjectValueOf[availabilitySLOModel]     `tfsdk:"availability_slo"`
+	AvailabilitySLO fwtypes.ListNestedObjectValueOf[availabilitySLOModel]     `tfsdk:"availability_slo"`
 	DataRecovery    fwtypes.ListNestedObjectValueOf[dataRecoveryTargetsModel] `tfsdk:"data_recovery"`
 	Description     types.String                                              `tfsdk:"description"`
 	KMSKeyID        fwtypes.ARN                                               `tfsdk:"kms_key_id"`
-	MultiAz         fwtypes.ListNestedObjectValueOf[multiAZTargetsModel]      `tfsdk:"multi_az"`
+	MultiAZ         fwtypes.ListNestedObjectValueOf[multiAZTargetsModel]      `tfsdk:"multi_az"`
 	MultiRegion     fwtypes.ListNestedObjectValueOf[multiRegionTargetsModel]  `tfsdk:"multi_region"`
 	Name            types.String                                              `tfsdk:"name"`
 	PolicyARN       types.String                                              `tfsdk:"arn"`

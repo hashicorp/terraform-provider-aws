@@ -6,7 +6,21 @@ resource "aws_resiliencehubv2_policy" "test" {
 
   multi_region {
     disaster_recovery_approach = "HOT_STANDBY"
+    rpo_in_minutes             = var.rpo_in_minutes
+    rto_in_minutes             = var.rto_in_minutes
   }
+}
+
+variable "rpo_in_minutes" {
+  type     = number
+  nullable = true
+  default  = null
+}
+
+variable "rto_in_minutes" {
+  type     = number
+  nullable = true
+  default  = null
 }
 
 variable "rName" {
