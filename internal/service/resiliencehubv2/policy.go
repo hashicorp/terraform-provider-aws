@@ -378,6 +378,6 @@ type multiAZTargetsModel struct {
 
 type multiRegionTargetsModel struct {
 	DisasterRecoveryApproach fwtypes.StringEnum[awstypes.MultiRegionDisasterRecoveryApproach] `tfsdk:"disaster_recovery_approach"`
-	RPOIntervalInMinutes     types.Int32                                                      `tfsdk:"rpo_in_minutes"`
+	RPOInMinutes             types.Int32                                                      `tfsdk:"rpo_in_minutes"`
 	RTOInMinutes             types.Int32                                                      `tfsdk:"rto_in_minutes"`
 }
