@@ -214,7 +214,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								Attributes: map[string]schema.Attribute{
 									names.AttrARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
-										Required:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 									"encryption_key_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
@@ -223,9 +226,9 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"event_expiry_duration": schema.Int32Attribute{
 										Optional: true,
 									},
-									"strategies": schema.ListAttribute{
+									"strategies": schema.SetAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringEnumType[awstypes.HarnessManagedMemoryStrategyType](),
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.HarnessManagedMemoryStrategyType](),
 										ElementType: types.StringType,
 									},
 								},
@@ -1506,12 +1509,30 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
 	}
+	if !m.ManagedMemoryConfiguration.IsNull() {
+		data, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		return &r, diags
+	}
 	return nil, diags
 }
 
 func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfiguration(ctx context.Context) (*awstypes.UpdatedHarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if !m.AgentCoreMemoryConfiguration.IsNull() {
+		r, d := m.expandToHarnessMemoryConfiguration(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
+	}
+	if !m.ManagedMemoryConfiguration.IsNull() {
 		r, d := m.expandToHarnessMemoryConfiguration(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1537,10 +1558,10 @@ type harnessAgentCoreMemoryRetrievalConfigModel struct {
 }
 
 type harnessManagedMemoryConfigurationModel struct {
-	ARN                 fwtypes.ARN                                                         `tfsdk:"arn"`
-	EncryptionKeyARN    fwtypes.ARN                                                         `tfsdk:"encryption_key_arn"`
-	EventExpiryDuration types.Int32                                                         `tfsdk:"event_expiry_duration"`
-	Strategies          fwtypes.ListOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
+	ARN                 fwtypes.ARN                                                        `tfsdk:"arn" autoflex:",noexpand"`
+	EncryptionKeyARN    fwtypes.ARN                                                        `tfsdk:"encryption_key_arn"`
+	EventExpiryDuration types.Int32                                                        `tfsdk:"event_expiry_duration"`
+	Strategies          fwtypes.SetOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
 }
 
 // HarnessMemoryConfigurationMemberManagedMemoryConfiguration
