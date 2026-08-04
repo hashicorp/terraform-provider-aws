@@ -43,7 +43,7 @@ func TestAccMailManagerRuleSet_basic(t *testing.T) {
 			{
 				Config: testAccRuleSetConfigBasic(rName, "X-Example"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+					testAccCheckRuleSetExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -60,7 +60,7 @@ func TestAccMailManagerRuleSet_basic(t *testing.T) {
 			{
 				Config: testAccRuleSetConfigBasic(rName, "X-Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+					testAccCheckRuleSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.0.header_name", "X-Updated"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.0.header_value", "example"),
@@ -91,7 +91,7 @@ func TestAccMailManagerRuleSet_disappears(t *testing.T) {
 		Steps: []resource.TestStep{{
 			Config: testAccRuleSetConfigBasic(rName, "X-Example"),
 			Check: resource.ComposeAggregateTestCheckFunc(
-				testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				testAccCheckRuleSetExists(ctx, t, resourceName),
 				acctest.CheckFrameworkResourceDisappears(ctx, t, tfmailmanager.ResourceRuleSet, resourceName),
 			),
 			ExpectNonEmptyPlan: true,
@@ -120,7 +120,7 @@ func TestAccMailManagerRuleSet_conditionTypes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleSetConfigConditionTypes(rName),
-				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrCondition), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("boolean_expression", map[string]knownvalue.Check{
@@ -181,7 +181,7 @@ func TestAccMailManagerRuleSet_actionSimpleTypes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleSetConfigActionSimpleTypes(rName),
-				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						names.AttrName: knownvalue.StringExact("primary"),
@@ -217,7 +217,7 @@ func TestAccMailManagerRuleSet_actionInvokeLambda(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleSetConfigActionInvokeLambda(rName),
-				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("invoke_lambda", map[string]knownvalue.Check{
@@ -255,7 +255,7 @@ func TestAccMailManagerRuleSet_actionPublishToSNS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleSetConfigActionPublishToSNS(rName),
-				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("publish_to_sns", map[string]knownvalue.Check{
@@ -293,7 +293,7 @@ func TestAccMailManagerRuleSet_actionWriteToS3(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleSetConfigActionWriteToS3(rName),
-				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("write_to_s3", map[string]knownvalue.Check{
@@ -331,7 +331,7 @@ func TestAccMailManagerRuleSet_evaluateTypes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleSetConfigEvaluateTypes(rName),
-				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrCondition), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("string_expression", map[string]knownvalue.Check{
@@ -346,7 +346,7 @@ func TestAccMailManagerRuleSet_evaluateTypes(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleSetExists(ctx context.Context, t *testing.T, name string, output *mailmanager.GetRuleSetOutput) resource.TestCheckFunc {
+func testAccCheckRuleSetExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -356,12 +356,9 @@ func testAccCheckRuleSetExists(ctx context.Context, t *testing.T, name string, o
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, name, errors.New("not set"))
 		}
 		conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
-		out, err := tfmailmanager.FindRuleSetByID(ctx, conn, rs.Primary.ID)
+		_, err := tfmailmanager.FindRuleSetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, rs.Primary.ID, err)
-		}
-		if output != nil {
-			*output = *out
 		}
 		return nil
 	}
