@@ -77,7 +77,7 @@ func TestFlattenMemoryStrategyPreservesTriggerConditionsShape(t *testing.T) {
 		},
 	}
 
-	if diags := flattenMemoryStrategy(ctx, source, &target); diags.HasError() {
+	if diags := setMemoryStrategyState(ctx, source, &target); diags.HasError() {
 		t.Fatalf("flattening memory strategy: %s", diags)
 	}
 	configuration, diags := target.Configuration.ToPtr(ctx)

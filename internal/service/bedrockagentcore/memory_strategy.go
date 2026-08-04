@@ -344,7 +344,7 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 	}
 
 	value, diags := fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx).ValueFromList(ctx, request.ConfigValue)
-	response.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -355,7 +355,7 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 		return
 	}
 	conditions, diags := conditionsValue.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	if response.Diagnostics.HasError() || conditions == nil {
 		return
 	}
@@ -363,7 +363,7 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 	rootPath := request.Path.AtListIndex(0)
 	if !conditions.MessageBasedTrigger.IsNull() && !conditions.MessageBasedTrigger.IsUnknown() {
 		message, diags := conditions.MessageBasedTrigger.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -381,7 +381,7 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 	}
 	if !conditions.TokenBasedTrigger.IsNull() && !conditions.TokenBasedTrigger.IsUnknown() {
 		token, diags := conditions.TokenBasedTrigger.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -399,7 +399,7 @@ func (triggerConditionsValidator) ValidateList(ctx context.Context, request vali
 	}
 	if !conditions.TimeBasedTrigger.IsNull() && !conditions.TimeBasedTrigger.IsUnknown() {
 		timeBased, diags := conditions.TimeBasedTrigger.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -598,7 +598,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
 			found.Configuration = nil
 		}
-		smerr.AddEnrich(ctx, &response.Diagnostics, flattenMemoryStrategy(ctx, found, &plan))
+		smerr.AddEnrich(ctx, &response.Diagnostics, setMemoryStrategyState(ctx, found, &plan))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -664,7 +664,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		out.Configuration = nil
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flattenMemoryStrategy(ctx, out, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, setMemoryStrategyState(ctx, out, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -732,7 +732,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
 				found.Configuration = nil
 			}
-			smerr.AddEnrich(ctx, &response.Diagnostics, flattenMemoryStrategy(ctx, found, &plan))
+			smerr.AddEnrich(ctx, &response.Diagnostics, setMemoryStrategyState(ctx, found, &plan))
 			if response.Diagnostics.HasError() {
 				return
 			}
@@ -1198,7 +1198,7 @@ func (m triggerConditionsModel) Expand(ctx context.Context) (result any, diags d
 	return conditions, diags
 }
 
-func expandTriggerConditions(ctx context.Context, value fwtypes.ListNestedObjectValueOf[triggerConditionsModel]) (result []awstypes.TriggerConditionInput, diags diag.Diagnostics) {
+func triggerConditionsFromModel(ctx context.Context, value fwtypes.ListNestedObjectValueOf[triggerConditionsModel]) (result []awstypes.TriggerConditionInput, diags diag.Diagnostics) {
 	if value.IsNull() || value.IsUnknown() {
 		return nil, diags
 	}
@@ -1289,7 +1289,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) (diags diag
 	return diags
 }
 
-func flattenTriggerConditions(ctx context.Context, conditions []awstypes.TriggerCondition) (result fwtypes.ListNestedObjectValueOf[triggerConditionsModel], diags diag.Diagnostics) {
+func triggerConditionsToModel(ctx context.Context, conditions []awstypes.TriggerCondition) (result fwtypes.ListNestedObjectValueOf[triggerConditionsModel], diags diag.Diagnostics) {
 	var model triggerConditionsModel
 	smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, conditions))
 	if diags.HasError() {
@@ -1454,7 +1454,7 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 					return diags
 				}
 			}
-			selfManaged.TriggerConditions, d = flattenTriggerConditions(ctx, t.SelfManagedConfiguration.TriggerConditions)
+			selfManaged.TriggerConditions, d = triggerConditionsToModel(ctx, t.SelfManagedConfiguration.TriggerConditions)
 			smerr.AddEnrich(ctx, &diags, d)
 			if diags.HasError() {
 				return diags
@@ -1553,7 +1553,7 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 				},
 			},
 		}
-		r.Value.TriggerConditions, d = expandTriggerConditions(ctx, sm.TriggerConditions)
+		r.Value.TriggerConditions, d = triggerConditionsFromModel(ctx, sm.TriggerConditions)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
@@ -1722,7 +1722,7 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 				TopicArn:                  ic.TopicARN.ValueStringPointer(),
 			}
 		}
-		modifySelfManaged.TriggerConditions, d = expandTriggerConditions(ctx, sm.TriggerConditions)
+		modifySelfManaged.TriggerConditions, d = triggerConditionsFromModel(ctx, sm.TriggerConditions)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
@@ -1744,7 +1744,7 @@ type overrideDetailsModel struct {
 	ModelID        types.String `tfsdk:"model_id"`
 }
 
-func flattenMemoryStrategy(ctx context.Context, source *awstypes.MemoryStrategy, target *memoryStrategyResourceModel) (diags diag.Diagnostics) {
+func setMemoryStrategyState(ctx context.Context, source *awstypes.MemoryStrategy, target *memoryStrategyResourceModel) (diags diag.Diagnostics) {
 	priorTriggerConditions := fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
 	if !target.Configuration.IsNull() && !target.Configuration.IsUnknown() {
 		priorConfiguration, d := target.Configuration.ToPtr(ctx)
