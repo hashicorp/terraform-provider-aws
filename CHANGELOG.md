@@ -16,7 +16,9 @@ ENHANCEMENTS:
 
 * resource/aws_api_gateway_rest_api: Add configurable resource timeouts. ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
 * resource/aws_dx_connection: Add `state` attribute ([#42150](https://github.com/hashicorp/terraform-provider-aws/issues/42150))
+* resource/aws_ecs_capacity_provider: Add `RESERVED` as a valid value for `managed_instances_provider.instance_launch_template.capacity_option_type` ([#48816](https://github.com/hashicorp/terraform-provider-aws/issues/48816))
 * resource/aws_ecs_capacity_provider: Add `local_storage_configuration` attribute to `managed_instances_provider.instance_launch_template` ([#47513](https://github.com/hashicorp/terraform-provider-aws/issues/47513))
+* resource/aws_ecs_capacity_provider: Add `managed_instances_provider.instance_launch_template.capacity_reservations` argument ([#48816](https://github.com/hashicorp/terraform-provider-aws/issues/48816))
 * resource/aws_glue_catalog_table_optimizer: Add `configuration.compaction_configuration` argument ([#43868](https://github.com/hashicorp/terraform-provider-aws/issues/43868))
 * resource/aws_prometheus_scraper: Add Resource Identity support ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
 * resource/aws_prometheus_scraper: Add `destination.cloudwatch` configuration block for CloudWatch Metrics destination support ([#49088](https://github.com/hashicorp/terraform-provider-aws/issues/49088))
@@ -32,6 +34,7 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
 * resource/aws_ecs_service: Fix `sigint_rollback` falsely rolling back healthy deployments during `wait_for_steady_state` ([#49077](https://github.com/hashicorp/terraform-provider-aws/issues/49077))
 * resource/aws_ecs_service: Prevent non-EBS deployment volume configurations from being written to state ([#48947](https://github.com/hashicorp/terraform-provider-aws/issues/48947))
+* resource/aws_elasticache_replication_group: Fix perpetual diff when changes are pending for the next maintenance window (`apply_immediately = false`) ([#48246](https://github.com/hashicorp/terraform-provider-aws/issues/48246))
 * resource/aws_glue_catalog_table: Fix `InvalidInputException: StorageDescriptor is not allowed` error when creating or updating ATHENA-dialect views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_glue_catalog_table: Fix `InvalidInputException` error when creating or updating SPARK-dialect views without an explicit `storage_descriptor` block ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_glue_catalog_table: Fix perpetual diff on `view_definition.representations` fields (`validation_connection`, `view_original_text`, `view_expanded_text`) that AWS Glue does not echo back for validated ATHENA views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
