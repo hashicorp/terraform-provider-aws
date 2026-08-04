@@ -57,10 +57,8 @@ func resourceCapacityProvider() *schema.Resource {
 
 			// Validate cluster field requirements
 			if len(managedProvider) > 0 && clusterName == "" {
-				// cluster is required for Managed Instances CP
 				return errors.New("cluster is required when using managed_instances_provider")
 			} else if len(asgProvider) > 0 && clusterName != "" {
-				// cluster must not be set for ASG CP
 				return errors.New("cluster must not be set when using auto_scaling_group_provider")
 			}
 
@@ -71,12 +69,9 @@ func resourceCapacityProvider() *schema.Resource {
 				instanceRequirements := diff.Get("managed_instances_provider.0.instance_launch_template.0.instance_requirements").([]any)
 				hasCapacityReservations := len(capacityReservations) > 0
 
-				// capacity_reservations requires capacity_option_type = RESERVED
 				if hasCapacityReservations && capacityOptionType != string(awstypes.CapacityOptionTypeReserved) {
 					return errors.New("capacity_reservations can only be set when capacity_option_type is RESERVED")
 				}
-
-				// capacity_option_type = RESERVED requires capacity_reservations
 				if capacityOptionType == string(awstypes.CapacityOptionTypeReserved) && !hasCapacityReservations {
 					return errors.New("capacity_reservations must be set when capacity_option_type is RESERVED")
 				}
@@ -85,15 +80,15 @@ func resourceCapacityProvider() *schema.Resource {
 					reservationPreference := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_preference").(string)
 					reservationGroupArn := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_group_arn").(string)
 
-					// reservation_group_arn is only valid with the RESERVATIONS_ONLY preference
 					if reservationGroupArn != "" && reservationPreference != "" && reservationPreference != string(awstypes.CapacityReservationPreferenceReservationsOnly) {
 						return errors.New("reservation_group_arn can only be set when reservation_preference is RESERVATIONS_ONLY")
 					}
 
-					// instance_requirements is required for RESERVATIONS_ONLY and RESERVATIONS_FIRST
-					if (reservationPreference == string(awstypes.CapacityReservationPreferenceReservationsOnly) ||
-						reservationPreference == string(awstypes.CapacityReservationPreferenceReservationsFirst)) && len(instanceRequirements) == 0 {
-						return errors.New("instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST")
+					switch reservationPreference {
+					case string(awstypes.CapacityReservationPreferenceReservationsOnly), string(awstypes.CapacityReservationPreferenceReservationsFirst):
+						if len(instanceRequirements) == 0 {
+							return errors.New("instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST")
+						}
 					}
 				}
 			}
