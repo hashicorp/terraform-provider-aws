@@ -701,7 +701,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 			return
 		}
 
-		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		if err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 			// The runtime was created but the metadata update failed; taint so it is tracked and can be cleaned up.
 			response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
@@ -822,7 +822,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 		new.AuthorizerConfiguration = authorizerConfiguration
 
-		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
 		}
@@ -888,7 +888,7 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 	return nil, smarterr.NewError(err)
 }
 
-func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
+func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
@@ -897,12 +897,8 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 		ContinuousTargetOccurence: 2,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeOutput); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
+	_, err := stateConf.WaitForStateContext(ctx)
+	return smarterr.NewError(err)
 }
 
 func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
