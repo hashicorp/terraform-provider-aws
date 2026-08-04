@@ -1505,7 +1505,7 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 
 	case awstypes.UnknownUnionMember:
-		fwflex.HandleFlattenUnkownUnionMember(ctx, t.Tag, &diags)
+		fwflex.HandleFlattenUnknownUnionMember(ctx, t.Tag, &diags)
 
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("memory configuration flatten: %T", v))
