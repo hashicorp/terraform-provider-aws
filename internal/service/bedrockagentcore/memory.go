@@ -340,7 +340,7 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		for _, k := range newKeys {
 			if _, ok := existing[indexedKeyIdentity(k)]; !ok {
 				input.AddIndexedKeys = append(input.AddIndexedKeys, awstypes.IndexedKey{
-					Key:  aws.String(k.Key.ValueString()),
+					Key:  k.Key.ValueStringPointer(),
 					Type: k.Type.ValueEnum(),
 				})
 			}
