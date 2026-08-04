@@ -11,8 +11,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -44,6 +47,9 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configuration").AtSliceIndex(0).AtMapKey("compaction_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
