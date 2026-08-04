@@ -869,7 +869,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
-												"source": schema.ListNestedBlock{
+												names.AttrSource: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConnectorSourceModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),

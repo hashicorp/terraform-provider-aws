@@ -2466,7 +2466,7 @@ func TestAccBedrockAgentCoreGatewayTarget_inferenceProviderPrefixStrip(t *testin
 				Config: testAccGatewayTargetConfig_targetConfigurationInferenceProviderPrefix(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.model_mapping.0.provider_prefix.0.strip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.inference.0.provider.0.model_mapping.0.provider_prefix.0.strip", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
