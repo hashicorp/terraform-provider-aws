@@ -207,6 +207,15 @@ For example, the resource type `aws_ssoadmin_application` has an ARN Identity an
 Otherwise, if the resource type has an `id` attribute that is set to the same value as an identity attribute,
 add an `@Testing(idAttrDuplicates="<attribute_name>")` annotation.
 
+If the resource type implemented using Plugin SDK
+and it has an ARN Identity, Single Parameter Identity, Singleton Identity, or Custom Inherent Region Identity,
+by default the `id` attribute will match the Identity attribute.
+In some rare cases, the value in the `id` attribute cannot be used as the identifying attribute;
+in this case, add the `duplicatesIdAttr=false` parameter to the identity annotation
+For example, the resource type `aws_iam_policy_attachment` sets the `id` attribute to the value of the `name`,
+but the `policy_arn` is the identifying attribute,
+so the annotation is `@ArnIdentity("policy_arn", duplicatesIdAttr=false)`.
+
 #### Composed Attribute Values
 
 Some resource attributes related to Resource Identity are composed from other attribute values.

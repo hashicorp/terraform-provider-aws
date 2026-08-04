@@ -26,7 +26,7 @@ data "aws_odb_db_servers" "example" {
 
 The following arguments are required:
 
-* `cloud_exadata_infrastructure_id` - (Required) The unique identifier of the cloud vm cluster.
+* `cloud_exadata_infrastructure_id` - (Required) Unique identifier of the cloud vm cluster.
 
 The following arguments are optional:
 
@@ -40,23 +40,23 @@ This data source exports the following attributes in addition to the arguments a
 
 ### db_servers
 
-* `autonomous_virtual_machine_ids` - A list of unique identifiers for the Autonomous VMs.
-* `autonomous_vm_cluster_ids` - A list of identifiers for the Autonomous VM clusters.
-* `compute_model` - The OCI compute model used when you create or clone an instance: **ECPU** or **OCPU**. ECPUs are based on the number of cores elastically allocated from a pool of compute and storage servers, while OCPUs are based on the physical core of a processor with hyper-threading enabled.
-* `cpu_core_count` - The number of CPU cores enabled on the database server.
-* `created_at` - The date and time when the database server was created.
-* `db_node_storage_size_in_gbs` - The amount of local node storage, in gigabytes (GB), that's allocated on the database server.
-* `id` - The unique identifier of the database server.
-* `db_server_patching_details` - The scheduling details for the quarterly maintenance window. Patching and system updates take place during the maintenance window.
-* `display_name` - The user-friendly name of the database server. The name doesn't need to be unique.
-* `exadata_infrastructure_id` - The ID of the Exadata infrastructure that hosts the database server.
-* `max_cpu_count` - The total number of CPU cores available on the database server.
-* `max_db_node_storage_in_gbs` - The total amount of local node storage, in gigabytes (GB), that's available on the database server.
-* `max_memory_in_gbs` - The total amount of memory, in gigabytes (GB), that's available on the database server.
-* `memory_size_in_gbs` - The amount of memory, in gigabytes (GB), that's allocated on the database server.
-* `oci_resource_anchor_name` - The name of the OCI resource anchor for the database server.
-* `ocid` - The OCID of the database server.
-* `shape` - The hardware system model of the Exadata infrastructure that the database server is hosted on. The shape determines the amount of CPU, storage, and memory resources available.
-* `status` - The current status of the database server.
+* `autonomous_virtual_machine_ids` - List of unique identifiers for the Autonomous VMs.
+* `autonomous_vm_cluster_ids` - List of identifiers for the Autonomous VM clusters.
+* `compute_model` - OCI compute model used when you create or clone an instance: **ECPU** or **OCPU**. ECPUs are based on the number of cores elastically allocated from a pool of compute and storage servers, while OCPUs are based on the physical core of a processor with hyper-threading enabled.
+* `cpu_core_count` - Number of CPU cores enabled on the database server.
+* `created_at` - Date and time when the database server was created.
+* `db_node_storage_size_in_gbs` - Amount of local node storage, in gigabytes (GB), that's allocated on the database server.
+* `db_server_patching_details` - Scheduling details for the quarterly maintenance window. Patching and system updates take place during the maintenance window.
+* `display_name` - User-friendly name of the database server. The name doesn't need to be unique.
+* `exadata_infrastructure_id` - ID of the Exadata infrastructure that hosts the database server.
+* `id` - Unique identifier of the database server.
+* `max_cpu_count` - Total number of CPU cores available on the database server.
+* `max_db_node_storage_in_gbs` - Total amount of local node storage, in gigabytes (GB), that's available on the database server.
+* `max_memory_in_gbs` - Total amount of memory, in gigabytes (GB), that's available on the database server.
+* `memory_size_in_gbs` - Amount of memory, in gigabytes (GB), that's allocated on the database server.
+* `oci_resource_anchor_name` - Name of the OCI resource anchor for the database server.
+* `ocid` - OCID of the database server.
+* `shape` - Hardware system model of the Exadata infrastructure that the database server is hosted on. The shape determines the amount of CPU, storage, and memory resources available.
+* `status` - Current status of the database server.
 * `status_reason` - Additional information about the status of the database server.
-* `vm_cluster_ids` - The IDs of the VM clusters that are associated with the database server.
+* `vm_cluster_ids` - IDs of the VM clusters that are associated with the database server.
