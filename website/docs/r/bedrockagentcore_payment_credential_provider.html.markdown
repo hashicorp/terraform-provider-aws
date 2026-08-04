@@ -39,9 +39,9 @@ resource "aws_bedrockagentcore_payment_credential_provider" "example" {
 
   provider_configuration {
     coinbase_cdp_configuration {
-      api_key_id    = "api_key_example"
+      api_key_id     = "api_key_example"
       api_key_secret = "secret_example"
-      wallet_secret = "wallet_example"
+      wallet_secret  = "wallet_example"
     }
   }
 }
