@@ -135,7 +135,7 @@ The `noncurrent_version_expiration` configuration block supports the following a
 
 ### `noncurrent_version_transition` Block
 
-The `noncurrent_version_transition` configuration supports the following arguments:
+The `noncurrent_version_transition` configuration block supports the following arguments:
 
 * `days` - (Required) Number of days noncurrent object versions transition.
 * `storage_class` - (Required) Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
