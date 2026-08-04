@@ -57,6 +57,8 @@ func TestOAuth2CredentialProviderTokenEndpointAuthMethodsValidation(t *testing.T
 			t.Parallel()
 
 			resource.UnitTest(t, resource.TestCase{
+				PreCheck:                 func() {},
+				ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
