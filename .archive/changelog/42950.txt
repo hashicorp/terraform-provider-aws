@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_pinpointsmsvoicev2_phone_number: Add `two_way_channel_role` argument
-```

@@ -53,6 +53,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

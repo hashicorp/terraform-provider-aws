@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_odb_gi_versions
-```
-
-```release-note:new-data-source
-aws_odb_db_system_shapes
-```

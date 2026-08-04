@@ -98,6 +98,7 @@ var (
 	FindDeviceFleetByName                     = findDeviceFleetByName
 	FindDomainByName                          = findDomainByName
 	FindEndpointByName                        = findEndpointByName
+	FindEndpointByNameExcludeDeleting         = findEndpointByNameExcludeDeleting
 	FindEndpointConfigByName                  = findEndpointConfigByName
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName

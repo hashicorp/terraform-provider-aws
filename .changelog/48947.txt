@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Prevent non-EBS deployment volume configurations from being written to state
+```

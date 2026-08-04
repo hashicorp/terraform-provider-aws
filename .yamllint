@@ -1,10 +1,6 @@
 ---
 extends: default
 
-ignore: |
-  .github/workflows/agentics-maintenance.yml
-  .github/workflows/*.lock.yml
-
 rules:
   comments:
     min-spaces-from-content: 1

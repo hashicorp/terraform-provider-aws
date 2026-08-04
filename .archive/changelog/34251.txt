@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_classifier: Add `csv_classifier.serde` argument
-```

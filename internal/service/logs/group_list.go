@@ -55,11 +55,12 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
+			logGroupName := aws.ToString(output.LogGroupName)
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.LogGroupName))
+			rd.SetId(logGroupName)
 			resourceGroupFlatten(ctx, rd, output)
 
-			result.DisplayName = aws.ToString(output.LogGroupName)
+			result.DisplayName = logGroupName
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
