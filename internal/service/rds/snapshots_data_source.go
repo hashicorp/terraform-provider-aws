@@ -28,10 +28,6 @@ func newSnapshotsDataSource(context.Context) (datasource.DataSourceWithConfigure
 	return &snapshotsDataSource{}, nil
 }
 
-const (
-	DSNameSnapshots = "Snapshots Data Source"
-)
-
 type snapshotsDataSource struct {
 	framework.DataSourceWithModel[snapshotsDataSourceModel]
 }
