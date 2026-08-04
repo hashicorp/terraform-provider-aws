@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -157,7 +157,7 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	// request to its ClientToken, so reusing one token would replay the cached
 	// SENDER_ID_REQUIRES_REGISTRATION failure instead of re-evaluating the request.
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, senderIDRegistrationPropagationTimeout, func(ctx context.Context) (any, error) {
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		return conn.RequestSenderId(ctx, input)
 	}, "ValidationException", "SENDER_ID_REQUIRES_REGISTRATION")
 
