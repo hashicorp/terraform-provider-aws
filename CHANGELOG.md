@@ -15,12 +15,14 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_rest_api: Add configurable resource timeouts. ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
 * resource/aws_dx_connection: Add `state` attribute ([#42150](https://github.com/hashicorp/terraform-provider-aws/issues/42150))
 * resource/aws_ecs_capacity_provider: Add `local_storage_configuration` attribute to `managed_instances_provider.instance_launch_template` ([#47513](https://github.com/hashicorp/terraform-provider-aws/issues/47513))
+* resource/aws_glue_catalog_table_optimizer: Add `configuration.compaction_configuration` argument ([#43868](https://github.com/hashicorp/terraform-provider-aws/issues/43868))
 * resource/aws_prometheus_scraper: Add Resource Identity support ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
 * resource/aws_prometheus_scraper: Add `destination.cloudwatch` configuration block for CloudWatch Metrics destination support ([#49088](https://github.com/hashicorp/terraform-provider-aws/issues/49088))
 
 BUG FIXES:
 
 * resource/aws_api_gateway_rest_api: Wait for the REST API to reach an available state on create and update, and to be fully deleted on delete, preventing intermittent `BadRequestException: There is already an update in progress` errors ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
+* resource/aws_appstream_stack: Fix `embed_host_domains` not being sent to the AWS API on update, which caused a permanent plan diff when the argument was added or changed on an existing stack ([#49015](https://github.com/hashicorp/terraform-provider-aws/issues/49015))
 * resource/aws_bedrockagent_data_source: Fix validator incorrectly requiring `bedrock_data_automation_configuration` when `parsing_strategy = "BEDROCK_DATA_AUTOMATION"`, a regression introduced in v6.56.0 ([#49111](https://github.com/hashicorp/terraform-provider-aws/issues/49111))
 * resource/aws_bedrockagentcore_agent_runtime: Allow `:` (colon) in the `match_value_string` and `match_value_string_list` attributes of `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` ([#48437](https://github.com/hashicorp/terraform-provider-aws/issues/48437))
 * resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
