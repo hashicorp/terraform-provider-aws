@@ -3341,8 +3341,8 @@ func flattenXMLWrapperRule2(ctx context.Context, flattener *autoFlattener, vFrom
 	return diags
 }
 
-// HandleFlattenUnkownUnionMember is used to handle an `awstypes.UnknownUnionMember` when Flattening
-func HandleFlattenUnkownUnionMember(ctx context.Context, unionTag string, diags *diag.Diagnostics) {
+// HandleFlattenUnknownUnionMember is used to handle an `awstypes.UnknownUnionMember` when Flattening
+func HandleFlattenUnknownUnionMember(ctx context.Context, unionTag string, diags *diag.Diagnostics) {
 	tflog.Warn(ctx, "Unexpected tagged union member", map[string]any{
 		"tag": unionTag,
 	})
