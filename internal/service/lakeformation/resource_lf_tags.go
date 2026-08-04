@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lakeformation
 
@@ -15,14 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,185 +42,183 @@ func ResourceResourceLFTags() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrDatabase: {
-				Type:     schema.TypeList,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrDatabase,
-					"table",
-					"table_with_columns",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					Computed: true,
+					ForceNew: true,
+					Optional: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
+				names.AttrDatabase: {
+					Type:     schema.TypeList,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrDatabase,
+						"table",
+						"table_with_columns",
 					},
-				},
-			},
-			"lf_tag": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateLFTagValues(),
-						},
-					},
-				},
-				Set: lfTagsHash,
-			},
-			"table": {
-				Type:     schema.TypeList,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrDatabase,
-					"table",
-					"table_with_columns",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-							AtLeastOneOf: []string{
-								"table.0.name",
-								"table.0.wildcard",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
 							},
-						},
-						"wildcard": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							ForceNew: true,
-							Optional: true,
-							AtLeastOneOf: []string{
-								"table.0.name",
-								"table.0.wildcard",
+							names.AttrName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"table_with_columns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrDatabase,
-					"table",
-					"table_with_columns",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
-						},
-						"column_names": {
-							Type:     schema.TypeSet,
-							ForceNew: true,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
+				"lf_tag": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrKey: {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.NoZeroValues,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
-							AtLeastOneOf: []string{
-								"table_with_columns.0.column_names",
-								"table_with_columns.0.wildcard",
-							},
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
-						"excluded_column_names": {
-							Type:     schema.TypeSet,
-							ForceNew: true,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
+							names.AttrValue: {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.NoZeroValues,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validateLFTagValues(),
 							},
 						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
-						"wildcard": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							ForceNew: true,
-							Optional: true,
-							AtLeastOneOf: []string{
-								"table_with_columns.0.column_names",
-								"table_with_columns.0.wildcard",
+					},
+					Set: lfTagsHash,
+				},
+				"table": {
+					Type:     schema.TypeList,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrDatabase,
+						"table",
+						"table_with_columns",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+								AtLeastOneOf: []string{
+									"table.0.name",
+									"table.0.wildcard",
+								},
+							},
+							"wildcard": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								ForceNew: true,
+								Optional: true,
+								AtLeastOneOf: []string{
+									"table.0.name",
+									"table.0.wildcard",
+								},
 							},
 						},
 					},
 				},
-			},
+				"table_with_columns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrDatabase,
+						"table",
+						"table_with_columns",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
+							"column_names": {
+								Type:     schema.TypeSet,
+								ForceNew: true,
+								Optional: true,
+								Set:      schema.HashString,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.NoZeroValues,
+								},
+								AtLeastOneOf: []string{
+									"table_with_columns.0.column_names",
+									"table_with_columns.0.wildcard",
+								},
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							"excluded_column_names": {
+								Type:     schema.TypeSet,
+								ForceNew: true,
+								Optional: true,
+								Set:      schema.HashString,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.NoZeroValues,
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							"wildcard": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								ForceNew: true,
+								Optional: true,
+								AtLeastOneOf: []string{
+									"table_with_columns.0.column_names",
+									"table_with_columns.0.wildcard",
+								},
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -249,22 +247,18 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	input.Resource = tagger.ExpandResource(d)
 
 	var output *lakeformation.AddLFTagsToResourceOutput
-	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = conn.AddLFTagsToResource(ctx, input)
 		if err != nil {
 			if errs.IsA[*awstypes.ConcurrentModificationException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.AddLFTagsToResource(ctx, input)
-	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionCreating, ResNameLFTags, prettify(input), err)
@@ -356,25 +350,21 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagWarningMessage(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), "no LF-Tags to remove")
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		_, err = conn.RemoveLFTagsFromResource(ctx, input)
 		if err != nil {
 			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
+			return tfresource.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.RemoveLFTagsFromResource(ctx, input)
-	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)

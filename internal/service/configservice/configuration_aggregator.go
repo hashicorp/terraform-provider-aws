@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,17 +28,16 @@ import (
 )
 
 // @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationAggregator")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,
 		ReadWithoutTimeout:   resourceConfigurationAggregatorRead,
 		UpdateWithoutTimeout: resourceConfigurationAggregatorPut,
 		DeleteWithoutTimeout: resourceConfigurationAggregatorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			// This is to prevent this error:
@@ -49,79 +50,81 @@ func resourceConfigurationAggregator() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"account_aggregation_source": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"organization_aggregation_source"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account_ids": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_aggregation_source": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"organization_aggregation_source"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_ids": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidAccountID,
+								},
+							},
+							"all_regions": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"regions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"organization_aggregation_source": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"account_aggregation_source"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all_regions": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"regions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrRoleARN: {
 								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidAccountID,
-							},
-						},
-						"all_regions": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"regions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"organization_aggregation_source": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"account_aggregation_source"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"all_regions": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"regions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -132,7 +135,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 
 	if d.IsNewResource() || d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		name := d.Get(names.AttrName).(string)
-		input := &configservice.PutConfigurationAggregatorInput{
+		input := configservice.PutConfigurationAggregatorInput{
 			ConfigurationAggregatorName: aws.String(name),
 			Tags:                        getTagsIn(ctx),
 		}
@@ -145,7 +148,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 			input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]any)[0].(map[string]any))
 		}
 
-		output, err := conn.PutConfigurationAggregator(ctx, input)
+		output, err := conn.PutConfigurationAggregator(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Aggregator (%s): %s", name, err)
@@ -165,7 +168,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 
 	aggregator, err := findConfigurationAggregatorByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Configuration Aggregator (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -209,11 +212,11 @@ func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.Resour
 }
 
 func findConfigurationAggregatorByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationAggregator, error) {
-	input := &configservice.DescribeConfigurationAggregatorsInput{
+	input := configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []string{name},
 	}
 
-	return findConfigurationAggregator(ctx, conn, input)
+	return findConfigurationAggregator(ctx, conn, &input)
 }
 
 func findConfigurationAggregator(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationAggregatorsInput) (*types.ConfigurationAggregator, error) {
@@ -235,8 +238,7 @@ func findConfigurationAggregators(ctx context.Context, conn *configservice.Clien
 
 		if errs.IsA[*types.NoSuchConfigurationAggregatorException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

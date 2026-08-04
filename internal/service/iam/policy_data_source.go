@@ -1,11 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -26,46 +27,49 @@ func dataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{names.AttrName, "path_prefix"},
-			},
-			"attachment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"path_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrARN},
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"policy_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{names.AttrName, "path_prefix"},
+				},
+				"attachment_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrARN},
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"path_prefix": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{names.AttrARN},
+					ValidateDiagFunc: validPolicyPath,
+				},
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"policy_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -102,31 +106,20 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any)
 	arn = aws.ToString(policy.Arn)
 
 	d.SetId(arn)
-	d.Set(names.AttrARN, arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrPath, policy.Path)
-	d.Set("policy_id", policy.PolicyId)
+	resourcePolicyFlatten(ctx, policy, d)
 
-	setTagsOut(ctx, policy.Tags)
-
-	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+	policyVersion, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 		func(ctx context.Context) (*awstypes.PolicyVersion, error) {
-			return findPolicyVersion(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
+			return findPolicyVersionByTwoPartKey(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) default version: %s", arn, err)
 	}
 
-	policyDocument, err := url.QueryUnescape(aws.ToString(output.Document))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
+	if err := resourcePolicyFlattenPolicyDocument(aws.ToString(policyVersion.Document), d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	d.Set(names.AttrPolicy, policyDocument)
 
 	return diags
 }

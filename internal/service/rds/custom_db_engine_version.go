@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,113 +53,115 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"database_installation_files_s3_bucket_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			"database_installation_files_s3_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"db_parameter_group_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
-					validation.StringLenBetween(1, 35),
-				),
-			},
-			names.AttrEngineVersion: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 60),
-			},
-			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"manifest"},
-			},
-			//API returns created image_id of the newly created image.
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"major_engine_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"manifest": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringIsJSON,
-					validation.StringLenBetween(1, 100000),
-				),
-				ConflictsWith:    []string{"filename"},
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			//API returns manifest with service added additions, non-determinestic.
-			"manifest_computed": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"manifest_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.CustomEngineVersionStatus](),
-			},
-			// Allow CEV creation from a source AMI ID.
-			// implicit state passthrough, virtual attribute
-			"source_image_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database_installation_files_s3_bucket_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				"database_installation_files_s3_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"db_parameter_group_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						validation.StringLenBetween(1, 35),
+					),
+				},
+				names.AttrEngineVersion: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 60),
+				},
+				"filename": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"manifest"},
+				},
+				//API returns created image_id of the newly created image.
+				"image_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"major_engine_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"manifest": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringIsJSON,
+						validation.StringLenBetween(1, 100000),
+					),
+					ConflictsWith:    []string{"filename"},
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				//API returns manifest with service added additions, non-determinestic.
+				"manifest_computed": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"manifest_hash": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.CustomEngineVersionStatus](),
+				},
+				// Allow CEV creation from a source AMI ID.
+				// implicit state passthrough, virtual attribute
+				"source_image_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -257,7 +261,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 
 	out, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Custom DB Engine Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -403,8 +407,7 @@ func findDBEngineVersions(ctx context.Context, conn *rds.Client, input *rds.Desc
 
 		if errs.IsA[*types.CustomDBEngineVersionNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -431,11 +434,11 @@ const (
 	statusPendingValidation = "pending-validation" // Custom for SQL Server, ready for validation by an instance
 )
 
-func statusDBEngineVersion(ctx context.Context, conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBEngineVersion(conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -451,7 +454,7 @@ func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.Client, eng
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusCreating},
 		Target:                    []string{statusAvailable, statusPendingValidation},
-		Refresh:                   statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh:                   statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -470,7 +473,7 @@ func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.Client, eng
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusAvailable},
 		Target:  []string{statusAvailable, statusPendingValidation},
-		Refresh: statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh: statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout: timeout,
 	}
 
@@ -487,7 +490,7 @@ func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.Client, eng
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting},
 		Target:  []string{},
-		Refresh: statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh: statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout: timeout,
 	}
 

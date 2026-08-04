@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmquicksetup_test
@@ -10,13 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssmquicksetup "github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,10 +26,10 @@ func TestAccSSMQuickSetupConfigurationManager_basic(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -38,12 +37,12 @@ func TestAccSSMQuickSetupConfigurationManager_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
@@ -70,10 +69,10 @@ func TestAccSSMQuickSetupConfigurationManager_disappears(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -81,15 +80,23 @@ func TestAccSSMQuickSetupConfigurationManager_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmquicksetup.ResourceConfigurationManager, resourceName),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmquicksetup.ResourceConfigurationManager, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmquicksetup_configuration_manager.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmquicksetup_configuration_manager.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -102,10 +109,10 @@ func TestAccSSMQuickSetupConfigurationManager_description(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -113,12 +120,12 @@ func TestAccSSMQuickSetupConfigurationManager_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_description(rName, "foo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "foo"),
 				),
@@ -134,7 +141,7 @@ func TestAccSSMQuickSetupConfigurationManager_description(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_description(rName, "bar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "bar"),
 				),
@@ -150,10 +157,10 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -161,12 +168,12 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_parameters(rName, "10%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
@@ -186,7 +193,7 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_parameters(rName, "15%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
@@ -206,10 +213,10 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -217,12 +224,12 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -239,7 +246,7 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -249,7 +256,7 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -280,9 +287,9 @@ func testAccConfigurationManagerPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckHasIAMRole(ctx, t, "AWS-QuickSetup-PatchPolicy-LocalExecutionRole")
 }
 
-func testAccCheckConfigurationManagerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationManagerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMQuickSetupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMQuickSetupClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssmquicksetup_configuration_manager" {
@@ -291,7 +298,7 @@ func testAccCheckConfigurationManagerDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfssmquicksetup.FindConfigurationManagerByID(ctx, conn, rs.Primary.Attributes["manager_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -306,14 +313,14 @@ func testAccCheckConfigurationManagerDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckConfigurationManagerExists(ctx context.Context, n string, v *ssmquicksetup.GetConfigurationManagerOutput) resource.TestCheckFunc {
+func testAccCheckConfigurationManagerExists(ctx context.Context, t *testing.T, n string, v *ssmquicksetup.GetConfigurationManagerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMQuickSetupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMQuickSetupClient(ctx)
 
 		output, err := tfssmquicksetup.FindConfigurationManagerByID(ctx, conn, rs.Primary.Attributes["manager_arn"])
 

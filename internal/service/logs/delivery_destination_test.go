@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -36,7 +37,10 @@ func TestAccLogsDeliveryDestination_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryDestinationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
 				),
@@ -54,10 +58,14 @@ func TestAccLogsDeliveryDestination_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
@@ -79,12 +87,64 @@ func TestAccLogsDeliveryDestination_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryDestinationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliveryDestination, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDeliveryDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsDeliveryDestination_XRAY(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DeliveryDestination
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_destination.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryDestinationConfig_xray(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("XRAY")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -121,10 +181,10 @@ func TestAccLogsDeliveryDestination_tags(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -193,10 +253,10 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -246,10 +306,10 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationSameTy
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -299,10 +359,10 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDiffer
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -317,6 +377,65 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDiffer
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("S3")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationWithTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DeliveryDestination
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_destination.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTag(rName, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("S3")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTagDestinationUpdated(rName, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("S3")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 			},
 		},
@@ -370,17 +489,6 @@ func testAccCheckDeliveryDestinationExists(ctx context.Context, t *testing.T, n 
 	}
 }
 
-func testAccDeliveryDestinationImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes[names.AttrName], nil
-	}
-}
-
 func testAccDeliveryDestinationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -393,6 +501,15 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
   delivery_destination_configuration {
     destination_resource_arn = aws_cloudwatch_log_group.test.arn
   }
+}
+`, rName)
+}
+
+func testAccDeliveryDestinationConfig_xray(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name                      = %[1]q
+  delivery_destination_type = "XRAY"
 }
 `, rName)
 }
@@ -507,4 +624,33 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTag(rName, tagValue string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.test.arn
+  }
+  tags = {
+    key1 = %[2]q
+  }
+}
+`, rName, tagValue))
+}
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTagDestinationUpdated(rName, tagValue string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = "${aws_s3_bucket.test.arn}/test"
+  }
+  tags = {
+    key1 = %[2]q
+  }
+}
+`, rName, tagValue))
 }

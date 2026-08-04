@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -33,7 +35,11 @@ import (
 
 // @FrameworkResource("aws_cloudwatch_log_delivery_destination", name="Delivery Destination")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(importStateIdAttribute="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.DeliveryDestination")
 func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliveryDestinationResource{}
 
@@ -42,6 +48,7 @@ func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfi
 
 type deliveryDestinationResource struct {
 	framework.ResourceWithModel[deliveryDestinationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *deliveryDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -50,6 +57,7 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"delivery_destination_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.DeliveryDestinationType](),
+				Optional:   true,
 				Computed:   true,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -75,15 +83,13 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 			"delivery_destination_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[deliveryDestinationConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"destination_resource_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
-							Required:   true,
+							Optional:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplaceIf(requiresReplaceIfARNServiceChanges, "", ""),
 							},
@@ -92,6 +98,34 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 				},
 			},
 		},
+	}
+}
+
+func (r *deliveryDestinationResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data deliveryDestinationResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	isXray := !data.DeliveryDestinationType.IsNull() && !data.DeliveryDestinationType.IsUnknown() &&
+		data.DeliveryDestinationType.ValueString() == string(awstypes.DeliveryDestinationTypeXray)
+	hasConfig := !data.DeliveryDestinationConfiguration.IsNull() && !data.DeliveryDestinationConfiguration.IsUnknown()
+
+	if isXray && hasConfig {
+		response.Diagnostics.AddAttributeError(
+			path.Root("delivery_destination_configuration"),
+			"Invalid Configuration",
+			"delivery_destination_configuration must not be set when delivery_destination_type is XRAY",
+		)
+	}
+
+	if !isXray && !hasConfig && !data.DeliveryDestinationType.IsUnknown() && !data.DeliveryDestinationConfiguration.IsUnknown() {
+		response.Diagnostics.AddAttributeError(
+			path.Root("delivery_destination_configuration"),
+			"Missing Configuration",
+			"delivery_destination_configuration is required when delivery_destination_type is not XRAY",
+		)
 	}
 }
 
@@ -104,7 +138,8 @@ func (r *deliveryDestinationResource) Create(ctx context.Context, request resour
 
 	conn := r.Meta().LogsClient(ctx)
 
-	input := cloudwatchlogs.PutDeliveryDestinationInput{}
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input cloudwatchlogs.PutDeliveryDestinationInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -116,7 +151,7 @@ func (r *deliveryDestinationResource) Create(ctx context.Context, request resour
 	output, err := conn.PutDeliveryDestination(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Destination (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 		return
 	}
@@ -137,7 +172,8 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findDeliveryDestinationByName(ctx, conn, data.Name.ValueString())
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	output, err := findDeliveryDestinationByName(ctx, conn, name)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -147,9 +183,16 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Destination (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 		return
+	}
+
+	// Handle empty destination_resource_arn for XRAY type destinations
+	// Clear it before flattening to avoid ARN validation error
+	if output.DeliveryDestinationConfiguration != nil &&
+		aws.ToString(output.DeliveryDestinationConfiguration.DestinationResourceArn) == "" {
+		output.DeliveryDestinationConfiguration = nil
 	}
 
 	// Set attributes for import.
@@ -179,19 +222,17 @@ func (r *deliveryDestinationResource) Update(ctx context.Context, request resour
 	conn := r.Meta().LogsClient(ctx)
 
 	if !new.DeliveryDestinationConfiguration.Equal(old.DeliveryDestinationConfiguration) || !new.OutputFormat.Equal(old.OutputFormat) {
-		input := cloudwatchlogs.PutDeliveryDestinationInput{}
+		name := fwflex.StringValueFromFramework(ctx, new.Name)
+		var input cloudwatchlogs.PutDeliveryDestinationInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		// Additional fields.
-		input.Tags = getTagsIn(ctx)
-
 		output, err := conn.PutDeliveryDestination(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Destination (%s)", new.Name.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 			return
 		}
@@ -214,23 +255,21 @@ func (r *deliveryDestinationResource) Delete(ctx context.Context, request resour
 
 	conn := r.Meta().LogsClient(ctx)
 
-	_, err := conn.DeleteDeliveryDestination(ctx, &cloudwatchlogs.DeleteDeliveryDestinationInput{
-		Name: fwflex.StringFromFramework(ctx, data.Name),
-	})
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	input := cloudwatchlogs.DeleteDeliveryDestinationInput{
+		Name: aws.String(name),
+	}
+	_, err := conn.DeleteDeliveryDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery Destination (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 		return
 	}
-}
-
-func (r *deliveryDestinationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findDeliveryDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.DeliveryDestination, error) {
@@ -255,7 +294,7 @@ func findDeliveryDestination(ctx context.Context, conn *cloudwatchlogs.Client, i
 	}
 
 	if output == nil || output.DeliveryDestination == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryDestination, nil

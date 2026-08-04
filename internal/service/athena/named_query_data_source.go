@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package athena
 
@@ -23,28 +25,30 @@ func dataSourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNamedQueryRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDatabase: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"querystring": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workgroup": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "primary",
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDatabase: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"querystring": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workgroup": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "primary",
+				},
+			}
 		},
 	}
 }
@@ -98,7 +102,7 @@ func findNamedQueryByName(ctx context.Context, conn *athena.Client, queryIDs []s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	queries := tfslices.Filter(output.NamedQueries, func(v types.NamedQuery) bool {

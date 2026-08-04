@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package evidently
 
@@ -18,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,116 +46,118 @@ func ResourceProject() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"active_experiment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"active_launch_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_delivery": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-							// https://docs.aws.amazon.com/cloudwatchevidently/latest/APIReference/API_UpdateProjectDataDelivery.html
-							ConflictsWith: []string{"data_delivery.0.s3_destination"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"log_group": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./-]+$`), "must be a valid CloudWatch Log Group name"),
-										),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_experiment_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"active_launch_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_delivery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								// You can't specify both cloudWatchLogs and s3Destination in the same operation.
+								// https://docs.aws.amazon.com/cloudwatchevidently/latest/APIReference/API_UpdateProjectDataDelivery.html
+								ConflictsWith: []string{"data_delivery.0.s3_destination"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"log_group": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 512),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./-]+$`), "must be a valid CloudWatch Log Group name"),
+											),
+										},
 									},
 								},
 							},
-						},
-						"s3_destination": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-							// https://docs.aws.amazon.com/cloudwatchevidently/latest/APIReference/API_UpdateProjectDataDelivery.html
-							ConflictsWith: []string{"data_delivery.0.cloudwatch_logs"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(3, 63),
-											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
-										),
-									},
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_!.*'()/-]*$`), "must be a valid prefix name"),
-										),
+							"s3_destination": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								// You can't specify both cloudWatchLogs and s3Destination in the same operation.
+								// https://docs.aws.amazon.com/cloudwatchevidently/latest/APIReference/API_UpdateProjectDataDelivery.html
+								ConflictsWith: []string{"data_delivery.0.cloudwatch_logs"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(3, 63),
+												validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
+											),
+										},
+										names.AttrPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_!.*'()/-]*$`), "must be a valid prefix name"),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 160),
-			},
-			"experiment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"feature_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"launch_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 160),
+				},
+				"experiment_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"feature_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"launch_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 127),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -199,7 +203,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

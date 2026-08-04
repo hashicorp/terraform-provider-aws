@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lakeformation
 
@@ -29,12 +31,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -144,14 +146,18 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				names.AttrValue: schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthBetween(1, 255),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+				names.AttrValues: schema.SetAttribute{
+					CustomType: fwtypes.SetOfStringType,
+					Required:   true,
+					Validators: []validator.Set{
+						setvalidator.SizeAtLeast(1),
+						setvalidator.ValueStringsAre(
+							stringvalidator.LengthBetween(1, 255),
+							stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+						),
 					},
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
+					PlanModifiers: []planmodifier.Set{
+						setplanmodifier.RequiresReplace(),
 					},
 				},
 			},
@@ -331,6 +337,8 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -383,21 +391,17 @@ func (r *optInResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	var output *lakeformation.CreateLakeFormationOptInOutput
-	err := retry.RetryContext(ctx, 2*IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 2*IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s) on Catalog") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -467,7 +471,7 @@ func (r *optInResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	out, err := findOptInByID(ctx, conn, principalData.DataLakePrincipalIdentifier.ValueString(), opinr)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -536,7 +540,7 @@ func (r *optInResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if _, err := conn.DeleteLakeFormationOptIn(ctx, in); err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -570,10 +574,9 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 		if err != nil {
@@ -893,9 +896,9 @@ type dataLocationOptIn struct {
 }
 
 type lfTagOptIn struct {
-	CatalogID types.String `tfsdk:"catalog_id"`
-	Key       types.String `tfsdk:"key"`
-	Value     types.String `tfsdk:"value"`
+	CatalogID types.String                     `tfsdk:"catalog_id"`
+	TagKey    types.String                     `tfsdk:"key"`
+	TagValues fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type lfTagExpressionOptIn struct {

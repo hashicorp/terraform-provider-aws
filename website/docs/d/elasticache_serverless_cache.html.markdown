@@ -44,7 +44,7 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshot_retention_limit` - The number of snapshots that will be retained for the serverless cache. Available for Redis only.
 * `status` - The current status of the serverless cache.
 * `subnet_ids` - A list of the identifiers of the subnets where the VPC endpoint for the serverless cache are deployed.
-* `user_group_id` - The identifier of the UserGroup associated with the serverless cache. Available for Redis only.
+* `user_group_id` - The identifier of the UserGroup associated with the serverless cache. Available for Redis and Valkey.
 
 ### `cache_usage_limits` Block
 

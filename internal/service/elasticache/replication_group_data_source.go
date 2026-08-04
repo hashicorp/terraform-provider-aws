@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
@@ -22,105 +24,145 @@ import (
 func dataSourceReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationGroupRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auth_token_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"automatic_failover_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"cluster_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configuration_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_delivery_configuration": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestination: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"destination_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_format": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"log_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auth_token_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"automatic_failover_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"cluster_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"configuration_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_delivery_configuration": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestination: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"destination_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_format": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"member_clusters": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"multi_az_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"num_cache_clusters": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"num_node_groups": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"primary_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"reader_endpoint_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateReplicationGroupID,
-			},
-			"replicas_per_node_group": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_retention_limit": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"member_clusters": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"multi_az_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"node_group_configuration": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"node_group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"primary_availability_zone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"primary_outpost_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"replica_availability_zones": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"replica_outpost_arns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"replica_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"slots": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"num_cache_clusters": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"num_node_groups": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"primary_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"reader_endpoint_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateReplicationGroupID,
+				},
+				"replicas_per_node_group": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_retention_limit": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_window": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -175,7 +217,12 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("node_type", rg.CacheNodeType)
 	d.Set("num_node_groups", len(rg.NodeGroups))
-	d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+	if len(rg.NodeGroups) > 0 {
+		d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+		if err := d.Set("node_group_configuration", flattenNodeGroupConfigurations(rg.NodeGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_group_configuration: %s", err)
+		}
+	}
 	d.Set("cluster_mode", rg.ClusterMode)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)

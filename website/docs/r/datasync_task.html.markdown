@@ -24,7 +24,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Scheduling
+### Example Usage with Scheduling
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -38,7 +38,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Filtering
+### Example Usage with Filtering
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -58,7 +58,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Enhanced Task Mode
+### Example Usage with Enhanced Task Mode
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -149,6 +149,7 @@ The following arguments are supported inside the `report_overrides` configuratio
 ### Schedule
 
 * `schedule_expression` - (Required) Specifies the schedule you want your task to use for repeated executions. For more information, see [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
+* `status` - (Optional) Whether to enable or disable your task schedule. Valid values: `ENABLED`, `DISABLED`. Default: `ENABLED`.
 
 ### excludes Argument Reference
 
@@ -175,6 +176,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_task.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:task/task-12345678901234567"
+  }
+}
+
+resource "aws_datasync_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync task.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 

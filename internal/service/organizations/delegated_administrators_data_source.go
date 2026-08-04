@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -24,52 +26,54 @@ func dataSourceDelegatedAdministrators() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedAdministratorsRead,
 
-		Schema: map[string]*schema.Schema{
-			"delegated_administrators": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"delegation_enabled_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"delegated_administrators": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"delegation_enabled_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_method": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"joined_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"service_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
+				"service_principal": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			}
 		},
 	}
 }
@@ -78,13 +82,13 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.ListDelegatedAdministratorsInput{}
+	input := organizations.ListDelegatedAdministratorsInput{}
 
 	if v, ok := d.GetOk("service_principal"); ok {
 		input.ServicePrincipal = aws.String(v.(string))
 	}
 
-	output, err := findDelegatedAdministrators(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DelegatedAdministrator]())
+	output, err := findDelegatedAdministrators(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.DelegatedAdministrator]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrators: %s", err)
@@ -95,7 +99,7 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "setting delegated_administrators: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenDelegatedAdministrators(apiObjects []awstypes.DelegatedAdministrator) []map[string]any {

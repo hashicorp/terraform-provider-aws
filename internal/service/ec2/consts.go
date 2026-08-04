@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -70,6 +70,13 @@ const (
 	vpnStateModifying = "modifying"
 )
 
+const (
+	guardDutyServiceNamePattern  = "*guardduty-data*"
+	guardDutySecurityGroupPrefix = "GuardDutyManagedSecurityGroup-"
+	guardDutyManagedTagKey       = "GuardDutyManaged"
+	guardDutyManagedTagValue     = "true"
+)
+
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
 const (
 	ebsSnapshotImportStateActive     = "active"
@@ -117,6 +124,14 @@ func managedPrefixListAddressFamily_Values() []string {
 	}
 }
 
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpnConcentrator.html.
+const (
+	vpnConcentratorStateAvailable = "available"
+	vpnConcentratorStateDeleted   = "deleted"
+	vpnConcentratorStateDeleting  = "deleting"
+	vpnConcentratorStatePending   = "pending"
+)
+
 const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
@@ -152,6 +167,18 @@ func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
 		names.AttrJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
+	}
+}
+
+const (
+	vpnTunnelCloudWatchLogBGPLogOutputFormatJSON = names.AttrJSON
+	vpnTunnelCloudWatchLogBGPLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogBGPLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogBGPLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogBGPLogOutputFormatText,
 	}
 }
 

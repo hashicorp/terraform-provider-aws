@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -15,7 +17,6 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,92 +46,94 @@ func resourceReplicationTask() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cdc_start_position": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"cdc_start_time"},
-			},
-			"cdc_start_time": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidStringDateOrPositiveInt,
-				ConflictsWith: []string{"cdc_start_position"},
-			},
-			"migration_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
-			},
-			"replication_instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"replication_task_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_task_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validReplicationTaskID,
-			},
-			// "replication_task_settings" is equivalent to "replication_settings" on "aws_dms_replication_config"
-			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_config"
-			"replication_task_settings": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringIsJSON),
-					validateReplicationSettings,
-				),
-				DiffSuppressFunc:      suppressEquivalentTaskSettings,
-				DiffSuppressOnRefresh: true,
-			},
-			"resource_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 31),
-					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
-			},
-			"source_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"start_replication_task": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"table_mappings": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cdc_start_position": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"cdc_start_time"},
+				},
+				"cdc_start_time": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidStringDateOrPositiveInt,
+					ConflictsWith: []string{"cdc_start_position"},
+				},
+				"migration_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
+				},
+				"replication_instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"replication_task_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_task_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validReplicationTaskID,
+				},
+				// "replication_task_settings" is equivalent to "replication_settings" on "aws_dms_replication_config"
+				// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_config"
+				"replication_task_settings": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringIsJSON),
+						validateReplicationSettings,
+					),
+					DiffSuppressFunc:      suppressEquivalentTaskSettings,
+					DiffSuppressOnRefresh: true,
+				},
+				"resource_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 31),
+						validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+					),
+				},
+				"source_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"start_replication_task": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"table_mappings": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -197,7 +201,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 
 	task, err := findReplicationTaskByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Task (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -381,8 +385,7 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -396,11 +399,11 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 	return output, nil
 }
 
-func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationTask(conn *dms.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationTaskByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -422,14 +425,14 @@ func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTas
 		errs = append(errs, errors.New(v))
 	}
 
-	tfresource.SetLastError(err, errors.Join(errs...))
+	retry.SetLastError(err, errors.Join(errs...))
 }
 
 func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusReplicationTask(ctx, conn, id),
+		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -449,7 +452,7 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
-		Refresh:    statusReplicationTask(ctx, conn, id),
+		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -469,7 +472,7 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
-		Refresh:    statusReplicationTask(ctx, conn, id),
+		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -489,7 +492,7 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
-		Refresh:    statusReplicationTask(ctx, conn, id),
+		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -512,7 +515,7 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
-		Refresh:    statusReplicationTask(ctx, conn, id),
+		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -535,7 +538,7 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:                    []string{replicationTaskStatusStopped},
-		Refresh:                   statusReplicationTask(ctx, conn, id),
+		Refresh:                   statusReplicationTask(conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
@@ -559,7 +562,7 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.Client, id string)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
 		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
-		Refresh:                   statusReplicationTask(ctx, conn, id),
+		Refresh:                   statusReplicationTask(conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
@@ -613,7 +616,7 @@ func startReplicationTask(ctx context.Context, conn *dms.Client, id string) erro
 func stopReplicationTask(ctx context.Context, conn *dms.Client, id string) error {
 	task, err := findReplicationTaskByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 

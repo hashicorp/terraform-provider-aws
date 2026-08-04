@@ -30,11 +30,11 @@ resource "aws_apprunner_auto_scaling_configuration_version" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_scaling_configuration_name` - (Required, Forces new resource) Name of the auto scaling configuration.
 * `max_concurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
 * `max_size` - (Optional, Forces new resource) Maximal number of instances that App Runner provisions for your service.
 * `min_size` - (Optional, Forces new resource) Minimal number of instances that App Runner provisions for your service.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -42,12 +42,35 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of this auto scaling configuration version.
-* `auto_scaling_configuration_revision` - The revision of this auto scaling configuration.
+* `auto_scaling_configuration_revision` - Revision of this auto scaling configuration.
+* `has_associated_service` - Whether there is an App Runner service associated with this auto scaling configuration.
+* `is_default` - Whether the auto scaling configuration is the default for the AWS account and Region.
 * `latest` - Whether the auto scaling configuration has the highest `auto_scaling_configuration_revision` among all configurations that share the same `auto_scaling_configuration_name`.
 * `status` - Current state of the auto scaling configuration. An INACTIVE configuration revision has been deleted and can't be used. It is permanently removed some time after deletion.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_auto_scaling_configuration_version.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:autoscalingconfiguration/example-auto-scaling-config/1/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_apprunner_auto_scaling_configuration_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner auto scaling configuration version.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner AutoScaling Configuration Versions using the `arn`. For example:
 

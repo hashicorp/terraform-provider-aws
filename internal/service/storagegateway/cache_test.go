@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,11 +75,11 @@ func TestCacheParseResourceID(t *testing.T) {
 
 func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cache.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -91,7 +89,7 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 			{
 				Config: testAccCacheConfig_fileGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCacheExists(ctx, resourceName),
+					testAccCheckCacheExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
@@ -107,11 +105,11 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 
 func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_cache.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -120,7 +118,7 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 			{
 				Config: testAccCacheConfig_tapeAndVolumeGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCacheExists(ctx, resourceName),
+					testAccCheckCacheExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
@@ -134,14 +132,14 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 	})
 }
 
-func testAccCheckCacheExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCacheExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).StorageGatewayClient(ctx)
 
 		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -153,7 +151,7 @@ func testAccCheckCacheExists(ctx context.Context, n string) resource.TestCheckFu
 }
 
 func testAccCacheConfig_fileGateway(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_typeFileS3(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeFileS3(rName, rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

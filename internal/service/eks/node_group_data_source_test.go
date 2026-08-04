@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_node_group.test"
 	resourceName := "aws_eks_node_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,7 +48,37 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceResourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "taint.#", dataSourceResourceName, "taints.#"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, "update_config.#", dataSourceResourceName, "update_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVersion, dataSourceResourceName, names.AttrVersion),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroupDataSource_warmPool(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceResourceName := "data.aws_eks_node_group.test"
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_warmPool(rName),
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+			{
+				Config: testAccNodeGroupDataSourceConfig_warmPool(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "warm_pool.#", dataSourceResourceName, "warm_pool.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "warm_pool.0.max_group_prepared_capacity", dataSourceResourceName, "warm_pool.0.max_group_prepared_capacity"),
+					resource.TestCheckResourceAttrPair(resourceName, "warm_pool.0.min_size", dataSourceResourceName, "warm_pool.0.min_size"),
+					resource.TestCheckResourceAttrPair(resourceName, "warm_pool.0.pool_state", dataSourceResourceName, "warm_pool.0.pool_state"),
+					resource.TestCheckResourceAttrPair(resourceName, "warm_pool.0.reuse_on_scale_in", dataSourceResourceName, "warm_pool.0.reuse_on_scale_in"),
 				),
 			},
 		},
@@ -58,6 +87,15 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 
 func testAccNodeGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccNodeGroupConfig_name(rName), fmt.Sprintf(`
+data "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+}
+`, rName))
+}
+
+func testAccNodeGroupDataSourceConfig_warmPool(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_warmPool(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q

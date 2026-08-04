@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -18,19 +20,21 @@ func dataSourceEmailIdentityMailFromAttributes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityMailFromAttributesRead,
 
-		Schema: map[string]*schema.Schema{
-			"behavior_on_mx_failure": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"mail_from_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"behavior_on_mx_failure": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"email_identity": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mail_from_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

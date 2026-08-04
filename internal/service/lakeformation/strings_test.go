@@ -1,12 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package lakeformation_test
+package lakeformation
 
 import (
 	"testing"
-
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
@@ -31,7 +29,7 @@ func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 		},
 	}
 	for _, v := range equal {
-		if !tflakeformation.StringSlicesEqualIgnoreOrder(v.([]any)[0].([]string), v.([]any)[1].([]string)) {
+		if !stringSlicesEqualIgnoreOrder(v.([]any)[0].([]string), v.([]any)[1].([]string)) {
 			t.Fatalf("%v should be equal: %v", v.([]any)[0].([]string), v.([]any)[1].([]string))
 		}
 	}
@@ -59,7 +57,7 @@ func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 		},
 	}
 	for _, v := range notEqual {
-		if tflakeformation.StringSlicesEqualIgnoreOrder(v.([]any)[0].([]string), v.([]any)[1].([]string)) {
+		if stringSlicesEqualIgnoreOrder(v.([]any)[0].([]string), v.([]any)[1].([]string)) {
 			t.Fatalf("%v should not be equal: %v", v.([]any)[0].([]string), v.([]any)[1].([]string))
 		}
 	}

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # GitHub Workflows
 
 ## This README Is Out-of-Date
@@ -15,7 +18,7 @@ The wrapper can be turned off by using
 
 ```yaml
 steps:
-- uses: hashicorp/setup-terraform@v1
+- uses: hashicorp/setup-terraform@v4.0.1
   with:
     terraform_wrapper: false
 ```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -17,11 +17,47 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_prometheus_anomaly_detector", sweepAnomalyDetectors)
+
 	awsv2.Register("aws_prometheus_scraper", sweepScraper)
 
 	awsv2.Register("aws_prometheus_workspace", sweepWorkspace,
-		"aws_prometheus_scraper",
+		"aws_prometheus_scraper", "aws_prometheus_anomaly_detector",
 	)
+}
+
+func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := amp.ListAnomalyDetectorsInput{}
+	conn := client.AMPClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	workspacePages := amp.NewListWorkspacesPaginator(conn, &amp.ListWorkspacesInput{})
+	for workspacePages.HasMorePages() {
+		workspacePage, err := workspacePages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, workspace := range workspacePage.Workspaces {
+			input.WorkspaceId = workspace.WorkspaceId
+			pages := amp.NewListAnomalyDetectorsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.AnomalyDetectors {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newAnomalyDetectorResource, client,
+						framework.NewAttribute(names.AttrID, aws.ToString(v.AnomalyDetectorId)),
+						framework.NewAttribute("workspace_id", aws.ToString(workspace.WorkspaceId)),
+					))
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepScraper(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

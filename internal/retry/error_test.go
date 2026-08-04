@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry_test
@@ -95,8 +95,9 @@ func TestTimedOut(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Name: "timeout error non-nil last error",
-			Err:  &retry.TimeoutError{LastError: errors.New("test")},
+			Name:     "timeout error non-nil last error",
+			Err:      &retry.TimeoutError{LastError: errors.New("test")},
+			Expected: true,
 		},
 		{
 			Name: "SDK timeout error non-nil last error",

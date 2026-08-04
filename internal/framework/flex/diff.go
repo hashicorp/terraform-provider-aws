@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -94,7 +94,7 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 }
 
 func dereferencePointer(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Pointer {
 		return value.Elem()
 	}
 	return value
@@ -110,6 +110,7 @@ func implementsAttrValue(field reflect.Value) bool {
 
 func skippedFields() []string {
 	return []string{
+		"Region",
 		"Tags",
 		"TagsAll",
 		"Timeouts",

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # EC2 Transit Gateway intra-region Peering
 
 This example demonstrates how to create two Transit Gateways in one AWS account and the same region, attach a VPC each, and then create a Peering Attachment between the two Transit Gateways.

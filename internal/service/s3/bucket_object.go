@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -28,10 +30,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
@@ -55,139 +57,141 @@ func resourceBucketObject() *schema.Resource {
 
 		CustomizeDiff: resourceBucketObjectCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			"acl": {
-				Type:             schema.TypeString,
-				Default:          types.ObjectCannedACLPrivate,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Deprecated:   "bucket is deprecated. Use the aws_s3_object resource instead.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"bucket_key_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"cache_control": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrContent: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, "content_base64"},
-			},
-			"content_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, names.AttrContent},
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content_language": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"etag": {
-				Type: schema.TypeString,
-				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
-				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
-				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrKMSKeyID},
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKey: {
-				Deprecated:   "key is deprecated. Use the aws_s3_object resource instead.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"metadata": {
-				Type:         schema.TypeMap,
-				ValidateFunc: validateMetadataIsLowerCase,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-			"object_lock_legal_hold_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectLockLegalHoldStatus](),
-			},
-			"object_lock_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectLockMode](),
-			},
-			"object_lock_retain_until_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			"server_side_encryption": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
-				Computed:         true,
-			},
-			names.AttrSource: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrContent, "content_base64"},
-			},
-			"source_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStorageClass: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ObjectStorageClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_redirect": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acl": {
+					Type:             schema.TypeString,
+					Default:          types.ObjectCannedACLPrivate,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Deprecated:   "bucket is deprecated. Use the aws_s3_object resource instead.",
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"bucket_key_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"cache_control": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrContent: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrSource, "content_base64"},
+				},
+				"content_base64": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrSource, names.AttrContent},
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_encoding": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"content_language": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"etag": {
+					Type: schema.TypeString,
+					// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
+					// if/when it's actually implemented. The Etag then won't match raw-file MD5.
+					// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrKMSKeyID},
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKey: {
+					Deprecated:   "key is deprecated. Use the aws_s3_object resource instead.",
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"metadata": {
+					Type:         schema.TypeMap,
+					ValidateFunc: validateMetadataIsLowerCase,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+				},
+				"object_lock_legal_hold_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectLockLegalHoldStatus](),
+				},
+				"object_lock_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectLockMode](),
+				},
+				"object_lock_retain_until_date": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				"server_side_encryption": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+					Computed:         true,
+				},
+				names.AttrSource: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrContent, "content_base64"},
+				},
+				"source_hash": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStorageClass: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ObjectStorageClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"version_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_redirect": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 
 		DeprecationMessage: `use the aws_s3_object resource instead`,
@@ -207,7 +211,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", "")
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -375,7 +379,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		content := v.(string)
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := itypes.Base64Decode(content)
+		contentRaw, err := inttypes.Base64Decode(content)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
 		}
@@ -520,7 +524,7 @@ func (bucketObjectImportID) Create(d *schema.ResourceData) string {
 	return createBucketObjectImportID(d)
 }
 
-func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
+func (bucketObjectImportID) Parse(id string) (string, map[string]any, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")
@@ -528,7 +532,7 @@ func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) 
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrBucket: bucket,
 		names.AttrKey:    key,
 	}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package quicksight
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -50,65 +52,61 @@ func resourceFolder() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAWSAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"folder_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.NoZeroValues,
-					validation.StringLenBetween(1, 2048),
-				),
-			},
-			"folder_path": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"folder_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.FolderTypeShared,
-				ValidateDiagFunc: enum.Validate[awstypes.FolderType](),
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.NoZeroValues,
-					validation.StringLenBetween(1, 200),
-				),
-			},
-			"parent_folder_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrPermissions: quicksightschema.PermissionsSchema(),
-			names.AttrTags:        tftags.TagsSchema(),
-			names.AttrTagsAll:     tftags.TagsSchemaComputed(),
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"folder_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.NoZeroValues,
+						validation.StringLenBetween(1, 2048),
+					),
+				},
+				"folder_path": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"folder_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.FolderTypeShared,
+					ValidateDiagFunc: enum.Validate[awstypes.FolderType](),
+				},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.NoZeroValues,
+						validation.StringLenBetween(1, 200),
+					),
+				},
+				"parent_folder_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrPermissions: quicksightschema.PermissionsSchema(),
+				names.AttrTags:        tftags.TagsSchema(),
+				names.AttrTagsAll:     tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -164,7 +162,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	folder, err := findFolderByTwoPartKey(ctx, conn, awsAccountID, folderID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Folder (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -309,8 +307,7 @@ func findFolder(ctx context.Context, conn *quicksight.Client, input *quicksight.
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -319,7 +316,7 @@ func findFolder(ctx context.Context, conn *quicksight.Client, input *quicksight.
 	}
 
 	if output == nil || output.Folder == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Folder, nil
@@ -339,8 +336,7 @@ func findFolderPermissions(ctx context.Context, conn *quicksight.Client, input *
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -349,7 +345,7 @@ func findFolderPermissions(ctx context.Context, conn *quicksight.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

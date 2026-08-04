@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,18 +26,18 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 
 	resourceName := "aws_dynamodb_table_replica.test"
 	tableResourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
@@ -59,21 +58,29 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableReplica(), resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTableReplica(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -86,18 +93,18 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_pitr(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 				),
 			},
@@ -117,18 +124,18 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_pitrKMS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
@@ -136,7 +143,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_pitrKMS(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
@@ -144,7 +151,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_pitrKMS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
@@ -165,18 +172,18 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
@@ -184,7 +191,7 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_pitrDefault(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
@@ -192,7 +199,7 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
@@ -213,18 +220,18 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_tableClass(rName, "STANDARD"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD"),
 				),
 			},
@@ -236,7 +243,7 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tableClass(rName, "STANDARD_INFREQUENT_ACCESS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD_INFREQUENT_ACCESS"),
 				),
 			},
@@ -251,18 +258,18 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_keys(rName, "test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test1", names.AttrARN),
 				),
 			},
@@ -274,7 +281,7 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_keys(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test2", names.AttrARN),
 				),
 			},
@@ -289,18 +296,18 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
 			},
@@ -312,14 +319,14 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
 			},
@@ -327,7 +334,7 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
 			},
@@ -335,9 +342,9 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 	})
 }
 
-func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTableReplicaDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 		replicaRegion := acctest.Region()
 
 		for _, rs := range s.RootModule().Resources {
@@ -355,7 +362,7 @@ func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 			output, err := tfdynamodb.FindTableByName(ctx, conn, tableName, optFn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -374,14 +381,14 @@ func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckTableReplicaExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTableReplicaExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 
 		tableName, mainRegion, err := tfdynamodb.TableReplicaParseResourceID(rs.Primary.ID)
 		if err != nil {

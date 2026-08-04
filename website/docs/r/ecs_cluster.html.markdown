@@ -133,7 +133,7 @@ resource "aws_ecs_cluster" "test" {
 
   configuration {
     managed_storage_configuration {
-      fargate_ephemeral_storage_kms_key_id = aws_kms_key.example.id
+      fargate_ephemeral_storage_kms_key_id = aws_kms_key.example.arn
     }
   }
   depends_on = [
@@ -150,8 +150,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_connect_defaults` - (Optional) Default Service Connect namespace. See [`service_connect_defaults` Block](#service_connect_defaults-block) for details.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -176,17 +176,17 @@ The `execute_command_configuration` configuration block supports the following a
 The `log_configuration` configuration block supports the following arguments:
 
 * `cloud_watch_encryption_enabled` - (Optional) Whether to enable encryption on the CloudWatch logs. If not specified, encryption will be disabled.
-* `cloud_watch_log_group_name` - (Optional) The name of the CloudWatch log group to send logs to.
-* `s3_bucket_name` - (Optional) Name of the S3 bucket to send logs to.
+* `cloud_watch_log_group_name` - (Optional) Name of the CloudWatch log group to send logs to.
 * `s3_bucket_encryption_enabled` - (Optional) Whether to enable encryption on the logs sent to S3. If not specified, encryption will be disabled.
+* `s3_bucket_name` - (Optional) Name of the S3 bucket to send logs to.
 * `s3_key_prefix` - (Optional) Optional folder in the S3 bucket to place logs in.
 
 ### `managed_storage_configuration` Block
 
 The `managed_storage_configuration` configuration block supports the following arguments:
 
-* `fargate_ephemeral_storage_kms_key_id` - (Optional) AWS Key Management Service key ID for the Fargate ephemeral storage.
-* `kms_key_id` - (Optional) AWS Key Management Service key ID to encrypt the managed storage.
+* `fargate_ephemeral_storage_kms_key_id` - (Optional) AWS Key Management Service key ARN for the Fargate ephemeral storage.
+* `kms_key_id` - (Optional) AWS Key Management Service key ARN to encrypt the managed storage.
 
 ### `service_connect_defaults` Block
 
@@ -199,7 +199,7 @@ The `service_connect_defaults` configuration block supports the following argume
 The `setting` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) Value to assign to the setting. Valid values: `enhanced`, `enabled`, `disabled`.
+* `value` - (Required) Value to assign to the setting. Valid values: `enhanced`, `enabled`, `disabled`.
 
 ## Attribute Reference
 

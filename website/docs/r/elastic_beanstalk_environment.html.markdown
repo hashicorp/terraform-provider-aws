@@ -18,15 +18,15 @@ Environments are often things such as `development`, `integration`, or
 ## Example Usage
 
 ```terraform
-resource "aws_elastic_beanstalk_application" "tftest" {
-  name        = "tf-test-name"
-  description = "tf-test-desc"
+resource "aws_elastic_beanstalk_environment" "example" {
+  name                = "tf-test-name"
+  application         = aws_elastic_beanstalk_application.example.name
+  solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
 }
 
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name                = "tf-test-name"
-  application         = aws_elastic_beanstalk_application.tftest.name
-  solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
+resource "aws_elastic_beanstalk_application" "example" {
+  name        = "tf-test-name"
+  description = "tf-test-desc"
 }
 ```
 
@@ -48,10 +48,10 @@ This resource supports the following arguments:
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
 * `solution_stack_name` - (Optional) A solution stack to base your environment
-off of. Example stacks can be found in the [Amazon API documentation][1]
+off of. Example stacks can be found in the [Amazon API documentation](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)
 * `template_name` - (Optional) The name of the Elastic Beanstalk Configuration
   template to use in deployment
-* `platform_arn` - (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
+* `platform_arn` - (Optional) The [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) of the Elastic Beanstalk [Platform](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn)
   to use in deployment
 * `wait_for_ready_timeout` - (Default `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
@@ -65,16 +65,16 @@ use the default behavior, which is an exponential backoff
 to use in deployment.
 * `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Option Settings
+### Option Settings
 
 Some options can be stack-specific, check [AWS Docs](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html)
 for supported options and examples.
 
 The `setting` and `all_settings` mappings support the following format:
 
-* `namespace` - unique namespace identifying the option's associated AWS resource
-* `name` - name of the configuration option
-* `value` - value for the configuration option
+* `namespace` - (Required) Unique namespace identifying the option's associated AWS resource
+* `name` - (Required) Name of the configuration option
+* `value` - (Required) Value for the configuration option
 * `resource` - (Optional) resource name for [scheduled action](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html#command-options-general-autoscalingscheduledaction)
 
 ### Example With Options
@@ -126,10 +126,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `queues` - SQS queues in use by this Environment.
 * `triggers` - Autoscaling triggers in use by this Environment.
 * `endpoint_url` - The URL to the Load Balancer for this Environment
-
-[1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
-[2]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
-[3]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn
 
 ## Import
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
@@ -31,12 +31,12 @@ func NotFound(err error) bool {
 // TimedOut returns true if the error represents a "wait timed out" condition.
 // Specifically, TimedOut returns true if the error matches all these conditions:
 //   - err is of type retry.TimeoutError
-//   - TimeoutError.LastError is nil
+//   - TimeoutError.LastError is nil for the Plugin SDK V2 variant
 func TimedOut(err error) bool {
 	// Handle both internal and Plugin SDK V2 error variants
-	timeoutErr, ok := err.(*TimeoutError)                //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
-	sdkTimeoutErr, sdkOk := err.(*sdkretry.TimeoutError) //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
-	return (ok && timeoutErr.LastError == nil) || (sdkOk && sdkTimeoutErr.LastError == nil)
+	_, ok := err.(*TimeoutError)                           //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
+	sdkTimeoutErr, sdkOk := err.(*sdkretry.TimeoutError)   //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
+	return ok || (sdkOk && sdkTimeoutErr.LastError == nil) // SDKv2 LastError check for backwards compatibility
 }
 
 // SetLastError sets the LastError field on the error if supported.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -17,11 +17,11 @@ func TestAccOpenSearchDomainDataSource_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -31,6 +31,8 @@ func TestAccOpenSearchDomainDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.#", resourceName, "deployment_strategy_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.0.deployment_strategy", resourceName, "deployment_strategy_options.0.deployment_strategy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
@@ -50,11 +52,11 @@ func TestAccOpenSearchDomainDataSource_complex(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,17 +70,77 @@ func TestAccOpenSearchDomainDataSource_complex(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.dedicated_master_enabled", resourceName, "cluster_config.0.dedicated_master_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.#", resourceName, "deployment_strategy_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_strategy_options.0.deployment_strategy", resourceName, "deployment_strategy_options.0.deployment_strategy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_center_options.#", resourceName, "identity_center_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "off_peak_window_options.#", resourceName, "off_peak_window_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "vpc_options.#", resourceName, "vpc_options.#"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomainDataSource_advancedSecurityOptionsJWTOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := testAccRandomDomainName(t)
+	datasourceName := "data.aws_opensearch_domain.test"
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainDataSourceConfig_advancedSecurityOptionsJWTOptions(rName, "OpenSearch", "2.11", "sub", "roles"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.#", resourceName, "advanced_security_options.0.jwt_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.enabled", resourceName, "advanced_security_options.0.jwt_options.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.subject_key", resourceName, "advanced_security_options.0.jwt_options.0.subject_key"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.roles_key", resourceName, "advanced_security_options.0.jwt_options.0.roles_key"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomainDataSource_advancedSecurityOptionsJWTOptionsWithJwksURL(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := testAccRandomDomainName(t)
+	datasourceName := "data.aws_opensearch_domain.test"
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainDataSourceConfig_advancedSecurityOptionsJWTOptionsWithJwksURL(rName, "OpenSearch", "3.5", "sub", "roles", "https://example.com/.well-known/jwks.json"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.#", resourceName, "advanced_security_options.0.jwt_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.enabled", resourceName, "advanced_security_options.0.jwt_options.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.jwks_url", resourceName, "advanced_security_options.0.jwt_options.0.jwks_url"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.subject_key", resourceName, "advanced_security_options.0.jwt_options.0.subject_key"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.jwt_options.0.roles_key", resourceName, "advanced_security_options.0.jwt_options.0.roles_key"),
 				),
 			},
 		},
@@ -95,6 +157,22 @@ data "aws_opensearch_domain" "test" {
 
 func testAccDomainDataSourceConfig_complex(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_complex(rName), `
+data "aws_opensearch_domain" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
+}
+`)
+}
+
+func testAccDomainDataSourceConfig_advancedSecurityOptionsJWTOptions(rName, engineType, version, subjectKey, rolesKey string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_advancedSecurityOptionsJWTOptions(rName, engineType, version, subjectKey, rolesKey), `
+data "aws_opensearch_domain" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
+}
+`)
+}
+
+func testAccDomainDataSourceConfig_advancedSecurityOptionsJWTOptionsWithJwksURL(rName, engineType, version, subjectKey, rolesKey, jwksURL string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_advancedSecurityOptionsJWTOptionsWithJwksURL(rName, engineType, version, subjectKey, rolesKey, jwksURL), `
 data "aws_opensearch_domain" "test" {
   domain_name = aws_opensearch_domain.test.domain_name
 }

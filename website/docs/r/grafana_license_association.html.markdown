@@ -61,6 +61,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `free_trial_expiration` - If `license_type` is set to `ENTERPRISE_FREE_TRIAL`, this is the expiration date of the free trial.
 * `license_expiration` - If `license_type` is set to `ENTERPRISE`, this is the expiration date of the enterprise license.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Grafana workspace license association using the workspace's `id`. For example:

@@ -48,7 +48,7 @@ resource "aws_fis_experiment_template" "example" {
 }
 ```
 
-## Example Usage with Report Configuration
+### Example Usage with Report Configuration
 
 ```terraform
 data "aws_partition" "current" {}
@@ -176,114 +176,122 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `experiment_options` - (Optional) Experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
+* `experiment_report_configuration` - (Optional) Configuration for [experiment reporting](https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html). See below.
+* `log_configuration` - (Optional) Configuration for experiment logging. See below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `experiment_options` - (Optional) The experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
 * `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
-* `log_configuration` - (Optional) The configuration for experiment logging. See below.
-* `experiment_report_configuration` - (Optional) The configuration for [experiment reporting](https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html). See below.
 
-### experiment_options
+### `experiment_options` Block
 
 The `experiment_options` block supports the following:
 
-* `account_targeting` - (Optional) Specifies the account targeting setting for experiment options. Supports `single-account` and `multi-account`.
-* `empty_target_resolution_mode` - (Optional) Specifies the empty target resolution mode for experiment options. Supports `fail` and `skip`.
+* `account_targeting` - (Optional) Account targeting setting for experiment options. Supports `single-account` and `multi-account`.
+* `empty_target_resolution_mode` - (Optional) Empty target resolution mode for experiment options. Supports `fail` and `skip`.
 
-### `action`
+### `action` Block
 
 * `action_id` - (Required) ID of the action. To find out what actions are supported see [AWS FIS actions reference](https://docs.aws.amazon.com/fis/latest/userguide/fis-actions-reference.html).
-* `name` - (Required) Friendly name of the action.
 * `description` - (Optional) Description of the action.
+* `name` - (Required) Friendly name of the action.
 * `parameter` - (Optional) Parameter(s) for the action, if applicable. See below.
 * `start_after` - (Optional) Set of action names that must complete before this action can be executed.
 * `target` - (Optional) Action's target, if applicable. See below.
 
-#### `parameter`
+#### `parameter` Block
+
+For a list of parameters supported by each action, see [AWS FIS actions reference](https://docs.aws.amazon.com/fis/latest/userguide/fis-actions-reference.html).
 
 * `key` - (Required) Parameter name.
 * `value` - (Required) Parameter value.
 
-For a list of parameters supported by each action, see [AWS FIS actions reference](https://docs.aws.amazon.com/fis/latest/userguide/fis-actions-reference.html).
+#### `action.target` Block
 
-#### `target` (`action.*.target`)
-
-* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `ManagedResources` (EKS clusters, Application and Network Load Balancers, and EC2 Auto Scaling groups that are enabled for ARC zonal shift), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
+* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Functions` (Lambda Functions), `Instances` (EC2 Instances), `KinesisStreams` (Kinesis Data Streams), `ManagedResources` (EKS clusters, Application and Network Load Balancers, and EC2 Auto Scaling groups that are enabled for ARC zonal shift), `MultiRegionClusters` (MemoryDB Multi-Region clusters), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes), `VPCEndpoints` (Amazon VPC endpoints). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/action-sequence.html#action-targets) for more details.
 * `value` - (Required) Target name, referencing a corresponding target.
 
-### `stop_condition`
+### `stop_condition` Block
 
 * `source` - (Required) Source of the condition. One of `none`, `aws:cloudwatch:alarm`.
 * `value` - (Optional) ARN of the CloudWatch alarm. Required if the source is a CloudWatch alarm.
 
-### `target`
+### `target` Block
 
-* `name` - (Required) Friendly name given to the target.
-* `resource_type` - (Required) AWS resource type. The resource type must be supported for the specified action. To find out what resource types are supported, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#resource-types).
-* `selection_mode` - (Required) Scopes the identified resources. Valid values are `ALL` (all identified resources), `COUNT(n)` (randomly select `n` of the identified resources), `PERCENT(n)` (randomly select `n` percent of the identified resources).
 * `filter` - (Optional) Filter(s) for the target. Filters can be used to select resources based on specific attributes returned by the respective describe action of the resource type. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters). See below.
+* `name` - (Required) Friendly name given to the target.
+* `parameters` - (Optional) Resource type parameters.
 * `resource_arns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resource_tag`.
 * `resource_tag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resource_arns`. See below.
-* `parameters` - (Optional) The resource type parameters.
+* `resource_type` - (Required) AWS resource type. The resource type must be supported for the specified action. To find out what resource types are supported, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#resource-types).
+* `selection_mode` - (Required) Scopes the identified resources. Valid values are `ALL` (all identified resources), `COUNT(n)` (randomly select `n` of the identified resources), `PERCENT(n)` (randomly select `n` percent of the identified resources).
 
 ~> **NOTE:** The `target` configuration block requires either `resource_arns` or `resource_tag`.
 
-#### `filter`
+#### `filter` Block
 
 * `path` - (Required) Attribute path for the filter.
 * `values` - (Required) Set of attribute values for the filter.
 
 ~> **NOTE:** Values specified in a `filter` are joined with an `OR` clause, while values across multiple `filter` blocks are joined with an `AND` clause. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters).
 
-#### `resource_tag`
+#### `resource_tag` Block
 
 * `key` - (Required) Tag key.
 * `value` - (Required) Tag value.
 
-### `log_configuration`
+### `log_configuration` Block
 
-* `log_schema_version` - (Required) The schema version. See [documentation](https://docs.aws.amazon.com/fis/latest/userguide/monitoring-logging.html#experiment-log-schema) for the list of schema versions.
-* `cloudwatch_logs_configuration` - (Optional) The configuration for experiment logging to Amazon CloudWatch Logs. See below.
-* `s3_configuration` - (Optional) The configuration for experiment logging to Amazon S3. See below.
+* `cloudwatch_logs_configuration` - (Optional) Configuration for experiment logging to Amazon CloudWatch Logs. See below.
+* `log_schema_version` - (Required) Schema version. See [documentation](https://docs.aws.amazon.com/fis/latest/userguide/monitoring-logging.html#experiment-log-schema) for the list of schema versions.
+* `s3_configuration` - (Optional) Configuration for experiment logging to Amazon S3. See below.
 
-#### `cloudwatch_logs_configuration`
+#### `cloudwatch_logs_configuration` Block
 
-* `log_group_arn` - (Required) The Amazon Resource Name (ARN) of the destination Amazon CloudWatch Logs log group.
+* `log_group_arn` - (Required) Amazon Resource Name (ARN) of the destination Amazon CloudWatch Logs log group. The ARN must end with `:*`
 
-#### `s3_configuration`
+#### `log_configuration.s3_configuration` Block
 
-* `bucket_name` - (Required) The name of the destination bucket.
-* `prefix` - (Optional) The bucket prefix.
+* `bucket_name` - (Required) Name of the destination bucket.
+* `prefix` - (Optional) Bucket prefix.
 
-### `experiment_report_configuration`
+### `experiment_report_configuration` Block
 
-* `data_sources` - (Required) The data sources for the experiment report. See below.
-* `outputs` - (Required) The outputs for the experiment report. See below.
-* `post_experiment_duration` - (Optional) The duration of the post-experiment period. Defaults to `PT20M`.
-* `pre_experiment_duration` - (Optional) The duration of the pre-experiment period. Defaults to `PT20M`.
+* `data_sources` - (Required) Data sources for the experiment report. See below.
+* `outputs` - (Required) Outputs for the experiment report. See below.
+* `post_experiment_duration` - (Optional) Duration of the post-experiment period. Defaults to `PT20M`.
+* `pre_experiment_duration` - (Optional) Duration of the pre-experiment period. Defaults to `PT20M`.
 
-#### `data_sources`
+#### `data_sources` Block
 
-* `cloudwatch_dashboard` - (Required) The data sources for the experiment report. See below.
+* `cloudwatch_dashboard` - (Required) Data sources for the experiment report. See below.
 
-#### `cloudwatch_dashboard`
+#### `cloudwatch_dashboard` Block
 
-* `dashboard_arn` - (Required) The ARN of the CloudWatch dashboard.
+* `dashboard_arn` - (Required) ARN of the CloudWatch dashboard.
 
-#### `outputs`
+#### `outputs` Block
 
-* `s3_configuration` - (Required) The data sources for the experiment report. See below.
+* `s3_configuration` - (Required) Data sources for the experiment report. See below.
 
-#### `s3_configuration`
+#### `outputs.s3_configuration` Block
 
-* `bucket_name` - (Required) The name of the destination bucket.
-* `prefix` - (Optional) The bucket prefix.
+* `bucket_name` - (Required) Name of the destination bucket.
+* `prefix` - (Optional) Bucket prefix.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Experiment Template ID.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

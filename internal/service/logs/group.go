@@ -1,10 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -28,9 +32,10 @@ import (
 
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
 // @Tags(identifierAttribute="arn")
-// @Testing(destroyTakesT=true)
-// @Testing(existsTakesT=true)
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogGroup")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.7.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -38,66 +43,69 @@ func resourceGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"log_group_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LogGroupClass](),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validLogGroupName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validLogGroupNamePrefix,
-			},
-			"retention_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.HasChange("log_group_class") {
-						return false
-					}
-					if v, ok := d.GetOk("log_group_class"); ok {
-						if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
-							return true
-						}
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"deletion_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_group_class": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LogGroupClass](),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validLogGroupName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validLogGroupNamePrefix,
+				},
+				"retention_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.HasChange("log_group_class") {
+							return false
+						}
+						if v, ok := d.GetOk("log_group_class"); ok {
+							if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
+								return true
+							}
+						}
+						return false
+					},
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -106,11 +114,15 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := cloudwatchlogs.CreateLogGroupInput{
 		LogGroupClass: awstypes.LogGroupClass(d.Get("log_group_class").(string)),
 		LogGroupName:  aws.String(name),
 		Tags:          getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+		input.DeletionProtectionEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -131,7 +143,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			RetentionInDays: aws.Int32(int32(v.(int))),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutRetentionPolicy(ctx, &input)
 		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -159,14 +171,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
-	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
-	d.Set("log_group_class", lg.LogGroupClass)
-	d.Set(names.AttrName, lg.LogGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
-	d.Set("retention_in_days", lg.RetentionInDays)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	resourceGroupFlatten(ctx, d, *lg)
 
 	return diags
 }
@@ -182,7 +187,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				RetentionInDays: aws.Int32(int32(v.(int))),
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 				return conn.PutRetentionPolicy(ctx, &input)
 			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -199,6 +204,29 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		var deletionProtectionEnabled bool
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			deletionProtectionEnabled = v.(bool)
+		} else {
+			deletionProtectionEnabled = false
+		}
+		loggroup, err := findLogGroupByName(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+		}
+		input := cloudwatchlogs.PutLogGroupDeletionProtectionInput{
+			LogGroupIdentifier:        loggroup.LogGroupArn,
+			DeletionProtectionEnabled: aws.Bool(deletionProtectionEnabled),
+		}
+
+		_, err = conn.PutLogGroupDeletionProtection(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) deletion protection: %s", d.Id(), err)
 		}
 	}
 
@@ -243,7 +271,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.OperationAbortedException](ctx, 1*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.OperationAbortedException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteLogGroup(ctx, &input)
 	}, "try again")
 
@@ -263,13 +291,13 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 		LogGroupNamePrefix: aws.String(name),
 	}
 
-	return findLogGroup(ctx, conn, &input, func(v *awstypes.LogGroup) bool {
+	return findLogGroup(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.LogGroup) bool {
 		return aws.ToString(v.LogGroupName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.LogGroup]())
 }
 
-func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) (*awstypes.LogGroup, error) {
-	output, err := findLogGroups(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) (*awstypes.LogGroup, error) {
+	output, err := findLogGroups(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -278,27 +306,35 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.LogGroup, error) {
-	var output []awstypes.LogGroup
-	opts := tfslices.NewFinderOptions(optFns)
+func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) ([]awstypes.LogGroup, error) {
+	return tfslices.CollectAndConcatWithError(listLogGroupPages(ctx, conn, input), optFns...)
+}
 
-	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set("deletion_protection_enabled", lg.DeletionProtectionEnabled)
+	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
+	d.Set("log_group_class", lg.LogGroupClass)
+	d.Set(names.AttrName, lg.LogGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
+	d.Set("retention_in_days", lg.RetentionInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+}
 
-		if err != nil {
-			return nil, err
-		}
+func listLogGroupPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogGroup, error] {
+	return func(yield func([]awstypes.LogGroup, error) bool) {
+		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
+				return
+			}
 
-		for _, v := range page.LogGroups {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
+			if !yield(page.LogGroups, nil) {
+				return
 			}
 		}
 	}
-
-	return output, nil
 }

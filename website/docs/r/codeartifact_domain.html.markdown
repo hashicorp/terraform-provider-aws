@@ -42,6 +42,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeartifact_domain.example
+  identity = {
+    "arn" = "arn:aws:codeartifact:us-west-2:123456789012:domain/example"
+  }
+}
+
+resource "aws_codeartifact_domain" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact domain.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain using the CodeArtifact Domain arn. For example:
 
 ```terraform

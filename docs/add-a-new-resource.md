@@ -1,5 +1,8 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
-# Adding a New Resource
+# Adding a New Resource Type
 
 New resources are required when AWS adds a new service, or adds new features within an existing service which would require a new resource to manage in Terraform. Typically anything with a new set of CRUD API endpoints is a great candidate for a new resource.
 
@@ -23,7 +26,7 @@ Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and
 
 ### Fill out the Resource Schema
 
-In the `internal/service/<service>/<service>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, choose the correct data type and supply the correct [Schema Behaviors](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors) to ensure Terraform knows how to correctly handle the value.
+In the `internal/service/<service>/<resource>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, choose the correct data type and supply the correct [Schema Behaviors](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors) to ensure Terraform knows how to correctly handle the value.
 
 Typically you will add arguments to represent the values that are under control by Terraform, and attributes to supply read-only values as references for Terraform. These are distinguished by Schema Behavior.
 
@@ -32,6 +35,11 @@ Attribute names are to be specified in `snake_case` as opposed to the AWS API wh
 ### Implement CRUD handlers
 
 These will map the planned Terraform state to the AWS API call, or an AWS API response to an applied Terraform state. You will also need to handle different response types (including errors correctly). For complex attributes, you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
+
+### Implement Resource Identity
+
+This will identify which of the resource type's attributes make up the resource's globally-unique identity.
+The [Resource Identity Reference](resource-identity.md) provides more detail on enabling Resource Identity on a resource type.
 
 ### Register Resource to the provider
 
@@ -89,6 +97,14 @@ You will need at a minimum:
 ### Create documentation for the resource
 
 Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. Add more examples if it is complex or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. Link to AWS Documentation where appropriate, particularly for values which are likely to change.
+
+### Add a Corresponding List Resource
+
+A List Resource is a side-car type that adds a Listing operation to a resource type's Create, Read, Update, and Delete operations.
+It is easiest to add after the main CRUD functionality of the resource type is implemented, but should still be part of creating a new resource type.
+
+See the instructions in the guide [Adding a New List Resource](add-a-new-list-resource.md).
+Full details on implementing a List Resource can be found in the [List Resource Reference](list-resources.md).
 
 ### Ensure format and lint checks are passing locally
 

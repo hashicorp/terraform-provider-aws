@@ -1,17 +1,20 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic resource ID generation only
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
@@ -22,7 +25,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	invocationResourceIDPartCount = 3
 )
 
 // @SDKResource("aws_lambda_invocation", name="Invocation")
@@ -41,45 +49,64 @@ func resourceInvocation() *schema.Resource {
 				Version: 0,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				functionName, qualifier, _, err := invocationParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
+				}
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				d.Set("function_name", functionName)
+				d.Set("qualifier", qualifier)
+
+				return []*schema.ResourceData{d}, nil
 			},
-			"input": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"lifecycle_scope": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          lifecycleScopeCreateOnly,
-				ValidateDiagFunc: enum.Validate[lifecycleScope](),
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  FunctionVersionLatest,
-			},
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"terraform_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "tf",
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		},
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"input": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"lifecycle_scope": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          lifecycleScopeCreateOnly,
+					ValidateDiagFunc: enum.Validate[lifecycleScope](),
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  FunctionVersionLatest,
+				},
+				"result": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tenant_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"terraform_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "tf",
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -135,6 +162,9 @@ func buildInput(d *schema.ResourceData, action invocationAction) ([]byte, error)
 		return nil, err
 	}
 
+	if newInputMap == nil {
+		newInputMap = make(map[string]any)
+	}
 	newInputMap[d.Get("terraform_key").(string)] = map[string]any{
 		names.AttrAction: action,
 		"prev_input":     oldInputMap,
@@ -194,6 +224,9 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		Payload:        payload,
 		Qualifier:      aws.String(qualifier),
 	}
+	if v, ok := d.GetOk("tenant_id"); ok {
+		input.TenantId = aws.String(v.(string))
+	}
 
 	output, err := conn.Invoke(ctx, input)
 
@@ -205,7 +238,13 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	resultHash := fmt.Sprintf("%x", md5.Sum(payload)) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-md5 -- MD5 used for non-cryptographic resource ID generation only
+	id, err := flex.FlattenResourceId([]string{functionName, qualifier, resultHash}, invocationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.SetId(id)
 	d.Set("result", string(output.Payload))
 
 	return diags
@@ -247,4 +286,27 @@ func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.Resou
 		return diff.SetNewComputed("result")
 	}
 	return nil
+}
+
+func invocationParseResourceID(id string) (string, string, string, error) {
+	parts, err := flex.ExpandResourceId(id, invocationResourceIDPartCount, false)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	functionName := parts[0]
+	qualifier := parts[1]
+	resultHash := parts[2]
+
+	// Validate qualifier format
+	if qualifier != "$LATEST" && !regexache.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
+		return "", "", "", fmt.Errorf("invalid qualifier format: %s, expected $LATEST or numeric version", qualifier)
+	}
+
+	// Validate hash format (should be MD5 - 32 hex chars)
+	if !regexache.MustCompile(`^[a-f0-9]{32}$`).MatchString(resultHash) {
+		return "", "", "", fmt.Errorf("invalid result hash format: %s, expected 32-character MD5 hash", resultHash)
+	}
+
+	return functionName, qualifier, resultHash, nil
 }

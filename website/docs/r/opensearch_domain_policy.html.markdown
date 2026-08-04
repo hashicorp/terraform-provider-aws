@@ -62,3 +62,20 @@ This resource exports no additional attributes.
 
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Domain Policy using `domain_name` prefixed with `esd-policy-`. For example:
+
+```terraform
+import {
+  to = aws_opensearch_domain_policy.example
+  id = "esd-policy-tf-test"
+}
+```
+
+Using `terraform import`, import OpenSearch Domain Policy using `domain_name` prefixed with `esd-policy-`. For example:
+
+```console
+% terraform import aws_opensearch_domain_policy.example esd-policy-tf-test
+```

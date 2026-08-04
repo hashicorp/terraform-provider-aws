@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,6 +79,11 @@ func setRegionInState() crudInterceptor {
 			// Set region in state after R.
 			switch why {
 			case Read:
+				// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
+				if d.Id() == "" {
+					return diags
+				}
+
 				if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
 				}
@@ -113,7 +119,7 @@ func forceNewIfRegionChanges() customizeDiffInterceptor {
 }
 
 func importRegion() importInterceptor {
-	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	return interceptorFunc1[*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) error {
 		c, d := opts.c, opts.d
 
 		switch when, why := opts.when, opts.why; when {
@@ -121,7 +127,7 @@ func importRegion() importInterceptor {
 			switch why {
 			case Import:
 				// Import ID optionally ends with "@<region>".
-				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+				if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
 					d.SetId(matches[1])
 					d.Set(names.AttrRegion, matches[2])
 				} else {
@@ -130,7 +136,7 @@ func importRegion() importInterceptor {
 			}
 		}
 
-		return []*schema.ResourceData{d}, nil
+		return nil
 	})
 }
 
@@ -144,7 +150,7 @@ func resourceImportRegion() interceptorInvocation {
 
 // importRegionNoDefault does not provide a default value for `region`. This should be used when the import ID is or contains a region.
 func importRegionNoDefault() importInterceptor {
-	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	return interceptorFunc1[*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) error {
 		d := opts.d
 
 		switch when, why := opts.when, opts.why; when {
@@ -152,14 +158,14 @@ func importRegionNoDefault() importInterceptor {
 			switch why {
 			case Import:
 				// Import ID optionally ends with "@<region>".
-				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+				if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
 					d.SetId(matches[1])
 					d.Set(names.AttrRegion, matches[2])
 				}
 			}
 		}
 
-		return []*schema.ResourceData{d}, nil
+		return nil
 	})
 }
 

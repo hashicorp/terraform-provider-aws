@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Community Note
 
 on:
@@ -10,8 +13,8 @@ on:
       - opened
 
 permissions:
-  issues: write
-  pull-requests: write
+  issues: write         # required to comment on issues
+  pull-requests: write  # required to comment on pull requests
 
 jobs:
   add_note:

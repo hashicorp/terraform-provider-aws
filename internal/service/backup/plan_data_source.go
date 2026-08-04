@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package backup
 
@@ -21,113 +23,158 @@ func dataSourcePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlanRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"plan_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"completion_window": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"copy_action": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_vault_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"lifecycle": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cold_storage_after": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"delete_after": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"opt_in_to_archive_for_supported_resources": {
-													Type:     schema.TypeBool,
-													Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"plan_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"completion_window": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"copy_action": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_vault_arn": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"lifecycle": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cold_storage_after": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													"delete_after": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+													"opt_in_to_archive_for_supported_resources": {
+														Type:     schema.TypeBool,
+														Computed: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"enable_continuous_backup": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"lifecycle": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cold_storage_after": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"delete_after": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"opt_in_to_archive_for_supported_resources": {
-										Type:     schema.TypeBool,
-										Computed: true,
+							"enable_continuous_backup": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"lifecycle": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cold_storage_after": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"delete_after": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"opt_in_to_archive_for_supported_resources": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"recovery_point_tags": tftags.TagsSchema(),
-						"rule_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSchedule: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"schedule_expression_timezone": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"start_window": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"target_vault_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							"recovery_point_tags": tftags.TagsSchema(),
+							"rule_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"scan_action": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"malware_scanner": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"scan_mode": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							names.AttrSchedule: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"schedule_expression_timezone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"start_window": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"target_logically_air_gapped_backup_vault_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"target_vault_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"scan_setting": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"malware_scanner": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_types": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"scanner_role_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -148,6 +195,9 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
 	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
+	if err := d.Set("scan_setting", flattenScanSettings(output.BackupPlan.ScanSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scan_settings: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
 

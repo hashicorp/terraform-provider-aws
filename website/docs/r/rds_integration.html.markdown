@@ -92,7 +92,7 @@ resource "aws_rds_integration" "example" {
 
 The following arguments are required:
 
-* `integration_name` - (Required, Forces new resources) Name of the integration.
+* `integration_name` - (Required) Name of the integration.
 * `source_arn` - (Required, Forces new resources) ARN of the database to use as the source for replication.
 * `target_arn` - (Required, Forces new resources) ARN of the Redshift data warehouse to use as the target for replication.
 
@@ -102,7 +102,7 @@ The following arguments are optional:
 * `additional_encryption_context` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
 For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
 You can only include this parameter if you specify the `kms_key_id` parameter.
-* `data_filter` - (Optional, Forces new resources) Data filters for the integration.
+* `data_filter` - (Optional) Data filters for the integration.
 These filters determine which tables from the source database are sent to the target Amazon Redshift data warehouse.
 The value should match the syntax from the AWS CLI which includes an `include:` or `exclude:` prefix before a filter expression.
 Multiple expressions are separated by a comma.
@@ -120,6 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Integration.
 * `id` - (**Deprecated**, use `arn` instead) ARN of the Integration.
+* `integration_identifier` - Identifier of the Integration. This value can be used when creating the target database to [receive results of zero-ETL integrations](https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_DATABASE.html#r_CREATE_DATABASE-integration).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -127,10 +128,31 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `update` - (Default `10m`)
+* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_integration.example
+  identity = {
+    "arn" = "arn:aws:rds:us-east-1:123456789012:integration:12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_rds_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the RDS integration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) Integration using the `arn`. For example:
 

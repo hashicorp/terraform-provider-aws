@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -24,7 +24,7 @@ func waitOperationSucceeded(ctx context.Context, conn *servicediscovery.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OperationStatusSubmitted, awstypes.OperationStatusPending),
 		Target:  enum.Slice(awstypes.OperationStatusSuccess),
-		Refresh: statusOperation(ctx, conn, operationID),
+		Refresh: statusOperation(conn, operationID),
 		Timeout: timeout,
 	}
 
@@ -36,7 +36,7 @@ func waitOperationSucceeded(ctx context.Context, conn *servicediscovery.Client, 
 		//   "ErrorMessage":"The VPC that you chose, vpc-xxx in region xxx, is already associated with another private hosted zone that has an overlapping name space, xxx.. (Service: AmazonRoute53; Status Code: 400; Error Code: ConflictingDomainExists; Request ID: xxx)"
 		//   "Status":"FAIL",
 		if status := output.Status; status == awstypes.OperationStatusFail {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.ErrorCode), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.ErrorCode), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -45,11 +45,11 @@ func waitOperationSucceeded(ctx context.Context, conn *servicediscovery.Client, 
 	return nil, err
 }
 
-func statusOperation(ctx context.Context, conn *servicediscovery.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOperation(conn *servicediscovery.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOperationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -70,8 +70,7 @@ func findOperationByID(ctx context.Context, conn *servicediscovery.Client, id st
 
 	if errs.IsA[*awstypes.OperationNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -80,7 +79,7 @@ func findOperationByID(ctx context.Context, conn *servicediscovery.Client, id st
 	}
 
 	if output == nil || output.Operation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Operation, nil

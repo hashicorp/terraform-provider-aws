@@ -75,11 +75,38 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_role_policy.example
+  identity = {
+    role = "role_of_mypolicy_name"
+    name = "mypolicy_name"
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `role` (String) Name of the IAM role.
+* `name` (String) Name of the role policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
 ```terraform
 import {
-  to = aws_iam_role_policy.mypolicy
+  to = aws_iam_role_policy.example
   id = "role_of_mypolicy_name:mypolicy_name"
 }
 ```
@@ -87,5 +114,5 @@ import {
 Using `terraform import`, import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
 ```console
-% terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
+% terraform import aws_iam_role_policy.example role_of_mypolicy_name:mypolicy_name
 ```

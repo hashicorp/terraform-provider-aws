@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -15,5 +15,5 @@ const (
 func isResourceMissing(err error) bool {
 	// DataZone returns a 403 when the domain does not exist
 	// AccessDeniedException: User is not permitted to perform operation: GetDomain
-	return errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not permitted to perform")
+	return errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err)
 }

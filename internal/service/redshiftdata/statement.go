@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftdata
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftdata/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,68 +41,70 @@ func resourceStatement() *schema.Resource {
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrDatabase: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"db_user": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrDatabase: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"db_user": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"secret_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"sql": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"statement_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"with_event": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				"secret_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"sql": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"statement_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"with_event": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -160,7 +164,7 @@ func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	sub, err := FindStatementByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Data Statement (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -194,8 +198,7 @@ func FindStatementByID(ctx context.Context, conn *redshiftdata.Client, id string
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -211,17 +214,17 @@ func FindStatementByID(ctx context.Context, conn *redshiftdata.Client, id string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusStatement(ctx context.Context, conn *redshiftdata.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStatement(conn *redshiftdata.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := FindStatementByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -241,7 +244,7 @@ func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id st
 			types.StatusStringSubmitted,
 		),
 		Target:     enum.Slice(types.StatusStringFinished),
-		Refresh:    statusStatement(ctx, conn, id),
+		Refresh:    statusStatement(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -251,7 +254,7 @@ func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id st
 
 	if output, ok := outputRaw.(*redshiftdata.DescribeStatementOutput); ok {
 		if status := output.Status; status == types.StatusStringFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Error)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Error)))
 		}
 
 		return output, err

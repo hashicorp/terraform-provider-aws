@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -23,76 +25,78 @@ func dataSourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"network_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"replication_instance_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"replication_instance_private_ips": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"replication_instance_public_ips": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"replication_subnet_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"replication_instance_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_instance_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_instance_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"replication_instance_private_ips": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"replication_instance_public_ips": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"replication_subnet_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Set:      schema.HashString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

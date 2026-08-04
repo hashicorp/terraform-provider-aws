@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -13,13 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,277 +40,279 @@ func resourceFeatureGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"event_time_feature_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
-				),
-			},
-			"feature_definition": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 2500,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"feature_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 64),
-								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
-									"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
-							),
-						},
-						"feature_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FeatureType](),
-						},
-						"collection_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"vector_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"dimension": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.IntBetween(1, 8192),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
+				},
+				"event_time_feature_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
+							"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
+					),
+				},
+				"feature_definition": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 2500,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"feature_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 64),
+									validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
+										"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
+								),
+							},
+							"feature_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FeatureType](),
+							},
+							"collection_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"vector_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"dimension": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntBetween(1, 8192),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"collection_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CollectionType](),
-						},
-					},
-				},
-			},
-			"feature_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
-				),
-			},
-			"offline_store_config": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_catalog_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"catalog": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
-									names.AttrDatabase: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
-									names.AttrTableName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"disable_glue_table_creation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"s3_storage_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"resolved_output_s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"table_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.TableFormatGlue,
-							ValidateDiagFunc: enum.Validate[awstypes.TableFormat](),
-						},
-					},
-				},
-			},
-			"online_store_config": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_online_store": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  false,
-						},
-						"security_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						names.AttrStorageType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
-						},
-						"ttl_duration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrUnit: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.TtlDurationUnit](),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
+							"collection_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CollectionType](),
 							},
 						},
 					},
 				},
-			},
-			"record_identifier_feature_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"throughput_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
-						},
-						"provisioned_read_capacity_units": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 10000000),
-						},
-						"provisioned_write_capacity_units": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 10000000),
+				"feature_group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,63}`),
+							"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
+					),
+				},
+				"offline_store_config": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_catalog_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"catalog": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+										},
+										names.AttrDatabase: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+										},
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+							"disable_glue_table_creation": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							"s3_storage_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"resolved_output_s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+										},
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+							"table_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.TableFormatGlue,
+								ValidateDiagFunc: enum.Validate[awstypes.TableFormat](),
+							},
 						},
 					},
 				},
-			},
+				"online_store_config": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_online_store": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  false,
+							},
+							"security_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							names.AttrStorageType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
+							},
+							"ttl_duration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrUnit: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.TtlDurationUnit](),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"record_identifier_feature_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
+							"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"throughput_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"throughput_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
+							},
+							"provisioned_read_capacity_units": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 10000000),
+							},
+							"provisioned_write_capacity_units": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 10000000),
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -344,23 +348,20 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] SageMaker AI Feature Group create config: %#v", *input)
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.CreateFeatureGroup(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateFeatureGroup(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Feature Group: %s", err)
@@ -381,7 +382,7 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findFeatureGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Feature Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -479,8 +480,7 @@ func findFeatureGroupByName(ctx context.Context, conn *sagemaker.Client, name st
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -489,7 +489,7 @@ func findFeatureGroupByName(ctx context.Context, conn *sagemaker.Client, name st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

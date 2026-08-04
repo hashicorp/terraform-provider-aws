@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3control
 
@@ -15,10 +17,12 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_s3_access_point", name="Access Point")
+// @Tags(identifierAttribute="arn")
 func newAccessPointDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &accessPointDataSource{}, nil
 }
@@ -67,6 +71,7 @@ func (d *accessPointDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			"public_access_block_configuration": framework.DataSourceComputedListOfObjectAttribute[publicAccessBlockConfigurationModel](ctx),
+			names.AttrTags:                      tftags.TagsAttributeComputedOnly(),
 			names.AttrVPCConfiguration:          framework.DataSourceComputedListOfObjectAttribute[vpcConfigurationModel](ctx),
 		},
 	}
@@ -117,6 +122,7 @@ type accessPointDataSourceModel struct {
 	Name                           types.String                                                         `tfsdk:"name"`
 	NetworkOrigin                  types.String                                                         `tfsdk:"network_origin"`
 	PublicAccessBlockConfiguration fwtypes.ListNestedObjectValueOf[publicAccessBlockConfigurationModel] `tfsdk:"public_access_block_configuration"`
+	Tags                           tftags.Map                                                           `tfsdk:"tags"`
 	VPCConfiguration               fwtypes.ListNestedObjectValueOf[vpcConfigurationModel]               `tfsdk:"vpc_configuration"`
 }
 

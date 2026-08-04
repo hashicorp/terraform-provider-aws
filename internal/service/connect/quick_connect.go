@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,107 +40,109 @@ func resourceQuickConnect() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 250),
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 127),
-			},
-			"quick_connect_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"phone_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"phone_number": {
-										Type:     schema.TypeString,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 250),
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 127),
+				},
+				"quick_connect_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"phone_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"phone_number": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
-							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypePhoneNumber {
-									return false
-								}
-								return true
-							},
-						},
-						"queue_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"queue_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypePhoneNumber {
+										return false
+									}
+									return true
 								},
 							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeQueue {
-									return false
-								}
-								return true
-							},
-						},
-						"quick_connect_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.QuickConnectType](),
-						},
-						"user_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"contact_flow_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"user_id": {
-										Type:     schema.TypeString,
-										Required: true,
+							"queue_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"contact_flow_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"queue_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeQueue {
+										return false
+									}
+									return true
+								},
 							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeUser {
-									return false
-								}
-								return true
+							"quick_connect_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.QuickConnectType](),
+							},
+							"user_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"contact_flow_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"user_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.QuickConnectType(d.Get("quick_connect_config.0.quick_connect_type").(string)); v == awstypes.QuickConnectTypeUser {
+										return false
+									}
+									return true
+								},
 							},
 						},
 					},
 				},
-			},
-			"quick_connect_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"quick_connect_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -183,7 +187,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	quickConnect, err := findQuickConnectByTwoPartKey(ctx, conn, instanceID, quickConnectID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Quick Connect (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -316,8 +320,7 @@ func findQuickConnect(ctx context.Context, conn *connect.Client, input *connect.
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -326,7 +329,7 @@ func findQuickConnect(ctx context.Context, conn *connect.Client, input *connect.
 	}
 
 	if output == nil || output.QuickConnect == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QuickConnect, nil

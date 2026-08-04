@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cognito_user_pool_client: Add support for `application_arn` in the `analytics_configuration` block.
-```

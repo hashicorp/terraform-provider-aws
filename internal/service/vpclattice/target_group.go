@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -13,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,158 +50,160 @@ func resourceTargetGroup() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrHealthCheck: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"health_check_interval_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      30,
-										ValidateFunc: validation.IntBetween(5, 300),
-									},
-									"health_check_timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      5,
-										ValidateFunc: validation.IntBetween(1, 120),
-									},
-									"healthy_threshold_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      5,
-										ValidateFunc: validation.IntBetween(2, 10),
-									},
-									"matcher": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "200",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrHealthCheck: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"health_check_interval_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      30,
+											ValidateFunc: validation.IntBetween(5, 300),
+										},
+										"health_check_timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      5,
+											ValidateFunc: validation.IntBetween(1, 120),
+										},
+										"healthy_threshold_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      5,
+											ValidateFunc: validation.IntBetween(2, 10),
+										},
+										"matcher": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Optional: true,
+														Default:  "200",
+													},
 												},
 											},
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										},
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/",
-									},
-									names.AttrPort: {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.IsPortNumber,
-									},
-									names.AttrProtocol: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
-									},
-									"protocol_version": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.HealthCheckProtocolVersionHttp1,
-										StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-										ValidateDiagFunc: enum.Validate[types.HealthCheckProtocolVersion](),
-									},
-									"unhealthy_threshold_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      2,
-										ValidateFunc: validation.IntBetween(2, 10),
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "/",
+										},
+										names.AttrPort: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										names.AttrProtocol: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
+										},
+										"protocol_version": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.HealthCheckProtocolVersionHttp1,
+											StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+											ValidateDiagFunc: enum.Validate[types.HealthCheckProtocolVersion](),
+										},
+										"unhealthy_threshold_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      2,
+											ValidateFunc: validation.IntBetween(2, 10),
+										},
 									},
 								},
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-						},
-						names.AttrIPAddressType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
-						},
-						"lambda_event_structure_version": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.LambdaEventStructureVersion](),
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
-						},
-						"protocol_version": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocolVersion](),
-						},
-						"vpc_identifier": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							names.AttrIPAddressType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+							},
+							"lambda_event_structure_version": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.LambdaEventStructureVersion](),
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
+							},
+							"protocol_version": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+								ValidateDiagFunc: enum.Validate[types.TargetGroupProtocolVersion](),
+							},
+							"vpc_identifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.TargetGroupType](),
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 128),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.TargetGroupType](),
+				},
+			}
 		},
 	}
 }
@@ -210,7 +214,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateTargetGroupInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 		Type:        types.TargetGroupType(d.Get(names.AttrType).(string)),
@@ -241,7 +245,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	out, err := findTargetGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Lattice Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -309,7 +313,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Draining the targets can take a moment, so we need to retry on conflict.
-	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteTargetGroup(ctx, &input)
 	})
 
@@ -341,8 +345,7 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -351,17 +354,17 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTargetGroup(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTargetGroupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -377,7 +380,7 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetGroupStatusCreateInProgress),
 		Target:                    enum.Slice(types.TargetGroupStatusActive),
-		Refresh:                   statusTargetGroup(ctx, conn, id),
+		Refresh:                   statusTargetGroup(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -386,7 +389,7 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 
 	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
 		if output.Status == types.TargetGroupStatusCreateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -399,7 +402,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetGroupStatusDeleteInProgress, types.TargetGroupStatusActive),
 		Target:  []string{},
-		Refresh: statusTargetGroup(ctx, conn, id),
+		Refresh: statusTargetGroup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -407,7 +410,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 
 	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
 		if output.Status == types.TargetGroupStatusDeleteFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

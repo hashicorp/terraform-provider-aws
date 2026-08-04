@@ -46,38 +46,38 @@ resource "aws_s3control_object_lambda_access_point" "example" {
 
 This resource supports the following arguments:
 
+* `account_id` - (Optional) AWS account ID for the owner of the bucket for which you want to create an Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `configuration` - (Required) Configuration block containing details about the Object Lambda Access Point. See [`configuration` Block](#configuration-block) below for more details.
+* `name` - (Required) Name for this Object Lambda Access Point.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `account_id` - (Optional) The AWS account ID for the owner of the bucket for which you want to create an Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `configuration` - (Required) A configuration block containing details about the Object Lambda Access Point. See [Configuration](#configuration) below for more details.
-* `name` - (Required) The name for this Object Lambda Access Point.
 
-### Configuration
+### `configuration` Block
 
 The `configuration` block supports the following:
 
 * `allowed_features` - (Optional) Allowed features. Valid values: `GetObject-Range`, `GetObject-PartNumber`.
 * `cloud_watch_metrics_enabled` - (Optional) Whether or not the CloudWatch metrics configuration is enabled.
 * `supporting_access_point` - (Required) Standard access point associated with the Object Lambda Access Point.
-* `transformation_configuration` - (Required) List of transformation configurations for the Object Lambda Access Point. See [Transformation Configuration](#transformation-configuration) below for more details.
+* `transformation_configuration` - (Required) List of transformation configurations for the Object Lambda Access Point. See [`transformation_configuration` Block](#transformation_configuration-block) below for more details.
 
-### Transformation Configuration
+### `transformation_configuration` Block
 
 The `transformation_configuration` block supports the following:
 
-* `actions` - (Required) The actions of an Object Lambda Access Point configuration. Valid values: `GetObject`.
-* `content_transformation` - (Required) The content transformation of an Object Lambda Access Point configuration. See [Content Transformation](#content-transformation) below for more details.
+* `actions` - (Required) Actions of an Object Lambda Access Point configuration. Valid values: `GetObject`.
+* `content_transformation` - (Required) Content transformation of an Object Lambda Access Point configuration. See [`content_transformation` Block](#content_transformation-block) below for more details.
 
-### Content Transformation
+### `content_transformation` Block
 
 The `content_transformation` block supports the following:
 
-* `aws_lambda` - (Required) Configuration for an AWS Lambda function. See [AWS Lambda](#aws-lambda) below for more details.
+* `aws_lambda` - (Required) Configuration for an AWS Lambda function. See [`aws_lambda` Block](#aws_lambda-block) below for more details.
 
-### AWS Lambda
+### `aws_lambda` Block
 
 The `aws_lambda` block supports the following:
 
-* `function_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Lambda function.
+* `function_arn` - (Required) Amazon Resource Name (ARN) of the AWS Lambda function.
 * `function_payload` - (Optional) Additional JSON that provides supplemental data to the Lambda function used to transform objects.
 
 ## Attribute Reference
@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `alias` - Alias for the S3 Object Lambda Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
-* `id` - The AWS account ID and access point name separated by a colon (`:`).
+* `id` - AWS account ID and access point name separated by a colon (`:`).
 
 ## Import
 

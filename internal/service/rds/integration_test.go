@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -8,16 +8,55 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestIntegrationIDFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		integrationARN types.String
+		want           types.String
+	}{
+		"null": {
+			types.StringNull(),
+			types.StringNull(),
+		},
+		"unknown": {
+			types.StringUnknown(),
+			types.StringNull(),
+		},
+		"invalid-arn": {
+			types.StringValue("not-an-arn"),
+			types.StringNull(),
+		},
+		"unexpected-format": {
+			types.StringValue("arn:aws:iam::012345678901:role/test-role"), // lintignore:AWSAT005
+			types.StringNull(),
+		},
+		"integration-arn": {
+			types.StringValue("arn:aws:rds:us-west-2:012345678901:integration:7c2b2747-4edc-4dac-92aa-b9d48f942cf5"), // lintignore:AWSAT003,AWSAT005
+			types.StringValue("7c2b2747-4edc-4dac-92aa-b9d48f942cf5"),
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			got := tfrds.IntegrationIDFromARN(tt.integrationARN)
+			if !got.Equal(tt.want) {
+				t.Errorf("IntegrationIDFromARN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestAccRDSIntegration_basic(t *testing.T) {
 	if testing.Short() {
@@ -25,20 +64,19 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_rds_cluster.test", names.AttrARN),
@@ -61,49 +99,54 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceIntegration, resourceName),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceIntegration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
 func TestAccRDSIntegration_optional(t *testing.T) {
-	ctx := acctest.Context(t)
-
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_optional(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.mytable"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
@@ -123,9 +166,81 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccRDSIntegration_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_update(rName, rName, "include: *.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: *.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: *.*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName, rNameUpdated, "include: test.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: test.*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccIntegrationConfig_update(rName, rName, "include: mydb.*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter", "include: mydb.*"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_integration" {
@@ -134,7 +249,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -149,24 +264,17 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
-		output, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		_, err := tfrds.FindIntegrationByARN(ctx, conn, rs.Primary.ID)
+		return err
 	}
 }
 
@@ -236,9 +344,15 @@ resource "aws_db_subnet_group" "test" {
   }
 }
 
+data "aws_rds_engine_version" "test" {
+  engine  = "aurora-mysql"
+  version = "8.0"
+  latest  = true
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora-mysql8.0"
+  family = data.aws_rds_engine_version.test.parameter_group_family
 
   dynamic "parameter" {
     for_each = local.cluster_parameters
@@ -252,8 +366,8 @@ resource "aws_rds_cluster_parameter_group" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  engine              = "aurora-mysql"
-  engine_version      = "8.0.mysql_aurora.3.05.2"
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version_actual
   database_name       = "test"
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
@@ -266,12 +380,20 @@ resource "aws_rds_cluster" "test" {
   apply_immediately = true
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version_actual
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
 resource "aws_rds_cluster_instance" "test" {
   identifier         = %[1]q
-  cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = "db.r6g.large"
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
   engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_redshift_cluster" "test" {
@@ -289,7 +411,7 @@ resource "aws_redshift_cluster" "test" {
   publicly_accessible                  = false
   encrypted                            = true
 }
-`, rName))
+`, rName, mainInstanceClasses))
 }
 
 func testAccIntegrationConfig_base(rName string) string {
@@ -447,4 +569,29 @@ resource "aws_rds_integration" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccIntegrationConfig_update(rName, integrationName, dataFilter string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_integration" "test" {
+  integration_name = %[1]q
+  source_arn       = aws_rds_cluster.test.arn
+  target_arn       = aws_redshiftserverless_namespace.test.arn
+  data_filter      = %[2]q
+
+  depends_on = [
+    aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
+    aws_redshiftserverless_namespace.test,
+    aws_redshiftserverless_workgroup.test,
+    aws_redshift_resource_policy.test,
+  ]
+}
+
+resource "aws_redshiftdata_statement" "test" {
+  workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
+  database       = aws_redshiftserverless_namespace.test.db_name
+  sql            = "CREATE DATABASE mydb FROM INTEGRATION '${aws_rds_integration.test.integration_identifier}';"
+}
+`, integrationName, dataFilter))
 }

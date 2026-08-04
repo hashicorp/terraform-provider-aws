@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,645 +40,647 @@ func resourceWorkflow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"on_exception_steps": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 8,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"copy_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_file_location": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"efs_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrPath: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(1, 65536),
-															},
-														},
-													},
-												},
-												"s3_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrKey: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(0, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"on_exception_steps": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 8,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"copy_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_file_location": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"efs_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrFileSystemID: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrPath: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 65536),
+																},
 															},
 														},
 													},
-												},
-											},
-										},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"overwrite_existing": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.OverwriteExistingFalse,
-										ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-								},
-							},
-						},
-						"custom_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									names.AttrTarget: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 1800),
-									},
-								},
-							},
-						},
-						"decrypt_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_file_location": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"efs_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrPath: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(1, 65536),
-															},
-														},
-													},
-												},
-												"s3_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrKey: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(0, 1024),
+													"s3_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrBucket: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrKey: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(0, 1024),
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"overwrite_existing": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.OverwriteExistingFalse,
-										ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"overwrite_existing": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.OverwriteExistingFalse,
+											ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
 									},
 								},
 							},
-						},
-						"delete_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
+							"custom_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+										names.AttrTarget: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 1800),
+										},
 									},
 								},
 							},
-						},
-						"tag_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									names.AttrTags: {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringLenBetween(0, 128),
+							"decrypt_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_file_location": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"efs_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrFileSystemID: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrPath: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 65536),
+																},
+															},
+														},
+													},
+													"s3_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrBucket: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrKey: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(0, 1024),
+																},
+															},
+														},
+													},
 												},
-												names.AttrValue: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringLenBetween(0, 256),
+											},
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"overwrite_existing": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.OverwriteExistingFalse,
+											ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+										},
+									},
+								},
+							},
+							"delete_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+									},
+								},
+							},
+							"tag_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+										names.AttrTags: {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.StringLenBetween(0, 128),
+													},
+													names.AttrValue: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.StringLenBetween(0, 256),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.WorkflowStepType](),
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.WorkflowStepType](),
+							},
 						},
 					},
 				},
-			},
-			"steps": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 8,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"copy_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_file_location": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"efs_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrPath: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(1, 65536),
-															},
-														},
-													},
-												},
-												"s3_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrKey: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(0, 1024),
+				"steps": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 8,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"copy_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_file_location": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"efs_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrFileSystemID: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrPath: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 65536),
+																},
 															},
 														},
 													},
-												},
-											},
-										},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"overwrite_existing": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.OverwriteExistingFalse,
-										ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-								},
-							},
-						},
-						"custom_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									names.AttrTarget: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(1, 1800),
-									},
-								},
-							},
-						},
-						"decrypt_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_file_location": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"efs_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrPath: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(1, 65536),
-															},
-														},
-													},
-												},
-												"s3_file_location": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrKey: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validation.StringLenBetween(0, 1024),
+													"s3_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrBucket: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrKey: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(0, 1024),
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"overwrite_existing": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.OverwriteExistingFalse,
-										ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"overwrite_existing": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.OverwriteExistingFalse,
+											ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
 									},
 								},
 							},
-						},
-						"delete_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
+							"custom_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+										names.AttrTarget: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.IntBetween(1, 1800),
+										},
 									},
 								},
 							},
-						},
-						"tag_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									names.AttrTags: {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringLenBetween(0, 128),
+							"decrypt_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_file_location": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"efs_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrFileSystemID: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrPath: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 65536),
+																},
+															},
+														},
+													},
+													"s3_file_location": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrBucket: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrKey: {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ForceNew:     true,
+																	ValidateFunc: validation.StringLenBetween(0, 1024),
+																},
+															},
+														},
+													},
 												},
-												names.AttrValue: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringLenBetween(0, 256),
+											},
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"overwrite_existing": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.OverwriteExistingFalse,
+											ValidateDiagFunc: enum.Validate[awstypes.OverwriteExisting](),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+										},
+									},
+								},
+							},
+							"delete_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+									},
+								},
+							},
+							"tag_step_details": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 30),
+												validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											),
+										},
+										"source_file_location": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 256),
+												validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											),
+										},
+										names.AttrTags: {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.StringLenBetween(0, 128),
+													},
+													names.AttrValue: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.StringLenBetween(0, 256),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.WorkflowStepType](),
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.WorkflowStepType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -718,7 +722,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findWorkflowByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer Workflow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -780,8 +784,7 @@ func findWorkflowByID(ctx context.Context, conn *transfer.Client, id string) (*a
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -790,7 +793,7 @@ func findWorkflowByID(ctx context.Context, conn *transfer.Client, id string) (*a
 	}
 
 	if output == nil || output.Workflow == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workflow, nil

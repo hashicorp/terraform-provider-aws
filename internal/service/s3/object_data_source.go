@@ -1,10 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
 import (
 	"context"
+	"encoding/base64"
 	"regexp"
 	"strings"
 	"time"
@@ -21,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,135 +35,146 @@ func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"bucket_key_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"cache_control": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ChecksumMode](),
-			},
-			"checksum_crc32": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_crc32c": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_crc64nvme": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_sha1": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_language": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expires": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"object_lock_legal_hold_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_lock_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_lock_retain_until_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"range": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sse_kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageClass: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"website_redirect_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"body_base64": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"bucket_key_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"cache_control": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ChecksumMode](),
+				},
+				"checksum_crc32": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_crc32c": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_crc64nvme": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_sha1": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_encoding": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_language": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_body": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"expires": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKey: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metadata": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"object_lock_legal_hold_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_retain_until_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"range": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"server_side_encryption": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sse_kms_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageClass: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"website_redirect_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -180,7 +195,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
-	input := &s3.HeadObjectInput{
+	input := s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
@@ -194,7 +209,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := findObject(ctx, conn, input, optFns...)
+	output, err := findObject(ctx, conn, &input, optFns...)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -252,25 +267,41 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
-	if isContentTypeAllowed(output.ContentType) {
+	downloadBody, downloadBodyNull, err := nullable.Bool(d.Get("download_body").(string)).ValueBool()
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+
+	// skip object download if download_body is explicitly set to false
+	if !downloadBodyNull && !downloadBody {
+		return diags
+	}
+
+	if downloadBody || isContentTypeAllowed(output.ContentType) {
 		downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
 		buf := manager.NewWriteAtBuffer(make([]byte, 0))
-		input := &s3.GetObjectInput{
+		inputObjectDownload := s3.GetObjectInput{
 			Bucket:    aws.String(bucket),
 			Key:       aws.String(key),
 			VersionId: output.VersionId,
 		}
 		if v, ok := d.GetOk("range"); ok {
-			input.Range = aws.String(v.(string))
+			inputObjectDownload.Range = aws.String(v.(string))
 		}
 
-		_, err := downloader.Download(ctx, buf, input)
-
+		_, err = downloader.Download(ctx, buf, &inputObjectDownload)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 		}
 
-		d.Set("body", string(buf.Bytes()))
+		if downloadBody {
+			base64Body := base64.StdEncoding.EncodeToString(buf.Bytes())
+			d.Set("body_base64", base64Body)
+		}
+
+		if isContentTypeAllowed(output.ContentType) {
+			d.Set("body", string(buf.Bytes()))
+		}
 	}
 
 	return diags

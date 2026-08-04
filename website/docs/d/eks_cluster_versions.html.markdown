@@ -16,6 +16,18 @@ Terraform data source for managing AWS EKS (Elastic Kubernetes) Cluster Versions
 
 ```terraform
 data "aws_eks_cluster_versions" "example" {}
+
+output "eks_cluster_versions" {
+  value = data.aws_eks_cluster_versions.example.cluster_versions
+}
+
+output "eks_cluster_version_filtered" {
+  value = [for version in data.aws_eks_cluster_versions.example.cluster_versions : version if version.cluster_version == "1.33"]
+}
+
+output "eks_cluster_version_list" {
+  value = [for version in data.aws_eks_cluster_versions.example.cluster_versions : version.cluster_version]
+}
 ```
 
 ### Filter by Cluster Type
@@ -41,7 +53,6 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_type` - (Optional) Type of clusters to filter by.
 Currently, the only valid value is `eks`.
-* `cluster_versions` - (Optional) A list of Kubernetes versions that you can use to check if EKS supports it.
 * `default_only` - (Optional) Whether to show only the default versions of Kubernetes supported by EKS.
 * `include_all` - (Optional) Whether to include all kubernetes versions in the response.
 * `version_status` - (Optional) Status of the EKS cluster versions to list.
@@ -51,12 +62,13 @@ Valid values are `STANDARD_SUPPORT` or `UNSUPPORTED` or `EXTENDED_SUPPORT`.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `cluster_type` - Type of cluster that the version belongs to.
-* `cluster_version` - Kubernetes version supported by EKS.
-* `default_platform_version` - Default eks platform version for the cluster version.
-* `default_version` - Default Kubernetes version for the cluster version.
-* `end_of_extended_support_date` - End of extended support date for the cluster version.
-* `end_of_standard_support_date` - End of standard support date for the cluster version.
-* `kubernetes_patch_version` - Kubernetes patch version for the cluster version.
-* `release_date` - Release date of the cluster version.
-* `version_status` - Status of the EKS cluster version.
+* `cluster_versions` - A list of Kubernetes version information.
+    * `cluster_type` - Type of cluster that the version belongs to.
+    * `cluster_version` - Kubernetes version supported by EKS.
+    * `default_platform_version` - Default eks platform version for the cluster version.
+    * `default_version` - Default Kubernetes version for the cluster version.
+    * `end_of_extended_support_date` - End of extended support date for the cluster version.
+    * `end_of_standard_support_date` - End of standard support date for the cluster version.
+    * `kubernetes_patch_version` - Kubernetes patch version for the cluster version.
+    * `release_date` - Release date of the cluster version.
+    * `version_status` - Status of the EKS cluster version.

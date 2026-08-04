@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -13,13 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,56 +45,58 @@ func resourceHost() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"asset_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"outpost_arn"},
-				Computed:     true,
-			},
-			"auto_placement": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AutoPlacementOn,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"host_recovery": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.HostRecoveryOff,
-				ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
-			},
-			"instance_family": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
-			},
-			names.AttrInstanceType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"asset_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{names.AttrOutpostARN},
+					Computed:     true,
+				},
+				"auto_placement": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AutoPlacementOn,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"host_recovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.HostRecoveryOff,
+					ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
+				},
+				"instance_family": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
+				},
+				names.AttrInstanceType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -104,7 +108,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	input := ec2.AllocateHostsInput{
 		AutoPlacement:     awstypes.AutoPlacement(d.Get("auto_placement").(string)),
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		HostRecovery:      awstypes.HostRecovery(d.Get("host_recovery").(string)),
 		Quantity:          aws.Int32(1),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeDedicatedHost),
@@ -122,7 +126,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("outpost_arn"); ok {
+	if v, ok := d.GetOk(names.AttrOutpostARN); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
@@ -148,7 +152,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	host, err := findHostByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Host %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -165,7 +169,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set(names.AttrInstanceType, host.HostProperties.InstanceType)
-	d.Set("outpost_arn", host.OutpostArn)
+	d.Set(names.AttrOutpostARN, host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 
 	setTagsOut(ctx, host.Tags)

@@ -97,6 +97,30 @@ resource "aws_dlm_lifecycle_policy" "example" {
 }
 ```
 
+### Example Default Policy
+
+```
+resource "aws_dlm_lifecycle_policy" "example" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.example.arn
+  default_policy     = "VOLUME"
+
+  policy_details {
+    create_interval = 5
+    resource_type   = "VOLUME"
+    policy_language = "SIMPLIFIED"
+
+    exclusions {
+      exclude_boot_volumes = false
+      exclude_tags = {
+        test = "exclude"
+      }
+      exclude_volume_types = ["gp2"]
+    }
+  }
+}
+```
+
 ### Example Cross-Region Snapshot Copy Usage
 
 ```terraform
@@ -216,6 +240,49 @@ resource "aws_iam_role_policy_attachment" "example" {
 }
 ```
 
+### Example Post/Pre Scripts
+
+```
+data "aws_iam_policy" "test" {
+  name = "AWSDataLifecycleManagerSSMFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "example" {
+  role       = aws_iam_role.test.id
+  policy_arn = data.aws_iam_policy.example.arn
+}
+
+resource "aws_dlm_lifecycle_policy" "example" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.example.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+
+    schedule {
+      name = "Windows VSS"
+
+      create_rule {
+        interval = 12
+        scripts {
+          execute_operation_on_script_failure = false
+          execution_handler                   = "AWS_VSS_BACKUP"
+          maximum_retry_count                 = 2
+        }
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tag1 = "Windows"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -223,6 +290,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
+* `default_policy` - (Required) Specify the type of default policy to create. valid values are `VOLUME` or `INSTANCE`.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
 * `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -230,13 +298,20 @@ This resource supports the following arguments:
 #### Policy Details arguments
 
 * `action` - (Optional) The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`action` configuration](#action-arguments) block.
+* `copy_tags` - (Optional, Default policies only) Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is `false`.
+* `create_interval` - (Optional, Default policies only) How often the policy should run and create snapshots or AMIs. valid values range from `1` to `7`. Default value is `1`.
+* `exclusions` - (Optional, Default policies only) Specifies exclusion parameters for volumes or instances for which you do not want to create snapshots or AMIs.  See the [`exclusions` configuration](#exclusions-arguments) block.
+* `extend_deletion` - (Optional, Default policies only) snapshot or AMI retention behavior for the policy if the source volume or instance is deleted, or if the policy enters the error, disabled, or deleted state. Default value is `false`.
+* `retain_interval` - (Optional, Default policies only) Specifies how long the policy should retain snapshots or AMIs before deleting them. valid values range from `2` to `14`. Default value is `7`.
 * `event_source` - (Optional) The event that triggers the event-based policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`event_source` configuration](#event-source-arguments) block.
+* `resource_type` - (Optional, Default policies only) Type of default policy to create. Valid values are `VOLUME` and `INSTANCE`.
 * `resource_types` - (Optional) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
-* `resource_locations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If you specify `OUTPOST`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `CLOUD` and `OUTPOST`.
+* `resource_locations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If the source resources are located in a Local Zone, specify `LOCAL_ZONE`. Valid values are `CLOUD`, `LOCAL_ZONE`, and `OUTPOST`.
+* `policy_language` - (Optional) Type of policy to create. `SIMPLIFIED` To create a default policy. `STANDARD` To create a custom policy.
 * `policy_type` - (Optional) The valid target resource types and actions a policy can manage. Specify `EBS_SNAPSHOT_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `IMAGE_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `EVENT_BASED_POLICY` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `EBS_SNAPSHOT_MANAGEMENT`.
 * `parameters` - (Optional) A set of optional parameters for snapshot and AMI lifecycle policies. See the [`parameters` configuration](#parameters-arguments) block.
 * `schedule` - (Optional) See the [`schedule` configuration](#schedule-arguments) block.
-* `target_tags` (Optional) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
+* `target_tags` (Optional) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted. Required when `policy_type` is `EBS_SNAPSHOT_MANAGEMENT` or `IMAGE_MANAGEMENT`. Must not be specified when `policy_type` is `EVENT_BASED_POLICY`.
 
 ~> Note: You cannot have overlapping lifecycle policies that share the same `target_tags`. Terraform is unable to detect this at plan time but it will fail during apply.
 
@@ -267,6 +342,12 @@ This resource supports the following arguments:
 * `event_type` - (Required) The type of event. Currently, only `shareSnapshot` events are supported.
 * `snapshot_owner` - (Required) The IDs of the AWS accounts that can trigger policy by sharing snapshots with your account. The policy only runs if one of the specified AWS accounts shares a snapshot with your account.
 
+#### Exclusions arguments
+
+* `exclude_boot_volumes` - (Optional) Indicates whether to exclude volumes that are attached to instances as the boot volume. To exclude boot volumes, specify `true`.
+* `exclude_tags` - (Optional) Map specifies whether to exclude volumes that have specific tags.
+* `exclude_volume_types` - (Optional) List specifies the volume types to exclude.
+
 #### Parameters arguments
 
 * `exclude_boot_volume` - (Optional) Indicates whether to exclude the root volume from snapshots created using CreateSnapshots. The default is `false`.
@@ -274,6 +355,7 @@ This resource supports the following arguments:
 
 #### Schedule arguments
 
+* `archive_rule` - (Optional) Specifies a snapshot archiving rule for a schedule. See [`archive_rule`](#archive-rule-arguments) block.
 * `copy_tags` - (Optional) Copy all user-defined tags on a source volume to snapshots of the volume created by this policy.
 * `create_rule` - (Required) See the [`create_rule`](#create-rule-arguments) block. Max of 1 per schedule.
 * `cross_region_copy_rule` (Optional) - See the [`cross_region_copy_rule`](#cross-region-copy-rule-arguments) block. Max of 3 per schedule.
@@ -285,12 +367,21 @@ This resource supports the following arguments:
 * `tags_to_add` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
 * `variable_tags` - (Optional) A map of tag keys and variable values, where the values are determined when the policy is executed. Only `$(instance-id)` or `$(timestamp)` are valid values. Can only be used when `resource_types` is `INSTANCE`.
 
+#### Archive Rule Arguments
+
+* `archive_retain_rule` - (Required) Information about the retention period for the snapshot archiving rule. See the [`archive_retain_rule`](#archive-retain-rule-arguments) block.
+
+#### Archive Retain Rule Arguments
+
+* `retention_archive_tier` - (Required) Information about retention period in the Amazon EBS Snapshots Archive. See the [`retention_archive_tier`](#retention-archive-tier-arguments) block.
+
 #### Create Rule arguments
 
-* `cron_expression` - (Optional) The schedule, as a Cron expression. The schedule interval must be between 1 hour and 1 year. Conflicts with `interval`, `interval_unit`, and `times`.
+* `cron_expression` - (Optional) The schedule, as a Cron expression. The schedule interval must be between 1 hour and 1 year. Conflicts with `interval`, `interval_unit`, and `times`. For details on valid Cron expressions, see [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html#eb-cron-expressions).
 * `interval` - (Optional) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values. Conflicts with `cron_expression`. If set, `interval_unit` and `times` must also be set.
 * `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value. Conflicts with `cron_expression`. Must be set if `interval` is set.
 * `location` - (Optional) Specifies the destination for snapshots created by the policy. To create snapshots in the same Region as the source resource, specify `CLOUD`. To create snapshots on the same Outpost as the source resource, specify `OUTPOST_LOCAL`. If you omit this parameter, `CLOUD` is used by default. If the policy targets resources in an AWS Region, then you must create snapshots in the same Region as the source resource. If the policy targets resources on an Outpost, then you can create snapshots on the same Outpost as the source resource, or in the Region of that Outpost. Valid values are `CLOUD` and `OUTPOST_LOCAL`.
+* `scripts` - (Optional) Specifies pre and/or post scripts for a snapshot lifecycle policy that targets instances. Valid only when `resource_type` is INSTANCE. See the [`scripts` configuration](#scripts-rule-arguments) block.
 * `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1. Conflicts with `cron_expression`. Must be set if `interval` is set.
 
 #### Deprecate Rule arguments
@@ -325,7 +416,8 @@ This resource supports the following arguments:
 * `deprecate_rule` - (Optional) The AMI deprecation rule for cross-Region AMI copies created by the rule. See the [`deprecate_rule`](#cross-region-copy-rule-deprecate-rule-arguments) block.
 * `encrypted` - (Required) To encrypt a copy of an unencrypted snapshot if encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or if encryption by default is not enabled.
 * `retain_rule` - (Required) The retention rule that indicates how long snapshot copies are to be retained in the destination Region. See the [`retain_rule`](#cross-region-copy-rule-retain-rule-arguments) block. Max of 1 per schedule.
-* `target` - (Required) The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+* `target` - Use only for DLM policies of `policy_type=EBS_SNAPSHOT_MANAGEMENT`. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+* `target_region` - Use only for DLM policies of `policy_type=IMAGE_MANAGEMENT`. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
 
 #### Cross Region Copy Rule Deprecate Rule arguments
 
@@ -336,6 +428,26 @@ This resource supports the following arguments:
 
 * `interval` - (Required) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
 * `interval_unit` - (Required) The unit of time for time-based retention. Valid values: `DAYS`, `WEEKS`, `MONTHS`, or `YEARS`.
+
+#### Scripts Rule arguments
+
+* `execute_operation_on_script_failure` - (Optional) Indicates whether Amazon Data Lifecycle Manager should default to crash-consistent snapshots if the pre script fails. The default is `true`.
+
+* `execution_handler` - (Required) The SSM document that includes the pre and/or post scripts to run. In case automating VSS backups, specify `AWS_VSS_BACKUP`. In case automating application-consistent snapshots for SAP HANA workloads, specify `AWSSystemsManagerSAP-CreateDLMSnapshotForSAPHANA`. If you are using a custom SSM document that you own, specify either the name or ARN of the SSM document.
+
+* `execution_handler_service` - (Optional) Indicates the service used to execute the pre and/or post scripts. If using custom SSM documents or automating application-consistent snapshots of SAP HANA workloads, specify `AWS_SYSTEMS_MANAGER`. In case automating VSS Backups, omit this parameter. The default is `AWS_SYSTEMS_MANAGER`.
+
+* `execution_timeout` - (Optional) Specifies a timeout period, in seconds, after which Amazon Data Lifecycle Manager fails the script run attempt if it has not completed. In case automating VSS Backups, omit this parameter. The default is `10`.
+
+* `maximum_retry_count` - (Optional) Specifies the number of times Amazon Data Lifecycle Manager should retry scripts that fail. Must be an integer between `0` and `3`. The default is `0`.
+
+* `stages` - (Optional) List to indicate which scripts Amazon Data Lifecycle Manager should run on target instances. Pre scripts run before Amazon Data Lifecycle Manager initiates snapshot creation. Post scripts run after Amazon Data Lifecycle Manager initiates snapshot creation. Valid values: `PRE` and `POST`. The default is `PRE` and `POST`
+
+#### Retention Archive Tier Arguments
+
+* `count` - (Optional)The maximum number of snapshots to retain in the archive storage tier for each volume. Must be an integer between `1` and `1000`. Conflicts with `interval` and `interval_unit`.
+* `interval` - (Optional) Specifies the period of time to retain snapshots in the archive tier. After this period expires, the snapshot is permanently deleted. Conflicts with `count`. If set, `interval_unit` must also be set.
+* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 ## Attribute Reference
 

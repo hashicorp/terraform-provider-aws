@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3control
 
@@ -15,19 +17,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_access_point, name="Access Point")
+// @SDKResource("aws_s3_access_point", name="Access Point")
+// @Tags(identifierAttribute="arn")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointCreate,
@@ -39,111 +43,115 @@ func resourceAccessPoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"bucket_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"has_public_access_policy": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"network_origin": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"public_access_block_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         true,
-				MinItems:         0,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"block_public_acls": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						"block_public_policy": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						"ignore_public_acls": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						"restrict_public_buckets": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"bucket_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoints: {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"has_public_access_policy": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"network_origin": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"public_access_block_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MinItems:         0,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"block_public_acls": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							"block_public_policy": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							"ignore_public_acls": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							"restrict_public_buckets": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVPCConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -162,6 +170,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(d.Get(names.AttrBucket).(string)),
 		Name:      aws.String(name),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bucket_account_id"); ok {
@@ -228,7 +237,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -318,7 +327,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		d.Set(names.AttrPolicy, policyToSet)
-	} else if policy == "" || tfresource.NotFound(err) {
+	} else if policy == "" || retry.NotFound(err) {
 		d.Set("has_public_access_policy", false)
 		d.Set(names.AttrPolicy, nil)
 	} else {
@@ -408,8 +417,7 @@ func findAccessPointByTwoPartKey(ctx context.Context, conn *s3control.Client, ac
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -418,7 +426,7 @@ func findAccessPointByTwoPartKey(ctx context.Context, conn *s3control.Client, ac
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

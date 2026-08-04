@@ -22,6 +22,23 @@ resource "aws_networkmanager_vpc_attachment" "example" {
 }
 ```
 
+### Usage with Options
+
+```terraform
+resource "aws_networkmanager_vpc_attachment" "example" {
+  subnet_arns     = [aws_subnet.example.arn]
+  core_network_id = awscc_networkmanager_core_network.example.id
+  vpc_arn         = aws_vpc.example.arn
+
+  options {
+    appliance_mode_support             = false
+    dns_support                        = true
+    ipv6_support                       = false
+    security_group_referencing_support = true
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -33,12 +50,15 @@ The following arguments are required:
 The following arguments are optional:
 
 * `options` - (Optional) Options for the VPC attachment. [See below](#options).
+* `routing_policy_label` - (Optional) The routing policy label to apply to the VPC attachment for traffic routing decisions. Maximum length of 256 characters.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### options
 
 * `appliance_mode_support` - (Optional) Whether to enable appliance mode support. If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow. If the VPC attachment is pending acceptance, changing this value will recreate the resource.
+* `dns_support` - (Optional) Whether to enable DNS support. If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 * `ipv6_support` - (Optional) Whether to enable IPv6 support. If the VPC attachment is pending acceptance, changing this value will recreate the resource.
+* `security_group_referencing_support` - (Optional) Whether to enable security group referencing support for this VPC attachment. The default is `true`. However, at the core network policy-level the default is set to `false`. If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 
 ## Attribute Reference
 

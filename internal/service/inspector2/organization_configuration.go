@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package inspector2
 
@@ -12,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -34,44 +36,46 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"code_repository": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"ec2": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"ecr": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"lambda": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"lambda_code": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"code_repository": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"ec2": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"ecr": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"lambda": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"lambda_code": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
-			"max_account_limit_reached": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"max_account_limit_reached": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -94,7 +98,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	output, err := findOrganizationConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Organization Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,8 +182,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 
 	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Invoking account does not have access to describe the organization configuration") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -188,7 +191,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 	}
 
 	if output == nil || output.AutoEnable == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

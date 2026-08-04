@@ -7,18 +7,13 @@ description: |-
 
 # AWS Provider
 
-Use the Amazon Web Services (AWS) provider to interact with the
-many resources supported by AWS. You must configure the provider
-with the proper credentials before you can use it.
+The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. It is an indispensable part of how leading technology companies, global banks, government agencies, and some of the largest enterprises in the world build and operate in the cloud. Every day, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations.
 
-Use the navigation to the left to read about the available resources. There are currently 1509 resources and 608 data sources available in the provider.
+With 1,682 resources, 10 ephemeral resources, 168 list resources and 672 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
 
-To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
-including Lambda, RDS, and IAM by following the [AWS services
-tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
-Some AWS services do not support IPv6. As a result, the provider may not be able to interact with AWS APIs using IPv6 addresses.
+Note: Some AWS services do not yet support IPv6. In those cases, the provider may not be able to connect to AWS APIs over IPv6 addresses.
 
 ## Example Usage
 
@@ -73,18 +68,18 @@ which are applied in the following order:
 1. Instance profile credentials and Region
 
 This order matches the precedence used by the
-[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence)
-and the [AWS SDKs](https://aws.amazon.com/tools/).
+[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#configure-precedence)
+and the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/configure-gosdk.html).
 
 The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
-or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
+or in [a named profile](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html#file-format-profile).
 If configuring the role in the provider configuration, the provider supports IAM Role Chaining by specifying a list of roles to assume.
 
-The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
+The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html#webidentity).
 This can be configured either using environment variables or in a named profile.
 
-When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
+When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html).
 
 ### Provider Configuration
 
@@ -136,7 +131,7 @@ Other environment variables related to authorization are:
 
 ### Shared Configuration and Credentials Files
 
-The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html).
 By default, these files are located at `$HOME/.aws/config` and `$HOME/.aws/credentials` on Linux and macOS,
 and `"%USERPROFILE%\.aws\config"` and `"%USERPROFILE%\.aws\credentials"` on Windows.
 
@@ -222,7 +217,7 @@ provider "aws" {
 
 ### Using an External Credentials Process
 
-To use an [external process to source credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html),
+To use an [external process to source credentials](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html),
 the process must be configured in a named profile, including the `default` profile.
 The profile is configured in a shared configuration file.
 
@@ -263,8 +258,8 @@ credential_process = custom-process --username jdoe
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+[envvars]: https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings
+[config]: https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#ConfigFileSettings
 
 ### Assume Role Configuration Reference
 
@@ -273,7 +268,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 
 Note that environment variables are not supported for assuming IAM roles.
 
-See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
+See the [assume role documentation](https://docs.aws.amazon.com/sdkref/latest/guide/feature-assume-role-credentials.html) for more information.
 
 |Setting|Provider|[Shared Config][config]|
 |-------|--------|-----------------------|
@@ -289,15 +284,15 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 
 ### Assume Role with Web Identity Configuration Reference
 
-Configuration for assuming an IAM role using web identify federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
+Configuration for assuming an IAM role using web identity federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role_with_web_identity` block.
 
-See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
+See the assume role documentation [section on web identities](https://docs.aws.amazon.com/sdkref/latest/guide/access-assume-role-web.html) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
 |-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Web Identity Token|`web_identity_token`|N/A|N/A|
+|Web Identity Token|`web_identity_token`|`TF_AWS_WEB_IDENTITY_TOKEN`|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
 |Duration|`duration`|N/A|`duration_seconds`|
 |Policy|`policy`|N/A|`policy`|
@@ -306,10 +301,63 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions.
+
+There are three ways to provide additional User-Agent information.
+
+1. The `user_agent` provider argument.
+1. The `TF_APPEND_USER_AGENT` environment variable.
+1. The [`provider_meta`](https://developer.hashicorp.com/terraform/internals/provider-meta) `user_agent` argument.
+
+-> The first two options will apply to all resources managed by the provider instance, while the `provider_meta` configuration applies only to resources in the module in which it is configured.
+
+### `user_agent` Provider Argument
+
+When using the `user_agent` provider argument, the items will be appended to the `User-Agent` header in order.
+The [`user_agent` provider-defined function](./docs/functions/user_agent.html.markdown) can be used to format the name, version, and comment components.
+
+```terraform
+provider "aws" {
+  user_agent = [
+    provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+    "other-demo/0.0.2 (other comment)",
+  ]
+}
+```
+
+### `TF_APPEND_USER_AGENT` Environment Variable
+
+When using the environment variable, the provided value will be directly appended to the `User-Agent` header.
 
 ```console
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
+
+### `provider_meta` `user_agent` Argument
+
+The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
+This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
+
+-> In a module, `provider_meta` is defined within the `terraform` block.
+The `provider` block is inherited from the root module.
+
+-> Functions, including the [`user_agent` provider-defined function](./docs/functions/user_agent.html.markdown), cannot be used in the [`terraform` block](https://developer.hashicorp.com/terraform/language/block/terraform#terraform-block).
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  provider_meta "aws" {
+    user_agent = [
+      "module-demo/0.0.3 (another comment)",
+    ]
+  }
+}
 ```
 
 ## Argument Reference
@@ -498,6 +546,12 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_web_acl` resource](/docs/providers/aws/r/waf_web_acl.html)
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
+* `tag_policy_compliance` - (Optional) The severity with which to enforce organizational tagging policies on resources managed by this provider instance.
+  At this time this only includes compliance with required tag keys by resource type.
+  Valid values are `error`, `warning`, and `disabled`.
+  When unset or `disabled`, tag policy compliance will not be enforced by the provider.
+  Can also be configured with the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable.
+  See the [Tag Policy Compliance user guide](./docs/guides/tag-policy-compliance.html.markdown) for additional details.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
 * `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
@@ -506,6 +560,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   This setting is ignored for any service with a custom endpoint specified.
   Note that not all services or regions have valid FIPS endpoints.
   The parameter `endpoints` can be used to override a particular service's endpoint if there is no valid FIPS endpoint.
+* `user_agent` (Optional) Product details to append to the User-Agent string sent in all AWS API calls.
 
 ### assume_role Configuration Block
 
@@ -537,9 +592,10 @@ The `assume_role_with_web_identity` configuration block supports the following a
 * `session_name` - (Optional) Session name to use when assuming the role.
   Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
 * `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token` or `web_identity_token_file` is required.
+  Either `web_identity_token` or `web_identity_token_file` must be provided.
+  Can also be set with the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token_file` or `web_identity_token` is required.
+  Either `web_identity_token_file` or `web_identity_token` must be provided.
   Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block

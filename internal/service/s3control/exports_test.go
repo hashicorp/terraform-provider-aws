@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -23,7 +23,7 @@ var (
 	ResourceStorageLensConfiguration           = resourceStorageLensConfiguration
 
 	FindAccessGrantByTwoPartKey                            = findAccessGrantByTwoPartKey
-	FindAccessGrantsInstance                               = findAccessGrantsInstance
+	FindAccessGrantsInstanceByID                           = findAccessGrantsInstanceByID
 	FindAccessGrantsInstanceResourcePolicy                 = findAccessGrantsInstanceResourcePolicy
 	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
@@ -34,11 +34,13 @@ var (
 	FindDirectoryAccessPointScopeByTwoPartKey              = findDirectoryAccessPointScopeByTwoPartKey
 	FindMultiRegionAccessPointByTwoPartKey                 = findMultiRegionAccessPointByTwoPartKey
 	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey   = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
+	FindMultiRegionAccessPointRoutesByTwoPartKey           = findMultiRegionAccessPointRoutesByTwoPartKey
 	FindObjectLambdaAccessPointAliasByTwoPartKey           = findObjectLambdaAccessPointAliasByTwoPartKey
 	FindObjectLambdaAccessPointConfigurationByTwoPartKey   = findObjectLambdaAccessPointConfigurationByTwoPartKey
 	FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey = findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey
 	FindPublicAccessBlockByAccountID                       = findPublicAccessBlockByAccountID
-	FindStorageLensConfigurationByAccountIDAndConfigID     = findStorageLensConfigurationByAccountIDAndConfigID
+	FindStorageLensConfigurationByTwoPartKey               = findStorageLensConfigurationByTwoPartKey
 
-	AccessPointParseResourceID = accessPointParseResourceID
+	AccessPointParseResourceID            = accessPointParseResourceID
+	MultiRegionAccessPointParseResourceID = multiRegionAccessPointParseResourceID
 )

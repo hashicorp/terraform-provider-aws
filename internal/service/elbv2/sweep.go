@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -23,8 +23,10 @@ func RegisterSweepers() {
 		F:    sweepLoadBalancers,
 		Dependencies: []string{
 			"aws_api_gateway_vpc_link",
+			"aws_ecs_express_gateway_service",
 			"aws_vpc_endpoint_service",
 			"aws_lb_listener",
+			"aws_arczonalshift_zonal_autoshift_configuration",
 		},
 	})
 
@@ -32,6 +34,7 @@ func RegisterSweepers() {
 		Name: "aws_lb_target_group",
 		F:    sweepTargetGroups,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
 			"aws_lb",
 		},
 	})
@@ -39,6 +42,9 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_lb_listener", &resource.Sweeper{
 		Name: "aws_lb_listener",
 		F:    sweepListeners,
+		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
+		},
 	})
 
 	awsv2.Register("aws_lb_trust_store", sweepTrustStore)
@@ -48,7 +54,7 @@ func sweepLoadBalancers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 	conn := client.ELBV2Client(ctx)
@@ -130,7 +136,7 @@ func sweepListeners(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 	conn := client.ELBV2Client(ctx)

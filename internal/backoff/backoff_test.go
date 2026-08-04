@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backoff
@@ -14,7 +14,7 @@ import (
 func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	t.Parallel()
 
-	delay := DefaultSDKv2HelperRetryCompatibleDelay()
+	delay := DefaultSDKv2HelperRetryCompatibleDelay(t.Context())
 	want := []time.Duration{
 		0,
 		500 * time.Millisecond,
@@ -29,7 +29,35 @@ func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Next(uint(i)))
+	}
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+	}
+}
+
+func TestDefaultSDKv2HelperRetryCompatibleDelayWithIncrementDelay(t *testing.T) {
+	t.Parallel()
+
+	delay := DefaultSDKv2HelperRetryCompatibleDelay(t.Context())
+	want := []time.Duration{
+		0,
+		500 * time.Millisecond,
+		1 * time.Second,
+		1 * time.Second,
+		1 * time.Second,
+		2 * time.Second,
+		4 * time.Second,
+		8 * time.Second,
+		10 * time.Second,
+		10 * time.Second,
+	}
+	var got []time.Duration
+	for i := range len(want) {
+		delay.(DelayWithSetIncrementDelay).SetIncrementDelay(i < 3 || i > 4)
+
+		got = append(got, delay.Next(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -40,7 +68,7 @@ func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	t.Parallel()
 
-	delay := SDKv2HelperRetryCompatibleDelay(200*time.Millisecond, 0, 3*time.Second)
+	delay := SDKv2HelperRetryCompatibleDelay(t.Context(), 200*time.Millisecond, 0, 3*time.Second)
 	want := []time.Duration{
 		200 * time.Millisecond,
 		3 * time.Second,
@@ -50,7 +78,7 @@ func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Next(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -61,7 +89,7 @@ func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 func TestSDKv2HelperRetryCompatibleDelayWithPollTimeout(t *testing.T) {
 	t.Parallel()
 
-	delay := SDKv2HelperRetryCompatibleDelay(200*time.Millisecond, 20*time.Second, 3*time.Second)
+	delay := SDKv2HelperRetryCompatibleDelay(t.Context(), 200*time.Millisecond, 20*time.Second, 3*time.Second)
 	want := []time.Duration{
 		200 * time.Millisecond,
 		20 * time.Second,
@@ -71,7 +99,7 @@ func TestSDKv2HelperRetryCompatibleDelayWithPollTimeout(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Next(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -85,7 +113,7 @@ func TestLoopWithTimeoutDefaultGracePeriod(t *testing.T) {
 	ctx := context.Background()
 
 	var n int
-	for r := NewLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
+	for r := NewLoopWithOptions(t.Context(), 1*time.Minute, WithDelay(FixedDelay(1*time.Second))); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}
@@ -102,7 +130,7 @@ func TestLoopWithTimeoutNoGracePeriod(t *testing.T) {
 	ctx := context.Background()
 
 	var n int
-	for r := NewLoopWithOptions(1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
+	for r := NewLoopWithOptions(t.Context(), 1*time.Minute, WithDelay(FixedDelay(1*time.Second)), WithGracePeriod(0)); r.Continue(ctx); {
 		time.Sleep(35 * time.Second)
 		n++
 	}

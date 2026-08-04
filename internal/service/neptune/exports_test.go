@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune
@@ -26,4 +26,11 @@ var (
 	FindSubnetGroupByName             = findSubnetGroupByName
 
 	DefaultEngine = defaultEngine
+
+	ValidEventSubscriptionName       = validEventSubscriptionName
+	ValidEventSubscriptionNamePrefix = validEventSubscriptionNamePrefix
+	ValidParamGroupName              = validParamGroupName
+	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
+	ValidSubnetGroupName             = validSubnetGroupName
+	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 )

@@ -3,11 +3,11 @@ subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_source_api_association"
 description: |-
-  Terraform resource for managing an AWS AppSync Source Api Association.
+  Terraform resource for managing an AWS AppSync Source API Association.
 ---
 # Resource: aws_appsync_source_api_association
 
-Terraform resource for managing an AWS AppSync Source Api Association.
+Terraform resource for managing an AWS AppSync Source API Association.
 
 ## Example Usage
 
@@ -25,11 +25,12 @@ resource "aws_appsync_source_api_association" "test" {
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the source API being merged.
 * `merged_api_arn` - (Optional) ARN of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
 * `merged_api_id` - (Optional) ID of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_api_arn` - (Optional) ARN of the source API. One of `source_api_arn` or `source_api_id` must be specified.
+* `source_api_association_config` - (Optional) Source API Association configuration. See [`source_api_association_config` Block](#source_api_association_config-block) for details.
 * `source_api_id` - (Optional) ID of the source API. One of `source_api_arn` or `source_api_id` must be specified.
 
 ### `source_api_association_config` Block
@@ -42,9 +43,9 @@ The `source_api_association_config` configuration block supports the following a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Source Api Association.
-* `association_id` - ID of the Source Api Association.
-* `id` - Combined ID of the Source Api Association and Merge Api.
+* `arn` - ARN of the Source API Association.
+* `association_id` - ID of the Source API Association.
+* `id` - Combined ID of the Source API Association and Merge API.
 
 ## Timeouts
 
@@ -56,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppSync Source Api Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppSync Source API Association using the `association_id` and `merged_api_id` separated by `,`. For example:
 
 ```terraform
 import {
@@ -65,7 +66,7 @@ import {
 }
 ```
 
-Using `terraform import`, import AppSync Source Api Association using the `gzos6bteufdunffzzifiowisoe,243685a0-9347-4a1a-89c1-9b57dea01e31`. For example:
+Using `terraform import`, import AppSync Source API Association using the `association_id` and `merged_api_id` separated by `,`. For example:
 
 ```console
 % terraform import aws_appsync_source_api_association.example gzos6bteufdunffzzifiowisoe,243685a0-9347-4a1a-89c1-9b57dea01e31

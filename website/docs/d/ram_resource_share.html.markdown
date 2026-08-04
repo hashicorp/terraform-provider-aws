@@ -19,7 +19,7 @@ data "aws_ram_resource_share" "example" {
 }
 ```
 
-## Search by filters
+### Search by filters
 
 ```terraform
 data "aws_ram_resource_share" "tag_filter" {
@@ -35,13 +35,16 @@ data "aws_ram_resource_share" "tag_filter" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `filter` - (Optional) Filter used to scope the list e.g., by tags. See [`filter` Block](#filter-block) below.
 * `name` - (Optional) Name of the resource share to retrieve.
-* `resource_owner` (Required) Owner of the resource share. Valid values are `SELF` or `OTHER-ACCOUNTS`.
-* `resource_share_status` (Optional) Specifies that you want to retrieve details of only those resource shares that have this status. Valid values are `PENDING`, `ACTIVE`, `FAILED`, `DELETING`, and `DELETED`.
-* `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs] (https://docs.aws.amazon.com/ram/latest/APIReference/API_TagFilter.html).
-    * `name` - (Required) Name of the tag key to filter on.
-    * `values` - (Required) Value of the tag key.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_owner` - (Required) Owner of the resource share. Valid values are `SELF` or `OTHER-ACCOUNTS`.
+* `resource_share_status` - (Optional) Status of resource shares to retrieve. Valid values are `PENDING`, `ACTIVE`, `FAILED`, `DELETING`, and `DELETED`.
+
+### `filter` Block
+
+* `name` - (Required) Name of the tag key to filter on.
+* `values` - (Required) Value of the tag key.
 
 ## Attribute Reference
 
@@ -50,6 +53,6 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the resource share.
 * `id` - ARN of the resource share.
 * `owning_account_id` - ID of the AWS account that owns the resource share.
-* `resource_arns` - A list of resource ARNs associated with the resource share.
+* `resource_arns` - List of resource ARNs associated with the resource share.
 * `status` - Status of the resource share.
 * `tags` - Tags attached to the resource share.

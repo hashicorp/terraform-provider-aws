@@ -1,0 +1,18 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct",
+    "autoflex.target.type": "int"
+  },
+  {
+    "@level": "error",
+    "@message": "Target is not a pointer",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.emptyStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "int"
+  }
+]

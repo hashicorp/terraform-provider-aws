@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_prometheus_scraper
 
--> **Note:** If you change a Scraper's source (EKS cluster), Terraform
+-> **Note:** If you change a Scraper's source (EKS cluster or VPC configuration), Terraform
 will delete the current Scraper and create a new one.
 
 Provides an Amazon Managed Service for Prometheus fully managed collector
@@ -90,6 +90,70 @@ scrape_configs:
       target_label: __address__
       regex: (.+?)(\\:\\d+)?
       replacement: $1:10249
+EOT
+}
+```
+
+### CloudWatch Destination
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    eks {
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+
+  destination {
+    cloudwatch {
+      dataset_arn = "arn:aws:cloudwatch:us-west-2:123456789012:dataset/default"
+    }
+  }
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: pod_exporter
+    kubernetes_sd_configs:
+      - role: pod
+EOT
+}
+```
+
+### VPC Configuration
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.example.id]
+      subnet_ids         = [aws_subnet.example1.id, aws_subnet.example2.id]
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
+  }
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: 'my-service'
+    dns_sd_configs:
+      - names: ['my-service.my-namespace']
+        type: A
+        port: 8080
+    metrics_path: '/metrics'
+    relabel_configs:
+      - target_label: service_name
+        replacement: 'my-service'
+      - target_label: discovery_method
+        replacement: 'cloudmap-dns'
 EOT
 }
 ```
@@ -198,50 +262,78 @@ resource "aws_prometheus_scraper" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination`](#destination).
-* `scrape_configuration` - (Required) The configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
-* `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source`](#source).
+* `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination` Block](#destination-block) for details.
+* `scrape_configuration` - (Required) Configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
+* `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source` Block](#source-block) for details.
 
 The following arguments are optional:
 
+* `alias` - (Optional) Name to associate with the managed scraper. This is for your use, and does not need to be unique.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
+* `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration` Block](#role_configuration-block) for details.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-* `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration`](#role_configuration) below.
+### `destination` Block
 
-### `destination`
+The `destination` configuration block supports the following arguments:
 
-* `amp` - (Required) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp`](#amp).
+* `amp` - (Optional) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp` Block](#amp-block) for details.
+* `cloudwatch` - (Optional) Configuration block for a CloudWatch Metrics destination. See [`cloudwatch` Block](#cloudwatch-block) for details.
 
-### `amp`
+~> **NOTE:** Either `amp` or `cloudwatch` must be specified, but not both.
 
-* `workspace_arn` - (Required) The Amazon Resource Name (ARN) of the prometheus workspace.
+### `amp` Block
 
-### `source`
+The `amp` configuration block supports the following arguments:
 
-* `eks` - (Required) Configuration block for an EKS cluster source. See [`eks`](#eks).
+* `workspace_arn` - (Required) ARN of the prometheus workspace.
 
-#### `eks`
+### `cloudwatch` Block
 
-* `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the source EKS cluster.
-* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
+The `cloudwatch` configuration block supports the following arguments:
+
+* `dataset_arn` - (Required) ARN of the CloudWatch dataset. Use `arn:aws:cloudwatch:{region}:{account}:dataset/default` for the default dataset.
+
+### `source` Block
+
+The `source` configuration block supports the following arguments:
+
+* `eks` - (Optional) Configuration block for an EKS cluster source. See [`eks` Block](#eks-block) for details.
+* `vpc` - (Optional) Configuration block for a VPC source. See [`vpc` Block](#vpc-block) for details.
+
+~> **NOTE:** Either `eks` or `vpc` must be specified, but not both.
+
+#### `eks` Block
+
+The `eks` configuration block supports the following arguments:
+
+* `cluster_arn` - (Required) ARN of the source EKS cluster.
 * `security_group_ids` - (Optional) List of the security group IDs for the Amazon EKS cluster VPC configuration.
+* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 
-### `role_configuration`
+#### `vpc` Block
 
-* `source_role_arn` - (Required) The Amazon Resource Name (ARN) of the source role configuration. Must be an IAM role ARN.
-* `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the target role configuration. Must be an IAM role ARN.
+The `vpc` configuration block supports the following arguments:
+
+* `security_group_ids` - (Required) List of security group IDs for the VPC configuration.
+* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
+
+### `role_configuration` Block
+
+The `role_configuration` configuration block supports the following arguments:
+
+* `source_role_arn` - (Required) ARN of the source role configuration. Must be an IAM role ARN.
+* `target_role_arn` - (Required) ARN of the target role configuration. Must be an IAM role ARN.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the new scraper.
-* `role_arn` - The Amazon Resource Name (ARN) of the IAM role that provides permissions for the scraper to discover, collect, and produce metrics
-* `status` - Status of the scraper. One of ACTIVE, CREATING, DELETING, CREATION_FAILED, DELETION_FAILED
+* `arn` - ARN of the scraper.
+* `role_arn` - ARN of the IAM role that provides permissions for the scraper to discover, collect, and produce metrics
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -253,19 +345,44 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Managed Scraper using the scraper
-identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_prometheus_scraper.example
-  id = "s-0123abc-0000-0123-a000-000000000000"
+  identity = {
+    id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+  }
+}
+
+resource "aws_prometheus_scraper" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import the Managed Scraper using its identifier.
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the scraper.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import scrapers using `id`. For example:
+
+```terraform
+import {
+  to = aws_prometheus_scraper.example
+  id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+}
+```
+
+Using `terraform import`, import scrapers using `id`.
 For example:
 
 ```console
-% terraform import aws_prometheus_scraper.example s-0123abc-0000-0123-a000-000000000000
+% terraform import aws_prometheus_scraper.example s-b6f487db-4761-4930-9215-e9d588a7efe2
 ```

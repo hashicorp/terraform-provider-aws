@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -6,7 +6,7 @@ package route53resolver_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
@@ -26,7 +26,7 @@ func TestValidResolverName(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 65, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 		{

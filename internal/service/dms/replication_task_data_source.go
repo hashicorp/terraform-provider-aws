@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -21,56 +23,58 @@ func dataSourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationTaskRead,
 
-		Schema: map[string]*schema.Schema{
-			"cdc_start_position": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cdc_start_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"migration_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_instance_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_task_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_task_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"replication_task_settings": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_endpoint_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"start_replication_task": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"table_mappings": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"target_endpoint_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cdc_start_position": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cdc_start_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"migration_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_instance_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_task_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_task_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"replication_task_settings": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_endpoint_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"start_replication_task": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"table_mappings": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"target_endpoint_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

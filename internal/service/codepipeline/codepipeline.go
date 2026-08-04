@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codepipeline
 
@@ -18,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,16 +42,16 @@ const (
 
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codepipeline/types;types.PipelineDeclaration")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
 		ReadWithoutTimeout:   resourcePipelineRead,
 		UpdateWithoutTimeout: resourcePipelineUpdate,
 		DeleteWithoutTimeout: resourcePipelineDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			conditionsSchema := func() map[string]*schema.Schema {
@@ -449,6 +451,15 @@ func resourcePipeline() *schema.Resource {
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[types.ActionCategory](),
 										},
+										"commands": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 50,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 1000),
+											},
+										},
 										names.AttrConfiguration: {
 											Type:     schema.TypeMap,
 											Optional: true,
@@ -484,6 +495,40 @@ func resourcePipeline() *schema.Resource {
 											Type:     schema.TypeList,
 											Optional: true,
 											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"output_artifacts_for_compute_action": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 100),
+															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-]+$`), ""),
+														),
+													},
+													"files": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 10,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(1, 128),
+														},
+													},
+												},
+											},
+										},
+										"output_variables": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 15,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
 										},
 										names.AttrOwner: {
 											Type:             schema.TypeString,
@@ -634,6 +679,7 @@ func resourcePipeline() *schema.Resource {
 				},
 			}
 		},
+		CustomizeDiff: outputArtifactsConflictValidate,
 	}
 }
 
@@ -653,7 +699,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStructureException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidStructureException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePipeline(ctx, input)
 	}, "not authorized")
 
@@ -673,7 +719,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findPipelineByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Pipeline %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -682,6 +728,12 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CodePipeline Pipeline (%s): %s", d.Id(), err)
 	}
+
+	return append(diags, resourcePipelineFlatten(d, output)...)
+}
+
+func resourcePipelineFlatten(d *schema.ResourceData, output *codepipeline.GetPipelineOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	metadata := output.Metadata
 	pipeline := output.Pipeline
@@ -770,8 +822,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 
 	if errs.IsA[*types.PipelineNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -780,7 +831,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	}
 
 	if output == nil || output.Metadata == nil || output.Pipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1025,6 +1076,14 @@ func expandActionDeclaration(tfMap map[string]any) *types.ActionDeclaration {
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
+	if v, ok := tfMap["commands"].([]any); ok && len(v) > 0 {
+		for _, v := range v {
+			if v, ok := v.(string); ok && v != "" {
+				apiObject.Commands = append(apiObject.Commands, v)
+			}
+		}
+	}
+
 	if v, ok := tfMap[names.AttrConfiguration].(map[string]any); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
@@ -1041,8 +1100,22 @@ func expandActionDeclaration(tfMap map[string]any) *types.ActionDeclaration {
 		apiObject.Namespace = aws.String(v)
 	}
 
-	if v, ok := tfMap["output_artifacts"].([]any); ok && len(v) > 0 {
-		apiObject.OutputArtifacts = expandOutputArtifacts(v)
+	if apiObject.ActionTypeId.Category == types.ActionCategoryCompute {
+		if v, ok := tfMap["output_artifacts_for_compute_action"].([]any); ok && len(v) > 0 {
+			apiObject.OutputArtifacts = expandOutputArtifactsForComputeAction(v)
+		}
+	} else {
+		if v, ok := tfMap["output_artifacts"].([]any); ok && len(v) > 0 {
+			apiObject.OutputArtifacts = expandOutputArtifacts(v)
+		}
+	}
+
+	if v, ok := tfMap["output_variables"].([]any); ok && len(v) > 0 {
+		for _, v := range v {
+			if v, ok := v.(string); ok && v != "" {
+				apiObject.OutputVariables = append(apiObject.OutputVariables, v)
+			}
+		}
 	}
 
 	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
@@ -1142,6 +1215,41 @@ func expandOutputArtifacts(tfList []any) []types.OutputArtifact {
 
 		apiObject := types.OutputArtifact{
 			Name: aws.String(v),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandOutputArtifactsForComputeAction(tfList []any) []types.OutputArtifact {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.OutputArtifact
+
+	for _, v := range tfList {
+		tfMap, ok := v.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := types.OutputArtifact{}
+
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
+		}
+		if v, ok := tfMap["files"].([]any); ok && len(v) > 0 {
+			for _, v := range v {
+				if v, ok := v.(string); ok && v != "" {
+					apiObject.Files = append(apiObject.Files, v)
+				}
+			}
+		} else {
+			apiObject.Files = nil
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -1899,6 +2007,14 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 		}
 	}
 
+	if v := apiObject.Commands; len(v) > 0 {
+		var tfList []any
+		for _, command := range v {
+			tfList = append(tfList, command)
+		}
+		tfMap["commands"] = tfList
+	}
+
 	if v := apiObject.Configuration; v != nil {
 		// The AWS API returns "****" for the OAuthToken value. Copy the value from the configuration.
 		if actionProvider == providerGitHub {
@@ -1924,7 +2040,19 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.OutputArtifacts; len(v) > 0 {
-		tfMap["output_artifacts"] = flattenOutputArtifacts(v)
+		if apiObject.ActionTypeId.Category == types.ActionCategoryCompute {
+			tfMap["output_artifacts_for_compute_action"] = flattenOutputArtifactsForComputeAction(v)
+		} else {
+			tfMap["output_artifacts"] = flattenOutputArtifacts(v)
+		}
+	}
+
+	if v := apiObject.OutputVariables; len(v) > 0 {
+		var tfList []any
+		for _, outputVariable := range v {
+			tfList = append(tfList, outputVariable)
+		}
+		tfMap["output_variables"] = tfList
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -1986,6 +2114,27 @@ func flattenOutputArtifacts(apiObjects []types.OutputArtifact) []string {
 	}
 
 	return aws.ToStringSlice(tfList)
+}
+
+func flattenOutputArtifactsForComputeAction(apiObjects []types.OutputArtifact) []map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		if v := apiObject.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
+		}
+		if v := apiObject.Files; len(v) > 0 {
+			tfMap["files"] = v
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map[string]any {
@@ -2197,4 +2346,27 @@ func flattenTriggerDeclarations(apiObjects []types.PipelineTriggerDeclaration) [
 	}
 
 	return tfList
+}
+
+func outputArtifactsConflictValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	stageCount := diff.Get("stage.#").(int)
+	for i := range stageCount {
+		actionCount := diff.Get(fmt.Sprintf("stage.%d.action.#", i)).(int)
+		for j := range actionCount {
+			category := diff.Get(fmt.Sprintf("stage.%d.action.%d.category", i, j)).(string)
+			outputArtifactsCount := diff.Get(fmt.Sprintf("stage.%d.action.%d.output_artifacts.#", i, j)).(int)
+			computeArtifactsCount := diff.Get(fmt.Sprintf("stage.%d.action.%d.output_artifacts_for_compute_action.#", i, j)).(int)
+
+			if outputArtifactsCount > 0 && computeArtifactsCount > 0 {
+				return fmt.Errorf("stage.%d.action.%d: only one of \"output_artifacts\" or \"output_artifacts_for_compute_action\" may be set", i, j)
+			}
+			if category == string(types.ActionCategoryCompute) && outputArtifactsCount > 0 {
+				return fmt.Errorf("stage.%d.action.%d: \"output_artifacts\" cannot be set when category is %q, use \"output_artifacts_for_compute_action\"", i, j, category)
+			}
+			if category != string(types.ActionCategoryCompute) && computeArtifactsCount > 0 {
+				return fmt.Errorf("stage.%d.action.%d: \"output_artifacts_for_compute_action\" can only be set when category is %q", i, j, types.ActionCategoryCompute)
+			}
+		}
+	}
+	return nil
 }

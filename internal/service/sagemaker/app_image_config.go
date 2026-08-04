@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,206 +59,208 @@ func resourceAppImageConfig() *schema.Resource {
 			return nil
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"app_image_config_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"code_editor_app_image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_arguments": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"container_entrypoint": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"container_environment_variables": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"app_image_config_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					),
+				},
+				"code_editor_app_image_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_arguments": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"container_entrypoint": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"container_environment_variables": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"file_system_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_gid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntInSlice([]int{0, 100}),
-									},
-									"default_uid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1000,
-										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
-									},
-									"mount_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/home/sagemaker-user",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
-										),
+							"file_system_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_gid": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      100,
+											ValidateFunc: validation.IntInSlice([]int{0, 100}),
+										},
+										"default_uid": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      1000,
+											ValidateFunc: validation.IntInSlice([]int{0, 1000}),
+										},
+										"mount_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "/home/sagemaker-user",
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"jupyter_lab_image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_arguments": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"container_entrypoint": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"container_environment_variables": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"file_system_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_gid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntInSlice([]int{0, 100}),
-									},
-									"default_uid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1000,
-										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
-									},
-									"mount_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/home/sagemaker-user",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
-										),
+				"jupyter_lab_image_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_arguments": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"container_entrypoint": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"container_environment_variables": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"kernel_gateway_image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"file_system_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_gid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      100,
-										ValidateFunc: validation.IntInSlice([]int{0, 100}),
-									},
-									"default_uid": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1000,
-										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
-									},
-									"mount_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/home/sagemaker-user",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
-										),
-									},
-								},
-							},
-						},
-						"kernel_spec": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 5,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDisplayName: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
+							"file_system_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_gid": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      100,
+											ValidateFunc: validation.IntInSlice([]int{0, 100}),
+										},
+										"default_uid": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      1000,
+											ValidateFunc: validation.IntInSlice([]int{0, 1000}),
+										},
+										"mount_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "/home/sagemaker-user",
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"kernel_gateway_image_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"file_system_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_gid": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      100,
+											ValidateFunc: validation.IntInSlice([]int{0, 100}),
+										},
+										"default_uid": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      1000,
+											ValidateFunc: validation.IntInSlice([]int{0, 1000}),
+										},
+										"mount_path": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "/home/sagemaker-user",
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
+											),
+										},
+									},
+								},
+							},
+							"kernel_spec": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 5,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDisplayName: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -300,7 +304,7 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 	image, err := findAppImageConfigByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
 		log.Printf("[WARN] Unable to find SageMaker AI App Image Config (%s); removing from state", d.Id())
 		return diags
@@ -391,8 +395,7 @@ func findAppImageConfigByName(ctx context.Context, conn *sagemaker.Client, name 
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -401,7 +404,7 @@ func findAppImageConfigByName(ctx context.Context, conn *sagemaker.Client, name 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

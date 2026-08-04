@@ -127,6 +127,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the container recipe.
 * `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
 * `date_created` - Date the container recipe was created.
 * `encrypted` - A flag that indicates if the target container is encrypted.
@@ -135,6 +136,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_container_recipe.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0"
+  }
+}
+
+resource "aws_imagebuilder_container_recipe" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder container recipe.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_container_recipe` resources using the Amazon Resource Name (ARN). For example:
 

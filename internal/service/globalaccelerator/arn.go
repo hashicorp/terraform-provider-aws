@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	arnSeparator = "/"
-	arnService   = "globalaccelerator"
+	arnResourceSeparator = "/"
+	arnService           = "globalaccelerator"
 )
 
 // endpointGroupARNToListenerARN converts an endpoint group ARN to a listener ARN.
@@ -28,7 +28,7 @@ func endpointGroupARNToListenerARN(inputARN string) (string, error) {
 		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
-	resourceParts := strings.Split(parsedARN.Resource, arnSeparator)
+	resourceParts := strings.Split(parsedARN.Resource, arnResourceSeparator)
 
 	if actual, expected := len(resourceParts), 6; actual < expected {
 		return "", fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
@@ -39,7 +39,7 @@ func endpointGroupARNToListenerARN(inputARN string) (string, error) {
 		Service:   parsedARN.Service,
 		Region:    parsedARN.Region,
 		AccountID: parsedARN.AccountID,
-		Resource:  strings.Join(resourceParts[0:4], arnSeparator),
+		Resource:  strings.Join(resourceParts[0:4], arnResourceSeparator),
 	}.String()
 
 	return outputARN, nil
@@ -58,7 +58,7 @@ func listenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error)
 		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
-	resourceParts := strings.Split(parsedARN.Resource, arnSeparator)
+	resourceParts := strings.Split(parsedARN.Resource, arnResourceSeparator)
 
 	if actual, expected := len(resourceParts), 4; actual < expected {
 		return "", fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
@@ -69,7 +69,7 @@ func listenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error)
 		Service:   parsedARN.Service,
 		Region:    parsedARN.Region,
 		AccountID: parsedARN.AccountID,
-		Resource:  strings.Join(resourceParts[0:2], arnSeparator),
+		Resource:  strings.Join(resourceParts[0:2], arnResourceSeparator),
 	}.String()
 
 	return outputARN, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -12,15 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_public_access_block", name="Bucket Public Access Block")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;types.PublicAccessBlockConfiguration")
 func resourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,
@@ -28,40 +33,38 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceBucketPublicAccessBlockDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -84,7 +87,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -120,7 +123,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 
 	pabc, err := findPublicAccessBlockConfiguration(ctx, conn, bucket)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -129,6 +132,12 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
+
+	return resourceBucketPublicAccessBlockFlatten(d, bucket, pabc)
+}
+
+func resourceBucketPublicAccessBlockFlatten(d *schema.ResourceData, bucket string, pabc *types.PublicAccessBlockConfiguration) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set("block_public_acls", pabc.BlockPublicAcls)
@@ -224,8 +233,7 @@ func findPublicAccessBlockConfiguration(ctx context.Context, conn *s3.Client, bu
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchPublicAccessBlockConfiguration) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -234,7 +242,7 @@ func findPublicAccessBlockConfiguration(ctx context.Context, conn *s3.Client, bu
 	}
 
 	if output == nil || output.PublicAccessBlockConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PublicAccessBlockConfiguration, nil

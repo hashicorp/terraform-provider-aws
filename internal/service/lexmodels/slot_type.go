@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexmodels
 
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,73 +52,75 @@ func resourceSlotType() *schema.Resource {
 			Delete: schema.DefaultTimeout(slotTypeDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_version": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"enumeration_value": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10000,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"synonyms": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_version": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "",
+					ValidateFunc: validation.StringLenBetween(0, 200),
+				},
+				"enumeration_value": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10000,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"synonyms": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 140),
+								},
+							},
+							names.AttrValue: {
 								Type:         schema.TypeString,
+								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 140),
 							},
 						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 140),
-						},
 					},
 				},
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
-				),
-			},
-			"value_selection_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SlotValueSelectionStrategyOriginalValue,
-				ValidateDiagFunc: enum.Validate[awstypes.SlotValueSelectionStrategy](),
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+					),
+				},
+				"value_selection_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SlotValueSelectionStrategyOriginalValue,
+					ValidateDiagFunc: enum.Validate[awstypes.SlotValueSelectionStrategy](),
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 		CustomizeDiff: updateComputedAttributesOnSlotTypeCreateVersion,
 	}
@@ -154,7 +159,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var output *lexmodelbuildingservice.PutSlotTypeOutput
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		var err error
 
 		if output != nil {
@@ -180,7 +185,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findSlotTypeVersionByName(ctx, conn, d.Id(), SlotTypeVersionLatest)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lex Slot Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -228,7 +233,7 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 		return conn.PutSlotType(ctx, input)
 	})
 
@@ -248,7 +253,7 @@ func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Slot Type: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteSlotType(ctx, input)
 	})
 

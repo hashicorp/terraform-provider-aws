@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Report a Bug
 description: Choose this option to let us know about an unexpected error, a crash, or otherwise incorrect behavior.
 labels:
@@ -98,7 +101,7 @@ body:
 
         For convenience, we pre-populate this section such that configurations pasted between the backticks (\```) will be contained within a disclosure triangle and have syntax highlighting as appropriate for HCL in the resulting issue. Where appropriate, feel free to delete this.
       value: |
-        <details>
+        <details open>
         <summary>Click to expand configuration</summary>
 
         ```hcl
@@ -130,7 +133,7 @@ body:
 
         For convenience, we pre-populate this section such that logs pasted between the backticks (\```) will be contained within a disclosure triangle and have syntax highlighting associated with console output in the resulting issue.
       value: |
-        <details>
+        <details open>
         <summary>Click to expand log output</summary>
 
         ```console

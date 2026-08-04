@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,7 +20,7 @@ func TestAccBackupRegionSettings_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccRegionSettings_basic,
-		"Identity":      testAccBackupRegionSettings_IdentitySerial,
+		"Identity":      testAccBackupRegionSettings_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -32,7 +31,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 	var settings backup.DescribeRegionSettingsOutput
 	resourceName := "aws_backup_region_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
@@ -45,14 +44,15 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "19"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EC2", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EFS", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EKS", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", acctest.CtTrue),
@@ -73,14 +73,15 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "19"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EC2", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EFS", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EKS", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", acctest.CtTrue),
@@ -95,14 +96,15 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "19"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EC2", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EFS", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EKS", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", acctest.CtTrue),
@@ -118,9 +120,9 @@ func testAccRegionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckRegionSettingsExists(ctx context.Context, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
+func testAccCheckRegionSettingsExists(ctx context.Context, t *testing.T, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindRegionSettings(ctx, conn)
 
@@ -146,6 +148,7 @@ resource "aws_backup_region_settings" "test" {
     "EBS"                    = true
     "EC2"                    = true
     "EFS"                    = true
+    "EKS"                    = true
     "FSx"                    = true
     "Neptune"                = true
     "RDS"                    = true
@@ -173,6 +176,7 @@ resource "aws_backup_region_settings" "test" {
     "EBS"                    = true
     "EC2"                    = true
     "EFS"                    = true
+    "EKS"                    = true
     "FSx"                    = true
     "Neptune"                = true
     "RDS"                    = true
@@ -205,6 +209,7 @@ resource "aws_backup_region_settings" "test" {
     "EBS"                    = true
     "EC2"                    = true
     "EFS"                    = true
+    "EKS"                    = true
     "FSx"                    = true
     "Neptune"                = true
     "RDS"                    = true

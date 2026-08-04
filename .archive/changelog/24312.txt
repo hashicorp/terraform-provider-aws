@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_kinesis_firehose_delivery_stream: Increase the maximum length of the `processing_configuration.processors.parameters.parameter_value` argument's value to `5120`
-```

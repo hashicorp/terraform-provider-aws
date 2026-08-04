@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Add `source_identity` argument to `assume_role` block
-```

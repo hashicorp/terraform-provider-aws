@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -7,6 +7,7 @@ package cognitoidp
 var (
 	ResourceIdentityProvider         = resourceIdentityProvider
 	ResourceLogDeliveryConfiguration = newLogDeliveryConfigurationResource
+	ResourceManagedLoginBranding     = newManagedLoginBrandingResource
 	ResourceManagedUserPoolClient    = newManagedUserPoolClientResource
 	ResourceResourceServer           = resourceResourceServer
 	ResourceRiskConfiguration        = resourceRiskConfiguration
@@ -22,6 +23,7 @@ var (
 	FindGroupUserByThreePartKey              = findGroupUserByThreePartKey
 	FindIdentityProviderByTwoPartKey         = findIdentityProviderByTwoPartKey
 	FindLogDeliveryConfigurationByUserPoolID = findLogDeliveryConfigurationByUserPoolID
+	FindManagedLoginBrandingByThreePartKey   = findManagedLoginBrandingByThreePartKey
 	FindResourceServerByTwoPartKey           = findResourceServerByTwoPartKey
 	FindRiskConfigurationByTwoPartKey        = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                     = findUserByTwoPartKey

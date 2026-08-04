@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafregional
@@ -132,7 +132,7 @@ func sweepByteMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListByteMatchSetsInput{}
@@ -185,7 +185,7 @@ func sweepGeoMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListGeoMatchSetsInput{}
@@ -238,7 +238,7 @@ func sweepIPSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListIPSetsInput{}
@@ -291,7 +291,7 @@ func sweepRateBasedRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListRateBasedRulesInput{}
@@ -344,7 +344,7 @@ func sweepRegexMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListRegexMatchSetsInput{}
@@ -397,7 +397,7 @@ func sweepRegexPatternSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListRegexPatternSetsInput{}
@@ -450,7 +450,7 @@ func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListRuleGroupsInput{}
@@ -503,7 +503,7 @@ func sweepRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListRulesInput{}
@@ -556,7 +556,7 @@ func sweepSizeConstraintSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListSizeConstraintSetsInput{}
@@ -609,7 +609,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListSqlInjectionMatchSetsInput{}
@@ -662,7 +662,7 @@ func sweepWebACLs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListWebACLsInput{}
@@ -715,7 +715,7 @@ func sweepXSSMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
 	input := &wafregional.ListXssMatchSetsInput{}

@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: do-not-use-exp-maps-or-slices
     languages: [go]
     message: Use Go standard library maps and slices packages instead of the golang.org/x/exp packages
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: |
           import ("$X")

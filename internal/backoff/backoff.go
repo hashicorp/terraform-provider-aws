@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backoff
@@ -7,7 +7,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
 // Inspired by https://github.com/ServiceWeaver/weaver and https://github.com/avast/retry-go.
@@ -17,8 +20,25 @@ type Timer interface {
 	After(time.Duration) <-chan time.Time
 }
 
+type Delay interface {
+	// Next returns the duration to wait before the next attempt.
+	Next(uint) time.Duration
+}
+
+type DelayWithSetIncrementDelay interface {
+	Delay
+
+	// SetIncrementDelay sets a flag to determine whether or not the next call to Next increments the delay duration.
+	SetIncrementDelay(bool)
+}
+
 // DelayFunc returns the duration to wait before the next attempt.
 type DelayFunc func(uint) time.Duration
+
+// Next returns the duration to wait before the next attempt.
+func (f DelayFunc) Next(n uint) time.Duration {
+	return f(n)
+}
 
 // FixedDelay returns a delay. The first attempt has no delay (0), and subsequent attempts use the fixed delay.
 func FixedDelay(delay time.Duration) DelayFunc {
@@ -34,68 +54,90 @@ func FixedDelay(delay time.Duration) DelayFunc {
 // ZeroDelay returns 0 for all attempts.
 //
 // This DelayFunc should only be used for testing.
-var ZeroDelay = func(n uint) time.Duration {
+var ZeroDelay DelayFunc = func(n uint) time.Duration {
 	return 0
 }
 
 type sdkv2HelperRetryCompatibleDelay struct {
-	minTimeout   time.Duration
-	pollInterval time.Duration
-	wait         time.Duration
+	delay          time.Duration
+	incrementDelay bool
+	initialDelay   time.Duration
+	minTimeout     time.Duration
+	pollInterval   time.Duration
 }
 
-func (d *sdkv2HelperRetryCompatibleDelay) delay() time.Duration {
-	wait := d.wait
-
-	// First round had no wait.
-	if wait == 0 {
-		wait = 100 * time.Millisecond
+// Next returns the duration to wait before the next attempt.
+func (d *sdkv2HelperRetryCompatibleDelay) Next(n uint) time.Duration {
+	if n == 0 {
+		return d.initialDelay
 	}
 
-	wait *= 2
+	delay := d.delay
+
+	// First round had no wait.
+	if delay == 0 {
+		delay = 100 * time.Millisecond
+	}
+
+	if d.incrementDelay {
+		delay *= 2
+	}
 
 	// If a poll interval has been specified, choose that interval.
 	// Otherwise bound the default value.
 	if d.pollInterval > 0 && d.pollInterval < 180*time.Second {
-		wait = d.pollInterval
+		delay = d.pollInterval
 	} else {
-		if wait < d.minTimeout {
-			wait = d.minTimeout
-		} else if wait > 10*time.Second {
-			wait = 10 * time.Second
+		if delay < d.minTimeout {
+			delay = d.minTimeout
+		} else if delay > 10*time.Second {
+			delay = 10 * time.Second
 		}
 	}
 
-	d.wait = wait
+	d.delay = delay
 
-	return wait
+	return delay
+}
+
+// SetIncrementDelay sets a flag to determine whether or not the next call to Next increments the delay duration.
+func (d *sdkv2HelperRetryCompatibleDelay) SetIncrementDelay(incrementDelay bool) {
+	d.incrementDelay = incrementDelay
 }
 
 // SDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay.
-func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) DelayFunc {
-	delay := &sdkv2HelperRetryCompatibleDelay{
-		minTimeout:   minTimeout,
-		pollInterval: pollInterval,
+//
+// When VCR testing is enabled in replay mode, the DelayFunc is overridden to
+// allow interactions to be replayed with no delay between state change refreshes.
+func SDKv2HelperRetryCompatibleDelay(ctx context.Context, initialDelay, pollInterval, minTimeout time.Duration) Delay {
+	// When VCR testing in replay mode, override the default DelayFunc
+	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
+			return ZeroDelay
+		}
 	}
 
-	return func(n uint) time.Duration {
-		if n == 0 {
-			return initialDelay
-		}
-
-		return delay.delay()
+	return &sdkv2HelperRetryCompatibleDelay{
+		incrementDelay: true,
+		initialDelay:   initialDelay,
+		minTimeout:     minTimeout,
+		pollInterval:   pollInterval,
 	}
 }
 
 // DefaultSDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay
 // with default values (from the `RetryContext` function).
-func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
-	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
+func DefaultSDKv2HelperRetryCompatibleDelay(ctx context.Context) Delay {
+	return SDKv2HelperRetryCompatibleDelay(ctx, 0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
+
+var (
+	_ DelayWithSetIncrementDelay = (*sdkv2HelperRetryCompatibleDelay)(nil)
+)
 
 // LoopConfig configures a loop.
 type LoopConfig struct {
-	delay       DelayFunc
+	delay       Delay
 	gracePeriod time.Duration
 	timer       Timer
 }
@@ -111,7 +153,7 @@ func WithGracePeriod(d time.Duration) Option {
 	}
 }
 
-func WithDelay(d DelayFunc) Option {
+func WithDelay(d Delay) Option {
 	if d == nil {
 		return emptyOption
 	}
@@ -138,9 +180,9 @@ func (t *timerImpl) After(d time.Duration) <-chan time.Time {
 }
 
 // The default RetryConfig is backwards compatible with github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry.
-func defaultLoopConfig() LoopConfig {
+func defaultLoopConfig(ctx context.Context) LoopConfig {
 	return LoopConfig{
-		delay:       DefaultSDKv2HelperRetryCompatibleDelay(),
+		delay:       DefaultSDKv2HelperRetryCompatibleDelay(ctx),
 		gracePeriod: 30 * time.Second,
 		timer:       &timerImpl{},
 	}
@@ -155,8 +197,8 @@ type Loop struct {
 }
 
 // NewLoopWithOptions returns a new loop configured with the provided options.
-func NewLoopWithOptions(timeout time.Duration, opts ...Option) *Loop {
-	config := defaultLoopConfig()
+func NewLoopWithOptions(ctx context.Context, timeout time.Duration, opts ...Option) *Loop {
+	config := defaultLoopConfig(ctx)
 	for _, opt := range opts {
 		opt(&config)
 	}
@@ -169,8 +211,8 @@ func NewLoopWithOptions(timeout time.Duration, opts ...Option) *Loop {
 }
 
 // NewLoop returns a new loop configured with the default options.
-func NewLoop(timeout time.Duration) *Loop {
-	return NewLoopWithOptions(timeout)
+func NewLoop(ctx context.Context, timeout time.Duration) *Loop {
+	return NewLoopWithOptions(ctx, timeout)
 }
 
 // Continue sleeps between attempts.
@@ -186,7 +228,7 @@ func (r *Loop) Continue(ctx context.Context) bool {
 		r.gracePeriod = 0
 	}
 
-	r.sleep(ctx, r.config.delay(r.attempt))
+	r.sleep(ctx, r.config.delay.Next(r.attempt))
 	r.attempt++
 
 	return context.Cause(ctx) == nil

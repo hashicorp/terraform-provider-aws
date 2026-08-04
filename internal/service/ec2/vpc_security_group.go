@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -20,13 +22,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,6 +40,9 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroup")
 // @Testing(importIgnore="revoke_rules_on_delete")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -44,10 +50,6 @@ func resourceSecurityGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceSecurityGroupRead,
 		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
 		DeleteWithoutTimeout: resourceSecurityGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -59,59 +61,61 @@ func resourceSecurityGroup() *schema.Resource {
 
 		// Keep in sync with aws_default_security_group's schema.
 		// See notes in vpc_default_security_group.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"egress":  securityGroupRuleSetNestedBlock,
-			"ingress": securityGroupRuleSetNestedBlock,
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
-				),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
-				),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"revoke_rules_on_delete": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      "Managed by Terraform",
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"egress":  securityGroupRuleSetNestedBlock,
+				"ingress": securityGroupRuleSetNestedBlock,
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
+					),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"revoke_rules_on_delete": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -188,7 +192,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputC := &ec2.CreateSecurityGroupInput{
 		GroupName:         aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecurityGroup),
@@ -270,7 +274,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	sg, err := findSecurityGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -280,14 +284,18 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
+	return resourceSecurityGroupFlatten(ctx, c, d, sg)
+}
+
+func resourceSecurityGroupFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, sg *awstypes.SecurityGroup) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	remoteIngressRules := securityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
 	remoteEgressRules := securityGroupIPPermGather(d.Id(), sg.IpPermissionsEgress, sg.OwnerId)
 
 	localIngressRules := d.Get("ingress").(*schema.Set).List()
 	localEgressRules := d.Get("egress").(*schema.Set).List()
 
-	// Loop through the local state of rules, doing a match against the remote
-	// ruleSet we built above.
 	ingressRules := matchRules("ingress", localIngressRules, remoteIngressRules)
 	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
 
@@ -311,7 +319,6 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	return diags
 }
-
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -368,7 +375,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		firstShortRetry, // short initial attempt followed by full length attempt
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
 				GroupId: aws.String(d.Id()),
 			})
@@ -388,7 +395,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
 			remainingRetry,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
 					GroupId: aws.String(d.Id()),
 				})
@@ -432,7 +439,7 @@ func forceRevokeSecurityGroupRules(ctx context.Context, conn *ec2.Client, id str
 
 	rules, err := rulesInSGsTouchingThis(ctx, conn, id, searchAll)
 	if err != nil {
-		return fmt.Errorf("describing security group rules: %s", err)
+		return fmt.Errorf("describing security group rules: %w", err)
 	}
 
 	for _, rule := range rules {
@@ -496,7 +503,7 @@ func rulesInSGsTouchingThis(ctx context.Context, conn *ec2.Client, id string, se
 	} else {
 		sgs, err := relatedSGs(ctx, conn, id)
 		if err != nil {
-			return nil, fmt.Errorf("describing security group rules: %s", err)
+			return nil, fmt.Errorf("describing security group rules: %w", err)
 		}
 
 		input = &ec2.DescribeSecurityGroupRulesInput{

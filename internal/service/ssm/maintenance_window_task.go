@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,12 +26,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_maintenance_window_task", name="Maintenance Window Task")
+// @IdentityAttribute("window_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("maintenanceWindowTaskImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowTaskOutput")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(importStateIdFunc="testAccMaintenanceWindowTaskImportStateIdFunc")
 func resourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTaskCreate,
@@ -38,286 +47,284 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 		UpdateWithoutTimeout: resourceMaintenanceWindowTaskUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowTaskDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceMaintenanceWindowTaskImport,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cutoff_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskCutoffBehavior](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"max_concurrency": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
-			},
-			"max_errors": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
-					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			names.AttrServiceRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cutoff_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskCutoffBehavior](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"max_concurrency": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+				},
+				"max_errors": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
+						"Only alphanumeric characters, hyphens, dots & underscores allowed."),
+				},
+				names.AttrPriority: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				names.AttrServiceRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"task_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"task_invocation_parameters": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automation_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"document_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
-									},
-									names.AttrParameter: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
+				"task_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"task_invocation_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automation_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"document_version": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 										},
-									},
-								},
-							},
-						},
-						"lambda_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_context": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 8000),
-									},
-									"payload": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Sensitive:    true,
-										ValidateFunc: validation.StringLenBetween(0, 4096),
-									},
-									"qualifier": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-								},
-							},
-						},
-						"run_command_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloudwatch_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cloudwatch_log_group_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"cloudwatch_output_enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-											},
-										},
-									},
-									names.AttrComment: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 100),
-									},
-									"document_hash": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 256),
-									},
-									"document_hash_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.DocumentHashType](),
-									},
-									"document_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
-									},
-									"notification_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"notification_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"notification_events": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:             schema.TypeString,
-														ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+										names.AttrParameter: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeList,
+														Required: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
 													},
 												},
-												"notification_type": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
-												},
 											},
 										},
-									},
-									"output_s3_bucket": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"output_s3_key_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrParameter: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									names.AttrServiceRoleARN: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(30, 2592000),
 									},
 								},
 							},
-						},
-						"step_functions_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"input": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Sensitive:    true,
-										ValidateFunc: validation.StringLenBetween(0, 4096),
+							"lambda_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_context": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 8000),
+										},
+										"payload": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Sensitive:    true,
+											ValidateFunc: validation.StringLenBetween(0, 4096),
+										},
+										"qualifier": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
 									},
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 80),
+								},
+							},
+							"run_command_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloudwatch_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cloudwatch_log_group_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"cloudwatch_output_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+										names.AttrComment: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 100),
+										},
+										"document_hash": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 256),
+										},
+										"document_hash_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DocumentHashType](),
+										},
+										"document_version": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
+										},
+										"notification_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"notification_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"notification_events": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+														},
+													},
+													"notification_type": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+													},
+												},
+											},
+										},
+										"output_s3_bucket": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"output_s3_key_prefix": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrParameter: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeList,
+														Required: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+												},
+											},
+										},
+										names.AttrServiceRoleARN: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(30, 2592000),
+										},
+									},
+								},
+							},
+							"step_functions_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"input": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Sensitive:    true,
+											ValidateFunc: validation.StringLenBetween(0, 4096),
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 80),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"task_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskType](),
-			},
-			"window_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"window_task_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"task_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskType](),
+				},
+				"window_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"window_task_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -385,7 +392,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 
 	output, err := findMaintenanceWindowTaskByTwoPartKey(ctx, conn, d.Get("window_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Task %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -504,21 +511,6 @@ func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceMaintenanceWindowTaskImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <window-id>/<window-task-id>", d.Id())
-	}
-
-	windowID := idParts[0]
-	windowTaskID := idParts[1]
-
-	d.Set("window_id", windowID)
-	d.SetId(windowTaskID)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client, windowID, windowTaskID string) (*ssm.GetMaintenanceWindowTaskOutput, error) {
 	input := &ssm.GetMaintenanceWindowTaskInput{
 		WindowId:     aws.String(windowID),
@@ -529,8 +521,7 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 
 	if errs.IsA[*awstypes.DoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -539,7 +530,7 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -868,4 +859,27 @@ func flattenTaskInvocationCommonParameters(apiObject map[string][]string) []any 
 	}
 
 	return tfList
+}
+
+var _ inttypes.SDKv2ImportID = maintenanceWindowTaskImportID{}
+
+type maintenanceWindowTaskImportID struct{}
+
+func (maintenanceWindowTaskImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 {
+		return id, nil, fmt.Errorf("maintenance_window_task id must be of the form <window_id>/<task_id>")
+	}
+
+	windowID := parts[0]
+	taskID := parts[1]
+
+	result := map[string]any{
+		"window_id": windowID,
+	}
+	return taskID, result, nil
 }

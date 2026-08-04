@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -44,7 +44,7 @@ resource "aws_lambda_function" "lambda" {
 
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "hello_lambda.lambda_handler"
-  runtime = "python3.9"
+  runtime = "python3.13"
 
   environment {
     variables = {

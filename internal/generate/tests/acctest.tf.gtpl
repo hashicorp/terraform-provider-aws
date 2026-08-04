@@ -6,6 +6,12 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
+{{ template "acctest.ConfigSubnets" . }}
+{{- end }}
+
+{{ define "acctest.ConfigSubnets" -}}
+# acctest.ConfigSubnets(rName, {{ . }})
+
 resource "aws_subnet" "test" {
 {{- template "region" }}
   count = {{ . }}
@@ -16,6 +22,66 @@ resource "aws_subnet" "test" {
 }
 
 {{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}
+{{- end }}
+
+{{ define "acctest.ConfigVPCWithSubnetsIPv6" -}}
+# acctest.ConfigVPCWithSubnetsIPv6(rName, {{ . }})
+
+resource "aws_vpc" "test" {
+{{- template "region" }}
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+}
+
+{{ template "acctest.ConfigSubnetsIPv6" . }}
+{{- end }}
+
+{{ define "acctest.ConfigSubnetsIPv6" -}}
+# acctest.ConfigSubnetsIPv6(rName, {{ . }})
+
+resource "aws_subnet" "test" {
+{{- template "region" }}
+  count = {{ . }}
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  cidr_block                      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+}
+
+{{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}
+{{- end }}
+
+{{ define "acctest.ConfigAvailableAZsNoOptIn" -}}
+# acctest.ConfigAvailableAZsNoOptIn
+
+data "aws_availability_zones" "available" {
+{{- template "region" }}
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+{{- end }}
+
+{{ define "acctest.ConfigAvailableAZsNoOptInExclude" -}}
+# acctest.ConfigAvailableAZsNoOptInExclude
+
+data "aws_availability_zones" "available" {
+{{- template "region" }}
+  exclude_zone_ids = local.exclude_zone_ids
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 {{- end }}
 
 {{ define "acctest.ConfigAvailableAZsNoOptInDefaultExclude" -}}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package memorydb
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,112 +45,114 @@ func resourceSnapshot() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEngine: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEngineVersion: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"maintenance_window": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"node_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"num_shards": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrParameterGroupName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"snapshot_retention_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"snapshot_window": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"subnet_group_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTopicARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEngine: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEngineVersion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"maintenance_window": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"node_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"num_shards": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrParameterGroupName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"snapshot_retention_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"snapshot_window": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"subnet_group_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTopicARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrClusterName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyARN: {
-				// The API will accept an ID, but return the ARN on every read.
-				// For the sake of consistency, force everyone to use ARN-s.
-				// To prevent confusion, the attribute is suffixed _arn rather
-				// than the _id implied by the API.
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validateResourceName(snapshotNameMaxLength),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - id.UniqueIDSuffixLength),
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrClusterName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyARN: {
+					// The API will accept an ID, but return the ARN on every read.
+					// For the sake of consistency, force everyone to use ARN-s.
+					// To prevent confusion, the attribute is suffixed _arn rather
+					// than the _id implied by the API.
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validateResourceName(snapshotNameMaxLength),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - sdkid.UniqueIDSuffixLength),
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -157,7 +161,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSnapshotInput{
 		ClusterName:  aws.String(d.Get(names.AttrClusterName).(string)),
 		SnapshotName: aws.String(name),
@@ -189,7 +193,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	snapshot, err := findSnapshotByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -268,8 +272,7 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 
 		if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -283,11 +286,11 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshot(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -303,7 +306,7 @@ func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name stri
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{snapshotStatusCreating},
 		Target:  []string{snapshotStatusAvailable},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: timeout,
 	}
 
@@ -320,7 +323,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, name string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{snapshotStatusDeleting},
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: timeout,
 	}
 

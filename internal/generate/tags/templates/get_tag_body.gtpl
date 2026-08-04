@@ -23,8 +23,8 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 	}
 
 	{{ if .RetryTagOps }}
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-		func() (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func(ctx context.Context) (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 			return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
 		},
 		"{{ .RetryErrorMessage }}",
@@ -47,7 +47,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 	{{- end }}
 
 	if !listTags.KeyExists(key) {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	{{ if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codepipeline
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -28,6 +31,7 @@ import (
 
 // @SDKResource("aws_codepipeline_custom_action_type", name="Custom Action Type")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
@@ -39,143 +43,145 @@ func resourceCustomActionType() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"category": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ActionCategory](),
-			},
-			"configuration_property": {
-				Type:     schema.TypeList,
-				MaxItems: 10,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"queryable": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"required": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"secret": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.ActionConfigurationPropertyType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"category": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ActionCategory](),
+				},
+				"configuration_property": {
+					Type:     schema.TypeList,
+					MaxItems: 10,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"queryable": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"required": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"secret": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.ActionConfigurationPropertyType](),
+							},
 						},
 					},
 				},
-			},
-			"input_artifact_details": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
-						},
-						"minimum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
-						},
-					},
-				},
-			},
-			"output_artifact_details": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
-						},
-						"minimum_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 5),
+				"input_artifact_details": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maximum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
+							"minimum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
 						},
 					},
 				},
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 35),
-			},
-			"settings": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"entity_url_template": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"execution_url_template": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"revision_url_template": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"third_party_configuration_url": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"output_artifact_details": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maximum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
+							"minimum_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 5),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 9),
-			},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 35),
+				},
+				"settings": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"entity_url_template": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"execution_url_template": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"revision_url_template": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"third_party_configuration_url": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 9),
+				},
+			}
 		},
 	}
 }
@@ -233,7 +239,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 
 	actionType, err := findCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Custom Action Type %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

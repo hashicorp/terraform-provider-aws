@@ -18,7 +18,7 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
-## Example with Delivery Policy
+### Example with Delivery Policy
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {
@@ -45,7 +45,7 @@ EOF
 }
 ```
 
-## Example with Server-side encryption (SSE)
+### Example with Server-side encryption (SSE)
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {
@@ -54,7 +54,7 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
-## Example with First-In-First-Out (FIFO)
+### Example with First-In-First-Out (FIFO)
 
 ```terraform
 resource "aws_sns_topic" "user_updates" {
@@ -64,7 +64,7 @@ resource "aws_sns_topic" "user_updates" {
 }
 ```
 
-## Message Delivery Status Arguments
+### Message Delivery Status Arguments
 
 The `<endpoint>_success_feedback_role_arn` and `<endpoint>_failure_feedback_role_arn` arguments are used to give Amazon SNS write access to use CloudWatch Logs on your behalf. The `<endpoint>_success_feedback_sample_rate` argument is for specifying the sample rate percentage (0-100) of successfully delivered messages. After you configure the  `<endpoint>_failure_feedback_role_arn` argument, then all failed message deliveries generate CloudWatch Logs.
 
@@ -113,6 +113,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sns_topic.example
+  identity = {
+    "arn" = "arn:aws:sns:us-west-2:123456789012:my-topic"
+  }
+}
+
+resource "aws_sns_topic" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SNS topic.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Topics using the topic `arn`. For example:
 

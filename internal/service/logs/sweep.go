@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -68,6 +68,8 @@ func RegisterSweepers() {
 		Name: "aws_cloudwatch_log_resource_policy",
 		F:    sweepResourcePolicies,
 	})
+
+	awsv2.Register("aws_logs_transformer", sweepTransformers)
 }
 
 func sweepAccountPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -224,7 +226,7 @@ func sweepGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 	conn := client.LogsClient(ctx)
@@ -265,7 +267,7 @@ func sweepQueryDefinitions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
 	conn := client.LogsClient(ctx)
@@ -309,7 +311,7 @@ func sweepResourcePolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 	conn := client.LogsClient(ctx)
@@ -347,4 +349,37 @@ func sweepResourcePolicies(region string) error {
 	}
 
 	return nil
+}
+
+func sweepTransformers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LogsClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, &cloudwatchlogs.DescribeLogGroupsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.LogGroups {
+			input := cloudwatchlogs.GetTransformerInput{
+				LogGroupIdentifier: v.LogGroupName,
+			}
+			transformer, err := conn.GetTransformer(ctx, &input)
+			if err != nil {
+				return nil, err
+			}
+
+			if transformer == nil || len(transformer.TransformerConfig) == 0 {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTransformerResource, client,
+				framework.NewAttribute("log_group_identifier", aws.ToString(transformer.LogGroupIdentifier))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

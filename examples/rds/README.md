@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Creating an RDS instance in AWS
 
 This example provides sample configuration for creating a mysql or postgres instance. For Oracle/SQL Servers, replace default values with appropriate values, they are not included in sample since the number of options are high.

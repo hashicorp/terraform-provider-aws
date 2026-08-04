@@ -54,6 +54,8 @@ This resource exports the following attributes in addition to the arguments abov
 The `filter_criteria` configuration block supports the following attributes:
 
 * `aws_account_id` - (Optional) The AWS account ID in which the finding was generated. [Documented below](#string-filter).
+* `code_repository_project_name` - (Optional) The project name in a code repository. [Documented below](#string-filter).
+* `code_repository_provider_type` - (Optional) The repository provider type (such as GitHub, GitLab, etc.) [Documented below](#string-filter).
 * `code_vulnerability_detector_name` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `code_vulnerability_detector_tags` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `code_vulnerability_file_path` - (Optional) The ID of the component. [Documented below](#string-filter).
@@ -63,6 +65,8 @@ The `filter_criteria` configuration block supports the following attributes:
 * `ec2_instance_subnet_id` - (Optional) The ID of the subnet. [Documented below](#string-filter).
 * `ec2_instance_vpc_id` - (Optional) The ID of the VPC. [Documented below](#string-filter).
 * `ecr_image_architecture` - (Optional) The architecture of the ECR image. [Documented below](#string-filter).
+* `ecr_image_in_use_count` - (Optional)  The number of the ECR images in use. [Documented below](#number-filter).
+* `ecr_image_last_in_use_at` - (Optional) The date range when an ECR image was last used in an ECS cluster task or EKS cluster pod. [Documented below](#date-filter).
 * `ecr_image_hash` - (Optional) The SHA256 hash of the ECR image. [Documented below](#string-filter).
 * `ecr_image_pushed_at` - (Optional) The date range when the image was pushed. [Documented below](#date-filter).
 * `ecr_image_registry` - (Optional) The registry of the ECR image. [Documented below](#string-filter).
@@ -147,6 +151,27 @@ The port range filter configuration block supports the following arguments:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_inspector2_filter.example
+  identity = {
+    "arn" = "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
+  }
+}
+
+resource "aws_inspector2_filter" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Inspector filter.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Filter using the `arn`. For example:
 
 ```terraform
@@ -156,7 +181,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Inspector Filter using the `example_id_arg`. For example:
+Using `terraform import`, import Inspector Filter using the `arn`. For example:
 
 ```console
 % terraform import aws_inspector2_filter.example "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
