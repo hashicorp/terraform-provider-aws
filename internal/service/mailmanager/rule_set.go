@@ -43,7 +43,6 @@ import (
 // @FrameworkResource("aws_mailmanager_rule_set", name="Rule Set")
 // @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/mailmanager;mailmanager.GetRuleSetOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccRuleSetPreCheck")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
