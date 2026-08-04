@@ -30,11 +30,10 @@ resource "aws_s3control_access_grants_location" "example" {
 
 This resource supports the following arguments:
 
+* `account_id` - (Optional) AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `iam_role_arn` - (Required) ARN of the IAM role that S3 Access Grants should use when fulfilling runtime access requests to the location.
+* `location_scope` - (Required) Default S3 URI `s3://` or the URI to a custom location, a specific bucket or prefix.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `account_id` - (Optional) The AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `iam_role_arn` - (Required) The ARN of the IAM role that S3 Access Grants should use when fulfilling runtime access
-requests to the location.
-* `location_scope` - (Required) The default S3 URI `s3://` or the URI to a custom location, a specific bucket or prefix.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -43,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `access_grants_location_arn` - Amazon Resource Name (ARN) of the S3 Access Grants location.
 * `access_grants_location_id` - Unique ID of the S3 Access Grants location.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

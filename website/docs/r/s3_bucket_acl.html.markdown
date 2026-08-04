@@ -123,34 +123,34 @@ resource "aws_s3_bucket_acl" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `acl` - (Optional, either `access_control_policy` or `acl` is required) Specifies the Canned ACL to apply to the bucket. Valid values: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`, `log-delivery-write`. Full details are available on the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
 * `access_control_policy` - (Optional, either `access_control_policy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `acl` - (Optional, either `access_control_policy` or `acl` is required) Canned ACL to apply to the bucket. Valid values: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`, `log-delivery-write`. Full details are available on the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
 * `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### access_control_policy
+### `access_control_policy` Block
 
 The `access_control_policy` configuration block supports the following arguments:
 
 * `grant` - (Required) Set of `grant` configuration blocks. [See below](#grant).
 * `owner` - (Required) Configuration block for the bucket owner's display name and ID. [See below](#owner).
 
-### grant
+### `grant` Block
 
 The `grant` configuration block supports the following arguments:
 
 * `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
 * `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `FULL_CONTROL`, `WRITE`, `WRITE_ACP`, `READ`, `READ_ACP`. See [What permissions can I grant?](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#permissions) for more details about what each permission means in the context of buckets.
 
-### owner
+### `owner` Block
 
 The `owner` configuration block supports the following arguments:
 
+* `display_name` - (Optional, **Deprecated**) Display name of the owner.
 * `id` - (Required) ID of the owner.
-* `display_name` - (Optional) Display name of the owner.
 
-### grantee
+### `grantee` Block
 
 The `grantee` configuration block supports the following arguments:
 
@@ -163,7 +163,7 @@ The `grantee` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket`, `expected_bucket_owner` (if configured), and `acl` (if configured) separated by commas (`,`).
+* `id` - `bucket`, `expected_bucket_owner` (if configured), and `acl` (if configured) separated by commas (`,`).
 
 ## Import
 
