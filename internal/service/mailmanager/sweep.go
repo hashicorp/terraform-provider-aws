@@ -17,7 +17,29 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_mailmanager_rule_set", sweepRuleSets)
 	awsv2.Register("aws_mailmanager_traffic_policy", sweepTrafficPolicies)
+}
+
+func sweepRuleSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.MailManagerClient(ctx)
+	var input mailmanager.ListRuleSetsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListRuleSetsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		for _, v := range page.RuleSets {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newRuleSetResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.RuleSetId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepTrafficPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
