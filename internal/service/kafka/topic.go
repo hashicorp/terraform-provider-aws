@@ -269,7 +269,15 @@ func (r *topicResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		ClusterArn: aws.String(clusterARN),
 		TopicName:  aws.String(topicName),
 	}
-	_, err := conn.DeleteTopic(ctx, &input)
+	// A channel's deletion can take a short while to fully disassociate from its
+	// topic. Retry while the API still reports the topic has associated channels.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*kafka.DeleteTopicOutput, *awstypes.BadRequestException](
+		ctx, r.DeleteTimeout(ctx, state.Timeouts),
+		func(ctx context.Context) (*kafka.DeleteTopicOutput, error) {
+			return conn.DeleteTopic(ctx, &input)
+		},
+		"associated Channel",
+	)
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return
 	}
