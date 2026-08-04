@@ -48,7 +48,7 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configuration").AtSliceIndex(0).AtMapKey("compaction_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("compaction_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
