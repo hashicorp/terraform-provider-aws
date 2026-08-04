@@ -58,12 +58,47 @@ func TestAccMailManagerRuleSet_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMailManagerRuleSet_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_rule_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccRuleSetPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleSetConfigBasic(rName, "X-Example"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.0.header_name", "X-Example"),
+				),
+			},
+			{
 				Config: testAccRuleSetConfigBasic(rName, "X-Updated"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.0.header_name", "X-Updated"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.add_header.0.header_value", "example"),
 				),
 			},
 			{
@@ -221,9 +256,9 @@ func TestAccMailManagerRuleSet_actionInvokeLambda(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("invoke_lambda", map[string]knownvalue.Check{
-							names.AttrFunctionARN:   knownvalue.NotNull(),
+							names.AttrFunctionARN:   knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:lambda:[^:]+:[^:]+:function:.+$`)),
 							"invocation_type":       knownvalue.StringExact("EVENT"),
-							names.AttrRoleARN:       knownvalue.NotNull(),
+							names.AttrRoleARN:       knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:iam::[^:]+:role/.+$`)),
 							"action_failure_policy": knownvalue.StringExact("CONTINUE"),
 							"retry_time_minutes":    knownvalue.Null(),
 						}),
@@ -259,8 +294,8 @@ func TestAccMailManagerRuleSet_actionPublishToSNS(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("publish_to_sns", map[string]knownvalue.Check{
-							names.AttrTopicARN:      knownvalue.NotNull(),
-							names.AttrRoleARN:       knownvalue.NotNull(),
+							names.AttrTopicARN:      knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:sns:[^:]+:[^:]+:.+$`)),
+							names.AttrRoleARN:       knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:iam::[^:]+:role/.+$`)),
 							"encoding":              knownvalue.StringExact("UTF-8"),
 							"payload_type":          knownvalue.StringExact("HEADERS"),
 							"action_failure_policy": knownvalue.StringExact("CONTINUE"),
@@ -297,8 +332,8 @@ func TestAccMailManagerRuleSet_actionWriteToS3(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						testAccRuleSetUnionValue("write_to_s3", map[string]knownvalue.Check{
-							names.AttrS3Bucket:      knownvalue.NotNull(),
-							names.AttrRoleARN:       knownvalue.NotNull(),
+							names.AttrS3Bucket:      knownvalue.StringExact(rName),
+							names.AttrRoleARN:       knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:iam::[^:]+:role/.+$`)),
 							"s3_prefix":             knownvalue.StringExact("mail/"),
 							"s3_sse_kms_key_id":     knownvalue.Null(),
 							"action_failure_policy": knownvalue.StringExact("CONTINUE"),
