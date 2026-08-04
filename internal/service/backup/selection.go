@@ -271,19 +271,27 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceSelectionFlatten(planID, d, output); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening Backup Selection (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceSelectionFlatten(planID string, d *schema.ResourceData, output *awstypes.BackupSelection) error {
 	if v := output.Conditions; v != nil {
 		if err := d.Set(names.AttrCondition, flattenConditions(v)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
+			return fmt.Errorf("setting condition: %w", err)
 		}
 	}
 	d.Set(names.AttrIAMRoleARN, output.IamRoleArn)
 	d.Set(names.AttrName, output.SelectionName)
 	if err := d.Set("not_resources", output.NotResources); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
+		return fmt.Errorf("setting not resources: %w", err)
 	}
 	d.Set("plan_id", planID)
 	if err := d.Set(names.AttrResources, output.Resources); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
+		return fmt.Errorf("setting resources: %w", err)
 	}
 	if v := output.ListOfTags; v != nil {
 		tfList := make([]any, 0)
@@ -299,11 +307,11 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if err := d.Set("selection_tag", tfList); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting selection tag: %s", err)
+			return fmt.Errorf("setting selection tag: %w", err)
 		}
 	}
 
-	return diags
+	return nil
 }
 
 func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

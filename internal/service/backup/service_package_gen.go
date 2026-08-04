@@ -7,6 +7,8 @@ package backup
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -190,6 +192,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newSelectionResourceAsListResource,
+			TypeName: "aws_backup_selection",
+			Name:     "Selection",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("plan_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
