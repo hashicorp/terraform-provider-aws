@@ -272,6 +272,10 @@ import {
     id = "rule-set-id"
   }
 }
+
+resource "aws_mailmanager_rule_set" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
 
 ### Identity Schema
@@ -291,6 +295,10 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 import {
   to = aws_mailmanager_rule_set.example
   id = "rule-set-id"
+}
+
+resource "aws_mailmanager_rule_set" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
