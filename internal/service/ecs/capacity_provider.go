@@ -44,11 +44,11 @@ func resourceCapacityProvider() *schema.Resource {
 		DeleteWithoutTimeout: resourceCapacityProviderDelete,
 
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-			// Ensure exactly one of auto_scaling_group_provider or managed_instances_provider is specified
 			asgProvider := diff.Get("auto_scaling_group_provider").([]any)
 			managedProvider := diff.Get("managed_instances_provider").([]any)
 			clusterName := diff.Get("cluster").(string)
 
+			// Ensure exactly one of auto_scaling_group_provider or managed_instances_provider is specified
 			if len(asgProvider) == 0 && len(managedProvider) == 0 {
 				return errors.New("exactly one of auto_scaling_group_provider or managed_instances_provider must be specified")
 			} else if len(asgProvider) > 0 && len(managedProvider) > 0 {
@@ -56,13 +56,16 @@ func resourceCapacityProvider() *schema.Resource {
 			}
 
 			// Validate cluster field requirements
-			if len(managedProvider) > 0 {
+			if len(managedProvider) > 0 && clusterName == "" {
 				// cluster is required for Managed Instances CP
-				if clusterName == "" {
-					return errors.New("cluster is required when using managed_instances_provider")
-				}
+				return errors.New("cluster is required when using managed_instances_provider")
+			} else if len(asgProvider) > 0 && clusterName != "" {
+				// cluster must not be set for ASG CP
+				return errors.New("cluster must not be set when using auto_scaling_group_provider")
+			}
 
-				// Validate capacity reservation rules for managed instances providers
+			// Validate capacity reservation rules for managed instances providers
+			if len(managedProvider) > 0 {
 				capacityOptionType := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_option_type").(string)
 				capacityReservations := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations").([]any)
 				instanceRequirements := diff.Get("managed_instances_provider.0.instance_launch_template.0.instance_requirements").([]any)
@@ -92,11 +95,6 @@ func resourceCapacityProvider() *schema.Resource {
 						reservationPreference == string(awstypes.CapacityReservationPreferenceReservationsFirst)) && len(instanceRequirements) == 0 {
 						return errors.New("instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST")
 					}
-				}
-			} else if len(asgProvider) > 0 {
-				// cluster must not be set for ASG CP
-				if clusterName != "" {
-					return errors.New("cluster must not be set when using auto_scaling_group_provider")
 				}
 			}
 
