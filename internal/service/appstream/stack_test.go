@@ -66,6 +66,9 @@ func TestAccAppStreamStack_embedHostDomains(t *testing.T) {
 	resourceName := "aws_appstream_stack.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	randomDomain := acctest.RandomDomain(t)
+	randomSubDomain := randomDomain.RandomSubdomain(t)
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -81,20 +84,20 @@ func TestAccAppStreamStack_embedHostDomains(t *testing.T) {
 			},
 			{
 				// Add embed_host_domains to an existing stack.
-				Config: testAccStackConfig_embedHostDomains(rName, "example.com"),
+				Config: testAccStackConfig_embedHostDomains(rName, randomDomain.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", randomDomain.String()),
 				),
 			},
 			{
 				// Change embed_host_domains on an existing stack.
-				Config: testAccStackConfig_embedHostDomains(rName, "subdomain.example.com"),
+				Config: testAccStackConfig_embedHostDomains(rName, randomSubDomain.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", randomSubDomain.String()),
 				),
 			},
 			{
