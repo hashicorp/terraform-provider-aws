@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_glue_catalog_table_optimizer: Add compaction configuration
+resource/aws_glue_catalog_table_optimizer: Add `configuration.compaction_configuration` argument
 ```
