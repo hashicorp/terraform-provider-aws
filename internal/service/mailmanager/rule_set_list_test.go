@@ -8,6 +8,7 @@ package mailmanager_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -129,10 +130,10 @@ func TestAccMailManagerRuleSet_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_mailmanager_rule_set.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_mailmanager_rule_set.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_mailmanager_rule_set.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreatedDate), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:ses:[^:]+:[^:]+:.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreatedDate), knownvalue.StringRegexp(regexache.MustCompile(acctest.RFC3339RegexPattern))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("last_modification_date"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("last_modification_date"), knownvalue.StringRegexp(regexache.MustCompile(acctest.RFC3339RegexPattern))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
