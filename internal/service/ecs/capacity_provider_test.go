@@ -349,7 +349,7 @@ func TestAccECSCapacityProvider_mutualExclusivity(t *testing.T) {
 	})
 }
 
-func TestAccECSCapacityProvider_createManagedInstancesProvider_basic(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -362,7 +362,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_basic(t *testing.
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_basic(rName),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -388,7 +388,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_basic(t *testing.
 	})
 }
 
-func TestAccECSCapacityProvider_createManagedInstancesProvider_withInstanceRequirements(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_withInstanceRequirements(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -401,7 +401,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInstanceRequi
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInstanceRequirements(rName),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_withInstanceRequirements(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -428,7 +428,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInstanceRequi
 	})
 }
 
-func TestAccECSCapacityProvider_createManagedInstancesProvider_withStorageConfiguration(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_withStorageConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -441,7 +441,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withStorageConfig
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_withStorageConfiguration(rName),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_withStorageConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -458,7 +458,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withStorageConfig
 	})
 }
 
-func TestAccECSCapacityProvider_createManagedInstancesProvider_withLocalStorageConfiguration(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_withLocalStorageConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -471,7 +471,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withLocalStorageC
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_withLocalStorageConfiguration(rName),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_withLocalStorageConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -488,7 +488,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withLocalStorageC
 	})
 }
 
-func TestAccECSCapacityProvider_updateManagedInstancesProvider(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -501,14 +501,14 @@ func TestAccECSCapacityProvider_updateManagedInstancesProvider(t *testing.T) {
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_basic(rName),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.propagate_tags", ""),
 				),
 			},
 			{
-				Config: testAccCapacityProviderConfig_updateManagedInstancesProvider(rName),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.propagate_tags", "NONE"),
@@ -523,7 +523,7 @@ func TestAccECSCapacityProvider_updateManagedInstancesProvider(t *testing.T) {
 	})
 }
 
-func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructureOptimization(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_withInfrastructureOptimization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -536,7 +536,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructur
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 300),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_withInfrastructureOptimization(rName, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -545,7 +545,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructur
 				),
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 0),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_withInfrastructureOptimization(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
@@ -553,7 +553,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructur
 				),
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, -1),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_withInfrastructureOptimization(rName, -1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
@@ -564,7 +564,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructur
 	})
 }
 
-func TestAccECSCapacityProvider_managedInstancesProvider_capacityOptionTypeReplacement(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_capacityOptionTypeReplacement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -577,7 +577,7 @@ func TestAccECSCapacityProvider_managedInstancesProvider_capacityOptionTypeRepla
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, "ON_DEMAND"),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_capacityOptionType(rName, "ON_DEMAND"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -590,7 +590,7 @@ func TestAccECSCapacityProvider_managedInstancesProvider_capacityOptionTypeRepla
 				},
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, "SPOT"),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_capacityOptionType(rName, "SPOT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -606,7 +606,7 @@ func TestAccECSCapacityProvider_managedInstancesProvider_capacityOptionTypeRepla
 	})
 }
 
-func TestAccECSCapacityProvider_createManagedInstancesProvider_monitoring(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_monitoring(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -619,7 +619,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_monitoring(t *tes
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_monitoring(rName, string(awstypes.ManagedInstancesMonitoringOptionsDetailed)),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_monitoring(rName, string(awstypes.ManagedInstancesMonitoringOptionsDetailed)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -639,7 +639,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_monitoring(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_monitoring(rName, string(awstypes.ManagedInstancesMonitoringOptionsBasic)),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_monitoring(rName, string(awstypes.ManagedInstancesMonitoringOptionsBasic)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -657,7 +657,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_monitoring(t *tes
 	})
 }
 
-func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservations(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_capacityReservations(t *testing.T) {
 	ctx := acctest.Context(t)
 	var provider awstypes.CapacityProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -670,7 +670,7 @@ func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservations(t 
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityReservations(rName, "RESERVATIONS_EXCLUDED"),
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_capacityReservations(rName, "RESERVATIONS_EXCLUDED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
@@ -688,10 +688,7 @@ func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservations(t 
 	})
 }
 
-// TestAccECSCapacityProvider_managedInstancesProvider_capacityReservationsValidation exercises the
-// plan-time cross-field validation for capacity_reservations. Each step is expected to fail during
-// plan, so no resources are created.
-func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservationsValidation(t *testing.T) {
+func TestAccECSCapacityProvider_ManagedInstancesProvider_capacityReservationsValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -702,19 +699,19 @@ func TestAccECSCapacityProvider_managedInstancesProvider_capacityReservationsVal
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCapacityProviderConfig_managedInstancesProvider_capacityReservationsWithoutReserved(rName),
+				Config:      testAccCapacityProviderConfig_ManagedInstancesProvider_capacityReservationsWithoutReserved(rName),
 				ExpectError: regexache.MustCompile(`capacity_reservations can only be set when capacity_option_type is RESERVED`),
 			},
 			{
-				Config:      testAccCapacityProviderConfig_managedInstancesProvider_reservedWithoutCapacityReservations(rName),
+				Config:      testAccCapacityProviderConfig_ManagedInstancesProvider_reservedWithoutCapacityReservations(rName),
 				ExpectError: regexache.MustCompile(`capacity_reservations must be set when capacity_option_type is RESERVED`),
 			},
 			{
-				Config:      testAccCapacityProviderConfig_managedInstancesProvider_reservationGroupARNWrongPreference(rName),
+				Config:      testAccCapacityProviderConfig_ManagedInstancesProvider_reservationGroupARNWrongPreference(rName),
 				ExpectError: regexache.MustCompile(`reservation_group_arn can only be set when reservation_preference is RESERVATIONS_ONLY`),
 			},
 			{
-				Config:      testAccCapacityProviderConfig_managedInstancesProvider_reservationsWithoutInstanceRequirements(rName),
+				Config:      testAccCapacityProviderConfig_ManagedInstancesProvider_reservationsWithoutInstanceRequirements(rName),
 				ExpectError: regexache.MustCompile(`instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST`),
 			},
 		},
@@ -764,6 +761,20 @@ func testAccCheckCapacityProviderExists(ctx context.Context, t *testing.T, resou
 		*provider = *output
 
 		return nil
+	}
+}
+
+func testAccAssociateCapacityProviderWithCluster(ctx context.Context, t *testing.T, clusterName, cpName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
+
+		_, err := conn.PutClusterCapacityProviders(ctx, &ecs.PutClusterCapacityProvidersInput{
+			Cluster:                         &clusterName,
+			CapacityProviders:               []string{cpName},
+			DefaultCapacityProviderStrategy: []awstypes.CapacityProviderStrategyItem{},
+		})
+
+		return err
 	}
 }
 
@@ -1007,7 +1018,7 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_base(rName string) string {
+func testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -1104,8 +1115,8 @@ resource "aws_iam_instance_profile" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_basic(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_basic(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1126,8 +1137,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_withInstanceRequirements(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_withInstanceRequirements(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1166,8 +1177,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_withStorageConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_withStorageConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1203,8 +1214,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_updateManagedInstancesProvider(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_update(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1236,8 +1247,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName string, scaleInAfter int) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_withInfrastructureOptimization(rName string, scaleInAfter int) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1273,8 +1284,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, scaleInAfter))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, capacityOptionType string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_capacityOptionType(rName, capacityOptionType string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   lifecycle {
     create_before_destroy = true
@@ -1310,8 +1321,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, capacityOptionType))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_capacityReservations(rName, preference string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_capacityReservations(rName, preference string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1347,8 +1358,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, preference))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_capacityReservationsWithoutReserved(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_capacityReservationsWithoutReserved(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1374,8 +1385,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_reservedWithoutCapacityReservations(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_reservedWithoutCapacityReservations(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1397,8 +1408,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_reservationGroupARNWrongPreference(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_reservationGroupARNWrongPreference(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1437,8 +1448,8 @@ data "aws_region" "current" {}
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_reservationsWithoutInstanceRequirements(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_reservationsWithoutInstanceRequirements(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1464,8 +1475,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_monitoring(rName, monitoring string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_monitoring(rName, monitoring string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1488,8 +1499,8 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, monitoring))
 }
 
-func testAccCapacityProviderConfig_managedInstancesProvider_withLocalStorageConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+func testAccCapacityProviderConfig_ManagedInstancesProvider_withLocalStorageConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = aws_ecs_cluster.test.name
@@ -1512,20 +1523,6 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName))
-}
-
-func testAccAssociateCapacityProviderWithCluster(ctx context.Context, t *testing.T, clusterName, cpName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
-
-		_, err := conn.PutClusterCapacityProviders(ctx, &ecs.PutClusterCapacityProvidersInput{
-			Cluster:                         &clusterName,
-			CapacityProviders:               []string{cpName},
-			DefaultCapacityProviderStrategy: []awstypes.CapacityProviderStrategyItem{},
-		})
-
-		return err
-	}
 }
 
 func testAccCapacityProviderConfig_withClusterNoAssociation(rName string) string {
