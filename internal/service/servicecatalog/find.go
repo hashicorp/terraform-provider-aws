@@ -102,6 +102,49 @@ func findProductPortfolioAssociations(ctx context.Context, conn *servicecatalog.
 	return result, nil
 }
 
+func findPortfolioByName(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, name string) (*awstypes.PortfolioDetail, error) {
+	output, err := findPortfoliosByName(ctx, conn, acceptLanguage, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPortfoliosByName(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, name string) ([]awstypes.PortfolioDetail, error) {
+	input := &servicecatalog.ListPortfoliosInput{}
+
+	if acceptLanguage != "" {
+		input.AcceptLanguage = aws.String(acceptLanguage)
+	}
+
+	var result []awstypes.PortfolioDetail
+
+	pages := servicecatalog.NewListPortfoliosPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, detail := range page.PortfolioDetails {
+			if aws.ToString(detail.DisplayName) == name {
+				result = append(result, detail)
+			}
+		}
+	}
+
+	return result, nil
+}
+
 func findBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) (*awstypes.BudgetDetail, error) {
 	output, err := findBudgetResourceAssociations(ctx, conn, budgetName, resourceID)
 
