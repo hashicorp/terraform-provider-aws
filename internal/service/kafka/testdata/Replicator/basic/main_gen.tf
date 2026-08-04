@@ -82,16 +82,6 @@ resource "aws_msk_cluster" "source" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.source.id]
 
-    connectivity_info {
-      vpc_connectivity {
-        client_authentication {
-          sasl {
-            iam = true
-          }
-        }
-      }
-    }
-
     storage_info {
       ebs_storage_info {
         volume_size = 10
@@ -109,30 +99,6 @@ resource "aws_msk_cluster" "source" {
       iam = true
     }
   }
-}
-
-resource "aws_msk_cluster_policy" "source" {
-  cluster_arn = aws_msk_cluster.source.arn
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Sid    = "testMskClusterPolicy"
-      Effect = "Allow"
-      Principal = {
-        "Service" = "kafka.amazonaws.com"
-      }
-      Action = [
-        "kafka:CreateVpcConnection",
-        "kafka:GetBootstrapBrokers",
-        "kafka:DescribeCluster",
-        "kafka:DescribeClusterV2"
-      ]
-      Resource = aws_msk_cluster.source.arn
-    }]
-  })
-
-  depends_on = [aws_msk_cluster.source]
 }
 
 resource "aws_iam_role" "source" {
