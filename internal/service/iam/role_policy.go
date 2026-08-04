@@ -146,6 +146,12 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role Policy (%s): %s", d.Id(), err)
 	}
 
+	return resourceRolePolicyFlatten(d, roleName, policyName, policyDocument)
+}
+
+func resourceRolePolicyFlatten(d *schema.ResourceData, roleName, policyName, policyDocument string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -186,6 +187,73 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_replaceWhenAssociated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	cpName1 := fmt.Sprintf("%s-1", rName)
+	cpName2 := fmt.Sprintf("%s-2", rName)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_replaceWhenAssociated(rName, cpName1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, cpName1),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_replaceWhenAssociated(rName, cpName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, cpName2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_deleteFailsWhenAssociated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_withClusterNoAssociation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					testAccAssociateCapacityProviderWithCluster(ctx, t, rName, rName),
+				),
+			},
+			{
+				Config:      testAccCapacityProviderConfig_withClusterNoAssociationRemoved(rName),
+				ExpectError: regexache.MustCompile(`capacity provider cannot be deleted because it is associated with cluster`),
+			},
+			{
+				Config: testAccCapacityProviderConfig_withClusterAssociation(rName),
 			},
 		},
 	})
@@ -379,6 +447,36 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withStorageConfig
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.storage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.storage_configuration.0.storage_size_gib", "50"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_createManagedInstancesProvider_withLocalStorageConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withLocalStorageConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.local_storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.local_storage_configuration.0.use_local_storage", acctest.CtTrue),
 				),
 			},
 			{
@@ -691,6 +789,31 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCapacityProviderConfig_replaceWhenAssociated(rName, cpName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name = %[2]q
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster_capacity_providers" "test" {
+  cluster_name       = aws_ecs_cluster.test.name
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
+
+  lifecycle {
+    replace_triggered_by = [aws_ecs_capacity_provider.test]
+  }
+}
+`, rName, cpName))
 }
 
 func testAccCapacityProviderConfig_tags1(rName, tag1Key, tag1Value string) string {
@@ -1145,4 +1268,89 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName, monitoring))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_withLocalStorageConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      local_storage_configuration {
+        use_local_storage = true
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccAssociateCapacityProviderWithCluster(ctx context.Context, t *testing.T, clusterName, cpName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
+
+		_, err := conn.PutClusterCapacityProviders(ctx, &ecs.PutClusterCapacityProvidersInput{
+			Cluster:                         &clusterName,
+			CapacityProviders:               []string{cpName},
+			DefaultCapacityProviderStrategy: []awstypes.CapacityProviderStrategyItem{},
+		})
+
+		return err
+	}
+}
+
+func testAccCapacityProviderConfig_withClusterNoAssociation(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_capacity_provider" "test" {
+  name = %[1]q
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_withClusterNoAssociationRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_withClusterAssociation(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_capacity_provider" "test" {
+  name = %[1]q
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "test" {
+  cluster_name       = aws_ecs_cluster.test.name
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
+}
+`, rName))
 }

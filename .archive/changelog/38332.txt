@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb_trust_store: Wait until trust store is `ACTIVE` on resource Create
-```

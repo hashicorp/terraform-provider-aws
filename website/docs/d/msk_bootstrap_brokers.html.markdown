@@ -39,3 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 * `bootstrap_brokers_vpc_connectivity_sasl_iam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity.
 * `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity.
 * `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity.
+* `bootstrap_brokers_ipv6` - One or more IPv6 DNS names (or IP addresses) and plaintext port pairs for clusters configured with DUAL network type.
+* `bootstrap_brokers_sasl_iam_ipv6` - One or more IPv6 DNS names (or IP addresses) and SASL IAM port pairs for clusters configured with DUAL network type.
+* `bootstrap_brokers_sasl_scram_ipv6` - One or more IPv6 DNS names (or IP addresses) and SASL SCRAM port pairs for clusters configured with DUAL network type.
+* `bootstrap_brokers_tls_ipv6` - One or more IPv6 DNS names (or IP addresses) and TLS port pairs for clusters configured with DUAL network type.

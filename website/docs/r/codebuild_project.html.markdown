@@ -136,9 +136,10 @@ resource "aws_codebuild_project" "example" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+    image                       = "aws/codebuild/amazonlinux-x86_64-standard:6.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+    host_kernel                 = "LINUX_KERNEL_6"
 
     environment_variable {
       name  = "SOME_KEY1"
@@ -374,6 +375,12 @@ The following arguments are optional:
 * `docker_server` - (Optional) Configuration block. Detailed below.
 * `fleet` - (Optional) Configuration block. Detailed below.
 * `environment_variable` - (Optional) Configuration block. Detailed below.
+* `host_kernel` - (Optional) Host operating system kernel used for on-demand builds in the build project. This setting
+  controls the kernel of the underlying build host. It does not change the build environment operating system, which is
+  determined by the image you specify. Valid values: `LINUX_KERNEL_4` (runs on an Amazon Linux 2 host, kernel 4.x),
+  `LINUX_KERNEL_6` (runs on an Amazon Linux 2023 host, kernel 6.x), `LINUX_KERNEL_LATEST` (runs on the latest supported
+  host kernel). Applies to the `LINUX_CONTAINER`, `ARM_CONTAINER`, `LINUX_EC2`, and `ARM_EC2` environment types; not
+  applicable to Windows, Lambda, or Mac environment types. If not specified, CodeBuild selects a default.
 * `image_pull_credentials_type` - (Optional) Type of credentials AWS CodeBuild uses to pull images in your build. Valid
   values: `CODEBUILD`, `SERVICE_ROLE`. When you use a cross-account or private registry image, you must use SERVICE_ROLE
   credentials. When you use an AWS CodeBuild curated image, you must use CodeBuild credentials. Defaults to `CODEBUILD`.

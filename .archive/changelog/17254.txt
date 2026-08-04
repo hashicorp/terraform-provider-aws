@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_kinesis_firehose_delivery_stream: Use standard retry timeout for IAM eventual consistency and retry on LakeFormation access errors
-```

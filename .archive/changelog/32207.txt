@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_codecommit_repository: Doesn't force replacement when renaming
-```

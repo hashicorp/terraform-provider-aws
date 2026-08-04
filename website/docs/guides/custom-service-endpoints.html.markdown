@@ -228,6 +228,7 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -237,6 +238,7 @@ provider "aws" {
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
+|SES Mail Manager|`mailmanager`|`AWS_ENDPOINT_URL_MAILMANAGER`|`mailmanager`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
 |Elemental MediaConvert|`mediaconvert`|`AWS_ENDPOINT_URL_MEDIACONVERT`|`mediaconvert`|
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
@@ -264,7 +266,7 @@ provider "aws" {
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
-|OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
+|OpenSearch Ingestion (OSIS)|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|

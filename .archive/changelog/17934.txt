@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Support automatic region validation for `ap-northeast-3`
-```

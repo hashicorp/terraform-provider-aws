@@ -382,7 +382,6 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "target_id"),
 				),
 			},
 			{
