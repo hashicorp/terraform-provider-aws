@@ -24,10 +24,10 @@ func TestAccBedrockAgentCore_serial(t *testing.T) {
 			"Identity":           testAccBedrockAgentCorePaymentManager_identitySerial,
 		},
 		"PaymentConnector": {
-			acctest.CtBasic:       testAccPaymentConnector_basic,
-			acctest.CtDisappears:  testAccPaymentConnector_disappears,
-			names.AttrDescription: testAccPaymentConnector_description,
-			"Identity":            testAccBedrockAgentCorePaymentConnector_identitySerial,
+			acctest.CtBasic:      testAccPaymentConnector_basic,
+			acctest.CtDisappears: testAccPaymentConnector_disappears,
+			"Description":        testAccPaymentConnector_description,
+			"Identity":           testAccBedrockAgentCorePaymentConnector_identitySerial,
 		},
 	}
 
