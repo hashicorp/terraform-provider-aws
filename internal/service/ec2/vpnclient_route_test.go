@@ -114,7 +114,7 @@ func testAccClientVPNRoute_transitGateway(t *testing.T, semaphore tfsync.Semapho
 					testAccCheckClientVPNRouteExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.2.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "target_vpc_subnet_id", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
 			{

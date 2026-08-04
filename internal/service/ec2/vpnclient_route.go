@@ -69,7 +69,7 @@ func resourceClientVPNRoute() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 				},
-				"transit_gateway_attachment_id": {
+				names.AttrTransitGatewayAttachmentID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -147,7 +147,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("origin", route.Origin)
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
-	d.Set("transit_gateway_attachment_id", route.TransitGatewayAttachmentId)
+	d.Set(names.AttrTransitGatewayAttachmentID, route.TransitGatewayAttachmentId)
 	d.Set(names.AttrType, route.Type)
 
 	return diags
