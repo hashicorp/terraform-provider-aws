@@ -1,3 +1,11 @@
 ```release-note:enhancement
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_secret_source` and `client_secret_config` arguments to all OAuth2 provider configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_authentication_method`, `on_behalf_of_token_exchange_config`, `private_endpoint`, and `private_endpoint_overrides` arguments to `custom_oauth2_provider_config`
+```
+
+```release-note:enhancement
 resource/aws_bedrockagentcore_oauth2_credential_provider: Add `atlassian_oauth2_provider_config`, `linkedin_oauth2_provider_config`, and `included_oauth2_provider_config` configuration blocks and the `token_endpoint_auth_methods` argument for custom OAuth2 authorization server metadata
 ```
