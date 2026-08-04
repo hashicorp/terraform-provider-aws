@@ -464,7 +464,7 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 func findMemoryByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryARN string) (*awstypes.Memory, error) {
 	parsedARN, err := arn.Parse(memoryARN)
 	if err != nil {
-		return nil, fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err)
+		return nil, smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
 	}
 	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
 
