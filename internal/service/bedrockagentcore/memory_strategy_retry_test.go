@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	frameworkvalidator "github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -34,6 +35,11 @@ func TestFlattenMemoryStrategyPreservesTriggerConditionsShape(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
+	topicARN := awsarn.ARN{
+		Partition: "aws",
+		Service:   "sns",
+		Resource:  "example",
+	}.String()
 	target := memoryStrategyResourceModel{
 		Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &customConfigurationModel{
 			Type:          fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
@@ -44,7 +50,7 @@ func TestFlattenMemoryStrategyPreservesTriggerConditionsShape(t *testing.T) {
 				HistoricalContextWindowSize: types.Int32Value(25),
 				InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &invocationConfigurationModel{
 					PayloadDeliveryBucketName: types.StringValue("example-bucket"),
-					TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-west-2:123456789012:example"),
+					TopicARN:                  fwtypes.ARNValue(topicARN),
 				}),
 				TriggerConditions: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &triggerConditionsModel{
 					MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageBasedTriggerModel{
@@ -66,7 +72,7 @@ func TestFlattenMemoryStrategyPreservesTriggerConditionsShape(t *testing.T) {
 				HistoricalContextWindowSize: aws.Int32(25),
 				InvocationConfiguration: &awstypes.InvocationConfiguration{
 					PayloadDeliveryBucketName: aws.String("example-bucket"),
-					TopicArn:                  aws.String("arn:aws:sns:us-west-2:123456789012:example"),
+					TopicArn:                  aws.String(topicARN),
 				},
 				TriggerConditions: []awstypes.TriggerCondition{
 					&awstypes.TriggerConditionMemberMessageBasedTrigger{Value: awstypes.MessageBasedTrigger{MessageCount: aws.Int32(12)}},
