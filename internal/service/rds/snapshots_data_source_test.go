@@ -101,8 +101,6 @@ resource "aws_db_snapshot" "test" {
 resource "aws_db_snapshot" "wrong" {
   db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = "%[1]s-wrong"
-
-  depends_on = [aws_db_snapshot.test]
 }
 
 data "aws_rds_snapshots" "test" {
