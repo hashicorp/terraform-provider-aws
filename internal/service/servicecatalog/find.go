@@ -125,6 +125,9 @@ func findPortfoliosByName(ctx context.Context, conn *servicecatalog.Client, acce
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		// ListPortfolios does not document ResourceNotFoundException; kept for
+		// consistency with the paginate-and-filter pattern used elsewhere in
+		// this file (e.g. findProductPortfolioAssociations).
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
