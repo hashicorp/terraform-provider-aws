@@ -117,6 +117,32 @@ resource "aws_bedrockagentcore_harness" "example" {
 }
 ```
 
+### With Managed Memory
+
+```terraform
+resource "aws_bedrockagentcore_harness" "example" {
+  harness_name       = "my_harness"
+  execution_role_arn = aws_iam_role.example.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  memory {
+    managed_memory_configuration {
+      event_expiry_duration = 14
+      strategies            = ["SEMANTIC", "SUMMARIZATION"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -134,7 +160,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional, Sensitive) Map of environment variables.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
-* `memory` - (Optional) Memory configuration. See [`memory`](#memory) below.
+* `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill`](#skill) below.
 * `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt`](#system_prompt) below.
@@ -399,14 +425,17 @@ The `claim_match_value` block supports the following:
 
 ### `memory` Block
 
-* `agentcore_memory_configuration` - (Required) AgentCore memory configuration. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
+The `memory` block supports one of the following:
+
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. Use this to connect to an existing AgentCore memory resource. See [`agentcore_memory_configuration` Block](#agentcore_memory_configuration-block) below.
+* `managed_memory_configuration` - (Optional) Managed memory configuration. Creates and manages a memory resource automatically. See [`managed_memory_configuration` Block](#managed_memory_configuration-block) below.
 
 ### `agentcore_memory_configuration` Block
 
 * `arn` - (Required) ARN of the AgentCore memory resource.
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
-* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
+* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config` Block](#retrieval_config-block) below.
 
 ### `retrieval_config` Block
 
@@ -416,6 +445,16 @@ The `claim_match_value` block supports the following:
 * `relevance_score` - (Optional) Relevance score threshold. Valid value is between `0` and `1`.
 * `strategy_id` - (Optional) ID of the memory strategy.
 * `top_k` - (Optional) Number of top results to retrieve.
+
+### `managed_memory_configuration` Block
+
+* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key used to encrypt the memory. Defaults to an AWS-owned key. Cannot be changed after creation.
+* `event_expiry_duration` - (Optional, Computed) Event retention in days. Defaults to `30`.
+* `strategies` - (Optional, Computed) Set of strategy types to enable. Valid values are `SEMANTIC`, `SUMMARIZATION`, and `USER_PREFERENCE`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
+
+In addition, the following attribute is exported:
+
+* `arn` - ARN of the managed memory resource.
 
 ## Attribute Reference
 
