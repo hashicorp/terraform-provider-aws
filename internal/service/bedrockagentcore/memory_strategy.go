@@ -127,6 +127,9 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
 				Validators: []validator.String{
+					// - configuration {} is only valid and is required when type = "CUSTOM"
+					// - reflection_configuration {} is only valid when type = "EPISODIC"
+					// - Exactly one of namespaces or namespace_templates is required except when type = "CUSTOM" and configuration.type = "SELF_MANAGED"
 					tfstringvalidator.AlsoRequiresWhenEquals(
 						awstypes.MemoryStrategyTypeCustom,
 						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
@@ -162,6 +165,11 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.OverrideType](),
 							Validators: []validator.String{
+								// - reflection {} is only valid and is required when type = "EPISODIC_OVERRIDE"
+								// - self_managed_configuration {} is only valid and is required when type = "SELF_MANAGED"
+								// - extraction {} is not valid when type = "SUMMARY_OVERRIDE" or type = "SELF_MANAGED"
+								// - consolidation {} is not valid when type = "SELF_MANAGED"
+								// - Exactly one of namespaces or namespace_templates is required except when type = "CUSTOM" and configuration.type = "SELF_MANAGED"
 								tfstringvalidator.AlsoRequiresWhenEquals(
 									awstypes.OverrideTypeEpisodicOverride,
 									path.MatchRelative().AtParent().AtName("reflection"),
@@ -1038,8 +1046,10 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	var rConsolidation awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration
 	var rExtraction awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration
 	var rReflection awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration
+	var rSelfManaged awstypes.ModifySelfManagedConfiguration
 	var consolidation, extraction *overrideDetailsModel
 	var reflection *episodicReflectionOverrideDetailsModel
+	var selfManaged *selfManagedConfigurationModel
 
 	if !m.Consolidation.IsNull() {
 		var d diag.Diagnostics
@@ -1070,6 +1080,16 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 		}
 
 		r.Reflection = &rReflection
+	}
+	if !m.SelfManagedConfiguration.IsNull() {
+		var d diag.Diagnostics
+		selfManaged, d = m.SelfManagedConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		r.SelfManagedConfiguration = &rSelfManaged
 	}
 
 	switch m.Type.ValueEnum() {
@@ -1159,6 +1179,14 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 			}
 
 			rReflection.Value = &r
+		}
+
+	case awstypes.OverrideTypeSelfManaged:
+		if selfManaged != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, selfManaged, &rSelfManaged))
+			if diags.HasError() {
+				return nil, diags
+			}
 		}
 
 	default:
@@ -1314,6 +1342,7 @@ func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v 
 type selfManagedConfigurationModel struct {
 	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
 	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
+	// TODO
 	//TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_condition"`
 }
 

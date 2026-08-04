@@ -776,6 +776,43 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
 			},
 		},
+		{
+			name: "self-managed",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: awstypes.ModifyMemoryStrategyInput{
+				Configuration: &awstypes.ModifyStrategyConfiguration{
+					SelfManagedConfiguration: &awstypes.ModifySelfManagedConfiguration{
+						HistoricalContextWindowSize: aws.Int32(4),
+						InvocationConfiguration: &awstypes.ModifyInvocationConfigurationInput{
+							PayloadDeliveryBucketName: aws.String("bucket001"),
+							TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						},
+					},
+				},
+			},
+		},
 	}
 
 	opts := cmp.Options{
@@ -794,9 +831,11 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			awstypes.EpisodicOverrideReflectionConfigurationInput{},
 			awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{},
 			awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{},
+			awstypes.ModifyInvocationConfigurationInput{},
 			awstypes.ModifyMemoryStrategyInput{},
 			awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration{},
 			awstypes.ModifyReflectionConfigurationMemberEpisodicReflectionConfiguration{},
+			awstypes.ModifySelfManagedConfiguration{},
 			awstypes.ModifyStrategyConfiguration{},
 			awstypes.SemanticOverrideConsolidationConfigurationInput{},
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
