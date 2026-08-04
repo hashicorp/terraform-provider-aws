@@ -165,7 +165,7 @@ func TestAccMailManagerRuleSet_conditionTypes(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
+func TestAccMailManagerRuleSet_actionSimpleTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_rule_set.test"
@@ -180,7 +180,7 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleSetConfigActionTypes(rName),
+				Config: testAccRuleSetConfigActionSimpleTypes(rName),
 				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
@@ -196,6 +196,120 @@ func TestAccMailManagerRuleSet_actionTypes(t *testing.T) {
 						}),
 					})),
 				},
+			},
+		},
+	})
+}
+
+func TestAccMailManagerRuleSet_actionInvokeLambda(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_rule_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccRuleSetPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleSetConfigActionInvokeLambda(rName),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						testAccRuleSetUnionValue("invoke_lambda", map[string]knownvalue.Check{
+							names.AttrFunctionARN:   knownvalue.NotNull(),
+							"invocation_type":       knownvalue.StringExact("EVENT"),
+							names.AttrRoleARN:       knownvalue.NotNull(),
+							"action_failure_policy": knownvalue.StringExact("CONTINUE"),
+							"retry_time_minutes":    knownvalue.Null(),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMailManagerRuleSet_actionPublishToSNS(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_rule_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccRuleSetPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleSetConfigActionPublishToSNS(rName),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						testAccRuleSetUnionValue("publish_to_sns", map[string]knownvalue.Check{
+							names.AttrTopicARN:      knownvalue.NotNull(),
+							names.AttrRoleARN:       knownvalue.NotNull(),
+							"encoding":              knownvalue.StringExact("UTF-8"),
+							"payload_type":          knownvalue.StringExact("HEADERS"),
+							"action_failure_policy": knownvalue.StringExact("CONTINUE"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMailManagerRuleSet_actionWriteToS3(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_rule_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccRuleSetPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleSetConfigActionWriteToS3(rName),
+				Check:  testAccCheckRuleSetExists(ctx, t, resourceName, nil),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule).AtSliceIndex(0).AtMapKey(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						testAccRuleSetUnionValue("write_to_s3", map[string]knownvalue.Check{
+							names.AttrS3Bucket:      knownvalue.NotNull(),
+							names.AttrRoleARN:       knownvalue.NotNull(),
+							"s3_prefix":             knownvalue.StringExact("mail/"),
+							"s3_sse_kms_key_id":     knownvalue.Null(),
+							"action_failure_policy": knownvalue.StringExact("CONTINUE"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -241,7 +355,8 @@ func testAccCheckRuleSetExists(ctx context.Context, t *testing.T, name string, o
 		if rs.Primary.ID == "" {
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, name, errors.New("not set"))
 		}
-		out, err := tfmailmanager.FindRuleSetByID(ctx, acctest.ProviderMeta(ctx, t).MailManagerClient(ctx), rs.Primary.ID)
+		conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
+		out, err := tfmailmanager.FindRuleSetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRuleSet, rs.Primary.ID, err)
 		}
@@ -254,11 +369,12 @@ func testAccCheckRuleSetExists(ctx context.Context, t *testing.T, name string, o
 
 func testAccCheckRuleSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mailmanager_rule_set" {
 				continue
 			}
-			_, err := tfmailmanager.FindRuleSetByID(ctx, acctest.ProviderMeta(ctx, t).MailManagerClient(ctx), rs.Primary.ID)
+			_, err := tfmailmanager.FindRuleSetByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				continue
 			}
@@ -402,7 +518,7 @@ resource "aws_mailmanager_rule_set" "test" {
 `, rName)
 }
 
-func testAccRuleSetConfigActionTypes(rName string) string {
+func testAccRuleSetConfigActionSimpleTypes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mailmanager_rule_set" "test" {
   name = %[1]q
@@ -457,4 +573,158 @@ resource "aws_mailmanager_rule_set" "test" {
   }
 }
 `, rName)
+}
+
+func testAccRuleSetConfigSESRoleBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ses.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccRuleSetConfigActionInvokeLambda(rName string) string {
+	return acctest.ConfigCompose(
+		testAccRuleSetConfigSESRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "%[1]s-lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  filename         = "test-fixtures/lambdatest.zip"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
+  function_name    = %[1]q
+  role             = aws_iam_role.lambda.arn
+  handler          = "exports.example"
+  runtime          = "nodejs22.x"
+}
+
+resource "aws_mailmanager_rule_set" "test" {
+  name = %[1]q
+
+  rule {
+    action {
+      invoke_lambda {
+        function_arn          = aws_lambda_function.test.arn
+        invocation_type       = "EVENT"
+        role_arn              = aws_iam_role.test.arn
+        action_failure_policy = "CONTINUE"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccRuleSetConfigActionPublishToSNS(rName string) string {
+	return acctest.ConfigCompose(
+		testAccRuleSetConfigSESRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sns:Publish"
+      Resource = aws_sns_topic.test.arn
+    }]
+  })
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_mailmanager_rule_set" "test" {
+  name = %[1]q
+
+  rule {
+    action {
+      publish_to_sns {
+        topic_arn             = aws_sns_topic.test.arn
+        role_arn              = aws_iam_role.test.arn
+        encoding              = "UTF-8"
+        payload_type          = "HEADERS"
+        action_failure_policy = "CONTINUE"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccRuleSetConfigActionWriteToS3(rName string) string {
+	return acctest.ConfigCompose(
+		testAccRuleSetConfigSESRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:PutObject", "s3:GetBucketLocation"]
+      Resource = [aws_s3_bucket.test.arn, "${aws_s3_bucket.test.arn}/*"]
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_mailmanager_rule_set" "test" {
+  name = %[1]q
+
+  rule {
+    action {
+      write_to_s3 {
+        s3_bucket             = aws_s3_bucket.test.id
+        role_arn              = aws_iam_role.test.arn
+        s3_prefix             = "mail/"
+        action_failure_policy = "CONTINUE"
+      }
+    }
+  }
+}
+`, rName))
 }
