@@ -35,17 +35,15 @@ const (
 
 // @SDKResource("aws_backup_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.GetBackupPlanOutput")
+// @Testing(preIdentityVersion="v6.57.1")
 func resourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,
 		ReadWithoutTimeout:   resourcePlanRead,
 		UpdateWithoutTimeout: resourcePlanUpdate,
 		DeleteWithoutTimeout: resourcePlanDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

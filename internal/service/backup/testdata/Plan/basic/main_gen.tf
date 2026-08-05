@@ -1,5 +1,7 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_backup_plan" "test" {
-{{- template "region" }}
   name = var.rName
 
   rule {
@@ -7,11 +9,14 @@ resource "aws_backup_plan" "test" {
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
-
-{{- template "tags" . }}
 }
 
 resource "aws_backup_vault" "test" {
-{{- template "region" }}
   name = var.rName
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
