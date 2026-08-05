@@ -1210,6 +1210,48 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m1, m2 awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName1 := "aws_bedrockagentcore_memory_strategy.test"
+	resourceName2 := "aws_bedrockagentcore_memory_strategy.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Two strategies of different types on the same memory: creating the
+				// second must not fail with "too many results" against the first.
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName, "Summarization strategy"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrType, string(awstypes.MemoryStrategyTypeUserPreference)),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrType, string(awstypes.MemoryStrategyTypeSummarization)),
+				),
+			},
+			{
+				// Updating one of the two strategies must not fail either, for the
+				// same reason.
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName, "Summarization strategy updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrDescription, "Summarization strategy updated"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -1620,10 +1662,29 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
 			},
-			// Step 4: Try to remove consolidation block → should ERROR
+			// Step 4: Remove consolidation block → should replace resource
 			{
-				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
-				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block"),
+				Config: testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						"reflection":   knownvalue.ListSizeExact(0),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
 			},
 			//// Step 5: Change override type → should replace resource
 			{
@@ -2105,6 +2166,19 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
   namespace_templates       = [%[3]q]
 }
 `, rName, strategyType, duplicateNamespace))
+}
+
+func testAccMemoryStrategyConfig_multipleTypes(rName, description string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test2" {
+  name                      = "%[1]s_summary"
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = %[3]q
+  namespace_templates       = ["{sessionId}"]
+}
+`, rName, awstypes.MemoryStrategyTypeSummarization, description))
 }
 
 func testAccMemoryStrategyConfig_custom(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {

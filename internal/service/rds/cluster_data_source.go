@@ -70,6 +70,10 @@ func dataSourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 				"db_cluster_parameter_group_name": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -223,6 +227,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
 	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
+	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.

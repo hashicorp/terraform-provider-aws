@@ -371,13 +371,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `topic` - (Optional) Notification configuration to SNS Topic. See below.
 
-### `lambda_function`
+### `lambda_function` Block
 
 * `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
@@ -385,15 +385,15 @@ The following arguments are optional:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `lambda_function_arn` - (Required) Lambda function ARN.
 
-### `queue`
+### `queue` Block
 
-* `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `queue_arn` - (Required) SQS queue ARN.
 
-### `topic`
+### `topic` Block
 
 * `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.

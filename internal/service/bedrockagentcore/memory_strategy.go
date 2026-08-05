@@ -72,7 +72,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			"memory_execution_role_arn": schema.StringAttribute{
 				CustomType:         fwtypes.ARNType,
 				Optional:           true,
-				DeprecationMessage: "memory_execution_role_arn is deprecated. The attribute can be removed from configuration.",
+				DeprecationMessage: "memory_execution_role_arn is deprecated. Use memory_execution_role_arn on the aws_bedrockagentcore_memory resource instead.",
 			},
 			"memory_id": schema.StringAttribute{
 				Required: true,
@@ -175,7 +175,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("consolidation"),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -192,7 +192,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							CustomType: fwtypes.NewListNestedObjectTypeOf[overrideDetailsModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("extraction"),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -211,7 +211,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("reflection"),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -257,66 +257,6 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
-type errorIfSingleBlockRemoved_ struct {
-	label string
-}
-
-func errorIfSingleBlockRemoved(label string) planmodifier.List {
-	return errorIfSingleBlockRemoved_{label: label}
-}
-
-func (m errorIfSingleBlockRemoved_) Description(context.Context) string {
-	return "Disallow removing previously configured " + m.label + " block"
-}
-
-func (m errorIfSingleBlockRemoved_) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	// Skip create or destroy.
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
-		return
-	}
-
-	// Defer until known values
-	if req.StateValue.IsUnknown() || req.PlanValue.IsUnknown() {
-		return
-	}
-
-	var plannedType awstypes.OverrideType
-	overrideTypePath := path.Root(names.AttrConfiguration).AtListIndex(0).AtName(names.AttrType)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, overrideTypePath, &plannedType))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var stateType awstypes.OverrideType
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, overrideTypePath, &stateType))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if plannedType != stateType {
-		return
-	}
-
-	stateList, sDiags := req.StateValue.ToListValue(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, sDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	planList, pDiags := req.PlanValue.ToListValue(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, pDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
-		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
-	}
-}
-
 func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
@@ -355,9 +295,9 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		}
 
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
-		found, err := tfresource.AssertSingleValueResult(out.Memory.Strategies, func(v *awstypes.MemoryStrategy) bool {
+		found, err := tfresource.AssertSingleValueResult(tfslices.Filter(out.Memory.Strategies, func(v awstypes.MemoryStrategy) bool {
 			return aws.ToString(v.Name) == name
-		})
+		}))
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
@@ -479,9 +419,9 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				return
 			}
 
-			found, err := tfresource.AssertSingleValueResult(out.Memory.Strategies, func(v *awstypes.MemoryStrategy) bool {
+			found, err := tfresource.AssertSingleValueResult(tfslices.Filter(out.Memory.Strategies, func(v awstypes.MemoryStrategy) bool {
 				return aws.ToString(v.StrategyId) == memoryStrategyID
-			})
+			}))
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return

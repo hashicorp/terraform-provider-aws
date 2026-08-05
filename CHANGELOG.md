@@ -1,30 +1,44 @@
 ## 6.58.0 (Unreleased)
 
-BREAKING CHANGES:
-
-* resource/aws_db_instance: `character_set_name` can no longer be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-
-NOTES:
-
-* resource/aws_dms_s3_endpoint: The `kms_key_arn` attribute has been deprecated. Use `server_side_encryption_kms_key_id` instead ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-
 FEATURES:
 
-* **New Action:** `aws_sfn_start_execution` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Data Source:** `aws_s3control_access_points` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Ephemeral Resource:** `aws_sts_web_identity_token` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Function:** `arn_parse` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Guide:** `Tag Policy Compliance` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New List Resource:** `aws_db_subnet_group` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
-* **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* **New List Resource:** `aws_mailmanager_rule_set` ([#49257](https://github.com/hashicorp/terraform-provider-aws/issues/49257))
+* **New List Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
+* **New List Resource:** `aws_prometheus_scraper` ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
+* **New List Resource:** `aws_prometheus_scraper_logging_configuration` ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
+* **New List Resource:** `aws_resiliencehubv2_policy` ([#48321](https://github.com/hashicorp/terraform-provider-aws/issues/48321))
+* **New Resource:** `aws_mailmanager_rule_set` ([#49257](https://github.com/hashicorp/terraform-provider-aws/issues/49257))
+* **New Resource:** `aws_prometheus_anomaly_detector` ([#49139](https://github.com/hashicorp/terraform-provider-aws/issues/49139))
+* **New Resource:** `aws_prometheus_scraper_logging_configuration` ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
+* **New Resource:** `aws_resiliencehubv2_policy` ([#48321](https://github.com/hashicorp/terraform-provider-aws/issues/48321))
 
 ENHANCEMENTS:
 
-* resource/aws_ssm_resource_data_sync: Add `s3_destination.destination_data_sharing` argument ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* resource/aws_api_gateway_rest_api: Add configurable resource timeouts. ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
+* resource/aws_dx_connection: Add `state` attribute ([#42150](https://github.com/hashicorp/terraform-provider-aws/issues/42150))
+* resource/aws_ecs_capacity_provider: Add `RESERVED` as a valid value for `managed_instances_provider.instance_launch_template.capacity_option_type` ([#48816](https://github.com/hashicorp/terraform-provider-aws/issues/48816))
+* resource/aws_ecs_capacity_provider: Add `local_storage_configuration` attribute to `managed_instances_provider.instance_launch_template` ([#47513](https://github.com/hashicorp/terraform-provider-aws/issues/47513))
+* resource/aws_ecs_capacity_provider: Add `managed_instances_provider.instance_launch_template.capacity_reservations` argument ([#48816](https://github.com/hashicorp/terraform-provider-aws/issues/48816))
+* resource/aws_glue_catalog_table_optimizer: Add `configuration.compaction_configuration` argument ([#43868](https://github.com/hashicorp/terraform-provider-aws/issues/43868))
+* resource/aws_prometheus_scraper: Add Resource Identity support ([#47466](https://github.com/hashicorp/terraform-provider-aws/issues/47466))
+* resource/aws_prometheus_scraper: Add `destination.cloudwatch` configuration block for CloudWatch Metrics destination support ([#49088](https://github.com/hashicorp/terraform-provider-aws/issues/49088))
 
 BUG FIXES:
 
-* resource/aws_glue_catalog_table: Fix `Invalid address to set` errors when reading `partition_keys.parameters` ([#README.md](https://github.com/hashicorp/terraform-provider-aws/issues/README.md))
+* resource/aws_api_gateway_rest_api: Wait for the REST API to reach an available state on create and update, and to be fully deleted on delete, preventing intermittent `BadRequestException: There is already an update in progress` errors ([#49205](https://github.com/hashicorp/terraform-provider-aws/issues/49205))
+* resource/aws_appstream_stack: Fix `embed_host_domains` not being sent to the AWS API on update, which caused a permanent plan diff when the argument was added or changed on an existing stack ([#49015](https://github.com/hashicorp/terraform-provider-aws/issues/49015))
+* resource/aws_bedrockagent_data_source: Fix validator incorrectly requiring `bedrock_data_automation_configuration` when `parsing_strategy = "BEDROCK_DATA_AUTOMATION"`, a regression introduced in v6.56.0 ([#49111](https://github.com/hashicorp/terraform-provider-aws/issues/49111))
+* resource/aws_bedrockagentcore_agent_runtime: Allow `:` (colon) in the `match_value_string` and `match_value_string_list` attributes of `authorizer_configuration.custom_jwt_authorizer.custom_claim.authorizing_claim_match_value.claim_match_value` ([#48437](https://github.com/hashicorp/terraform-provider-aws/issues/48437))
+* resource/aws_bedrockagentcore_memory_strategy: Fix `Value Conversion Error ... Received null value, however the target type cannot handle null values` errors ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
+* resource/aws_bedrockagentcore_memory_strategy: Fix `too many results: wanted 1, got 2` error when creating or updating a strategy on a memory that already has another strategy of a different type ([#49250](https://github.com/hashicorp/terraform-provider-aws/issues/49250))
+* resource/aws_bedrockagentcore_memory_strategy: Replace resource rather than erroring when `configuration.consolidation`, `configuration.extraction`, or `configuration.reflection` blocks are removed ([#49188](https://github.com/hashicorp/terraform-provider-aws/issues/49188))
+* resource/aws_ecs_service: Fix `sigint_rollback` falsely rolling back healthy deployments during `wait_for_steady_state` ([#49077](https://github.com/hashicorp/terraform-provider-aws/issues/49077))
+* resource/aws_ecs_service: Prevent non-EBS deployment volume configurations from being written to state ([#48947](https://github.com/hashicorp/terraform-provider-aws/issues/48947))
+* resource/aws_elasticache_replication_group: Fix perpetual diff when changes are pending for the next maintenance window (`apply_immediately = false`) ([#48246](https://github.com/hashicorp/terraform-provider-aws/issues/48246))
+* resource/aws_glue_catalog_table: Fix `InvalidInputException: StorageDescriptor is not allowed` error when creating or updating ATHENA-dialect views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
+* resource/aws_glue_catalog_table: Fix `InvalidInputException` error when creating or updating SPARK-dialect views without an explicit `storage_descriptor` block ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
+* resource/aws_glue_catalog_table: Fix perpetual diff on `view_definition.representations` fields (`validation_connection`, `view_original_text`, `view_expanded_text`) that AWS Glue does not echo back for validated ATHENA views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
+* resource/aws_route53recoverycontrolconfig_safety_rule: Fix crash when the create operation returns an error ([#49155](https://github.com/hashicorp/terraform-provider-aws/issues/49155))
 * resource/aws_ssm_parameter: Correctly imports when passing ARN value. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 * resource/aws_ssm_parameter: Prevents errors when importing specific version. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 
@@ -32,7 +46,7 @@ BUG FIXES:
 
 NOTES:
 
-* resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. This attribute should be removed from configurations ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
+* resource/aws_bedrockagentcore_memory_strategy: The `memory_execution_role_arn` attribute has been deprecated. Use the `memory_execution_role_arn` attribute on the `aws_bedrockagentcore_memory` resource instead ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
 * resource/aws_bedrockagentcore_memory_strategy: The `namespaces` attribute has been deprecated. All configurations using `namespaces` should be updated to use the `namespace_templates` attribute instead ([#49140](https://github.com/hashicorp/terraform-provider-aws/issues/49140))
 
 FEATURES:
