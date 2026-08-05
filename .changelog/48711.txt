@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_policy: Add `enforcement_mode` argument
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_policy: Add `policy` block to `definition`
+```
