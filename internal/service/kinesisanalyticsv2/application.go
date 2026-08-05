@@ -809,6 +809,25 @@ func resourceApplication() *schema.Resource {
 						},
 					},
 				},
+				"application_maintenance_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application_maintenance_window_start_time": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:MM 24-hour format"),
+							},
+							"application_maintenance_window_end_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"application_mode": {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -925,6 +944,27 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	// CreateTimestamp is required for deletion, so persist to state now in case of subsequent errors and destroy being called without refresh.
 	d.Set("create_timestamp", aws.ToTime(output.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 
+	if v, ok := d.GetOk("application_maintenance_configuration"); ok {
+		applicationMaintenanceConfigurationUpdate := expandApplicationMaintenanceConfigurationUpdate(v.([]any))
+
+		if applicationMaintenanceConfigurationUpdate != nil {
+			input := &kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationInput{
+				ApplicationName:                            aws.String(applicationName),
+				ApplicationMaintenanceConfigurationUpdate: applicationMaintenanceConfigurationUpdate,
+			}
+
+			if _, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationOutput, error) {
+				return conn.UpdateApplicationMaintenanceConfiguration(ctx, input)
+			}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s) maintenance configuration: %s", applicationName, err)
+			}
+
+			if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", applicationName, err)
+			}
+		}
+	}
+
 	if _, ok := d.GetOk("start_application"); ok {
 		if err := startApplication(ctx, conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -952,6 +992,9 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	if err := d.Set("application_configuration", flattenApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting application_configuration: %s", err)
+	}
+	if err := d.Set("application_maintenance_configuration", flattenApplicationMaintenanceConfigurationDescription(application.ApplicationMaintenanceConfigurationDescription)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting application_maintenance_configuration: %s", err)
 	}
 	d.Set("application_mode", application.ApplicationMode)
 	d.Set(names.AttrARN, application.ApplicationARN)
@@ -1431,6 +1474,27 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %s", applicationName, operationID, err)
 				}
+			}
+
+			if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("application_maintenance_configuration") {
+		applicationMaintenanceConfigurationUpdate := expandApplicationMaintenanceConfigurationUpdate(d.Get("application_maintenance_configuration").([]any))
+
+		if applicationMaintenanceConfigurationUpdate != nil {
+			input := &kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationInput{
+				ApplicationName:                            aws.String(applicationName),
+				ApplicationMaintenanceConfigurationUpdate: applicationMaintenanceConfigurationUpdate,
+			}
+
+			if _, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationOutput, error) {
+				return conn.UpdateApplicationMaintenanceConfiguration(ctx, input)
+			}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s) maintenance configuration: %s", d.Id(), err)
 			}
 
 			if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1982,6 +2046,22 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 	}
 
 	return applicationConfiguration
+}
+
+func expandApplicationMaintenanceConfigurationUpdate(vApplicationMaintenanceConfiguration []any) *awstypes.ApplicationMaintenanceConfigurationUpdate {
+	if len(vApplicationMaintenanceConfiguration) == 0 || vApplicationMaintenanceConfiguration[0] == nil {
+		return nil
+	}
+
+	applicationMaintenanceConfigurationUpdate := &awstypes.ApplicationMaintenanceConfigurationUpdate{}
+
+	mApplicationMaintenanceConfiguration := vApplicationMaintenanceConfiguration[0].(map[string]any)
+
+	if vApplicationMaintenanceWindowStartTime, ok := mApplicationMaintenanceConfiguration["application_maintenance_window_start_time"].(string); ok && vApplicationMaintenanceWindowStartTime != "" {
+		applicationMaintenanceConfigurationUpdate.ApplicationMaintenanceWindowStartTimeUpdate = aws.String(vApplicationMaintenanceWindowStartTime)
+	}
+
+	return applicationMaintenanceConfigurationUpdate
 }
 
 func expandApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []any) *awstypes.ApplicationCodeConfigurationUpdate {
@@ -2705,6 +2785,19 @@ func expandRunConfigurationUpdate(vRunConfigurationUpdate []any) *awstypes.RunCo
 	}
 
 	return runConfigurationUpdate
+}
+
+func flattenApplicationMaintenanceConfigurationDescription(applicationMaintenanceConfigurationDescription *awstypes.ApplicationMaintenanceConfigurationDescription) []any {
+	if applicationMaintenanceConfigurationDescription == nil {
+		return []any{}
+	}
+
+	mApplicationMaintenanceConfiguration := map[string]any{
+		"application_maintenance_window_start_time": aws.ToString(applicationMaintenanceConfigurationDescription.ApplicationMaintenanceWindowStartTime),
+		"application_maintenance_window_end_time":   aws.ToString(applicationMaintenanceConfigurationDescription.ApplicationMaintenanceWindowEndTime),
+	}
+
+	return []any{mApplicationMaintenanceConfiguration}
 }
 
 func flattenApplicationConfigurationDescription(applicationConfigurationDescription *awstypes.ApplicationConfigurationDescription) []any {
