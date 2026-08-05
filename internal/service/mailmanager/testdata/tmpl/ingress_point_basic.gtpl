@@ -29,4 +29,13 @@ resource "aws_mailmanager_traffic_policy" "test" {
 
 resource "aws_mailmanager_rule_set" "test" {
   name = var.rName
+
+  rule {
+    action {
+      add_header {
+        header_name  = "X-Test"
+        header_value = "example"
+      }
+    }
+  }
 }
