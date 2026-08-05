@@ -234,6 +234,42 @@ func TestAccQuickSightDashboard_pieChartVisualArcThickness(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDashboard_lineChartVisualMissingDataConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var dashboard awstypes.Dashboard
+	resourceName := "aws_quicksight_dashboard.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDashboardConfig_lineChartVisualMissingDataConfiguration(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.line_chart_visual.0.chart_configuration.0.primary_y_axis_display_options.0.missing_data_configuration.0.treatment_option", string(awstypes.MissingDataTreatmentOptionShowAsBlank)),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.line_chart_visual.0.chart_configuration.0.secondary_y_axis_display_options.0.missing_data_configuration.0.treatment_option", string(awstypes.MissingDataTreatmentOptionShowAsZero)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
+			},
+		},
+	})
+}
+
 func testAccCheckDashboardDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
@@ -643,6 +679,53 @@ resource "aws_quicksight_dashboard" "test" {
             donut_options {
               arc_options {
                 arc_thickness = "WHOLE"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDashboardConfig_lineChartVisualMissingDataConfiguration(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDashboardConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_dashboard" "test" {
+  dashboard_id        = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        line_chart_visual {
+          visual_id = "LineChart"
+          title {
+            format_text {
+              plain_text = "Line Chart Test"
+            }
+          }
+          chart_configuration {
+            field_wells {
+              line_chart_aggregated_field_wells {}
+            }
+            primary_y_axis_display_options {
+              missing_data_configuration {
+                treatment_option = "SHOW_AS_BLANK"
+              }
+            }
+            secondary_y_axis_display_options {
+              missing_data_configuration {
+                treatment_option = "SHOW_AS_ZERO"
               }
             }
           }
