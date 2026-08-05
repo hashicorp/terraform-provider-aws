@@ -1,5 +1,13 @@
 ## 6.59.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+
+ENHANCEMENTS:
+
+* resource/aws_backup_selection: Add resource identity support ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+
 ## 6.58.0 (August 5, 2026)
 
 FEATURES:
