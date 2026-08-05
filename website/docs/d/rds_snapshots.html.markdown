@@ -33,7 +33,7 @@ data "aws_rds_snapshots" "example" {
 
 ## Argument Reference
 
-The data source supports the following arguments:
+This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance.
@@ -43,7 +43,7 @@ The data source supports the following arguments:
 * `include_shared` - (Optional) Set this value to `true` to include shared manual DB snapshots from other AWS accounts that this AWS account has been given permission to copy or restore, otherwise set this value to `false`. The default is `false`.
 * `snapshot_type` - (Optional) Type of snapshots to be returned. If you don't specify a SnapshotType value, then both automated and manual snapshots are returned. Shared and public DB snapshots are not included in the returned results by default. Possible values are `automated`, `manual`, `shared`, `public` and `awsbackup`.
 
-### filter Configuration Block
+### `filter` Block
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the RDS DescribeDBSnapshots API Reference.
 * `values` - (Required) Set of values accepted for the given filter field. Results will be selected if any given value matches.
@@ -51,6 +51,10 @@ The data source supports the following arguments:
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
+
+* `snapshots` - List of snapshots. 
+
+### `snapshots` Attribute Reference
 
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zone` - Name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
@@ -64,9 +68,9 @@ This data source exports the following attributes in addition to the arguments a
 * `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Option group name for the DB snapshot.
-* `original_snapshot_create_time` - The time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
+* `original_snapshot_create_time` - Time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 * `port` - Port that the database engine was listening on at the time of the snapshot.
-* `snapshot_create_time` - The time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes when the snapshot is copied.
+* `snapshot_create_time` - Time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes when the snapshot is copied.
 * `snapshot_type` - Type of the DB snapshot.
 * `source_db_snapshot_identifier` - DB snapshot ARN that the DB snapshot was copied from. Only set for cross-account or cross-region copies.
 * `source_region` - Region that the DB snapshot was created in or copied from.
