@@ -62,6 +62,7 @@ func TestAccResilienceHubV2System_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("system_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
@@ -168,6 +169,98 @@ func TestAccResilienceHubV2System_description(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2System_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var system awstypes.System
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/System/kms_key_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemExists(ctx, t, resourceName, &system),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2System_sharingEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var system awstypes.System
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/System/sharing_enabled/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"sharing_enabled": config.BoolVariable(true),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemExists(ctx, t, resourceName, &system),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/System/sharing_enabled/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"sharing_enabled": config.BoolVariable(false),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemExists(ctx, t, resourceName, &system),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(false)),
 				},
 			},
 		},
