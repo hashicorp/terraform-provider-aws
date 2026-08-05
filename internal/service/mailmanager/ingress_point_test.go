@@ -63,7 +63,7 @@ func testAccMailManagerIngressPoint_basic(t *testing.T) {
 				Config: testAccIngressPointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`ingress-point/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`mailmanager-ingress-point/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
