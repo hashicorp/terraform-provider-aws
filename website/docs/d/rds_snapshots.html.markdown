@@ -78,4 +78,3 @@ This data source exports the following attributes in addition to the arguments a
 * `storage_type` - Storage type associated with the DB snapshot.
 * `tags` - Map of tags assigned to the snapshot.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
-
