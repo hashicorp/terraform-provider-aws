@@ -68,7 +68,7 @@ func (l *harnessListResource) List(ctx context.Context, request list.ListRequest
 
 			var data harnessResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data, true))
 				if result.Diagnostics.HasError() {
 					return
 				}
