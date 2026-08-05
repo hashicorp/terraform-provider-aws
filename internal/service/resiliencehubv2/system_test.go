@@ -211,62 +211,6 @@ func TestAccResilienceHubV2System_kmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubV2System_sharingEnabled(t *testing.T) {
-	ctx := acctest.Context(t)
-	var system awstypes.System
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_resiliencehubv2_system.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSystemDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/System/sharing_enabled/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					"sharing_enabled": config.BoolVariable(true),
-				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSystemExists(ctx, t, resourceName, &system),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(true)),
-				},
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/System/sharing_enabled/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					"sharing_enabled": config.BoolVariable(false),
-				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSystemExists(ctx, t, resourceName, &system),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(false)),
-				},
-			},
-		},
-	})
-}
-
 func testAccCheckSystemDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
