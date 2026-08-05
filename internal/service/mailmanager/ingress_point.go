@@ -432,7 +432,6 @@ func (r *ingressPointResource) flatten(ctx context.Context, apiObject *mailmanag
 	return diags
 }
 
-
 func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id string, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
