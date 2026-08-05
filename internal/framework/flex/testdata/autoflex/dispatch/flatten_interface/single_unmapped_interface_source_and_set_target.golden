@@ -45,8 +45,17 @@
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
   },
   {
-    "@level": "trace",
-    "@message": "Flattening null value",
+    "@level": "info",
+    "@message": "Target implements flex.Flattener",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
+  },
+  {
+    "@level": "warn",
+    "@message": "No values set by Flatten",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
