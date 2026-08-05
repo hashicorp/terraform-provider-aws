@@ -417,7 +417,7 @@ func (r *ingressPointResource) Delete(ctx context.Context, req resource.DeleteRe
 
 func (r *ingressPointResource) flatten(ctx context.Context, apiObject *mailmanager.GetIngressPointOutput, data *ingressPointResourceModel) diag.Diagnostics {
 	// AWS always returns a NetworkConfiguration even when the user did not
-	// configure one. Preserve the existing value so we don't introduce drift.
+	// configure one. Preserve the existing value to avoid drift.
 	priorNetworkConfiguration := data.NetworkConfiguration
 
 	diags := flex.Flatten(ctx, apiObject, data, flex.WithFieldNamePrefix("IngressPoint"))
