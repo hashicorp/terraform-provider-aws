@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
@@ -34,6 +35,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -135,7 +137,7 @@ func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRe
 
 func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data senderIDResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -143,7 +145,7 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	var input pinpointsmsvoicev2.RequestSenderIdInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -158,14 +160,13 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	}, "ValidationException", "SENDER_ID_REQUIRES_REGISTRATION")
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("requesting End User Messaging SMS Sender ID (%s)", data.SenderID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.SenderID.String())
 		return
 	}
 
 	output := outputRaw.(*pinpointsmsvoicev2.RequestSenderIdOutput)
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -180,19 +181,18 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	// here so Create-time state matches what Read produces and import stays consistent.
 	data.MessageTypes = flattenMessageTypes(ctx, output.MessageTypes)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *senderIDResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data senderIDResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
@@ -201,33 +201,32 @@ func (r *senderIDResource) Read(ctx context.Context, request resource.ReadReques
 	out, err := findSenderIDByTwoPartKey(ctx, conn, data.SenderID.ValueString(), data.ISOCountryCode.ValueString())
 
 	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading End User Messaging SMS Sender ID (%s)", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
-	response.Diagnostics.Append(data.flatten(ctx, out)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, data.flatten(ctx, out))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *senderIDResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new senderIDResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -244,18 +243,17 @@ func (r *senderIDResource) Update(ctx context.Context, request resource.UpdateRe
 		_, err := conn.UpdateSenderId(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating End User Messaging SMS Sender ID (%s)", new.ID.ValueString()), err.Error())
-
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID.String())
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *senderIDResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data senderIDResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -272,8 +270,7 @@ func (r *senderIDResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("releasing End User Messaging SMS Sender ID (%s)", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 }
@@ -297,7 +294,7 @@ func (model *senderIDResourceModel) InitFromID() error {
 	parts := strings.Split(model.ID.ValueString(), senderIDResourceIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", model.ID.ValueString(), senderIDResourceIDSeparator)
+		return smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", model.ID.ValueString(), senderIDResourceIDSeparator))
 	}
 
 	model.SenderID = types.StringValue(parts[0])
@@ -320,7 +317,7 @@ type senderIDImportID struct{}
 func (senderIDImportID) Parse(id string) (string, map[string]any, error) {
 	senderID, isoCountryCode, found := strings.Cut(id, senderIDResourceIDSeparator)
 	if !found || senderID == "" || isoCountryCode == "" {
-		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", id, senderIDResourceIDSeparator)
+		return "", nil, smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", id, senderIDResourceIDSeparator))
 	}
 
 	return id, map[string]any{
@@ -342,7 +339,7 @@ func (senderIDImportID) Create(ctx context.Context, state tfsdk.State) string {
 func (model *senderIDResourceModel) flatten(ctx context.Context, out *awstypes.SenderIdInformation) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(fwflex.Flatten(ctx, out, model)...)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, model))
 	if diags.HasError() {
 		return diags
 	}
@@ -385,10 +382,10 @@ func findSenderID(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *p
 	output, err := findSenderIDs(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findSenderIDs(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeSenderIdsInput) ([]awstypes.SenderIdInformation, error) {
@@ -399,13 +396,13 @@ func findSenderIDs(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
-			}
+			})
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		output = append(output, page.SenderIds...)

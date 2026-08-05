@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
 
 // @FrameworkListResource("aws_pinpointsmsvoicev2_sender_id")
@@ -61,7 +62,7 @@ func (l *senderIDListResource) List(ctx context.Context, request list.ListReques
 
 			var data senderIDResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(data.flatten(ctx, item)...)
+				smerr.AddEnrich(ctx, &result.Diagnostics, data.flatten(ctx, item))
 				if result.Diagnostics.HasError() {
 					return
 				}
