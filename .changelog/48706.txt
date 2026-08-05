@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `connector` MCP target configuration block with `parameter_values` and `parameter_overrides` support
+```

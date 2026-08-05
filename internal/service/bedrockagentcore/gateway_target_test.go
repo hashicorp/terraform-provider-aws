@@ -2365,3 +2365,401 @@ resource "aws_route_table_association" "test" {
 }
 `, rName, subnetCount))
 }
+
+// skipIfKnowledgeBaseIDEnvVarNotSet skips the test unless
+// TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID is set to the ID of an ACTIVE Bedrock
+// knowledge base in the test account/region. The connector "bedrock-knowledge-
+// bases" requires entitlement plus a real KB the gateway role can call
+// bedrock:Retrieve on — there is no offline way to fake either, so the live
+// connector test is gated behind this env var (mirroring the OSS-collection
+// and Kendra-index gating in internal/service/bedrockagent/knowledge_base_test.go).
+func skipIfKnowledgeBaseIDEnvVarNotSet(t *testing.T) string {
+	t.Helper()
+	return acctest.SkipIfEnvVarNotSet(t, "TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID")
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector exercises
+// the connector MCP target with a LIVE create against the "bedrock-knowledge-
+// bases" connector and a real Bedrock knowledge base. The KB id is supplied
+// via the TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID environment variable; the test is
+// skipped when it is unset. The gateway execution role is granted
+// bedrock:Retrieve on the KB ARN — without it, CreateGatewayTarget fails with
+// "Insufficient permissions to validate the specified resource."
+//
+// The connector's contract was confirmed by probing CreateGatewayTarget
+// directly: the only valid configuration name is "Retrieve", its only
+// recognized parameter is "knowledgeBaseId" (e.g. "numberOfResults" is
+// rejected), and the connector's Retrieve tool requires a MANAGED-type
+// knowledge base — a VECTOR KB fails with "Retrieve is not supported for this
+// knowledge base type". So the supplied KB id must belong to a MANAGED (fully
+// managed) knowledge base. The gateway execution role needs both
+// bedrock:Retrieve and bedrock:GetKnowledgeBase on the KB (the connector
+// validation calls GetKnowledgeBase to inspect the KB type). A time_sleep
+// guards against the freshly-created inline policy not yet having propagated
+// when the target is validated.
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
+	ctx := acctest.Context(t)
+	kbID := skipIfKnowledgeBaseIDEnvVarNotSet(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.name", "Retrieve"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters
+// is a focused plan-only test for the `parameter_values` JSON round-trip and
+// `parameter_overrides` block. Kept separate from the main connector test so
+// the parameter-handling code paths are easy to target in isolation when
+// `parameter_values` semantics evolve. Plan-only for the same reason as the
+// main connector test — see its doc comment.
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, "bedrock-knowledge-bases", "retrieve"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, connectorID, toolName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      connector {
+        source {
+          connector_id = %[2]q
+        }
+
+        enabled = [%[3]q]
+
+        configurations {
+          name        = %[3]q
+          description = "Tool exercised via plan-only test"
+
+          parameter_values = jsonencode({
+            knowledgeBaseId = "EXAMPLEKB123"
+          })
+
+          parameter_overrides {
+            path        = "/numberOfResults"
+            description = "Number of results to retrieve"
+            visible     = true
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, connectorID, toolName))
+}
+
+// testAccGatewayTargetConfig_targetConfigurationConnectorLive builds a config
+// that creates a real connector gateway target backed by a pre-provisioned
+// Bedrock knowledge base. It grants the gateway execution role bedrock:Retrieve
+// on the KB ARN (required for CreateGatewayTarget to validate the resource)
+// and uses the GATEWAY_IAM_ROLE credential provider per the API contract for
+// the bedrock-knowledge-bases connector.
+//
+// testAccGatewayTargetConfig_base already declares data.aws_partition.current
+// and data.aws_region.current, so this overlay only adds the caller-identity
+// data source and the Retrieve policy.
+func testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role_policy" "kb_retrieve" {
+  name = "%[1]s-kb-retrieve"
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "bedrock:Retrieve",
+        "bedrock:GetKnowledgeBase",
+      ]
+      Resource = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/%[2]s"
+    }]
+  })
+}
+
+# The gateway target create validates by assuming the gateway execution role
+# and calling the connector; wait for the freshly-created inline policy to
+# propagate before creating the target, otherwise CreateGatewayTarget fails
+# with "Insufficient permissions to validate the specified resource."
+resource "time_sleep" "wait_for_kb_retrieve" {
+  create_duration = "30s"
+  depends_on      = [aws_iam_role_policy.kb_retrieve]
+}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      connector {
+        source {
+          connector_id = "bedrock-knowledge-bases"
+        }
+
+        configurations {
+          name = "Retrieve"
+
+          parameter_values = jsonencode({
+            knowledgeBaseId = %[2]q
+          })
+        }
+      }
+    }
+  }
+
+  depends_on = [time_sleep.wait_for_kb_retrieve]
+}
+`, rName, kbID))
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation confirms the mcp
+// target union requires exactly one member and credential_provider_configuration
+// requires at least one provider, both at plan time. Previously setting multiple mcp
+// members silently dropped all but the first (perpetual diff) and an empty
+// credential_provider_configuration {} only failed at apply.
+func TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_mcpMultipleMembers(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpNoMember(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_credentialEmpty(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+func testAccGatewayTargetConfig_mcpMultipleMembers(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+      }
+      open_api_schema {
+        inline_payload {
+          payload = "{}"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_mcpNoMember(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {}
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_credentialEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {}
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_descriptionClearing verifies that
+// removing the optional description on update converges to an empty plan.
+// description is plain Optional (not Computed), so the set->unset transition
+// must leave no perpetual diff or "inconsistent result after apply".
+func TestAccBedrockAgentCoreGatewayTarget_descriptionClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: create with description set.
+			{
+				Config: testAccGatewayTargetConfig_description(rName, "initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: identical config with description removed; must converge.
+			{
+				Config: testAccGatewayTargetConfig_descriptionRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// testAccGatewayTargetConfig_description and _descriptionRemoved are an
+// identical pair differing only by the optional description argument, so the
+// only change under test is clearing description.
+func testAccGatewayTargetConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+  description        = %[2]q
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}
+`, rName, description))
+}
+
+func testAccGatewayTargetConfig_descriptionRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}
+`, rName))
+}

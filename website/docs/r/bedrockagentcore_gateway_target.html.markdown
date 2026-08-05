@@ -569,10 +569,42 @@ The `target_configuration` block supports exactly one of the following:
 The `mcp` block supports exactly one of the following:
 
 * `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway`](#api_gateway) below.
+* `connector` - (Optional) Connector integration target configuration. Connectors provide pre-built integrations with AWS services and third-party tools. See [`connector`](#connector) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda`](#lambda) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server`](#mcp_server) below.
 * `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
 * `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
+
+### `connector`
+
+The `connector` block supports the following:
+
+* `source` - (Required) Source configuration identifying which connector to use. See [`source`](#source) below.
+* `configurations` - (Optional) Per-tool configurations for the connector. See [`configurations`](#configurations) below.
+* `enabled` - (Optional) List of tool names to enable from this connector. If omitted, all tools provided by the connector are enabled.
+
+### `source`
+
+The `source` block supports the following:
+
+* `connector_id` - (Required) Identifier for the connector integration (for example, `bedrock-knowledge-bases`).
+
+### `configurations`
+
+The `configurations` block supports the following:
+
+* `name` - (Required) Tool or operation name (for example, `retrieve` or `webSearch`).
+* `description` - (Optional) Agent-facing description override for this tool.
+* `parameter_values` - (Optional) JSON-encoded parameters to set as fixed or default values when provisioning this tool. Free-form JSON whose schema is defined by the connector.
+* `parameter_overrides` - (Optional) Parameter overrides to control parameter visibility and descriptions. See [`parameter_overrides`](#parameter_overrides) below.
+
+### `parameter_overrides`
+
+The `parameter_overrides` block supports the following:
+
+* `path` - (Required) JSON Pointer path identifying the parameter (for example, `/numberOfResults` or `/filter`).
+* `description` - (Optional) Agent-facing description override for this parameter.
+* `visible` - (Optional) Whether this parameter is visible to the agent. If not specified, uses the service default.
 
 ### `api_gateway`
 

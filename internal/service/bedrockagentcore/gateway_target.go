@@ -17,8 +17,10 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -45,6 +47,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -391,6 +394,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
 									path.MatchRelative().AtParent().AtName("oauth"),
 								),
+								// At least one credential provider must be configured; an empty
+								// credential_provider_configuration {} otherwise passed validation
+								// and only failed at apply. Combined with ConflictsWith this yields
+								// exactly-one semantics.
+								listvalidator.AtLeastOneOf(
+									path.MatchRelative().AtParent().AtName("api_key"),
+									path.MatchRelative().AtParent().AtName("caller_iam_credentials"),
+									path.MatchRelative().AtParent().AtName("gateway_iam_role"),
+									path.MatchRelative().AtParent().AtName("jwt_passthrough"),
+									path.MatchRelative().AtParent().AtName("oauth"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -609,6 +623,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.NewListNestedObjectTypeOf[apiGatewayTargetConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+											// Exactly one mcp target type must be set. Without this, setting
+											// two members passed validation and apply "succeeded" while Expand
+											// silently kept only the first, leaving a perpetual diff.
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("api_gateway"),
+												path.MatchRelative().AtParent().AtName("connector"),
+												path.MatchRelative().AtParent().AtName("lambda"),
+												path.MatchRelative().AtParent().AtName("mcp_server"),
+												path.MatchRelative().AtParent().AtName("open_api_schema"),
+												path.MatchRelative().AtParent().AtName("smithy_model"),
+											),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -657,6 +682,72 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 																		},
 																		names.AttrPath: schema.StringAttribute{
 																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"connector": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[connectorTargetConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"enabled": schema.ListAttribute{
+													CustomType:  fwtypes.ListOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												names.AttrSource: schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[connectorSourceModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"connector_id": schema.StringAttribute{
+																Required: true,
+															},
+														},
+													},
+												},
+												"configurations": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[connectorConfigurationModel](ctx),
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrName: schema.StringAttribute{
+																Required: true,
+															},
+															names.AttrDescription: schema.StringAttribute{
+																Optional: true,
+															},
+															"parameter_values": schema.StringAttribute{
+																CustomType: jsontypes.NormalizedType{},
+																Optional:   true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"parameter_overrides": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[connectorParameterOverrideModel](ctx),
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrPath: schema.StringAttribute{
+																			Required: true,
+																		},
+																		names.AttrDescription: schema.StringAttribute{
+																			Optional: true,
+																		},
+																		"visible": schema.BoolAttribute{
+																			Optional: true,
 																		},
 																	},
 																},
@@ -1511,6 +1602,8 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 	if !m.MCP.IsNull() {
 		mcpData, _ := m.MCP.ToPtr(ctx)
 		switch {
+		case !mcpData.Connector.IsNull():
+			return "connector"
 		case !mcpData.Lambda.IsNull():
 			return "lambda"
 		case !mcpData.MCPServer.IsNull():
@@ -1646,6 +1739,7 @@ func (m httpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 
 type mcpTargetConfigurationModel struct {
 	APIGateway    fwtypes.ListNestedObjectValueOf[apiGatewayTargetConfigurationModel] `tfsdk:"api_gateway"`
+	Connector     fwtypes.ListNestedObjectValueOf[connectorTargetConfigurationModel]  `tfsdk:"connector"`
 	Lambda        fwtypes.ListNestedObjectValueOf[mcpLambdaTargetConfigurationModel]  `tfsdk:"lambda"`
 	MCPServer     fwtypes.ListNestedObjectValueOf[mcpServerTargetConfigurationModel]  `tfsdk:"mcp_server"`
 	SmithyModel   fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel]        `tfsdk:"smithy_model"`
@@ -1667,6 +1761,14 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 			return diags
 		}
 		m.APIGateway = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.McpTargetConfigurationMemberConnector:
+		var model connectorTargetConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.Connector = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.McpTargetConfigurationMemberLambda:
 		var model mcpLambdaTargetConfigurationModel
@@ -1721,6 +1823,20 @@ func (m mcpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 
 		var r awstypes.McpTargetConfigurationMemberApiGateway
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, apiGatewayMCPConfigurationData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Connector.IsNull():
+		connectorConfigurationData, d := m.Connector.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.McpTargetConfigurationMemberConnector
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, connectorConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1836,6 +1952,87 @@ type apiGatewayToolOverrideModel struct {
 	Method      fwtypes.StringEnum[awstypes.RestApiMethod] `tfsdk:"method"`
 	Name        types.String                               `tfsdk:"name"`
 	Path        types.String                               `tfsdk:"path"`
+}
+
+type connectorTargetConfigurationModel struct {
+	Configurations fwtypes.ListNestedObjectValueOf[connectorConfigurationModel] `tfsdk:"configurations"`
+	Enabled        fwtypes.ListOfString                                         `tfsdk:"enabled"`
+	Source         fwtypes.ListNestedObjectValueOf[connectorSourceModel]        `tfsdk:"source"`
+}
+
+type connectorSourceModel struct {
+	ConnectorID types.String `tfsdk:"connector_id"`
+}
+
+type connectorConfigurationModel struct {
+	Description        types.String                                                     `tfsdk:"description"`
+	Name               types.String                                                     `tfsdk:"name"`
+	ParameterOverrides fwtypes.ListNestedObjectValueOf[connectorParameterOverrideModel] `tfsdk:"parameter_overrides"`
+	ParameterValues    jsontypes.Normalized                                             `tfsdk:"parameter_values" autoflex:"-"`
+}
+
+var (
+	_ fwflex.Expander  = connectorConfigurationModel{}
+	_ fwflex.Flattener = &connectorConfigurationModel{}
+)
+
+func (m connectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	var r awstypes.ConnectorConfiguration
+	diags.Append(fwflex.Expand(ctx, m.Description, &r.Description)...)
+	diags.Append(fwflex.Expand(ctx, m.Name, &r.Name)...)
+	diags.Append(fwflex.Expand(ctx, m.ParameterOverrides, &r.ParameterOverrides)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.ParameterValues.IsNull() {
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ParameterValues), document.NewLazyDocument)
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Decoding JSON",
+				err.Error(),
+			))
+			return nil, diags
+		}
+		r.ParameterValues = json
+	}
+
+	return &r, diags
+}
+
+func (m *connectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v, ok := v.(awstypes.ConnectorConfiguration); ok {
+		diags.Append(fwflex.Flatten(ctx, v.Description, &m.Description)...)
+		diags.Append(fwflex.Flatten(ctx, v.Name, &m.Name)...)
+		diags.Append(fwflex.Flatten(ctx, v.ParameterOverrides, &m.ParameterOverrides)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if v.ParameterValues != nil {
+			json, err := tfsmithy.DocumentToJSONString(v.ParameterValues)
+			if err != nil {
+				diags.Append(diag.NewErrorDiagnostic(
+					"Encoding JSON",
+					err.Error(),
+				))
+				return diags
+			}
+			m.ParameterValues = jsontypes.NewNormalizedValue(json)
+		}
+	}
+
+	return diags
+}
+
+type connectorParameterOverrideModel struct {
+	Description types.String `tfsdk:"description"`
+	Path        types.String `tfsdk:"path"`
+	Visible     types.Bool   `tfsdk:"visible"`
 }
 
 type mcpLambdaTargetConfigurationModel struct {
