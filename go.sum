@@ -187,8 +187,8 @@ github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.66.3 h1:IKnhWb1
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.66.3/go.mod h1:H5Gin6ldHyK1DST48a9QyDGCsY4H4xG3zx0a2DT90PU=
 github.com/aws/aws-sdk-go-v2/service/databrew v1.42.3 h1:Qv6YXdtzvLlCK/0rn07d1/fIjpqdxKmKYEBSzYz6ivg=
 github.com/aws/aws-sdk-go-v2/service/databrew v1.42.3/go.mod h1:rBs0CfIYzRJECFxN3aSfckK49mAdL4l3J+j6O6x8nwk=
-github.com/aws/aws-sdk-go-v2/service/dataexchange v1.44.2 h1:aK7RmuUuDeCf2S/DLAAwyElrSHDNowAq2NlD4cinGn4=
-github.com/aws/aws-sdk-go-v2/service/dataexchange v1.44.2/go.mod h1:rxBVZBDdqbGreLeKbC4sjr16vtGJUNSI4cpkFk03c7E=
+github.com/aws/aws-sdk-go-v2/service/dataexchange v1.44.3 h1:KazQokm74jY64SZFRAOuRUYn8XLMjGola40dPjCTkuI=
+github.com/aws/aws-sdk-go-v2/service/dataexchange v1.44.3/go.mod h1:jjl70tNVz4v+UV0IDTyfK7WOR+ZPEkGjMK+aMKBAX1o=
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.33.2 h1:lV3lKlp0/eZIH0X34C3f/lw7vNDWxE4yy+m+2XM5PXY=
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.33.2/go.mod h1:82iEk9G2Y4ugUSbL7vV4oscm6eI6PQu8/A0zYALVs50=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.61.2 h1:UoANtOdXOR4D1rbCcHZvTZw+ie9wA6lTK6fTq2yyJyM=
