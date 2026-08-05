@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -141,33 +142,19 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	input := &pinpointsmsvoicev2.RequestSenderIdInput{
-		SenderId:       data.SenderID.ValueStringPointer(),
-		IsoCountryCode: data.ISOCountryCode.ValueStringPointer(),
-		Tags:           getTagsIn(ctx),
+	var input pinpointsmsvoicev2.RequestSenderIdInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
-
-	if !data.DeletionProtectionEnabled.IsNull() {
-		input.DeletionProtectionEnabled = data.DeletionProtectionEnabled.ValueBoolPointer()
-	}
-
-	if !data.MessageTypes.IsNull() && !data.MessageTypes.IsUnknown() {
-		var messageTypes []fwtypes.StringEnum[awstypes.MessageType]
-		response.Diagnostics.Append(data.MessageTypes.ElementsAs(ctx, &messageTypes, false)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		for _, mt := range messageTypes {
-			input.MessageTypes = append(input.MessageTypes, mt.ValueEnum())
-		}
-	}
+	input.Tags = getTagsIn(ctx)
 
 	// A fresh ClientToken is generated on each attempt: AWS pins the result of a
 	// request to its ClientToken, so reusing one token would replay the cached
 	// SENDER_ID_REQUIRES_REGISTRATION failure instead of re-evaluating the request.
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, senderIDRegistrationPropagationTimeout, func(ctx context.Context) (any, error) {
 		input.ClientToken = aws.String(create.UniqueId(ctx))
-		return conn.RequestSenderId(ctx, input)
+		return conn.RequestSenderId(ctx, &input)
 	}, "ValidationException", "SENDER_ID_REQUIRES_REGISTRATION")
 
 	if err != nil {
@@ -178,25 +165,22 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 
 	output := outputRaw.(*pinpointsmsvoicev2.RequestSenderIdOutput)
 
-	// AWS canonicalizes sender IDs to upper case, and `sender_id` is validated to be
-	// upper case, so the returned value always matches the configured one. Taking it
-	// from the response keeps AWS the single source of truth for the attribute, the
-	// composite `id`, and the resource identity.
-	data.SenderID = fwflex.StringToFramework(ctx, output.SenderId)
-	data.ISOCountryCode = fwflex.StringToFramework(ctx, output.IsoCountryCode)
-	data.SenderIDARN = fwflex.StringToFramework(ctx, output.SenderIdArn)
-	data.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, output.MonthlyLeasingPrice)
-	data.Registered = types.BoolValue(output.Registered)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// RequestSenderId does not return a registration ID, and the composite ID is
+	// derived locally, so set both explicitly after flattening the response.
 	data.RegistrationID = types.StringNull()
 	data.setID()
 
-	messageTypeValues := make([]attr.Value, len(output.MessageTypes))
-	for i, mt := range output.MessageTypes {
-		messageTypeValues[i] = fwtypes.StringEnumValue(awstypes.MessageType(strings.ToUpper(string(mt))))
-	}
-	data.MessageTypes = fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.MessageType]](ctx, messageTypeValues)
+	// DescribeSenderIds (used on Read/import) returns message types in mixed case
+	// (e.g. "Transactional"), while the canonical enum values are upper case. Normalize
+	// here so Create-time state matches what Read produces and import stays consistent.
+	data.MessageTypes = flattenMessageTypes(ctx, output.MessageTypes)
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *senderIDResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -229,7 +213,10 @@ func (r *senderIDResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	data.flattenSenderIdInformation(ctx, out)
+	response.Diagnostics.Append(data.flatten(ctx, out)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -352,22 +339,33 @@ func (senderIDImportID) Create(ctx context.Context, state tfsdk.State) string {
 	return senderID.ValueString() + senderIDResourceIDSeparator + isoCountryCode.ValueString()
 }
 
-func (model *senderIDResourceModel) flattenSenderIdInformation(ctx context.Context, out *awstypes.SenderIdInformation) {
-	model.SenderIDARN = fwflex.StringToFramework(ctx, out.SenderIdArn)
-	model.SenderID = fwflex.StringToFramework(ctx, out.SenderId)
-	model.ISOCountryCode = fwflex.StringToFramework(ctx, out.IsoCountryCode)
-	model.DeletionProtectionEnabled = types.BoolValue(out.DeletionProtectionEnabled)
-	model.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, out.MonthlyLeasingPrice)
-	model.Registered = types.BoolValue(out.Registered)
-	model.RegistrationID = fwflex.StringToFramework(ctx, out.RegistrationId)
+func (model *senderIDResourceModel) flatten(ctx context.Context, out *awstypes.SenderIdInformation) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	messageTypeValues := make([]attr.Value, len(out.MessageTypes))
-	for i, mt := range out.MessageTypes {
-		messageTypeValues[i] = fwtypes.StringEnumValue(awstypes.MessageType(strings.ToUpper(string(mt))))
+	diags.Append(fwflex.Flatten(ctx, out, model)...)
+	if diags.HasError() {
+		return diags
 	}
-	model.MessageTypes = fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.MessageType]](ctx, messageTypeValues)
+
+	// DescribeSenderIds returns message types in mixed case (e.g. "Transactional"),
+	// while the canonical enum values are upper case. Normalize so state matches the
+	// configured value and stays stable across refresh and import.
+	model.MessageTypes = flattenMessageTypes(ctx, out.MessageTypes)
 
 	model.setID()
+
+	return diags
+}
+
+// flattenMessageTypes normalizes AWS message types to their canonical upper case enum
+// values. The DescribeSenderIds and RequestSenderId APIs are inconsistent about casing.
+func flattenMessageTypes(ctx context.Context, messageTypes []awstypes.MessageType) fwtypes.SetOfStringEnum[awstypes.MessageType] {
+	values := make([]attr.Value, len(messageTypes))
+	for i, mt := range messageTypes {
+		values[i] = fwtypes.StringEnumValue(awstypes.MessageType(strings.ToUpper(string(mt))))
+	}
+
+	return fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.MessageType]](ctx, values)
 }
 
 func findSenderIDByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, senderID, isoCountryCode string) (*awstypes.SenderIdInformation, error) {

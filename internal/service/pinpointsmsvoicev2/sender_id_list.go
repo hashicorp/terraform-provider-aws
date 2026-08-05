@@ -61,7 +61,10 @@ func (l *senderIDListResource) List(ctx context.Context, request list.ListReques
 
 			var data senderIDResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.flattenSenderIdInformation(ctx, item)
+				result.Diagnostics.Append(data.flatten(ctx, item)...)
+				if result.Diagnostics.HasError() {
+					return
+				}
 
 				result.DisplayName = senderID
 			})
