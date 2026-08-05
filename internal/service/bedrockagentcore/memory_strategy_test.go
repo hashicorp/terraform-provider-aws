@@ -1198,6 +1198,48 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
 			},
 		},
+		{
+			name: "self-managed",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					SelfManagedConfiguration: &awstypes.SelfManagedConfiguration{
+						HistoricalContextWindowSize: aws.Int32(4),
+						InvocationConfiguration: &awstypes.InvocationConfiguration{
+							PayloadDeliveryBucketName: aws.String("bucket001"),
+							TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						},
+					},
+					Type: awstypes.OverrideTypeSelfManaged,
+				},
+				Name:       aws.String("self_managed_001"),
+				StrategyId: aws.String("self_managed_001-5xKsqQHSWW"),
+				Type:       awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryStrategyID:        types.StringValue("self_managed_001-5xKsqQHSWW"),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
 	}
 
 	for _, tc := range testCases {

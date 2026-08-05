@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -281,8 +282,12 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								Attributes: map[string]schema.Attribute{
 									"historical_context_window_size": schema.Int32Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int32{
 											int32validator.Between(0, 50),
+										},
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -387,7 +392,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			return
 		}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, found, &plan))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -445,7 +450,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 
 	nullReflectionConfiguration := state.ReflectionConfiguration.IsNull()
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -511,7 +516,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				return
 			}
 
-			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+			smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, found, &plan))
 			if response.Diagnostics.HasError() {
 				return
 			}
@@ -574,6 +579,14 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 			return
 		}
 	})
+}
+
+func (r *resourceMemoryStrategy) flatten(ctx context.Context, memoryStrategy *awstypes.MemoryStrategy, data *memoryStrategyResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, memoryStrategy, data)...)
+
+	return diags
 }
 
 func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -907,50 +920,30 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 		m.Type = fwtypes.StringEnumValue(t.Type)
 
 		if t.Consolidation != nil {
-			var consolidation overrideDetailsModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &consolidation))
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &m.Consolidation))
 			if diags.HasError() {
 				return diags
-			}
-			if !consolidation.AppendToPrompt.IsNull() && !consolidation.ModelID.IsNull() {
-				var d diag.Diagnostics
-				m.Consolidation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &consolidation)
-				smerr.AddEnrich(ctx, &diags, d)
-				if diags.HasError() {
-					return diags
-				}
 			}
 		}
 
 		if t.Extraction != nil {
-			var extraction overrideDetailsModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &extraction))
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &m.Extraction))
 			if diags.HasError() {
 				return diags
-			}
-			if !extraction.AppendToPrompt.IsNull() && !extraction.ModelID.IsNull() {
-				var d diag.Diagnostics
-				m.Extraction, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &extraction)
-				smerr.AddEnrich(ctx, &diags, d)
-				if diags.HasError() {
-					return diags
-				}
 			}
 		}
 
 		if t.Reflection != nil {
-			var reflection episodicReflectionOverrideDetailsModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Reflection, &reflection))
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Reflection, &m.Reflection))
 			if diags.HasError() {
 				return diags
 			}
-			if !reflection.AppendToPrompt.IsNull() && !reflection.ModelID.IsNull() && !reflection.NamespaceTemplates.IsNull() {
-				var d diag.Diagnostics
-				m.Reflection, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &reflection)
-				smerr.AddEnrich(ctx, &diags, d)
-				if diags.HasError() {
-					return diags
-				}
+		}
+
+		if t.SelfManagedConfiguration != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.SelfManagedConfiguration, &m.SelfManagedConfiguration))
+			if diags.HasError() {
+				return diags
 			}
 		}
 
