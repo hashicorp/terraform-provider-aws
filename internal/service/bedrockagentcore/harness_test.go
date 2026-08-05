@@ -84,7 +84,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 											"max_lifetime":                 knownvalue.Int32Exact(28800),
 										}),
 									}),
-									"network_configuration": knownvalue.ListExact([]knownvalue.Check{
+									names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"network_mode":        knownvalue.StringExact("PUBLIC"),
 											"network_mode_config": knownvalue.Null(),
