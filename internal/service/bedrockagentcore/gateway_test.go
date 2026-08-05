@@ -240,6 +240,7 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration").AtSliceIndex(0).AtMapKey("input_configuration").AtSliceIndex(0).AtMapKey("payload_filter").AtSliceIndex(0).AtMapKey("exclude").AtSliceIndex(0).AtMapKey("field"), knownvalue.StringExact("RESPONSE_BODY")),
 				},
 			},
 			{
@@ -248,6 +249,53 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_interceptorConfigurationClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_interceptorConfigurations(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				// Remove the interceptor_configuration block and assert the set->unset transition converges.
+				Config: testAccGatewayConfig_interceptorConfigurationsCleared(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 		},
 	})
@@ -302,6 +350,53 @@ func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated description")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_descriptionClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_description(rName, "Initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Initial description")),
+				},
+			},
+			{
+				// Remove the description attribute and assert the set->unset transition converges.
+				Config: testAccGatewayConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 				},
 			},
 		},
@@ -969,6 +1064,54 @@ func TestAccBedrockAgentCoreGateway_policyEngineConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_policyEngineConfigurationClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNamePolicyEngine := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_policyEngineConfiguration(rName, rNamePolicyEngine, awstypes.GatewayPolicyEngineModeLogOnly),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_configuration"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				// Remove the policy_engine_configuration block and assert the set->unset transition converges.
+				Config: testAccGatewayConfig_policyEngineConfigurationCleared(rName, rNamePolicyEngine),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_engine_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -1340,8 +1483,49 @@ resource "aws_bedrockagentcore_gateway" "test" {
 
     input_configuration {
       pass_request_headers = true
+
+      payload_filter {
+        exclude {
+          field = "RESPONSE_BODY"
+        }
+      }
     }
   }
+}
+`, rName))
+}
+
+func testAccGatewayConfig_interceptorConfigurationsCleared(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "%[1]s-lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
 }
 `, rName))
 }
@@ -1455,4 +1639,136 @@ resource "aws_bedrockagentcore_policy_engine" "test" {
   name = %[2]q
 }
 `, rName, rNamePolicyEngine, mode))
+}
+
+func testAccGatewayConfig_policyEngineConfigurationCleared(rName, rNamePolicyEngine string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[2]q
+}
+`, rName, rNamePolicyEngine))
+}
+
+// TestAccBedrockAgentCoreGateway_payloadFilterRequiresExclude confirms that a
+// payload_filter block without the required exclude sub-block is rejected at plan
+// time. Previously SizeBetween(1,1) was skipped when exclude was absent, so
+// payload_filter {} passed validation and only failed at apply with a client-side
+// "missing required field ...PayloadFilter.Exclude".
+func TestAccBedrockAgentCoreGateway_payloadFilterRequiresExclude(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayConfig_payloadFilterNoExclude(rName),
+				ExpectError: regexache.MustCompile("Invalid Block"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGateway_interceptorRequiresLambda confirms that an
+// interceptor block without the required lambda sub-block is rejected at plan time.
+// Previously interceptor {} expanded to nil and surfaced a confusing "always an
+// error in the provider" message instead of a plan-time validation error.
+func TestAccBedrockAgentCoreGateway_interceptorRequiresLambda(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayConfig_interceptorNoLambda(rName),
+				ExpectError: regexache.MustCompile("Invalid Block"),
+			},
+		},
+	})
+}
+
+func testAccGatewayConfig_payloadFilterNoExclude(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST"]
+
+    interceptor {
+      lambda {
+        arn = "arn:aws:lambda:us-west-2:123456789012:function:test"
+      }
+    }
+
+    input_configuration {
+      pass_request_headers = true
+
+      payload_filter {}
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayConfig_interceptorNoLambda(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST"]
+
+    interceptor {}
+
+    input_configuration {
+      pass_request_headers = true
+
+      payload_filter {
+        exclude {
+          field = "RESPONSE_BODY"
+        }
+      }
+    }
+  }
+}
+`, rName))
 }

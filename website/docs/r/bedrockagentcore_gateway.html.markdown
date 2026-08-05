@@ -231,6 +231,19 @@ The `lambda` block supports the following:
 The `input_configuration` block supports the following:
 
 * `pass_request_headers` - (Required) Whether to pass request headers to the interceptor.
+* `payload_filter` - (Optional) Filter controlling which fields of the request or response payload are included in the input to the interceptor. See [`payload_filter`](#payload_filter) below.
+
+### `payload_filter`
+
+The `payload_filter` block supports the following:
+
+* `exclude` - (Required) Selector identifying a payload field to exclude from the interceptor input. Exactly one entry. See [`exclude`](#exclude) below.
+
+### `exclude`
+
+The `exclude` block supports the following:
+
+* `field` - (Required) The field to exclude from the interceptor input. Valid value: `RESPONSE_BODY`.
 
 ### `policy_engine_configuration`
 
