@@ -35,8 +35,8 @@ data "aws_rds_snapshots" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
 * `filter` - (Optional) Configuration block(s) used to filter snapshots with AWS supported attributes. Detailed below.
 * `include_public` - (Optional) Set this value to `true` to include manual DB snapshots that are public and can be copied or restored by any AWS account, otherwise set this value to `false`. The default is `false`.
