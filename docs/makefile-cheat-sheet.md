@@ -122,7 +122,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `fmt-check` | Verify Go source is formatted |  |  | `CURDIR` |
 | `fmt-core` | Fix Go source formatting in core directories |  |  |  |
 | `fumpt` | Run gofumpt |  |  | `K`, `PKG`, `PKG_NAME` |
-| `gen`<sup>D</sup> | Run all Go generators |  |  | `GO_VER` |
+| `gen`<sup>D</sup> | Run Go generators (all provider-wide, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `SVC_DIR` |
 | `gen-check`<sup>D</sup> | Provider Checks / go_generate | ✔️ |  |  |
 | `gen-raw` | Run all Go generators (without Go version check) |  |  | `GO_VER` |
 | `generate-changelog` | Generate changelog |  |  | `CURDIR` |

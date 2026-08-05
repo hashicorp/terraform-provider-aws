@@ -360,7 +360,14 @@ fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-gen: prereq-go gen-raw ## Run all Go generators (with Go version check)
+gen: prereq-go ## Run Go generators (all provider-wide, or scoped to a service with PKG=/K=<service>)
+ifneq ($(origin PKG), undefined)
+	@echo "make: Running Go generators for $(SVC_DIR)..."
+	@echo "make: If you changed anything under internal/generate, run the full make gen without PKG/K scoping"
+	$(GO_VER) generate $(SVC_DIR)/...
+else
+	@$(MAKE) gen-raw
+endif
 
 gen-raw: ## Run all Go generators
 	@echo "make: Running Go generators..."
