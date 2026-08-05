@@ -235,13 +235,13 @@ func (r *senderIDResource) Update(ctx context.Context, request resource.UpdateRe
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	if !new.DeletionProtectionEnabled.Equal(old.DeletionProtectionEnabled) {
-		input := &pinpointsmsvoicev2.UpdateSenderIdInput{
+		input := pinpointsmsvoicev2.UpdateSenderIdInput{
 			SenderId:                  new.SenderID.ValueStringPointer(),
 			IsoCountryCode:            new.ISOCountryCode.ValueStringPointer(),
 			DeletionProtectionEnabled: new.DeletionProtectionEnabled.ValueBoolPointer(),
 		}
 
-		_, err := conn.UpdateSenderId(ctx, input)
+		_, err := conn.UpdateSenderId(ctx, &input)
 
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID.String())
@@ -261,10 +261,12 @@ func (r *senderIDResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	_, err := conn.ReleaseSenderId(ctx, &pinpointsmsvoicev2.ReleaseSenderIdInput{
+	input := pinpointsmsvoicev2.ReleaseSenderIdInput{
 		SenderId:       data.SenderID.ValueStringPointer(),
 		IsoCountryCode: data.ISOCountryCode.ValueStringPointer(),
-	})
+	}
+
+	_, err := conn.ReleaseSenderId(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -367,7 +369,7 @@ func normalizeMessageTypes(ctx context.Context, messageTypes []awstypes.MessageT
 }
 
 func findSenderIDByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, senderID, isoCountryCode string) (*awstypes.SenderIdInformation, error) {
-	input := &pinpointsmsvoicev2.DescribeSenderIdsInput{
+	input := pinpointsmsvoicev2.DescribeSenderIdsInput{
 		SenderIds: []awstypes.SenderIdAndCountry{
 			{
 				SenderId:       aws.String(senderID),
@@ -376,7 +378,7 @@ func findSenderIDByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Clie
 		},
 	}
 
-	return findSenderID(ctx, conn, input)
+	return findSenderID(ctx, conn, &input)
 }
 
 func findSenderID(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeSenderIdsInput) (*awstypes.SenderIdInformation, error) {
