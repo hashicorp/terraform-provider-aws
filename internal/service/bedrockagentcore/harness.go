@@ -206,6 +206,13 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								},
 							},
 						},
+						"disabled": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessDisabledMemoryConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{},
+						},
 						"managed_memory_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessManagedMemoryConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -1477,6 +1484,7 @@ func (m harnessEnvironmentArtifactModel) expandToUpdatedHarnessEnvironmentArtifa
 
 type harnessMemoryConfigurationModel struct {
 	AgentCoreMemoryConfiguration fwtypes.ListNestedObjectValueOf[harnessAgentCoreMemoryConfigurationModel] `tfsdk:"agentcore_memory_configuration"`
+	Disabled                     fwtypes.ListNestedObjectValueOf[harnessDisabledMemoryConfigurationModel]  `tfsdk:"disabled"`
 	ManagedMemoryConfiguration   fwtypes.ListNestedObjectValueOf[harnessManagedMemoryConfigurationModel]   `tfsdk:"managed_memory_configuration"`
 }
 
@@ -1503,6 +1511,9 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 			return diags
 		}
 		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	case awstypes.HarnessMemoryConfigurationMemberDisabled:
+		m.Disabled = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &harnessDisabledMemoryConfigurationModel{})
 
 	case awstypes.UnknownUnionMember:
 		fwflex.HandleFlattenUnknownUnionMember(ctx, t.Tag, &diags)
@@ -1547,6 +1558,9 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
 	}
+	if !m.Disabled.IsNull() {
+		return &awstypes.HarnessMemoryConfigurationMemberDisabled{}, diags
+	}
 	return nil, diags
 }
 
@@ -1567,6 +1581,9 @@ func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfigurati
 			return nil, diags
 		}
 		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
+	}
+	if !m.Disabled.IsNull() {
+		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: &awstypes.HarnessMemoryConfigurationMemberDisabled{}}, diags
 	}
 	return &awstypes.UpdatedHarnessMemoryConfiguration{}, diags
 }
@@ -1605,6 +1622,8 @@ type harnessAgentCoreMemoryRetrievalConfigModel struct {
 	StrategyID     types.String  `tfsdk:"strategy_id"`
 	TopK           types.Int32   `tfsdk:"top_k"`
 }
+
+type harnessDisabledMemoryConfigurationModel struct{}
 
 type harnessManagedMemoryConfigurationModel struct {
 	ARN                 fwtypes.ARN                                                        `tfsdk:"arn" autoflex:",noexpand"`

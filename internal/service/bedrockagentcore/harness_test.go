@@ -610,11 +610,17 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_basic(t 
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("agentcore_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						names.AttrARN:      knownvalue.NotNull(),
-						"actor_id":         knownvalue.Null(),
-						"messages_count":   knownvalue.Null(),
-						"retrieval_config": knownvalue.ListSizeExact(0),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrARN:      knownvalue.NotNull(),
+								"actor_id":         knownvalue.Null(),
+								"messages_count":   knownvalue.Null(),
+								"retrieval_config": knownvalue.ListSizeExact(0),
+							}),
+						}),
+						"disabled":                     knownvalue.ListSizeExact(0),
+						"managed_memory_configuration": knownvalue.ListSizeExact(0),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("agentcore_memory_configuration").AtSliceIndex(0).AtMapKey(names.AttrARN), "aws_bedrockagentcore_memory.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
@@ -876,13 +882,19 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_empty(t *t
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
-						"encryption_key_arn":    knownvalue.Null(),
-						"event_expiry_duration": knownvalue.Int32Exact(30),
-						"strategies": knownvalue.SetExact([]knownvalue.Check{
-							knownvalue.StringExact("SEMANTIC"),
-							knownvalue.StringExact("SUMMARIZATION"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+						"disabled":                       knownvalue.ListSizeExact(0),
+						"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+								"encryption_key_arn":    knownvalue.Null(),
+								"event_expiry_duration": knownvalue.Int32Exact(30),
+								"strategies": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("SEMANTIC"),
+									knownvalue.StringExact("SUMMARIZATION"),
+								}),
+							}),
 						}),
 					})),
 				},
@@ -1005,6 +1017,53 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_encryption
 						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0).AtMapKey("encryption_key_arn"), "aws_kms_key.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_Memory_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_Memory_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+						"disabled": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{}),
+						}),
+						"managed_memory_configuration": knownvalue.ListSizeExact(0),
+					})),
 				},
 			},
 			{
@@ -1723,6 +1782,29 @@ resource "aws_bedrockagentcore_harness" "test" {
 
 resource "aws_kms_key" "test" {
   description = %[1]q
+}
+`, rName))
+}
+
+func testAccHarnessConfig_Memory_disabled(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    disabled {}
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
 }
 `, rName))
 }
