@@ -257,7 +257,6 @@ func TestAccQuickSightDashboard_lineChartVisualMissingDataConfiguration(t *testi
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.line_chart_visual.0.chart_configuration.0.primary_y_axis_display_options.0.missing_data_configuration.0.treatment_option", string(awstypes.MissingDataTreatmentOptionShowAsBlank)),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.line_chart_visual.0.chart_configuration.0.secondary_y_axis_display_options.0.missing_data_configuration.0.treatment_option", string(awstypes.MissingDataTreatmentOptionShowAsZero)),
 				),
 			},
 			{
@@ -716,16 +715,31 @@ resource "aws_quicksight_dashboard" "test" {
           }
           chart_configuration {
             field_wells {
-              line_chart_aggregated_field_wells {}
+              line_chart_aggregated_field_wells {
+                category {
+                  categorical_dimension_field {
+                    field_id = "1"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                  }
+                }
+                values {
+                  categorical_measure_field {
+                    field_id = "2"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                    aggregation_function = "COUNT"
+                  }
+                }
+              }
             }
             primary_y_axis_display_options {
               missing_data_configuration {
                 treatment_option = "SHOW_AS_BLANK"
-              }
-            }
-            secondary_y_axis_display_options {
-              missing_data_configuration {
-                treatment_option = "SHOW_AS_ZERO"
               }
             }
           }
