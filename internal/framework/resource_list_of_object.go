@@ -31,22 +31,7 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context, planModi
 
 // ResourceOptionalComputedListOfObjectsAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, nestedObjectOptions []fwtypes.NestedObjectOfOptionsFunc[T], planModifiers ...planmodifier.List) schema.ListAttribute {
-	return schema.ListAttribute{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, nestedObjectOptions...),
-		Optional:      true,
-		Computed:      true,
-		PlanModifiers: planModifiers,
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(sizeAtMost),
-		},
-		ElementType: types.ObjectType{
-			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
-		},
-	}
-}
-
-func ResourceOptionalComputedListOfObjectsAttribute2[T any](ctx context.Context, optFns ...ResourceListOfObjectsOptionsFunc[T]) schema.ListAttribute {
+func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, optFns ...ResourceListOfObjectsOptionsFunc[T]) schema.ListAttribute {
 	opts := newResourceListOfObjectsOptions(optFns...)
 
 	return schema.ListAttribute{
@@ -64,13 +49,20 @@ func ResourceOptionalComputedListOfObjectsAttribute2[T any](ctx context.Context,
 // ResourceOptionalComputedSingleNestedObjectAttribute returns a schema attribute that
 // is equivalent to a Terraform Plugin SDKv2 Optional+Computed list nested block with a maximum size of 1.
 func ResourceOptionalComputedSingleNestedObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
-	return ResourceOptionalComputedListOfObjectsAttribute2(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.UseStateForUnknown()))
+	return ResourceOptionalComputedListOfObjectsAttribute(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.UseStateForUnknown()))
 }
 
 // ResourceOptionalComputedForceNewSingleNestedObjectAttribute returns a schema attribute that
 // is equivalent to a Terraform Plugin SDKv2 Optional+Computed+ForceNew list nested block with a maximum size of 1.
 func ResourceOptionalComputedForceNewSingleNestedObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
-	return ResourceOptionalComputedListOfObjectsAttribute2(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()))
+	return ResourceOptionalComputedListOfObjectsAttribute(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()))
+}
+
+// ResourceOptionalComputedSingleNestedChildObjectAttribute returns a schema attribute that
+// is equivalent to a Terraform Plugin SDKv2 Optional+Computed list nested block with a maximum size of 1.
+// The single nested block should be a child (as opposed to top-level) attribute.
+func ResourceOptionalComputedSingleNestedChildObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
+	return ResourceOptionalComputedListOfObjectsAttribute(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.UseNonNullStateForUnknown()))
 }
 
 type resourceListOfObjectsOptions[T any] struct {
