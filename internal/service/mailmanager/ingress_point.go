@@ -263,7 +263,6 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	if configIPCfg != nil && !configIPCfg.SMTPPasswordWO.IsNull() {
 		input.IngressPointConfiguration = &awstypes.IngressPointConfigurationMemberSmtpPassword{
 			Value: configIPCfg.SMTPPasswordWO.ValueString(),
@@ -362,9 +361,6 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 				Value: updateConfigIPCfg.SMTPPasswordWO.ValueString(),
 			}
 		}
-
-		// Explicitly set the ID since AutoFlex won't map plan.ID → IngressPointId.
-		input.IngressPointId = state.ID.ValueStringPointer()
 
 		_, err := conn.UpdateIngressPoint(ctx, &input)
 		if err != nil {
