@@ -433,8 +433,8 @@ github.com/aws/aws-sdk-go-v2/service/polly v1.60.3 h1:gIXfBIzMjoH+bOFHiBkS2m7pRE
 github.com/aws/aws-sdk-go-v2/service/polly v1.60.3/go.mod h1:hLRLe1JMeHt//4aXqWCOTuHoY0n9wF4vW+UjQWMrGOo=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.44.3 h1:FlwRvZDV5BHa8v0BCPW8+Za26HobkVYWiuw5aOs/hq8=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.44.3/go.mod h1:pmcZWdMf109OWwzIQ7qax7B3BLnuhf6z39+6L3UorEM=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.37.2 h1:xi5EUkHqAgbBMCgxgvDbD/Q+DVvJhpguuylSVqfpg08=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.37.2/go.mod h1:yRpqPJZXz1B1f9QzcCk2Gj3ouMMZkvrbvPwOcol6fsk=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.37.3 h1:1FnpfO6ouYFBXtq7Ax87ZCHDOiriiKcyjujchl3LLpc=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.37.3/go.mod h1:iUcsluQy5Lc8FfmwwPtI+29FJB/2OXKkwYvmHo7PoEI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2 h1:tSctQisNHgXnDmyoOdLXkSQmHYo5yPQuvYK+4c4QiNI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2/go.mod h1:m6bmXbLs5XiGnTLcgKn9eNk5+GCO5e/wHQsIuN7d1Tw=
 github.com/aws/aws-sdk-go-v2/service/quicksight v1.122.2 h1:FG/JiHenX5uo8KivZ0z3E/f+gbt3P7cqa6OFI4NuFP4=
