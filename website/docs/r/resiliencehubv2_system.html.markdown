@@ -45,6 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the system.
+* `kms_key_id` - (Optional) KMS key ARN.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sharing_enabled` - (Optional) Whether cross-account sharing is enabled for this system.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -54,6 +55,9 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the system.
+* `organization_id` - AWS Organizations identifier for the system.
+* `ou_id` - Organizational unit (OU) identifier for the system.
+* `system_id` - System ID for cross-account use without exposing account structure.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -64,7 +68,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_resiliencehubv2_system.example
   identity = {
-    "arn" = "arn:aws:resiliencehub:us-west-2:123456789012:system/example-system:abc123"
+    arn = "arn:aws:resiliencehub:us-west-2:123456789012:system/example-system:abc123"
   }
 }
 

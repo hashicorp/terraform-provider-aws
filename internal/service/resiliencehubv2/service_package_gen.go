@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newResourceSystem,
+			Factory:  newSystemResource,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

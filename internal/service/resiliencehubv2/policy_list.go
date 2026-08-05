@@ -60,7 +60,7 @@ func (l *policyListResource) List(ctx context.Context, request list.ListRequest,
 
 			result := request.NewListResult(ctx)
 
-			var data resourcePolicyModel
+			var data policyResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				data.PolicyARN = fwflex.StringValueToFramework(ctx, arn)
 

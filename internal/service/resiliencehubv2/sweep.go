@@ -56,7 +56,7 @@ func sweepSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, system := range page.SystemSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSystem, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSystemResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(system.SystemArn)),
 			))
 		}

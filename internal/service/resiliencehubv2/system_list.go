@@ -28,7 +28,7 @@ func newResourceSystemAsListResource() list.ListResourceWithConfigure {
 var _ list.ListResource = &systemListResource{}
 
 type systemListResource struct {
-	resourceSystem
+	systemResource
 	framework.WithList
 }
 
@@ -64,7 +64,7 @@ func (l *systemListResource) List(ctx context.Context, request list.ListRequest,
 
 			result := request.NewListResult(ctx)
 
-			var data resourceSystemModel
+			var data systemResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 				if result.Diagnostics.HasError() {
