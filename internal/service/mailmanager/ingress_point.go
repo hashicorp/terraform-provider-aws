@@ -270,6 +270,7 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 		}
 	}
 
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
