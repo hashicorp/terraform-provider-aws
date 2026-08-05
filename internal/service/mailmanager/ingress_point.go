@@ -16,7 +16,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mailmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -121,13 +123,37 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"previous_smtp_password_expiry_timestamp": schema.StringAttribute{
+							CustomType: timetypes.RFC3339Type{},
+							Computed:   true,
+						},
+						"previous_smtp_password_version": schema.StringAttribute{
+							Computed: true,
+						},
 						"secret_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 						},
-						"smtp_password": schema.StringAttribute{
+						"smtp_password_version": schema.StringAttribute{
+							Computed: true,
+						},
+						"smtp_password_wo": schema.StringAttribute{
 							Optional:  true,
+							WriteOnly: true,
 							Sensitive: true,
+							Validators: []validator.String{
+								stringvalidator.AlsoRequires(path.Expressions{
+									path.MatchRelative().AtParent().AtName("smtp_password_wo_version"),
+								}...),
+							},
+						},
+						"smtp_password_wo_version": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.AlsoRequires(path.Expressions{
+									path.MatchRelative().AtParent().AtName("smtp_password_wo"),
+								}...),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -211,8 +237,14 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 }
 
 func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data ingressPointResourceModel
+	var data, config ingressPointResourceModel
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -225,8 +257,19 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	// Additional fields not covered by AutoFlex field name mapping.
-	input.IngressPointName = data.Name.ValueStringPointer()
+	// smtp_password_wo is write-only. it is only present in Config, not Plan.
+	configIPCfg, d := config.IngressPointConfiguration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if configIPCfg != nil && !configIPCfg.SMTPPasswordWO.IsNull() {
+		input.IngressPointConfiguration = &awstypes.IngressPointConfigurationMemberSmtpPassword{
+			Value: configIPCfg.SMTPPasswordWO.ValueString(),
+		}
+	}
+
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
@@ -237,12 +280,7 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	ingressPointID := aws.ToString(out.IngressPointId)
-
-	// Persist ID early so a failed wait can still be tracked.
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), ingressPointID)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), ingressPointID))
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	ingressPointOut, err := waitIngressPointActive(ctx, conn, ingressPointID, createTimeout)
@@ -254,16 +292,6 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ingressPointOut, &data, flex.WithFieldNamePrefix("IngressPoint")))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	// smtp_password is not returned by the API (write-only). Restore from plan.
-	if !req.Plan.Raw.IsNull() {
-		var planData ingressPointResourceModel
-		smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &planData))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.IngressPointConfiguration = planData.IngressPointConfiguration
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
@@ -299,9 +327,10 @@ func (r *ingressPointResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state ingressPointResourceModel
+	var plan, state, config ingressPointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -320,9 +349,21 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// smtp_password_wo is write-only: it is only present in Config, not Plan.
+		updateConfigIPCfg, d := config.IngressPointConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if updateConfigIPCfg != nil && !updateConfigIPCfg.SMTPPasswordWO.IsNull() {
+			input.IngressPointConfiguration = &awstypes.IngressPointConfigurationMemberSmtpPassword{
+				Value: updateConfigIPCfg.SMTPPasswordWO.ValueString(),
+			}
+		}
+
 		// Explicitly set the ID since AutoFlex won't map plan.ID → IngressPointId.
 		input.IngressPointId = state.ID.ValueStringPointer()
-		input.IngressPointName = plan.Name.ValueStringPointer()
 
 		_, err := conn.UpdateIngressPoint(ctx, &input)
 		if err != nil {
@@ -341,16 +382,6 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	}
-
-	// smtp_password is not returned by the API (write-only). Restore from plan.
-	if !req.Plan.Raw.IsNull() {
-		var reqPlan ingressPointResourceModel
-		smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &reqPlan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		plan.IngressPointConfiguration = reqPlan.IngressPointConfiguration
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -472,9 +503,9 @@ func (m ingressPointConfigurationModel) Expand(ctx context.Context) (any, diag.D
 	var diags diag.Diagnostics
 
 	switch {
-	case !m.SMTPPassword.IsNull() && !m.SMTPPassword.IsUnknown():
+	case !m.SMTPPasswordWO.IsNull() && !m.SMTPPasswordWO.IsUnknown():
 		return &awstypes.IngressPointConfigurationMemberSmtpPassword{
-			Value: m.SMTPPassword.ValueString(),
+			Value: m.SMTPPasswordWO.ValueString(),
 		}, diags
 	case !m.SecretARN.IsNull():
 		return &awstypes.IngressPointConfigurationMemberSecretArn{
@@ -497,25 +528,24 @@ func (m *ingressPointConfigurationModel) Flatten(ctx context.Context, v any) dia
 
 	switch t := v.(type) {
 	case awstypes.IngressPointAuthConfiguration:
+		if t.IngressPointPasswordConfiguration != nil {
+			pc := t.IngressPointPasswordConfiguration
+			m.SMTPPasswordVersion = types.StringPointerValue(pc.SmtpPasswordVersion)
+			m.PreviousSMTPPasswordVersion = types.StringPointerValue(pc.PreviousSmtpPasswordVersion)
+			if pc.PreviousSmtpPasswordExpiryTimestamp != nil {
+				m.PreviousSMTPPasswordExpiryTimestamp = timetypes.NewRFC3339TimePointerValue(pc.PreviousSmtpPasswordExpiryTimestamp)
+			}
+		}
 		if t.SecretArn != nil {
 			m.SecretARN = fwtypes.ARNValue(aws.ToString(t.SecretArn))
 		}
 		if t.TlsAuthConfiguration != nil {
-			if ts := t.TlsAuthConfiguration.TrustStore; ts != nil {
-				tsModel := trustStoreModel{
-					CAContent: types.StringPointerValue(ts.CAContent),
-				}
-				if ts.CrlContent != nil {
-					tsModel.CRLContent = types.StringPointerValue(ts.CrlContent)
-				}
-				if ts.KmsKeyArn != nil {
-					tsModel.KMSKeyARN = fwtypes.ARNValue(aws.ToString(ts.KmsKeyArn))
-				}
-				tlsConf := tlsAuthConfigurationModel{
-					TrustStore: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tsModel),
-				}
-				m.TLSAuthConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tlsConf)
+			var tlsConf tlsAuthConfigurationModel
+			smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.TlsAuthConfiguration, &tlsConf))
+			if diags.HasError() {
+				return diags
 			}
+			m.TLSAuthConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tlsConf)
 		}
 	default:
 		diags.AddError("Unexpected Type", fmt.Sprintf("ingress point configuration flatten: %T", v))
@@ -606,9 +636,13 @@ type ingressPointResourceModel struct {
 }
 
 type ingressPointConfigurationModel struct {
-	SecretARN            fwtypes.ARN                                                `tfsdk:"secret_arn"`
-	SMTPPassword         types.String                                               `tfsdk:"smtp_password"`
-	TLSAuthConfiguration fwtypes.ListNestedObjectValueOf[tlsAuthConfigurationModel] `tfsdk:"tls_auth_configuration"`
+	PreviousSMTPPasswordExpiryTimestamp timetypes.RFC3339                                          `tfsdk:"previous_smtp_password_expiry_timestamp"`
+	PreviousSMTPPasswordVersion         types.String                                               `tfsdk:"previous_smtp_password_version"`
+	SecretARN                           fwtypes.ARN                                                `tfsdk:"secret_arn"`
+	SMTPPasswordVersion                 types.String                                               `tfsdk:"smtp_password_version"`
+	SMTPPasswordWO                      types.String                                               `tfsdk:"smtp_password_wo"`
+	SMTPPasswordWOVersion               types.Int64                                                `tfsdk:"smtp_password_wo_version"`
+	TLSAuthConfiguration                fwtypes.ListNestedObjectValueOf[tlsAuthConfigurationModel] `tfsdk:"tls_auth_configuration"`
 }
 
 type tlsAuthConfigurationModel struct {
