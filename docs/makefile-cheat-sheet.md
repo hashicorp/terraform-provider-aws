@@ -106,6 +106,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `clean-go`<sup>D</sup> | Clean up Go cache |  |  | `GO_VER` |
 | `clean-go-cache-trim` | Trim Go build cache to manageable size |  |  |  |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
+| `convert-changelog` | Convert `go-changelog` fragment to Changie format |  |  | `FILE` |
 | `clean-tidy`<sup>D</sup> | Clean up tidy |  |  | `GO_VER` |
 | `copyright` | Copyright Checks / headers check | ✔️ |  |  |
 | `copyright-fix` | Fix copyright headers |  |  |  |
